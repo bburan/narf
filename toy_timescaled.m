@@ -6,12 +6,13 @@ close all;
 duration = 3;                % Duration in seconds
 Fs = 1000;                   % Sampling frequency
 ts = [1:Fs*duration]*(1/Fs); % Time series
+secret = 0.9;                % This is the number we will try to infer
 
 % lambda becomes a time-varying function
-lambda = @(t) 12*(1 + cos(2*pi*t));
+lambda = @(t) 123*(1 + cos(2*pi*secret*t));
 
 % Integral of lambda
-Lambda = @(t) (12*t + (12/(2*pi))*sin(2*pi*t));
+Lambda = @(t) (123*t + (123/(2*pi))*sin(2*pi*secret*t));
 
 % The last time
 T_end = Lambda(ts(end));
@@ -77,7 +78,9 @@ title('{\Lambda}(t)');
 subplot(3,2,4);
 hold on;
 hist(isis_scaled, nbins);
-plot(ts, lambda_avg * exp(-lambda_avg*ts), 'r-');
+PDTMP = fitdist(isis_scaled', 'exponential');
+lam = 1 / PDTMP.mu;
+plot(ts, nbins * lam * exp(-lam*ts), 'r-');
 title('Time-Scaled ISI and Scaled Unit Exponential');
 xlabel('Scaled Inter-Spike Interval [-]');
 ylabel('N');
@@ -122,52 +125,38 @@ for l = search
 
     % Where scaled ISIs fall on the unit poisson's cumulative density function
     z = 1 - exp(- l_avg * isi_h);
-    z = sort(z);
+    z = sort(z);  % This is the all-important scaled CDF
     
-    % TODO: likelihood of the model should replace this bogus approximation
-    %likelihoods(i) = - sum(([0:1/(length(z)-1):1] - z).^2); % LSq of difference from 45 degree line
-    % If it is not on the 45 degree line, then uniformity has been violated!
-    % Slightly better way is this?
+    % METHOD #1: Least Squares deviation from 45 degree line on KS Plot
+    %likelihoods(i) = - sum(([0:1/(length(z)-1):1] - z).^2); 
+    
+    % METHOD #2: Negative Log Likelihood
     PD = fitdist(z','exponential');
-    
     k = 1;
     n = length(isi_h); 
     %likelihoods(i) = -2*(-PD.NLogL) + 2*k*log(n); % THIS IS THE BIC!
-    likelihoods(i) = exp(PD.NLogL); 
-        
-    % TODO: When more alert, check if the following is actually better:
-    %isi_h = diff(hypothesis_CDF([0,spikes]) / hypothesis_CDF(duration));
+    likelihoods(i) = PD.NLogL; % The Negative Log Likelihood
 
-    % The integral from the deviation from the uniform distribution at this
-    % point is a good metric?
-    
-    % Average lambda for the scaled ISIs
-    %l_avg = 1 / mean(isi_h);
-
-    % Where scaled ISIs fall on the unit poisson's cumulative density function
-    %z = 1 - exp(- l_avg * isi_h);
-    %z = sort(z);
-        
+       
     i=i+1;
 end
 
-plot(search, likelihoods, 'k-');
-title('Model Likelihood');
+figure; plot(search, likelihoods, 'k-');
+title('Model Likelihood (Higher is better)');
 xlabel('Model Parameter');
-ylabel('Likelihood');
+ylabel('Negative Log Likelihood');
 
-
-figure;
-hold on;
-bar(spikes, 50*ones(1,length(spikes)), 0.01,'k');
-plot(ts, lambda(ts), 'r-');
-l=0.99; hypo = @(t) 123*(1 + cos(2*pi*l*t));
-plot(ts, hypo(ts), 'g-');
-l=1.02; hypo = @(t) 123*(1 + cos(2*pi*l*t));
-plot(ts, hypo(ts), 'g-');
-xlabel('Time [s]');
-ylabel('\lambda(t) [spikes/s]');
-hold off;
-
-
-
+% figure;
+% hold on;
+% bar(spikes, 50*ones(1,length(spikes)), 0.01,'k');
+% plot(ts, lambda(ts), 'r-');
+% l=0.99; hypo = @(t) 123*(1 + cos(2*pi*l*t));
+% plot(ts, hypo(ts), 'g-');
+% l=1.02; hypo = @(t) 123*(1 + cos(2*pi*l*t));
+% plot(ts, hypo(ts), 'g-');
+% xlabel('Time [s]');
+% ylabel('\lambda(t) [spikes/s]');
+% hold off;
+% 
+% 
+% 
