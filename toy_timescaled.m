@@ -157,6 +157,4 @@ ylabel('Negative Log Likelihood');
 % xlabel('Time [s]');
 % ylabel('\lambda(t) [spikes/s]');
 % hold off;
-% 
-% 
-% 
+
