@@ -289,6 +289,7 @@ function fir_history_Callback(hObject, eventdata, handles)
 % TODO: Initialize the FIR filter_dimensions
 str2double(get(hObject,'String'));
 
+
 function model_view_popup_CreateFcn(hObject, eventdata, handles)
 function model_view_popup_Callback(hObject, eventdata, handles)
 
@@ -312,6 +313,7 @@ function termination_condition_popup_Callback(hObject, eventdata, handles)
 
 function termination_iterations_CreateFcn(hObject, eventdata, handles)
 function termination_iterations_Callback(hObject, eventdata, handles)
+
 
 function fit_model_button_Callback(hObject, eventdata, handles)
 
