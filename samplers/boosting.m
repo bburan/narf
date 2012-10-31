@@ -28,14 +28,15 @@ function [x_bst, s_bst] = boosting(x_0, objfn, termfn, stepsize)
 %
 % TODO:
 %    Step size should probably be different for each dimension of x or
-%    scaling problems could present difficulties. 
+%    scaling problems could present difficulties. Or, maybe the variance
+%    produced by each change should be the scaling factor?
 %     
 % Oct 12, 2012. Ivar Thorson.
 
 % Ensure that the arguments are valid
-[nc, nr] = size(x_0); 
+[nr, nc] = size(x_0); 
+
 if (nc ~= 1) error('x_0 must be a row vector'); end
-if (steps <= 1) error('stepsize must be >= 1'); end
 if (stepsize <= 0) error('stepsize must be > 0'); end
 
 % Starting search point
@@ -43,7 +44,6 @@ x = x_0;
 s = objfn(x);
 l = length(x_0);
 n = 1;  % Step number
-
 
 while ~termfn(n,x,s)
     x_pre = x;   % The state before taking any steps
@@ -70,6 +70,8 @@ while ~termfn(n,x,s)
             s = s_bck;
             x = x_bck;
         end
+        
+        fprintf('.');
     end
     
     % If the search point has not changed, step size is too big.
