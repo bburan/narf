@@ -1,0 +1,91 @@
+* LEFT OFF HERE:
+  I am now at the stage of testing out boosting again. Before that can happen:
+  1. Are we sure every SOUND was prefiltered and downsampled? 
+  2. Are we sure that every downsampled sound is being run through MAKE_PREDICTIONS?
+  3. Are we sure that the sum of the DS_PREDS across all filters is the best way to get the estimate?
+  4. Are we sure that the average of the correlations for every sound is the right metric?
+  5. Try out the boosting algorithm
+
+* Possible refactoring 
+  1. Data ordering is perhaps nonstandard, since we need filter(B,A,X,[],2) instead of filter(B,A,X);
+  2. Should PREFILTEREDSTIM be a 3D matrix, or is it more convenient to use as a mixture of cell array and 2H matrices.? 
+     STIM [30x400000] (30 tones with 400000 samples in time each)
+     RESP [30x400000x3] (3 reps)
+     PREFILTEREDSTIM{numoffilters} and under each cell [30x400000]
+  3.  Rewrite of dbchooserawfile() because it's so damn useful for selecting a file, but let's make it work for multiple stimulus files
+      (Should also display well, site and have selectors for channel, unit, etc
+  4. Use squeeze() to remove unneeded dimensions from a matrix.
+* Small steps to take
+  - [ ] Check that types of data structures don't change ( cell and 2D matrices for FIRCOEFS)
+  - [ ] Add logging strings for everything
+  - [ ] Try filtfilt to avoid affecting the phase of the response
+  - [ ] tic/toc microbenchmarks...this thing is getting slow
+  - [ ] Connect the boosting algorithm to the FIR parameter matrix and correlation coefficient
+  - [ ] Write dbchoosecellfiles() and make it work for multiple selections.
+  - [ ] Consider putting everything under a single GLOBAL 
+  - [ ] Make code work for batch processing and without a GUI
+* Issues for Stephen
+  1. I am of the opinion that things should be done once, not twice. I still think it's a pain dealing with BAPHY because it's not my baby, and everyone who deals with it will feel the same way. We want that part to be encapsulated; even though the DB may change continuously and grow, we don't want to have to change our 5 lines of code every time a new experiment is added. We just want an easy way to select the stim and response files for our experiment so we can get back to work without learning about BAPHY. 
+* TOP TODO
+  - [ ] TWO DATA SETS. Use the first as the training, and the second as the validation set. (You may also want to look at por010c)
+	 (92955) 	por010b04_p_SPN.m 	300 (5) 	sorted: 2-1 2-2 - parms - psth
+	 (92956) 	por010b05_p_SPN.m 	80 (20) 	sorted: 2-1 2-2 - parms - psth
+  - [ ] Look at exptparams.TrialObject.ReferenceHandle object and figure out how to do two bandpass filters that give stimulus band info
+  - [ ] Pick out files that all have really high SNR ratios
+* CODE TO REVIEW LATER
+  - [X] meska_pca()                              Used for doing the spike sorting, the front end. 
+  - [ ] RemoteAnalysis/boost_online.m
+  - [ ] Utilities/cacheevpspikes.m
+  - [ ] cellDB/dbchooserawfile.m
+  - [ ] Config/lbhb/BaphyMainGuiItems.m  has some hard-coded defaults for the GUI
+  - [ ] Try messing with creating GUIs for structs using 'structdlg.m'
+  - [ ] Consider the data for this: /auto/data/daq/Portabello/por010/por010c08_p_SPN
+* LUXURY TODO
+  - [ ] Use inter_curve_v3 to interactively make FIR things!
+  - [ ] Make the stimulus data drive the windowing of the other visualizations
+  - [ ] Try adding color to histograms and scatter plots
+  - [ ] try improving contrast of various intensity plots
+* Possible problems or hacks to study
+  - [ ] Negative effects of discretization on Inter-Spike Intervals histogram estimation (Use known data)
+  - [ ] Infer the average rate of spiking from the data, then fit your model against that inferred lambd without doing EM all the time.
+* HIGH LEVEL TODO:
+   1) [ ] GUI that lets you quickly try different models in a clicky sort of way
+   2) [ ] Logging and recording multiple models and their performance
+   3) [ ] Plots the STRF of the best-fitting model?
+   4) [ ] Analyze:  'dai020a-c2', 'mag009b-b1', 'dai008a-c1', 'mag007d-d1' 
+   5) [ ] Rank model fits and plot correlations
+   6) [ ] Replicate Stephen's results with exitation/inhibition
+* ModelFit GUI Design Brainstorm
+* -----------------
+* Data Selection
+  TRAINING SET: por010b04_p_SPN.m    60 stimuli repeated 5 times each? 97% isolation on -b1
+  TEST SET:     por010b05_p_SPN.m    4 stimuli repeated 20 times each? 99% isolation on -b1
+  button: refresh from BAPHY? Or select cell ID?
+  textbox: cellID#
+  dropbox: channel
+  dropbox: trial class of associated data (and # of responses?)
+  textbox: report of relevant data about the data?
+  textbox: stimulus frequency
+  textbox: response bin size (set to 0 for continuous timings?)
+  graph: Rendering of the sound
+  dropbox: toggle between rendering of the sound with spectrogram or time
+* Preprocessing
+   dropbox: filter class
+   graph: filter output
+   dropbox: graph view in time, graph white noise filtered by this, or as a heat map?
+   button: refresh graph
+*** Envelope
+    textbox: raster frequency
+*** Single Gammatone
+    textbox: center freq
+    textbox: bandwidth
+*** Gammatone filter bank
+    textbox: min freq
+    textbox: max freq
+    textbox: num filters (or maybe, vector of filter center freqs, so I could pick just the few that are important?)
+    checkbox: align phase
+* Model Class
+  dropbox: model
+  pane with checkboxes (editable or not) and editboxes: model params       (Hidden: will need on-the-fly generated functions which map structs to vectors and back)
+* Performance
+** TODO: Add BIC or AIC to the model-comparison part of my figure
