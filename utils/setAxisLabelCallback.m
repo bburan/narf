@@ -1,4 +1,4 @@
-function [] = setYAxisLabelCallback(gca, fn, axis)
+function [] = setAxisLabelCallback(gca, fn, axis)
 % Sets up fn as the callback fn to label an axis dynamically
 %
 % INPUTS:
