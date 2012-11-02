@@ -1,9 +1,6 @@
 * LEFT OFF HERE:
-  - Commit my code!
   - Restructure all the computation into a sequence of function calls from a single big ANALYZE FILES function. 
   - Automatic analysis can occur simply by having checkboxes on the left, or manually by leaving them unchecked
-  - Draw a pretty diagram of what I have now.
-  - Put meeting notes in my good binder
   - Check to make sure that I am doing the prefiltering in the right way...the ferquencies might be half or double what I think I am doing!
   - Write a better dbchoosecellfiles(), linking it to STRFs
   - Write a 'automatic multiple band' filter, which presents downsampled results of gamma or elliptical notched filters spaced across the domains

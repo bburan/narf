@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 02-Nov-2012 11:49:15
+% Last Modified by GUIDE v2.5 02-Nov-2012 14:47:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -310,7 +310,6 @@ for i = 1:n_filts
     [B,A] = ellip(4,0.5,50,[lp(i)/SAMPFREQ*2, hp(i)/SAMPFREQ*2]);   
     PF_COEFS{i} = {B,A};
 end
-
 % Filter the data
 set(handles.prefilter_status, 'String', 'Filtering...');
 PF_STIM=[];
@@ -351,7 +350,6 @@ DS_RESPAVG = conv_fn(RESPAVG, 2, @sum, SAMPFREQ/DS_FREQ, 0);
 DS_TIME = [0:1/DS_FREQ:l/DS_FREQ-1/DS_FREQ];
 DS_STIM = conv_fn(PF_STIM, 2, @mean, SAMPFREQ/DS_FREQ, 0);
 
-
 function make_predictions()
 % Apply the FIR filters to corresponding downsampled stimuli to get the model prediction
 % Since it is linear, the prediction is just the sum of the filters
@@ -364,9 +362,11 @@ DS_PREDS = [];
 %disp('Applying FIR filters');
 [n_filts, l] = size(FIRCOEFS);
 
+tic;
 for filt_idx = 1:n_filts 
     DS_PREDS = cat(3, DS_PREDS, abs(filter(FIRCOEFS(filt_idx,:), 1, squeeze(DS_STIM(:,:,filt_idx)), [],2)));
 end
+toc;
 
 DS_PRED = squeeze(sum(DS_PREDS, 3)); 
 
@@ -494,6 +494,17 @@ unpak_FIRCOEFS(x_bst);
 
 % Nothing so far!
 
+function dump_data_button_Callback(hObject, eventdata, handles)
+
+AAA = get(handles.preproc_settings, 'Data');
+1;
+
+tempdata = cell(4,3);
+tempdata{1,1} = true;
+tempdata{2,1} = false;
+tempdata{1,2} = 'Bandpass Lo Frq'; tempdata{1,3} = 9000;
+tempdata{2,2} = 'Bandpass Hi Frq'; tempdata{2,3} = 14000;
+
+set(handles.preproc_settings, 'Data', tempdata)
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
