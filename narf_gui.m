@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 02-Nov-2012 14:47:50
+% Last Modified by GUIDE v2.5 02-Nov-2012 16:00:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -97,18 +97,13 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DATA SELECTION WIDGETS
 
-function update_the_data_plots(hObject, eventdata, handles)
-global TIME STIM RESPAVG SAMPFREQ;
-
-% Plot the stimulus
+function update_raw_stim_plot(hObject, eventdata, handles)
+global TIME STIM SAMPFREQ;
 axes(handles.stim_view_axes); cla;
-
-nsel = cellstr(get(handles.data_view_popup, 'String'));
-plottype = nsel{get(handles.data_view_popup, 'Value')};
-
+nsel = cellstr(get(handles.raw_stim_view_popup, 'String'));
+plottype = nsel{get(handles.raw_stim_view_popup, 'Value')};
 nvals = cellstr(get(handles.selected_stimuli_popup, 'String'));
 stim_idx = str2num(nvals{get(handles.selected_stimuli_popup, 'Value')});
-
 switch plottype
     case 'Time Series View'
         plot(TIME, STIM(stim_idx,:), 'k-');
@@ -117,46 +112,52 @@ switch plottype
         % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
         nwin = 4048;
         logfsgram(STIM(stim_idx,:)', nwin, SAMPFREQ, [], [], 500, 12);
-        caxis([-20,40]);
-        %colorbar;
+        %caxis([-20,40]); % TODO: use a 'smarter' caxis here which discards
+        % information based on a histogram to get rid of outliers.
 end
 
-% Plot the response
+
+function update_raw_resp_plot(hObject, eventdata, handles)
+global TIME RESPAVG;
+nvals = cellstr(get(handles.selected_stimuli_popup, 'String'));
+stim_idx = str2num(nvals{get(handles.selected_stimuli_popup, 'Value')});
 axes(handles.resp_view_axes); cla;
 bar(TIME, RESPAVG(stim_idx,:), 0.01,'k');
 axis tight;
-%------------------------------------------------------------------------
+
+
 function select_training_set_button_Callback(hObject, eventdata, handles)
 global STIM RESP TIME RESPAVG SAMPFREQ;
 
+% TODO: Replace me with cellid-based GUI
 % Use David's Nifty DB file chooser to choose the file data
-fd = dbchooserawfile(0,'Choose file to sort');
-if isempty(fd)
-    STIM = [];
-    RESP = [];
-    set(handles.training_set, 'String', 'none');
-    guidata(hObject, handles);               % Write the change
-    drawnow;                                 % Flush the event queue
-    return
-end
+% fd = dbchooserawfile(0,'Choose file to sort');
+% if isempty(fd)
+%     STIM = [];
+%     RESP = [];
+%     set(handles.training_sets_listbox, 'String', 'none');
+%     guidata(hObject, handles);               % Write the change
+%     drawnow;                                 % Flush the event queue
+%     return
+% end
 
-[cfd, cellids, cellfileids] = dbgetscellfile('rawid', fd.rawid);
-
-% TODO: Replace this file with the right channel and unit?
-%index = find([cfd.respfiletype] == 1);
+%[cfd, cellids, cellfileids] = dbgetscellfile('rawid', fd.rawid);
+[cfd, cellids, cellfileids] = dbgetscellfile('cellid', 'por010b-b2');
 
 % If there is more than one cell file returned, complain
-%if ~isequal(index, 1)
-%    error('BAPHY gave me multiple files and I cannot find the one I need');
-%end
+if ~isequal(length(cellids), 1)
+    error('BAPHY gave me multiple cell files yet I asked for only one.');
+end
 
-index = 1;
-
+index=1;
 options.includeprestim = 1;
 options.unit     = cfd(index).unit;
-options.channel  = fd.channel;
+options.channel  = cfd(index).channum;
 options.rasterfs = 100000; 
 SAMPFREQ = options.rasterfs; 
+
+% TODO: make this load multiple stimulus and response files for a single
+% cellid
 
 fprintf('Loading stimulus file: %s%s\n', cfd(index).stimpath, cfd(index).stimfile);
 stimfile = [cfd(index).stimpath cfd(index).stimfile];
@@ -184,38 +185,42 @@ TIME = (1/options.rasterfs).*[1:d2]';
 % PROBABLY this should be a function that you can call anytime to get
 % global values checked.
 
-% Update other parts of the GUI, starting with the text box
-set(handles.training_set, 'String', cellids(index));   
+% Update other parts of the GUI
+set(handles.training_sets_listbox, 'String', char(cfd.stimfile));   
+set(handles.cellid_text, 'String', char(cellids(1)));   
 
 % Update the popup for selecting a particular stimuli to graph
 c = {};
-for i=1:e1;
+for i = 1:e1;
     c{i} = sprintf('%d',i);
 end
 set(handles.selected_stimuli_popup, 'String', char(c)); 
 set(handles.selected_stimuli_popup, 'Value', 1);
 
-update_the_data_plots(hObject, eventdata, handles);
+update_raw_stim_plot(hObject, eventdata, handles);
+update_raw_resp_plot(hObject, eventdata, handles);
 %------------------------------------------------------------------------
 
 function view_strf_button_Callback(hObject, eventdata, handles)
+% TODO: If a 
 %strf_offline2();
 
-function refresh_stim_view_button_Callback(hObject, eventdata, handles)
-update_the_data_plots(hObject, eventdata, handles);
+function raw_stim_view_popup_CreateFcn(hObject, eventdata, handles)
+function raw_stim_view_popup_Callback(hObject, eventdata, handles)
+update_raw_stim_plot(hObject, eventdata, handles);
 
-function select_test_set_button_Callback(hObject, eventdata, handles)
+function raw_resp_view_popup_CreateFcn(hObject, eventdata, handles)
+function raw_resp_view_popup_Callback(hObject, eventdata, handles)
+update_raw_resp_plot(hObject, eventdata, handles);
 
-function training_set_info_listbox_CreateFcn(hObject, eventdata, handles)
-function training_set_info_listbox_Callback(hObject, eventdata, handles)
+function training_sets_listbox_CreateFcn(hObject, eventdata, handles)
+function training_sets_listbox_Callback(hObject, eventdata, handles)
+% TODO: change the graphs of everything!
 
 function selected_stimuli_popup_CreateFcn(hObject, eventdata, handles)
 function selected_stimuli_popup_Callback(hObject, eventdata, handles)
-update_the_data_plots(hObject, eventdata, handles);
-
-function data_view_popup_CreateFcn(hObject, eventdata, handles)
-function data_view_popup_Callback(hObject, eventdata, handles)
-update_the_data_plots(hObject, eventdata, handles);
+update_raw_stim_plot(hObject, eventdata, handles);
+update_raw_resp_plot(hObject, eventdata, handles);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PREPROCESSING WIDGETS
@@ -479,7 +484,7 @@ function termination_iterations_Callback(hObject, eventdata, handles)
 
 function fit_model_button_Callback(hObject, eventdata, handles)
 global FIRCOEFS;
-% get the number of iterations
+% Get the number of iterations
 n_iters = str2num(get(handles.termination_iterations, 'String'));
 
 % Get the starting score of the current filter
@@ -493,11 +498,9 @@ unpak_FIRCOEFS(x_bst);
 %% REPORTING WIDGETS
 
 % Nothing so far!
+function select_test_set_button_Callback(hObject, eventdata, handles)
 
 function dump_data_button_Callback(hObject, eventdata, handles)
-
-AAA = get(handles.preproc_settings, 'Data');
-1;
 
 tempdata = cell(4,3);
 tempdata{1,1} = true;
