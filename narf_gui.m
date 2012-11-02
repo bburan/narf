@@ -300,11 +300,11 @@ lp = eval(get(handles.low_freqs, 'String'));
 hp = eval(get(handles.high_freqs, 'String'));
 sf = eval(get(handles.smoothing_frqs, 'String'));
 
-% Check that the inputs are valid
-if ~(isvector(lp) & isvector(hp) & isvector(sf))
-    set(handles.prefilter_status, 'String', 'ERROR: ALL PREFILTER SETTINGS MUST BE VECTORS AND OF THE SAME LENGTH!');
-    return;
-end
+% TODO: Check that the inputs are valid
+% if ~(isvector(lp) & isvector(hp) & isvector(sf))
+%     set(handles.prefilter_status, 'String', 'ERROR: ALL PREFILTER SETTINGS MUST BE VECTORS AND OF THE SAME LENGTH!');
+%     return;
+% end
 
 n_filts = length(lp);
 
@@ -316,7 +316,7 @@ for i = 1:n_filts
     PF_COEFS{i} = {B,A};
 end
 % Filter the data
-set(handles.prefilter_status, 'String', 'Filtering...');
+%set(handles.prefilter_status, 'String', 'Filtering...');
 PF_STIM=[];
 for i = 1:n_filts
     pfstmp1 = filter(PF_COEFS{i}{1}, PF_COEFS{i}{2}, STIM,[],2);
@@ -332,9 +332,9 @@ for i = 1:n_filts
 end
 
 % Plot either the data or the frequency response
-set(handles.prefilter_status, 'String', 'Plotting...');
+%set(handles.prefilter_status, 'String', 'Plotting...');
 update_prefilter_plots(handles);
-set(handles.prefilter_status, 'String', 'Done.');
+%set(handles.prefilter_status, 'String', 'Done.');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MODEL CLASS WIDGETS

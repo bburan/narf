@@ -1,8 +1,17 @@
 * LEFT OFF HERE:
-  - Restructure all the computation into a sequence of function calls from a single big ANALYZE FILES function. 
+  - Finish messing around with the GUI, adding a few more plot windows
+  - Write a dbchoosecellfiles()
+  - Connect the STRF button to the appropriate file, if it exists
+  - Expand my code to work for MULTIPLE rawfile experiments
+  - Any loadable prefilter will have
+    1. A default parameters object
+    2. A function which filters a sound response
+    3. A function which returns the 'stationary frequency response'
+    4. A pack function
+    5. An unpack function
+  - Restructure all the computation into a sequence of function calls from a single big ANALYZE FILES function.
   - Automatic analysis can occur simply by having checkboxes on the left, or manually by leaving them unchecked
   - Check to make sure that I am doing the prefiltering in the right way...the ferquencies might be half or double what I think I am doing!
-  - Write a better dbchoosecellfiles(), linking it to STRFs
   - Write a 'automatic multiple band' filter, which presents downsampled results of gamma or elliptical notched filters spaced across the domains
   - Make the prefilter LOADABLE from 
   - Make a second prefilter (full-coverage gammatone bank)
@@ -32,7 +41,6 @@
   - [ ] Write dbchoosecellfiles() and make it work for multiple selections.
   - [ ] Consider putting everything under a single GLOBAL 
   - [ ] Make code work for batch processing and without a GUI
-
 * TOP TODO
   - [ ] TWO DATA SETS. Use the first as the training, and the second as the validation set. (You may also want to look at por010c)
 	 (92955) 	por010b04_p_SPN.m 	300 (5) 	sorted: 2-1 2-2 - parms - psth
