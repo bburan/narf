@@ -1,12 +1,23 @@
 * LEFT OFF HERE:
-  I am now at the stage of testing out boosting again. Before that can happen:
-  1. Are we sure every SOUND was prefiltered and downsampled? 
-  2. Are we sure that every downsampled sound is being run through MAKE_PREDICTIONS?
-  3. Are we sure that the sum of the DS_PREDS across all filters is the best way to get the estimate?
-  4. Are we sure that the average of the correlations for every sound is the right metric?
-  5. Try out the boosting algorithm
+  - Commit my code!
+  - Restructure all the computation into a sequence of function calls from a single big ANALYZE FILES function. 
+  - Automatic analysis can occur simply by having checkboxes on the left, or manually by leaving them unchecked
+  - Draw a pretty diagram of what I have now.
+  - Put meeting notes in my good binder
+  - Check to make sure that I am doing the prefiltering in the right way...the ferquencies might be half or double what I think I am doing!
+  - Write a better dbchoosecellfiles(), linking it to STRFs
+  - Write a 'automatic multiple band' filter, which presents downsampled results of gamma or elliptical notched filters spaced across the domains
+  - Make the prefilter LOADABLE from 
+  - Make a second prefilter (full-coverage gammatone bank)
+  - Make a 3rd prefilter (full-coverage elliptic filter bank)
+  - Set the spectrogram as the default data view
+  - Present the rasterization of the response as dots, not as lines, to display MORE info
+  - Increase the size of the GUI viewports  and clean up the labeling
 
-* Possible refactoring 
+* Ask Stephen:
+  - [ ] Split keyboard?
+  - [ ] Constraints on the boosting should be only positive coefficients?
+* Possible refactoring
   1. Data ordering is perhaps nonstandard, since we need filter(B,A,X,[],2) instead of filter(B,A,X);
   2. Should PREFILTEREDSTIM be a 3D matrix, or is it more convenient to use as a mixture of cell array and 2H matrices.? 
      STIM [30x400000] (30 tones with 400000 samples in time each)
@@ -24,8 +35,7 @@
   - [ ] Write dbchoosecellfiles() and make it work for multiple selections.
   - [ ] Consider putting everything under a single GLOBAL 
   - [ ] Make code work for batch processing and without a GUI
-* Issues for Stephen
-  1. I am of the opinion that things should be done once, not twice. I still think it's a pain dealing with BAPHY because it's not my baby, and everyone who deals with it will feel the same way. We want that part to be encapsulated; even though the DB may change continuously and grow, we don't want to have to change our 5 lines of code every time a new experiment is added. We just want an easy way to select the stim and response files for our experiment so we can get back to work without learning about BAPHY. 
+
 * TOP TODO
   - [ ] TWO DATA SETS. Use the first as the training, and the second as the validation set. (You may also want to look at por010c)
 	 (92955) 	por010b04_p_SPN.m 	300 (5) 	sorted: 2-1 2-2 - parms - psth

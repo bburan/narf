@@ -27,7 +27,7 @@ function [x_bst, s_bst] = boosting(x_0, objfn, termfn, stepsize)
 % Returns the best point found and the score of that point. 
 %
 % TODO:
-%    Step size should probably be different for each dimension of x or
+%    Step size should probably be dhelifferent for each dimension of x or
 %    scaling problems could present difficulties. Or, maybe the variance
 %    produced by each change should be the scaling factor?
 %     
@@ -36,7 +36,7 @@ function [x_bst, s_bst] = boosting(x_0, objfn, termfn, stepsize)
 % Ensure that the arguments are valid
 [nr, nc] = size(x_0); 
 
-if (nc ~= 1) error('x_0 must be a row vector'); end
+if (nr ~= 1) error('x_0 must be a row vector'); end
 if (stepsize <= 0) error('stepsize must be > 0'); end
 
 % Starting search point
@@ -49,6 +49,7 @@ while ~termfn(n,x,s)
     x_pre = x;   % The state before taking any steps
     
     % Try to take a step along every dimension
+    fprintf('log: Stepping along every dimension');
     for d = 1:l
         stepdir = zeros(1, l);
         stepdir(d) = stepsize;
@@ -56,8 +57,8 @@ while ~termfn(n,x,s)
         x_fwd = x + stepdir;
         x_bck = x - stepdir;
 
-        s_fwd = evalfn(x_fwd);
-        s_bck = evalfn(x_bck);
+        s_fwd = objfn(x_fwd);
+        s_bck = objfn(x_bck);
         
         % Take a step forward if that is better
         if s_fwd < s
@@ -84,6 +85,9 @@ while ~termfn(n,x,s)
     % Print the improvement after stepping
     fprintf('log: new score: %d\n', s);
 
+    % Increment n
+    n = n + 1;
+    
 end
 
 % Return the best value found so far

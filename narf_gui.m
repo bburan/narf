@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 31-Oct-2012 17:03:10
+% Last Modified by GUIDE v2.5 02-Nov-2012 11:49:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -143,12 +143,14 @@ end
 [cfd, cellids, cellfileids] = dbgetscellfile('rawid', fd.rawid);
 
 % TODO: Replace this file with the right channel and unit?
-index = find([cfd.respfiletype] == 1);
+%index = find([cfd.respfiletype] == 1);
 
 % If there is more than one cell file returned, complain
-if size(index) ~= 1
-    error('BAPHY gave me multiple files and I cannot find the one I need');
-end
+%if ~isequal(index, 1)
+%    error('BAPHY gave me multiple files and I cannot find the one I need');
+%end
+
+index = 1;
 
 options.includeprestim = 1;
 options.unit     = cfd(index).unit;
@@ -172,9 +174,10 @@ end
 
 STIM = permute(stim, [3 2 1]);  % Remove the irrelevant first dimension
 RESP = permute(resp, [3 1 2]);  % Rearrange to match (TODO: Try squeeze() instead)
+RESP(isnan(RESP)) = 0;          % Replace all NaN's with 0's. TODO: is this the right behavior?
 rsp = sum(RESP,3); 
 [e1 e2 e3] = size(rsp);
-RESPAVG = reshape(rsp, [e1 e2]); % Averaged response across all trials
+RESPAVG = reshape(rsp, [e1 e2]); % Averaged response across all trials TODO: Squeeze()
 TIME = (1/options.rasterfs).*[1:d2]';
 
 % TODO: Check that STIM, RESP, RESPAVG, TIME are all the proper sizes
@@ -194,6 +197,9 @@ set(handles.selected_stimuli_popup, 'Value', 1);
 
 update_the_data_plots(hObject, eventdata, handles);
 %------------------------------------------------------------------------
+
+function view_strf_button_Callback(hObject, eventdata, handles)
+%strf_offline2();
 
 function refresh_stim_view_button_Callback(hObject, eventdata, handles)
 update_the_data_plots(hObject, eventdata, handles);
@@ -243,10 +249,10 @@ switch plottype
             setAxisLabelCallback(gca, @(f) (f*SAMPFREQ/(3.14*2)), 'X');
             axis tight;
             % Best way?
-            %P = bodeoptions;
-            %P.PhaseVisible = 'off';
-            %P.FreqUnits = 'Hz'; 
-            %h = bodeplot(tf(PF_COEFS{filt_idx}{2}, PF_COEFS{filt_idx}{1}),P);               
+            % P = bodeoptions;
+            % P.PhaseVisible = 'off';
+            % P.FreqUnits = 'Hz'; 
+            % h = bodeplot(tf(PF_COEFS{filt_idx}{2}, PF_COEFS{filt_idx}{1}),P);               
         end
     case 'Filtered Stimulus'
         for filt_idx = 1:n_filts
@@ -273,6 +279,9 @@ function smoothing_frqs_CreateFcn(hObject, eventdata, handles)
 
 function preprocessing_view_popup_CreateFcn(hObject, eventdata, handles)
 function preprocessing_view_popup_Callback(hObject, eventdata, handles)
+update_prefilter_plots(handles);
+
+function refresh_preproc_view_button_Callback(hObject, eventdata, handles)
 update_prefilter_plots(handles);
 
 % TODO: Make this work for a ANY prefilter selection and move this to a
@@ -342,24 +351,27 @@ DS_RESPAVG = conv_fn(RESPAVG, 2, @sum, SAMPFREQ/DS_FREQ, 0);
 DS_TIME = [0:1/DS_FREQ:l/DS_FREQ-1/DS_FREQ];
 DS_STIM = conv_fn(PF_STIM, 2, @mean, SAMPFREQ/DS_FREQ, 0);
 
+
 function make_predictions()
 % Apply the FIR filters to corresponding downsampled stimuli to get the model prediction
 % Since it is linear, the prediction is just the sum of the filters
 % We assume that there are no second order terms combining elements of both filters
 
-global DS_STIM DS_PREDS FIRCOEFS;
+global DS_STIM DS_PREDS FIRCOEFS DS_PRED;
 TOTAL_INPUT = sum(DS_STIM, 3);
 DS_PREDS = [];
 
-disp('Applying FIR filters');
+%disp('Applying FIR filters');
 [n_filts, l] = size(FIRCOEFS);
 
 for filt_idx = 1:n_filts 
-    DS_PREDS = cat(3, DS_PREDS, filter(FIRCOEFS(filt_idx,:), 1, squeeze(DS_STIM(:,:,filt_idx)), [],2));
+    DS_PREDS = cat(3, DS_PREDS, abs(filter(FIRCOEFS(filt_idx,:), 1, squeeze(DS_STIM(:,:,filt_idx)), [],2)));
 end
 
+DS_PRED = squeeze(sum(DS_PREDS, 3)); 
+
 function plot_model(handles)
-global FIRCOEFS DS_TIME DS_STIM DS_RESPAVG DS_PREDS;
+global FIRCOEFS DS_TIME DS_STIM DS_RESPAVG DS_PREDS DS_PRED FIRBINSIZE;
 
 nvals = cellstr(get(handles.model_view_popup, 'String'));
 plottype = nvals{get(handles.model_view_popup, 'Value')};
@@ -376,6 +388,8 @@ switch plottype
         for filt_idx = 1:n_filts
             stem([1:n_coefs], FIRCOEFS(filt_idx,:), pickcolor(filt_idx));
         end
+        setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
+        axis tight;
     case 'Downsampled Stims'
         for filt_idx = 1:n_filts
             plot(DS_TIME, DS_STIM(stim_idx,:,filt_idx), pickcolor(filt_idx));
@@ -386,10 +400,13 @@ switch plottype
         for filt_idx = 1:n_filts
             plot(DS_TIME, DS_PREDS(stim_idx,:,filt_idx), pickcolor(filt_idx));
         end
-        
+        axis tight;
     case 'Downsampled Resp'
-        plot(DS_TIME, DS_RESPAVG(stim_idx,:));
-        %ploty(DS_TIME, DS_RESPAVG(stim_idx,:), DS_TIME, DS_PRED(stim_idx,:));
+        %plot(DS_TIME, DS_RESPAVG(stim_idx,:));
+        s1 = 1/max(DS_RESPAVG(stim_idx,:));
+        s2 = 1/max(DS_PRED(stim_idx,:));
+        plot(DS_TIME, s1*DS_RESPAVG(stim_idx,:), pickcolor(0), ...
+             DS_TIME, s2*DS_PRED(stim_idx,:), pickcolor(1));
         axis tight; 
 end
 hold off;
@@ -410,13 +427,14 @@ function plot_model_button_Callback(hObject, eventdata, handles)
 plot_model(handles);
 
 function downsample_button_Callback(hObject, eventdata, handles)
+update_fir_model(handles);
 downsample_stimresp();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% OPTIMIZATION WIDGETS
 
 function x = pak_FIRCOEFS(FC)
-x = FC(:);
+x = FC(:)';
 
 function FC = unpak_FIRCOEFS(x)
 global PF_COEFS FIRHIST FIRBINSIZE;
@@ -424,29 +442,25 @@ d = length(PF_COEFS);
 l = ceil(FIRHIST/FIRBINSIZE);
 FC = reshape(x, d, l);
 
+
 function z = correlation_of_downsampled_signals(x)
 % Returns the correlation of the binned stimulus and binned response
-FIRCOEFS = unpak_FIRCOEFS(x);
+global DS_RESPAVG DS_PREDS DS_PRED FIRCOEFS;
+FIRCOEFS = unpak_FIRCOEFS(x);  % Update the global
+make_predictions(); % TODO: This should be more functional!
 
-make_predictions();
+[n_stims, n_ds_samps] = size(DS_RESPAVG);
 
-% TODO: This is probably broken here since it probably captures the global
-% before make_predictions does the write?
-% Temporary solution: Import the globals after the prediction?
-global RESPAVG PF_STIM FIRBINSIZE SAMPFREQ FIRCOEFS;
+corrs = zeros(1, n_stims);
 
-% The score is the average across all the stimuli
+% The average correlation across ALL trials is what we care about
 for stim_idx = 1:n_stims
-    PRED = sum(DS_PREDS(stim_idx,:,:));    
-    
+    R = corrcoef(DS_PRED(stim_idx,:), DS_RESPAVG(stim_idx,:));
+    R(isnan(R)) = 0; % Replace NaN's with 0 correlations again.
+    corrs(stim_idx) = R(2,1);
 end
 
-% Prediction is the sum of teh PREDS
-
-
-% Flatten the prediction and response and compare using correlation
-R = corrcoef(, BINNEDRESP);
-z = R(2,1);
+z = mean(corrs);
 
 function sampling_algorithm_popup_CreateFcn(hObject, eventdata, handles)
 function sampling_algorithm_popup_Callback(hObject, eventdata, handles)
@@ -464,11 +478,12 @@ function termination_iterations_CreateFcn(hObject, eventdata, handles)
 function termination_iterations_Callback(hObject, eventdata, handles)
 
 function fit_model_button_Callback(hObject, eventdata, handles)
+global FIRCOEFS;
 % get the number of iterations
 n_iters = str2num(get(handles.termination_iterations, 'String'));
 
 % Get the starting score of the current filter
-x_0 = pak_FIRCOEFS();
+x_0 = pak_FIRCOEFS(FIRCOEFS);
 
 stepsize = 1.0;
 [x_bst, s_bst] = boosting(x_0, @correlation_of_downsampled_signals, @(n,x,s)(n > n_iters), stepsize);
@@ -480,3 +495,5 @@ unpak_FIRCOEFS(x_bst);
 % Nothing so far!
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
