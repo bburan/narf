@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 02-Nov-2012 16:00:31
+% Last Modified by GUIDE v2.5 06-Nov-2012 10:48:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -129,7 +129,7 @@ axis tight;
 function select_training_set_button_Callback(hObject, eventdata, handles)
 global STIM RESP TIME RESPAVG SAMPFREQ;
 
-% TODO: Replace me with cellid-based GUI
+% TODO: Replace me with cellid-based GUI to pick cellid, channel, unit
 % Use David's Nifty DB file chooser to choose the file data
 % fd = dbchooserawfile(0,'Choose file to sort');
 % if isempty(fd)
@@ -142,7 +142,8 @@ global STIM RESP TIME RESPAVG SAMPFREQ;
 % end
 
 %[cfd, cellids, cellfileids] = dbgetscellfile('rawid', fd.rawid);
-[cfd, cellids, cellfileids] = dbgetscellfile('cellid', 'por010b-b2');
+%[cfd, cellids, cellfileids] = dbgetscellfile('cellid', 'por010b-b2');
+[cfd, cellids, cellfileids] = dbgetscellfile('cellid', 'por012c-b1', 'runclass', 'SPN');
 
 % If there is more than one cell file returned, complain
 if ~isequal(length(cellids), 1)
@@ -161,7 +162,7 @@ SAMPFREQ = options.rasterfs;
 
 fprintf('Loading stimulus file: %s%s\n', cfd(index).stimpath, cfd(index).stimfile);
 stimfile = [cfd(index).stimpath cfd(index).stimfile];
-stim     = loadstimfrombaphy(stimfile, [], [], 'wav', options.rasterfs, 1, 1, options.includeprestim);
+stim     = loadstimfrombaphy(stimfile, [], [], 'wav', options.rasterfs, 1, 0, options.includeprestim);
 
 fprintf('Loading response file: %s/%s\n', cfd(index).path, cfd(index).respfile);
 respfile = [cfd(index).path cfd(index).respfile];
@@ -355,6 +356,8 @@ DS_RESPAVG = conv_fn(RESPAVG, 2, @sum, SAMPFREQ/DS_FREQ, 0);
 DS_TIME = [0:1/DS_FREQ:l/DS_FREQ-1/DS_FREQ];
 DS_STIM = conv_fn(PF_STIM, 2, @mean, SAMPFREQ/DS_FREQ, 0);
 
+
+
 function make_predictions()
 % Apply the FIR filters to corresponding downsampled stimuli to get the model prediction
 % Since it is linear, the prediction is just the sum of the filters
@@ -367,13 +370,15 @@ DS_PREDS = [];
 %disp('Applying FIR filters');
 [n_filts, l] = size(FIRCOEFS);
 
-tic;
 for filt_idx = 1:n_filts 
-    DS_PREDS = cat(3, DS_PREDS, abs(filter(FIRCOEFS(filt_idx,:), 1, squeeze(DS_STIM(:,:,filt_idx)), [],2)));
+    DS_PREDS = cat(3, DS_PREDS, sqrt(abs(filter(FIRCOEFS(filt_idx,:), 1, squeeze(DS_STIM(:,:,filt_idx)), [],2))));
 end
-toc;
 
 DS_PRED = squeeze(sum(DS_PREDS, 3)); 
+
+
+
+
 
 function plot_model(handles)
 global FIRCOEFS DS_TIME DS_STIM DS_RESPAVG DS_PREDS DS_PRED FIRBINSIZE;
@@ -399,19 +404,23 @@ switch plottype
         for filt_idx = 1:n_filts
             plot(DS_TIME, DS_STIM(stim_idx,:,filt_idx), pickcolor(filt_idx));
         end
+        setAxisLabelCallback(gca, @(t) (t), 'X');
         axis tight; 
     case 'Downsampled Preds'
         make_predictions();
         for filt_idx = 1:n_filts
             plot(DS_TIME, DS_PREDS(stim_idx,:,filt_idx), pickcolor(filt_idx));
         end
+        setAxisLabelCallback(gca, @(t) (t), 'X');
         axis tight;
     case 'Downsampled Resp'
         %plot(DS_TIME, DS_RESPAVG(stim_idx,:));
         s1 = 1/max(DS_RESPAVG(stim_idx,:));
         s2 = 1/max(DS_PRED(stim_idx,:));
-        plot(DS_TIME, s1*DS_RESPAVG(stim_idx,:), pickcolor(0), ...
+            plot(DS_TIME, s1*DS_RESPAVG(stim_idx,:), pickcolor(0), ...
              DS_TIME, s2*DS_PRED(stim_idx,:), pickcolor(1));
+%        plot(DS_TIME, s1*DS_RESPAVG(stim_idx,:), pickcolor(0));
+        setAxisLabelCallback(gca, @(t) (t), 'X');
         axis tight; 
 end
 hold off;
@@ -459,13 +468,20 @@ make_predictions(); % TODO: This should be more functional!
 corrs = zeros(1, n_stims);
 
 % The average correlation across ALL trials is what we care about
-for stim_idx = 1:n_stims
-    R = corrcoef(DS_PRED(stim_idx,:), DS_RESPAVG(stim_idx,:));
-    R(isnan(R)) = 0; % Replace NaN's with 0 correlations again.
-    corrs(stim_idx) = R(2,1);
-end
+% for stim_idx = 1:n_stims
+%     R = corrcoef(DS_PRED(stim_idx,:), DS_RESPAVG(stim_idx,:));
+%     R(isnan(R)) = 0; % Replace NaN's with 0 correlations again.
+%     corrs(stim_idx) = R(2,1);
+% end
+%z = mean(corrs);
 
-z = mean(corrs);
+% TODO: Allow option to do correlation average or concatenated.
+V1 = reshape(DS_PRED.',[],1);
+V2 = reshape(DS_RESPAVG.',[],1);
+R = corrcoef(V1,V2);
+R(isnan(R)) = 0;
+z = R(2,1);
+
 
 function sampling_algorithm_popup_CreateFcn(hObject, eventdata, handles)
 function sampling_algorithm_popup_Callback(hObject, eventdata, handles)
@@ -482,6 +498,7 @@ function termination_condition_popup_Callback(hObject, eventdata, handles)
 function termination_iterations_CreateFcn(hObject, eventdata, handles)
 function termination_iterations_Callback(hObject, eventdata, handles)
 
+
 function fit_model_button_Callback(hObject, eventdata, handles)
 global FIRCOEFS;
 % Get the number of iterations
@@ -493,6 +510,84 @@ x_0 = pak_FIRCOEFS(FIRCOEFS);
 stepsize = 1.0;
 [x_bst, s_bst] = boosting(x_0, @correlation_of_downsampled_signals, @(n,x,s)(n > n_iters), stepsize);
 unpak_FIRCOEFS(x_bst);
+
+
+% ------------------------
+function initialize_optplot_menu(handle)
+menuopts = {'Param Likelihoods', 'Pred/PSTH scatter', ...
+        'KS Plot', 'Raw ISI', 'Time-Scaled ISI', ...
+        'Cond. Intensity Fn', 'Time Scaling Fn'};
+
+set(handle, 'String', char(menuopts));
+
+function setoptplot(handles, plothandle, plottype)
+global DS_RESPAVG DS_PRED;
+
+nvals = cellstr(get(handles.selected_stimuli_popup, 'String'));
+stim_idx = str2num(nvals{get(handles.selected_stimuli_popup, 'Value')});
+
+axes(plothandle); cla;
+hold on;
+switch plottype
+    case 'Param Likelihoods'
+        %plot(DS_PRED, DS_RESPAVG, 'k.');
+        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
+        axis tight;
+    case 'Pred/PSTH scatter'
+        plot(DS_PRED(stim_idx,:), DS_RESPAVG(stim_idx,:), 'k.');
+        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
+        axis tight;
+    case 'KS Plot'
+        %plot(DS_PRED, DS_RESPAVG, 'k.');
+        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
+        axis tight;
+    case 'Raw ISI'
+        %plot(DS_PRED, DS_RESPAVG, 'k.');
+        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
+        axis tight;        
+    case 'Time-Scaled ISI'
+        %plot(DS_PRED, DS_RESPAVG, 'k.');
+        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
+        axis tight;
+    case 'Cond. Intensity Fn'
+        %plot(DS_PRED, DS_RESPAVG, 'k.');
+        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
+        axis tight;        
+    case 'Time Scaling Fn'
+        %plot(DS_PRED, DS_RESPAVG, 'k.');
+        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
+        axis tight;
+end
+hold off;
+
+
+function optplot1popup_CreateFcn(hObject, eventdata, handles)
+initialize_optplot_menu(hObject);
+function optplot1popup_Callback(hObject, eventdata, handles)
+nvals = cellstr(get(handles.optplot1popup, 'String'));
+plottype = nvals{get(handles.optplot1popup, 'Value')};
+setoptplot(handles, handles.optplot1, plottype);
+
+function optplot2popup_CreateFcn(hObject, eventdata, handles)
+initialize_optplot_menu(hObject);
+function optplot2popup_Callback(hObject, eventdata, handles)
+nvals = cellstr(get(handles.optplot2popup, 'String'));
+plottype = nvals{get(handles.optplot2popup, 'Value')};
+setoptplot(handles, handles.optplot2, plottype);
+
+function optplot3popup_CreateFcn(hObject, eventdata, handles)
+initialize_optplot_menu(hObject);
+function optplot3popup_Callback(hObject, eventdata, handles)
+nvals = cellstr(get(handles.optplot3popup, 'String'));
+plottype = nvals{get(handles.optplot3popup, 'Value')};
+setoptplot(handles, handles.optplot3, plottype);
+
+function optplot4popup_CreateFcn(hObject, eventdata, handles)
+initialize_optplot_menu(hObject);
+function optplot4popup_Callback(hObject, eventdata, handles)
+nvals = cellstr(get(handles.optplot4popup, 'String'));
+plottype = nvals{get(handles.optplot4popup, 'Value')};
+setoptplot(handles, handles.optplot4, plottype);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% REPORTING WIDGETS

@@ -1,5 +1,11 @@
+* Assumptions:
+** Filtering
+   I apply the filter at 100Khz
+   I convert things to 200Hz by summing groups of 500 samps and dividing by 500
+   
+  
+
 * LEFT OFF HERE:
-  - Finish messing around with the GUI, adding a few more plot windows
   - Write a dbchoosecellfiles()
   - Connect the STRF button to the appropriate file, if it exists
   - Expand my code to work for MULTIPLE rawfile experiments
@@ -22,7 +28,7 @@
 
 * Ask Stephen:
   - [ ] Split keyboard?
-  - [ ] Constraints on the boosting should be only positive coefficients?
+
 * Possible refactoring
   1. Data ordering is perhaps nonstandard, since we need filter(B,A,X,[],2) instead of filter(B,A,X);
   2. Should PREFILTEREDSTIM be a 3D matrix, or is it more convenient to use as a mixture of cell array and 2H matrices.? 

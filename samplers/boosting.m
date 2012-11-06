@@ -61,13 +61,13 @@ while ~termfn(n,x,s)
         s_bck = objfn(x_bck);
         
         % Take a step forward if that is better
-        if s_fwd < s
+        if s_fwd > s
             s = s_fwd;
             x = x_fwd;
         end
 
         % Take a step backward if that is better
-        if s_bck < s
+        if s_bck > s
             s = s_bck;
             x = x_bck;
         end
