@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 06-Nov-2012 16:39:07
+% Last Modified by GUIDE v2.5 07-Nov-2012 11:38:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -43,8 +43,9 @@ else
 end
 % End initialization code - DO NOT EDIT
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% INITIALIZATION CODE EXECUTES BEFORE GUI BECOMES VISIBLE
 
-% --- Executes just before narf_gui is made visible.
 function narf_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
@@ -54,6 +55,7 @@ function narf_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for narf_gui
 handles.output = hObject;
+%handles.output = handles.status_textbox; % TODO: Enable this
 
 % Update handles structure
 guidata(hObject, handles);
@@ -61,11 +63,35 @@ guidata(hObject, handles);
 % UIWAIT makes narf_gui wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
-% ADD some things to the path!
+% Add necessary directories to NARF's path
 NARFHOME = '/home/ivar/matlab/narf'
 addpath([NARFHOME filesep 'utils'], ...
         [NARFHOME filesep 'samplers']);
 
+% Create a scrollable edit box in the status panel
+hEdit = uicontrol(handles.uipanel6, 'Style','edit', 'FontSize',9, ...
+    'Min',0, 'Max',2, 'HorizontalAlignment','left', ...
+    'Units','normalized', 'Position',[0 0 1 1], ...
+    'String','GUI Initialized');
+
+global LOG_HANDLE LOG_LENGTH LOG_BUFFER LOG_LEVEL;
+LOG_LEVEL = 0;      % 0=debug, 1=informative, 2=normal, 3=warnings, 4=errors % TODO: Make top-level constant
+LOG_HANDLE = hEdit;
+LOG_LENGTH = 6;      % TODO: Make a top-level constant
+LOG_BUFFER = cell(1,LOG_LENGTH);
+for i = 1:LOG_LENGTH
+    LOG_BUFFER{i} = '';
+end
+
+% Invalidate all data tables
+set(handles.data_selection_table, 'Data', {});
+set(handles.sampling_data_table, 'Data', {});
+set(handles.perf_metric_data_table, 'Data', {});
+set(handles.term_cond_data_table, 'Data', {});
+set(handles.preproc_data_table, 'Data', {});
+set(handles.model_data_table, 'Data', {});
+set(handles.stochasticity_data_table, 'Data', {});
+drawnow;
 
 % --- Outputs from this function are returned to the command line.
 function varargout = narf_gui_OutputFcn(hObject, eventdata, handles) 
@@ -75,6 +101,32 @@ varargout{1} = handles.output;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % USEFUL FUNCTIONS FOR MORE THAN ONE WIDGET
 
+function printlog(varargin)
+global LOG_HANDLE LOG_LENGTH LOG_BUFFER;
+for i = 1:LOG_LENGTH-1                                % Shift buffer up
+    LOG_BUFFER{i} = LOG_BUFFER{i+1};
+end
+LOG_BUFFER{LOG_LENGTH} = feval(@sprintf, varargin{:});% Add the newest data
+set(LOG_HANDLE, 'String', char(LOG_BUFFER));          % Refresh the display
+drawnow;
+
+function log_dbg(varargin) % For debugging-level messages only
+global LOG_LEVEL; if(LOG_LEVEL < 1)  feval(@printlog, varargin{:}); end
+
+function log_inf(varargin) % For informative messages
+global LOG_LEVEL; if(LOG_LEVEL < 2)  feval(@printlog, varargin{:}); end
+
+function log_msg(varargin) % For regular priority messages
+global LOG_LEVEL; if(LOG_LEVEL < 3)  feval(@printlog, varargin{:}); end
+
+function log_wrn(varargin) % For warning messages
+global LOG_LEVEL; if(LOG_LEVEL < 4)  feval(@printlog, varargin{:}); end
+
+function log_err(varargin) % For error messages
+global LOG_LEVEL; if(LOG_LEVEL < 5)  feval(@printlog, varargin{:}); end
+error(feval(@sprintf, varargin{:}));
+
+% ------------------------------------------------------------------------
 function c = pickcolor(n)
 m = mod(n,7);
 switch m
@@ -94,50 +146,107 @@ switch m
         c='y-';
 end
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% DATA SELECTION WIDGETS
+% Core functionality of the system should be independent of the GUI
+
+function run_narf(cellid, dataset_sel_fn, opt_fn, perf_metric, term_cond)
+cfd = query_db(cellid);
+[train_set, test_set] = select_train_test_sets(cfd); 
+% Load the files
+% -> Display the raw data
+% Load the model and its parameters
+% Initialize the model
+% Prefilter the data
+% -> Display the filtered data
+% Downsample the filtered data
+% -> Display the downsampled data
+% Run the optimization on the downsampled data
+% -> Display optimization performance
+% -> Display parameters in GUI
+% Return the best fitting parameters
+
+% ------------------------------------------------------------------------
+function cfd = query_db(cellid)
+log_dbg('query_db(''%s'');', cellid);
+
+% Returns a list of raw files with this cell ID
+[cfd, cellids, cellfileids] = dbgetscellfile('cellid', cellid);
+
+% If there is not exactly one cell file returned, throw an error.
+if ~isequal(length(cellids), 1)
+    log_err('BAPHY gave me zero/multiple cellids yet I only need one.');
+end
+
+% ------------------------------------------------------------------------
+function [training_set, test_set] = select_train_test_sets(cfd)
+log_dbg('Selecting training and test sets...');
+len = length(cfd);
+training_set = {};
+test_set = {};
+test_set_reps = 0;
+parms = cell(1, len);
+perfs = cell(1, len);
+
+% Load parms, perfs. Select set with the most repetitions as test set.
+for i = 1:len;
+    [parms{i}, perfs{i}] = dbReadData(cfd(i).rawid);
+    if (isfield(parms{i}, 'Ref_Subsets') & ...
+            parms{i}.Ref_Subsets > test_set_reps)
+       test_set_reps = parms{i}.Ref_Subsets;
+       test_set{1} = cfd(i).stimfile;
+    end
+end
+
+% Train on everything else by default
+for i = 1:len;
+    if ~isequal(cfd(i).stimfile, test_set{1})
+        training_set{end+1} = cfd(i).stimfile;
+    end
+end
+
+% TODO: Consider saving the parm/perf info to a global for later use?
+% TODO: Consider moving parm/perf outside this fn?
+
+log_dbg('Training sets selected: %s', ...
+    strtrim(sprintf('%s ', training_set{:})));
+log_dbg('Test set selected: %s', char(test_set{:}));
+
+% ------------------------------------------------------------------------
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% DATA SELECTION GUI
 
 function query_db_button_Callback(hObject, eventdata, handles)
-% TODO: Clear all global variables
+log_dbg('query_db_button pressed.');
 
-% Invalidate data_selection_table
-set(handles.data_selection_table, 'Data', {}); 
+% Clear the global variable storing state for the GUI (GS = 'Gui State')
+global GS; GS = {};
 
-% TODO: Invalidate all of the GUI
-% TODO: Report that we are querying the DB
-% Flush the event queue so it updates visually
-drawnow; 
+% Invalidate data_selection_table, and other parts of the GUI
+set(handles.data_selection_table, 'Data', {}); drawnow;
 
-% TODO: Query the DB
-[cfd, cellids, cellfileids] = dbgetscellfile('cellid', 'por012c-b1');
+% Query the DB and select the train/test sets
+GS.cellid = get(handles.cellid_text, 'String');
+GS.cfd = query_db(GS.cellid);
+[GS.training_set, GS.test_set] = select_train_test_sets(GS.cfd);
 
-% If there is more than one cell file returned, throw an error.
-if ~isequal(length(cellids), 1)
-    error('BAPHY gave me multiple cell files yet I asked for only one.');
+% Convert the above into a GUI viewable cell array
+c = cell(length(GS.cfd), 3);
+for i = 1:length(GS.cfd);
+    c{i,1} = GS.cfd(i).stimfile; 
+    c{i,2} = sum(ismember(GS.training_set, c{i,1})) > 0; 
+    c{i,3} = sum(ismember(GS.test_set, c{i,1})) > 0;
 end
+set(handles.data_selection_table, 'Data', c); drawnow;
 
-% TODO: Populate data_selection_table, setting the train? and test? flags.
-% By default, the most repetitive signal becomes the test set. Everything
-% else becomes the training set.
-num_rawfiles = length(cfd);
-m = cell(num_rawfiles, 3);
-
+% TODO: Request that the files be loaded
+% TODO: Load the first of the training sets
+% TODO: Display the stimuli data.
 
 
-
-
-
-
-% TODO: LEFT OFF HERE
-for idx = 1:num_rawfiles
-    if (idx == test_set_idx)
-        m = ;
-end
-
-% TODO: Report that we have finished querying the DB
-
-
-
+% ------------------------------------------------------------------------
 function update_raw_stim_plot(hObject, eventdata, handles)
 global TIME STIM SAMPFREQ;
 axes(handles.stim_view_axes); cla;
@@ -170,87 +279,68 @@ axis tight;
 function raster_freq_CreateFcn(hObject, eventdata, handles)
 function raster_freq_Callback(hObject, eventdata, handles)
 % TODO: Save the raster frequency to a global somewhere
-frq = str2double(get(hObject,'String'));
+%frq = str2double(get(hObject,'String'));
 
-
-
-function select_training_set_button_Callback(hObject, eventdata, handles)
-global STIM RESP TIME RESPAVG SAMPFREQ;
-
-% TODO: Replace me with cellid-based GUI to pick cellid, channel, unit
-% Use David's Nifty DB file chooser to choose the file data
-% fd = dbchooserawfile(0,'Choose file to sort');
-% if isempty(fd)
-%     STIM = [];
-%     RESP = [];
-%     set(handles.training_sets_listbox, 'String', 'none');
-%     return
+% 
+% function select_training_set_button_Callback(hObject, eventdata, handles)
+% global STIM RESP TIME RESPAVG SAMPFREQ;
+% 
+% index=1;
+% options.includeprestim = 1;
+% options.unit     = cfd(index).unit;
+% options.channel  = cfd(index).channum;
+% options.rasterfs = 100000; 
+% SAMPFREQ = options.rasterfs; 
+% 
+% % TODO: make this load multiple stimulus and response files for a single
+% % cellid
+% 
+% fprintf('Loading stimulus file: %s%s\n', cfd(index).stimpath, cfd(index).stimfile);
+% stimfile = [cfd(index).stimpath cfd(index).stimfile];
+% stim     = loadstimfrombaphy(stimfile, [], [], 'wav', options.rasterfs, 1, 0, options.includeprestim);
+% 
+% fprintf('Loading response file: %s/%s\n', cfd(index).path, cfd(index).respfile);
+% respfile = [cfd(index).path cfd(index).respfile];
+% [resp, tags] = loadspikeraster(respfile, options);
+% 
+% [d1 d2 d3] = size(stim);
+% if d1 ~= 1
+%     disp([d1 d2 d3]);
+%     error('Stimulus matrix must initially have size 1xLxN, where L=length in samples, N=num of stimuli');
 % end
-
-%[cfd, cellids, cellfileids] = dbgetscellfile('rawid', fd.rawid);
-%[cfd, cellids, cellfileids] = dbgetscellfile('cellid', 'por010b-b2');
-[cfd, cellids, cellfileids] = dbgetscellfile('cellid', 'por012c-b1', 'runclass', 'SPN');
-
-% If there is more than one cell file returned, complain
-if ~isequal(length(cellids), 1)
-    error('BAPHY gave me multiple cell files yet I asked for only one.');
-end
-
-index=1;
-options.includeprestim = 1;
-options.unit     = cfd(index).unit;
-options.channel  = cfd(index).channum;
-options.rasterfs = 100000; 
-SAMPFREQ = options.rasterfs; 
-
-% TODO: make this load multiple stimulus and response files for a single
-% cellid
-
-fprintf('Loading stimulus file: %s%s\n', cfd(index).stimpath, cfd(index).stimfile);
-stimfile = [cfd(index).stimpath cfd(index).stimfile];
-stim     = loadstimfrombaphy(stimfile, [], [], 'wav', options.rasterfs, 1, 0, options.includeprestim);
-
-fprintf('Loading response file: %s/%s\n', cfd(index).path, cfd(index).respfile);
-respfile = [cfd(index).path cfd(index).respfile];
-[resp, tags] = loadspikeraster(respfile, options);
-
-[d1 d2 d3] = size(stim);
-if d1 ~= 1
-    disp([d1 d2 d3]);
-    error('Stimulus matrix must initially have size 1xLxN, where L=length in samples, N=num of stimuli');
-end
-
-STIM = permute(stim, [3 2 1]);  % Remove the irrelevant first dimension
-RESP = permute(resp, [3 1 2]);  % Rearrange to match (TODO: Try squeeze() instead)
-RESP(isnan(RESP)) = 0;          % Replace all NaN's with 0's. TODO: is this the right behavior?
-rsp = sum(RESP,3); 
-[e1 e2 e3] = size(rsp);
-RESPAVG = reshape(rsp, [e1 e2]); % Averaged response across all trials TODO: Squeeze()
-TIME = (1/options.rasterfs).*[1:d2]';
-
-% TODO: Check that STIM, RESP, RESPAVG, TIME are all the proper sizes
-% PROBABLY this should be a function that you can call anytime to get
-% global values checked.
-
-% Update other parts of the GUI
-set(handles.training_sets_listbox, 'String', char(cfd.stimfile));   
-set(handles.cellid_text, 'String', char(cellids(1)));   
-
-% Update the popup for selecting a particular stimuli to graph
-c = {};
-for i = 1:e1;
-    c{i} = sprintf('%d',i);
-end
-set(handles.selected_stimuli_popup, 'String', char(c)); 
-set(handles.selected_stimuli_popup, 'Value', 1);
-
-update_raw_stim_plot(hObject, eventdata, handles);
-update_raw_resp_plot(hObject, eventdata, handles);
+% 
+% STIM = permute(stim, [3 2 1]);  % Remove the irrelevant first dimension
+% RESP = permute(resp, [3 1 2]);  % Rearrange to match (TODO: Try squeeze() instead)
+% RESP(isnan(RESP)) = 0;          % Replace all NaN's with 0's. TODO: is this the right behavior?
+% rsp = sum(RESP,3); 
+% [e1 e2 e3] = size(rsp);
+% RESPAVG = reshape(rsp, [e1 e2]); % Averaged response across all trials TODO: Squeeze()
+% TIME = (1/options.rasterfs).*[1:d2]';
+% 
+% % TODO: Check that STIM, RESP, RESPAVG, TIME are all the proper sizes
+% % PROBABLY this should be a function that you can call anytime to get
+% % global values checked.
+% 
+% % Update other parts of the GUI
+% set(handles.training_sets_listbox, 'String', char(cfd.stimfile));   
+% set(handles.cellid_text, 'String', char(cellids(1)));   
+% 
+% % Update the popup for selecting a particular stimuli to graph
+% c = {};
+% for i = 1:e1;
+%     c{i} = sprintf('%d',i);
+% end
+% set(handles.selected_stimuli_popup, 'String', char(c)); 
+% set(handles.selected_stimuli_popup, 'Value', 1);
+% 
+% update_raw_stim_plot(hObject, eventdata, handles);
+% update_raw_resp_plot(hObject, eventdata, handles);
 %------------------------------------------------------------------------
 
 function view_strf_button_Callback(hObject, eventdata, handles)
 % TODO: If a TOR file exists in data_selection_table, use it to view
 %strf_offline2();
+% TODO: If a TOR file does NOT exist, print a dialog box saying so
 
 function raw_stim_view_popup_CreateFcn(hObject, eventdata, handles)
 function raw_stim_view_popup_Callback(hObject, eventdata, handles)
@@ -649,7 +739,7 @@ tempdata{2,1} = false;
 tempdata{1,2} = 'Bandpass Lo Frq'; tempdata{1,3} = 9000;
 tempdata{2,2} = 'Bandpass Hi Frq'; tempdata{2,3} = 14000;
 
-set(handles.preproc_settings, 'Data', tempdata)
+set(handles.preproc_data_table, 'Data', tempdata)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
