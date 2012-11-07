@@ -1,34 +1,57 @@
-* Assumptions:
-** Filtering
-   I apply the filter at 100Khz
-   I convert things to 200Hz by summing groups of 500 samps and dividing by 500
-   
-  
+* Analysis on paper
+  Where should the line be drawn between analysis in the DB, partitionining things for your search within the DB, holding out data, etc?
+  How should the code accomodate extra dimensions of training in the future, such as behavioral ones? (Even though we don't think we need it now)
+  CellID Dimensions: RespFile(), Stimulus #, repetition #, Value at Time
+  Other dimensions: PreFilter #, Central filter #, 
 
-* LEFT OFF HERE:
-  - Write a dbchoosecellfiles()
+* modelstruct = narf(cellid, datasets_usage_struct, optimization_fn, optimization_fn_args, perf_metric, perf_metric_args, termcond, termcond_args)
+  modelstruct = {preproc fn, preproc fn params, model fn, model fn params, stochasticity fn, stochasticity fn)
+  Using curried functions is probably a good idea to reduce the total number of arguments to narf().
+
+
+* BACKLOG
+  - Make CellID an editable box at the top, with a 'refresh' button to query DB results
+  - Make DB results have a checkbox (test set or training set), which will be determined automagically if datasets_usage is empty.
+  - Put my globals under a single global struct
+  - Normalize the PSTH
+  - Load Bandpass information from the params struct  (Look at exptparams.TrialObject.ReferenceHandle object?)
+  - DB loading should have adjustable rasterizatino frequencies
+  - Downsampling should be a GUI-editable operation (We should be able to boxcar it, decimate it, or whatever)
+  - Present the rasterization of the response as dots
+  - Use NaN's better.
+  - Try the Sinc() function (via resample) during the downsampling step 
+  - Write dbchoosecellfiles()
   - Connect the STRF button to the appropriate file, if it exists
-  - Expand my code to work for MULTIPLE rawfile experiments
-  - Any loadable prefilter will have
+  - Expand global structures to accomodate multiple training sets
+  - Experiment with creating a GUI or doing a batch analysis from the command line
+  - Log status message area
+  - Log status messages added to most functions
+  - Restructure all the computation into a sequence of function calls to encourage scripting
+  - Modularize the Prefilter setup, which must have
     1. A default parameters object
     2. A function which filters a sound response
     3. A function which returns the 'stationary frequency response'
     4. A pack function
     5. An unpack function
-  - Restructure all the computation into a sequence of function calls from a single big ANALYZE FILES function.
-  - Automatic analysis can occur simply by having checkboxes on the left, or manually by leaving them unchecked
-  - Check to make sure that I am doing the prefiltering in the right way...the ferquencies might be half or double what I think I am doing!
-  - Write a 'automatic multiple band' filter, which presents downsampled results of gamma or elliptical notched filters spaced across the domains
-  - Make the prefilter LOADABLE from 
+ 
+* Modules
+  - Automatic covering bands filter, which presents downsampled results of gamma or elliptical notched filters spaced across the domains and completely covering the input space
   - Make a second prefilter (full-coverage gammatone bank)
   - Make a 3rd prefilter (full-coverage elliptic filter bank)
-  - Set the spectrogram as the default data view
-  - Present the rasterization of the response as dots, not as lines, to display MORE info
   - Increase the size of the GUI viewports  and clean up the labeling
 
-* Ask Stephen:
-  - [ ] Split keyboard?
+* Notes on Stephen's Brain + Code Dump
+  cellxcmaster('por012c-b1',238); % intelligently performs batch analysis 238 on cellid 'por012c-b1'
+  After the execution of the above, 'params' contains the details of how the analysis was performed.
+  params.resploadparms{1} is a way of getting
+  params.respfiles gives a list of the files being used during the analysis
+  dbget('sBatch', 238); % Returns details about which experiment is actually being performed
 
+* There are three very important functions to look at:
+  [cellfiledata, times, ...] = cellfiletimes()      % Note that times contains important info about the training set/test set split, such as the fitting method used?
+  xcloadfiles      % Performs analysis on multiple files, queries from the database
+  xcloadstimresp   % A cleaner, gentler version of the previous file that is probably what I should base my analysis off of. 
+  
 * Possible refactoring
   1. Data ordering is perhaps nonstandard, since we need filter(B,A,X,[],2) instead of filter(B,A,X);
   2. Should PREFILTEREDSTIM be a 3D matrix, or is it more convenient to use as a mixture of cell array and 2H matrices.? 
@@ -38,20 +61,13 @@
   3.  Rewrite of dbchooserawfile() because it's so damn useful for selecting a file, but let's make it work for multiple stimulus files
       (Should also display well, site and have selectors for channel, unit, etc
   4. Use squeeze() to remove unneeded dimensions from a matrix.
+
 * Small steps to take
-  - [ ] Check that types of data structures don't change ( cell and 2D matrices for FIRCOEFS)
-  - [ ] Add logging strings for everything
   - [ ] Try filtfilt to avoid affecting the phase of the response
-  - [ ] tic/toc microbenchmarks...this thing is getting slow
   - [ ] Connect the boosting algorithm to the FIR parameter matrix and correlation coefficient
-  - [ ] Write dbchoosecellfiles() and make it work for multiple selections.
-  - [ ] Consider putting everything under a single GLOBAL 
-  - [ ] Make code work for batch processing and without a GUI
+
 * TOP TODO
-  - [ ] TWO DATA SETS. Use the first as the training, and the second as the validation set. (You may also want to look at por010c)
-	 (92955) 	por010b04_p_SPN.m 	300 (5) 	sorted: 2-1 2-2 - parms - psth
-	 (92956) 	por010b05_p_SPN.m 	80 (20) 	sorted: 2-1 2-2 - parms - psth
-  - [ ] Look at exptparams.TrialObject.ReferenceHandle object and figure out how to do two bandpass filters that give stimulus band info
+
   - [ ] Pick out files that all have really high SNR ratios
 * CODE TO REVIEW LATER
   - [X] meska_pca()                              Used for doing the spike sorting, the front end. 
@@ -70,8 +86,7 @@
   - [ ] Negative effects of discretization on Inter-Spike Intervals histogram estimation (Use known data)
   - [ ] Infer the average rate of spiking from the data, then fit your model against that inferred lambd without doing EM all the time.
 * HIGH LEVEL TODO:
-   1) [ ] GUI that lets you quickly try different models in a clicky sort of way
-   2) [ ] Logging and recording multiple models and their performance
+   1) [ ] Logging and recording multiple models and their performance
    3) [ ] Plots the STRF of the best-fitting model?
    4) [ ] Analyze:  'dai020a-c2', 'mag009b-b1', 'dai008a-c1', 'mag007d-d1' 
    5) [ ] Rank model fits and plot correlations
@@ -79,9 +94,10 @@
 * ModelFit GUI Design Brainstorm
 * -----------------
 * Data Selection
-  TRAINING SET: por010b04_p_SPN.m    60 stimuli repeated 5 times each? 97% isolation on -b1
-  TEST SET:     por010b05_p_SPN.m    4 stimuli repeated 20 times each? 99% isolation on -b1
-  button: refresh from BAPHY? Or select cell ID?
+  CellID
+  Training set(s) 
+  Test set(s)
+  button to 
   textbox: cellID#
   dropbox: channel
   dropbox: trial class of associated data (and # of responses?)
@@ -110,3 +126,5 @@
   pane with checkboxes (editable or not) and editboxes: model params       (Hidden: will need on-the-fly generated functions which map structs to vectors and back)
 * Performance
 ** TODO: Add BIC or AIC to the model-comparison part of my figure
+* Ask stephen
+  [ ] Split Keyboard?

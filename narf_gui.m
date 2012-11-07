@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 06-Nov-2012 10:48:49
+% Last Modified by GUIDE v2.5 06-Nov-2012 16:39:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -97,6 +97,47 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DATA SELECTION WIDGETS
 
+function query_db_button_Callback(hObject, eventdata, handles)
+% TODO: Clear all global variables
+
+% Invalidate data_selection_table
+set(handles.data_selection_table, 'Data', {}); 
+
+% TODO: Invalidate all of the GUI
+% TODO: Report that we are querying the DB
+% Flush the event queue so it updates visually
+drawnow; 
+
+% TODO: Query the DB
+[cfd, cellids, cellfileids] = dbgetscellfile('cellid', 'por012c-b1');
+
+% If there is more than one cell file returned, throw an error.
+if ~isequal(length(cellids), 1)
+    error('BAPHY gave me multiple cell files yet I asked for only one.');
+end
+
+% TODO: Populate data_selection_table, setting the train? and test? flags.
+% By default, the most repetitive signal becomes the test set. Everything
+% else becomes the training set.
+num_rawfiles = length(cfd);
+m = cell(num_rawfiles, 3);
+
+
+
+
+
+
+
+% TODO: LEFT OFF HERE
+for idx = 1:num_rawfiles
+    if (idx == test_set_idx)
+        m = ;
+end
+
+% TODO: Report that we have finished querying the DB
+
+
+
 function update_raw_stim_plot(hObject, eventdata, handles)
 global TIME STIM SAMPFREQ;
 axes(handles.stim_view_axes); cla;
@@ -126,6 +167,13 @@ bar(TIME, RESPAVG(stim_idx,:), 0.01,'k');
 axis tight;
 
 
+function raster_freq_CreateFcn(hObject, eventdata, handles)
+function raster_freq_Callback(hObject, eventdata, handles)
+% TODO: Save the raster frequency to a global somewhere
+frq = str2double(get(hObject,'String'));
+
+
+
 function select_training_set_button_Callback(hObject, eventdata, handles)
 global STIM RESP TIME RESPAVG SAMPFREQ;
 
@@ -136,8 +184,6 @@ global STIM RESP TIME RESPAVG SAMPFREQ;
 %     STIM = [];
 %     RESP = [];
 %     set(handles.training_sets_listbox, 'String', 'none');
-%     guidata(hObject, handles);               % Write the change
-%     drawnow;                                 % Flush the event queue
 %     return
 % end
 
@@ -203,7 +249,7 @@ update_raw_resp_plot(hObject, eventdata, handles);
 %------------------------------------------------------------------------
 
 function view_strf_button_Callback(hObject, eventdata, handles)
-% TODO: If a 
+% TODO: If a TOR file exists in data_selection_table, use it to view
 %strf_offline2();
 
 function raw_stim_view_popup_CreateFcn(hObject, eventdata, handles)
@@ -606,3 +652,26 @@ tempdata{2,2} = 'Bandpass Hi Frq'; tempdata{2,3} = 14000;
 set(handles.preproc_settings, 'Data', tempdata)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% --- Executes on selection change in popupmenu17.
+function popupmenu17_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu17 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu17 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu17
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu17_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu17 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
