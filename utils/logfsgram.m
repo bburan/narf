@@ -77,7 +77,7 @@ mx = mx ./ repmat(sqrt(2*sum(mx.^2,2)), 1, nfftbins);
 y = sqrt( mx * (abs(XX).^2) );
 
 % so, we lost phase information...
-disp(logffrqs(1));
+%disp(logffrqs(1));
 
 if nargout < 1
   imagesc([0 length(X)/SR],[1 nbins],20*log10(y));

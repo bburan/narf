@@ -1,44 +1,45 @@
-* Analysis on paper
-  Where should the line be drawn between analysis in the DB, partitionining things for your search within the DB, holding out data, etc?
-  How should the code accomodate extra dimensions of training in the future, such as behavioral ones? (Even though we don't think we need it now)
-  CellID Dimensions: RespFile(), Stimulus #, repetition #, Value at Time
-  Other dimensions: PreFilter #, Central filter #, 
+* LEFT OFF THINKING ABOUT THIS
+  Today I mostly worked on the data selection pane, and how it is graphed in the raw stimulus/resp window. 
+  I think the next stage will be to try to pass the stimulus through the preprocessing filter. 
+  That's not so hard, but making it general could be tricky
+  So I think the first thing to try will be
+  1. Try Loading a struct from an mfile,
+  2. Try displaying the contents of a directory and selecting one of the mfiles
+  3. Try pushing the loaded struct into a data table 
+  4. Try pushing the data table into a struct
+  5. Try going back down to an mfile again
+  6. Do steps 1-5 with a user-definabel function
+  7. Then start doing load_model(preproc, downsamp, modelfn) to initialize the GUI, using the above
+  8. mod = load_model(preproc, model, stochasticity); % Load the model form
+  9. Load the model parameters (save under cellid+stimfile in a 'saved' dir)
+  10. 
 
-* modelstruct = narf(cellid, datasets_usage_struct, optimization_fn, optimization_fn_args, perf_metric, perf_metric_args, termcond, termcond_args)
-  modelstruct = {preproc fn, preproc fn params, model fn, model fn params, stochasticity fn, stochasticity fn)
-  Using curried functions is probably a good idea to reduce the total number of arguments to narf().
-
-
-* BACKLOG
-  - Make CellID an editable box at the top, with a 'refresh' button to query DB results
-  - Make DB results have a checkbox (test set or training set), which will be determined automagically if datasets_usage is empty.
-  - Put my globals under a single global struct
+* BACKLOG 
+  - Move Data selection to the right, and everything else down
+  - Renaem 'optimization plots' into 'STochasticity plots', and put histogram stuff and scatter stuff there
+  - Add a button to load a set of model params and initaialize the GUI accordingly
+  - Downsampling is also part of the model, since it is quite similar to the preprocessing transformation
+  - Ad a button to load Bandpass information from the params struct  (Look at exptparams.TrialObject.ReferenceHandle object?)
   - Normalize the PSTH
-  - Load Bandpass information from the params struct  (Look at exptparams.TrialObject.ReferenceHandle object?)
-  - DB loading should have adjustable rasterizatino frequencies
   - Downsampling should be a GUI-editable operation (We should be able to boxcar it, decimate it, or whatever)
-  - Present the rasterization of the response as dots
-  - Use NaN's better.
-  - Try the Sinc() function (via resample) during the downsampling step 
-  - Write dbchoosecellfiles()
-  - Connect the STRF button to the appropriate file, if it exists
-  - Expand global structures to accomodate multiple training sets
-  - Experiment with creating a GUI or doing a batch analysis from the command line
-  - Log status message area
-  - Log status messages added to most functions
-  - Restructure all the computation into a sequence of function calls to encourage scripting
+  - Handle NaN's better
+  - Use resample during the downsampling step. (which applies the Sinc() function)
   - Modularize the Prefilter setup, which must have
     1. A default parameters object
     2. A function which filters a sound response
     3. A function which returns the 'stationary frequency response'
     4. A pack function
     5. An unpack function
- 
+  - Experiment with creating a GUI or doing a batch analysis from the command line
+
 * Modules
   - Automatic covering bands filter, which presents downsampled results of gamma or elliptical notched filters spaced across the domains and completely covering the input space
   - Make a second prefilter (full-coverage gammatone bank)
   - Make a 3rd prefilter (full-coverage elliptic filter bank)
   - Increase the size of the GUI viewports  and clean up the labeling
+
+* Koans to reflect upon
+  1. Is it faster to prefilter with many different settings, then fit or correlate to each of them, rather than include it in the optimization loop?
 
 * Notes on Stephen's Brain + Code Dump
   cellxcmaster('por012c-b1',238); % intelligently performs batch analysis 238 on cellid 'por012c-b1'
@@ -46,12 +47,21 @@
   params.resploadparms{1} is a way of getting
   params.respfiles gives a list of the files being used during the analysis
   dbget('sBatch', 238); % Returns details about which experiment is actually being performed
-
+  
 * There are three very important functions to look at:
   [cellfiledata, times, ...] = cellfiletimes()      % Note that times contains important info about the training set/test set split, such as the fitting method used?
   xcloadfiles      % Performs analysis on multiple files, queries from the database
   xcloadstimresp   % A cleaner, gentler version of the previous file that is probably what I should base my analysis off of. 
-  
+ 
+* Analysis on paper
+  Where should the line be drawn between analysis in the DB, partitionining things for your search within the DB, holding out data, etc?
+  How should the code accomodate extra dimensions of training in the future, such as behavioral ones? (Even though we don't think we need it now)
+  CellID Dimensions: RespFile(), Stimulus #, repetition #, Value at Time
+  Other dimensions: PreFilter #, Central filter #, 
+
+* Issues for Stephen :
+  1. Where is 'repetitions' visible? The closest thing I see is the 'Ref_Subsets' field returned in the 'parms' struct by 'dbReadData'
+
 * Possible refactoring
   1. Data ordering is perhaps nonstandard, since we need filter(B,A,X,[],2) instead of filter(B,A,X);
   2. Should PREFILTEREDSTIM be a 3D matrix, or is it more convenient to use as a mixture of cell array and 2H matrices.? 
@@ -61,14 +71,10 @@
   3.  Rewrite of dbchooserawfile() because it's so damn useful for selecting a file, but let's make it work for multiple stimulus files
       (Should also display well, site and have selectors for channel, unit, etc
   4. Use squeeze() to remove unneeded dimensions from a matrix.
+  5. Try filtfilt to avoid affecting the phase of the response
+  6. Why is it 'stimpath' and 'stimfile' but 'path' and 'respfile'. it should be 'resppath'?
+  7. Why is loadspikeraster the only thing that cares about the 'options' struct?
 
-* Small steps to take
-  - [ ] Try filtfilt to avoid affecting the phase of the response
-  - [ ] Connect the boosting algorithm to the FIR parameter matrix and correlation coefficient
-
-* TOP TODO
-
-  - [ ] Pick out files that all have really high SNR ratios
 * CODE TO REVIEW LATER
   - [X] meska_pca()                              Used for doing the spike sorting, the front end. 
   - [ ] RemoteAnalysis/boost_online.m
@@ -78,6 +84,8 @@
   - [ ] Try messing with creating GUIs for structs using 'structdlg.m'
   - [ ] Consider the data for this: /auto/data/daq/Portabello/por010/por010c08_p_SPN
 * LUXURY TODO
+  - [ ] Write dbchoosecellfiles()
+  - [ ] Make DB loading have adjustable rasterization freqs
   - [ ] Use inter_curve_v3 to interactively make FIR things!
   - [ ] Make the stimulus data drive the windowing of the other visualizations
   - [ ] Try adding color to histograms and scatter plots

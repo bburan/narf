@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 07-Nov-2012 11:38:41
+% Last Modified by GUIDE v2.5 07-Nov-2012 16:29:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -74,14 +74,16 @@ hEdit = uicontrol(handles.uipanel6, 'Style','edit', 'FontSize',9, ...
     'Units','normalized', 'Position',[0 0 1 1], ...
     'String','GUI Initialized');
 
-global LOG_HANDLE LOG_LENGTH LOG_BUFFER LOG_LEVEL;
+global LOG_HANDLE LOG_LENGTH LOG_BUFFER LOG_LEVEL GS;
 LOG_LEVEL = 0;      % 0=debug, 1=informative, 2=normal, 3=warnings, 4=errors % TODO: Make top-level constant
 LOG_HANDLE = hEdit;
-LOG_LENGTH = 6;      % TODO: Make a top-level constant
+LOG_LENGTH = 6;      % 6 lines visible
 LOG_BUFFER = cell(1,LOG_LENGTH);
 for i = 1:LOG_LENGTH
     LOG_BUFFER{i} = '';
 end
+
+GS = []; % Create a new global "Gui State" object GS
 
 % Invalidate all data tables
 set(handles.data_selection_table, 'Data', {});
@@ -153,18 +155,15 @@ end
 function run_narf(cellid, dataset_sel_fn, opt_fn, perf_metric, term_cond)
 cfd = query_db(cellid);
 [train_set, test_set] = select_train_test_sets(cfd); 
-% Load the files
-% -> Display the raw data
-% Load the model and its parameters
+dat = load_stim_resps(cfd, train_set, test_set);
+% mod = load_model(preproc, model, stochasticity); % Load the model form
+% Load the model parameters (save under cellid+stimfile in a 'saved' dir)
+% Autodetect the bands of the SPN (when doing single-filter analysis)
 % Initialize the model
 % Prefilter the data
-% -> Display the filtered data
 % Downsample the filtered data
-% -> Display the downsampled data
 % Run the optimization on the downsampled data
-% -> Display optimization performance
-% -> Display parameters in GUI
-% Return the best fitting parameters
+% Return the best fitting parameters and/or save them
 
 % ------------------------------------------------------------------------
 function cfd = query_db(cellid)
@@ -175,12 +174,12 @@ log_dbg('query_db(''%s'');', cellid);
 
 % If there is not exactly one cell file returned, throw an error.
 if ~isequal(length(cellids), 1)
-    log_err('BAPHY gave me zero/multiple cellids yet I only need one.');
+    log_err('BAPHY gave me %d cellids yet I need one.', length(cellids));
 end
 
 % ------------------------------------------------------------------------
 function [training_set, test_set] = select_train_test_sets(cfd)
-log_dbg('Selecting training and test sets...');
+log_dbg('Selecting training and test sets');
 len = length(cfd);
 training_set = {};
 test_set = {};
@@ -198,22 +197,108 @@ for i = 1:len;
     end
 end
 
-% Train on everything else by default
+% Train on every other passive trial by default
 for i = 1:len;
-    if ~isequal(cfd(i).stimfile, test_set{1})
+    if (~isequal(cfd(i).stimfile, test_set{1}) & ...
+         isequal(cfd(i).behavior, 'passive'))
         training_set{end+1} = cfd(i).stimfile;
     end
 end
 
 % TODO: Consider saving the parm/perf info to a global for later use?
 % TODO: Consider moving parm/perf outside this fn?
-
 log_dbg('Training sets selected: %s', ...
     strtrim(sprintf('%s ', training_set{:})));
 log_dbg('Test set selected: %s', char(test_set{:}));
 
 % ------------------------------------------------------------------------
+function dat = load_stim_resps(cfd, training_set, test_set)
+% Return a 'dat' struct with 100Khz rasterized stims and responses. 'dat'
+% struct has field names that are the stimfiles found in training_set and
+% test_set, and so may be accessed using 'dat.mystimfilename.raw_stim', for
+% example. The following fields will eventually be defined for the
+% sub-structures held under each stimfile key:
+%
+%    raw_stim    The 100Khz rasterized stimulus signal    [SxN]
+%    raw_resp    The 100Khz rasterized response signal    [SxNxR]
+%    raw_respavg The 100Khz average response signal       [SxN]
+%    raw_time    The 100Khz rasterized time index         [1xN]
+%    pp_stim     The preprocessed stimulus                [SxNxF]
+%    pp_resp     The preprocessed response                [SxNxRxF] 
+%    pp_respavg  The preprocessed average response        [SxNxF]
+%    ds_stim     The downsampled, preprocessed stimulus   [SxTxF]
+%    ds_resp     The downsampled, preprocessed response   [SxTxRxF]
+%    ds_time     The downsampled time index               [1xT]
+%    ds_psth     The downsampled, averaged response       [SxTxF]
+%
+% In the above, dimensions are indicated with
+%      S = sound stimulus index #
+%      R = repetition index #
+%      N = Time index at 100KHz sampling
+%      T = Time index in downsampled frequency
+%      F = Preprocessing filter index #
 
+log_dbg('load_stim_resps() was called');
+
+rasterfreq = 100000;   % TODO: Make user editable
+includeprestim = 1;    % TODO: Make user editable
+
+% Merge the training and test set names, which may overlap
+files_to_load = unique({training_set{:}, test_set{:}});
+
+% Create the 'dat' cell array and its entries
+len = length(files_to_load);
+dat = cell(1, len);
+for i = 1:len;
+    f = files_to_load{i};
+    
+    % Find the right index of cfd corresponding to the file, call it idx
+    idx = 0;
+    for j = 1:length(cfd)
+        if isequal(cfd(j).stimfile, f)
+            idx = j;
+        end
+    end
+    if idx == 0 log_err('Not found in cfd: %s', f); end
+    
+    % Load the raw_stim part of the data structure
+    stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
+    log_msg('Loading stimulus: %s', stimfile);
+    stim = loadstimfrombaphy(stimfile, [], [], 'wav', rasterfreq, 1, 0,...
+                             includeprestim);
+    [d1 d2 d3] = size(stim);
+    if d1 ~= 1
+         log_dbg('Stimulus matrix was: [%d %d %d]', d1, d2, d3);
+         log_err('Stimulus size was not [1xNxS]!?');
+    end
+    dat.(f).raw_stim = permute(stim, [3 2 1]); 
+    
+    % Create the raw_time index
+    dat.(f).raw_time = (1/rasterfreq).*[1:d2]';
+    
+    % Load the raw_resp part of the data structure
+    respfile = [cfd(idx).path, cfd(idx).respfile];
+    log_msg('Loading response: %s', respfile);
+    options = [];
+    options.includeprestim = includeprestim;
+    options.unit = cfd(idx).unit;
+    options.channel  = cfd(idx).channum;
+    options.rasterfs = rasterfreq; 
+    [resp, tags] = loadspikeraster(respfile, options);   
+    dat.(f).raw_resp = permute(resp, [3 1 2]);    
+    dat.(f).raw_respavg = squeeze(sum(dat.(f).raw_resp, 3));
+    
+    % Check raw_stim, raw_resp, and raw_time signal sizes match.
+    [s1 s2]    = size(dat.(f).raw_stim);
+    [r1 r2 r3] = size(dat.(f).raw_resp);
+    [a1 a2]    = size(dat.(f).raw_respavg);
+    if ~(isequal(s1, r1, a1) & isequal(s2, r2, a2))
+        log_dbg('Stim [%d %d], Resp: [%d %d %d] Respavg=[%d %d]',...
+                s1,s2,r1,r2,r3, a1,a2);
+        log_err('Stimulus, Response, and Average matrices size mismatch.');
+    end
+end
+log_dbg('Done loading stimulus and response files.');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DATA SELECTION GUI
@@ -222,17 +307,27 @@ function query_db_button_Callback(hObject, eventdata, handles)
 log_dbg('query_db_button pressed.');
 
 % Clear the global variable storing state for the GUI (GS = 'Gui State')
-global GS; GS = {};
+global GS; 
+GS = [];
 
 % Invalidate data_selection_table, and other parts of the GUI
 set(handles.data_selection_table, 'Data', {}); drawnow;
+axes(handles.stim_view_axes); cla;
+axes(handles.resp_view_axes); cla;
+axes(handles.preproc_view_axes); cla;
+axes(handles.model_view_axes); cla;
+axes(handles.optplot1); cla;
+axes(handles.optplot2); cla;
+axes(handles.optplot3); cla;
+set(handles.selected_stimfile_popup, 'String', '');   
+set(handles.selected_stim_idx_popup, 'String', '');  
 
 % Query the DB and select the train/test sets
 GS.cellid = get(handles.cellid_text, 'String');
 GS.cfd = query_db(GS.cellid);
 [GS.training_set, GS.test_set] = select_train_test_sets(GS.cfd);
 
-% Convert the above into a GUI viewable cell array
+% Convert the above into a GUI viewable cell array, then update GUI
 c = cell(length(GS.cfd), 3);
 for i = 1:length(GS.cfd);
     c{i,1} = GS.cfd(i).stimfile; 
@@ -241,123 +336,196 @@ for i = 1:length(GS.cfd);
 end
 set(handles.data_selection_table, 'Data', c); drawnow;
 
-% TODO: Request that the files be loaded
-% TODO: Load the first of the training sets
-% TODO: Display the stimuli data.
+% ------------------------------------------------------------------------
+function data_selection_table_CellEditCallback(hObject, eventdata, handles)
+global GS;
+log_dbg('data_selection_table was modified, updating GB.*_set.');
 
+% Refresh GB.training_set and GB.test_set from the GUI 
+d = get(hObject, 'Data');
+[r, c] = size(d);
+training_set = {};
+test_set = {};
+j = 1;
+k = 1;
+for i = 1:r
+    if d{i,2},
+        training_set{j} = d{i,1};
+        j = j+1;
+    elseif d{i,3}
+        test_set{k} = d{i,1};
+        k = k+1;
+    end
+end
+
+GS.training_set = training_set;
+GS.test_set = test_set;
 
 % ------------------------------------------------------------------------
-function update_raw_stim_plot(hObject, eventdata, handles)
-global TIME STIM SAMPFREQ;
-axes(handles.stim_view_axes); cla;
-nsel = cellstr(get(handles.raw_stim_view_popup, 'String'));
-plottype = nsel{get(handles.raw_stim_view_popup, 'Value')};
-nvals = cellstr(get(handles.selected_stimuli_popup, 'String'));
-stim_idx = str2num(nvals{get(handles.selected_stimuli_popup, 'Value')});
+function load_above_files_button_Callback(hObject, eventdata, handles)
+global GS;
+set(handles.selected_stimfile_popup, 'String', '');  
+set(handles.selected_stim_idx_popup, 'String', '');
+drawnow;
+GS.dat = load_stim_resps(GS.cfd, GS.training_set, GS.test_set);
+update_selected_stimfile_popup(handles);
+update_selected_stim_idx_popup(handles);
+% Refresh the plots
+nvals = cellstr(get(handles.raw_stim_view_popup, 'String'));
+GS.raw_stim_plot_type = nvals{get(handles.raw_stim_view_popup, 'Value')};
+nvals = cellstr(get(handles.raw_resp_view_popup, 'String'));
+GS.raw_resp_plot_type = nvals{get(handles.raw_resp_view_popup, 'Value')};
+update_raw_stim_plot(handles);
+update_raw_resp_plot(handles);
+
+% ------------------------------------------------------------------------
+function update_selected_stimfile_popup(handles)
+global GS;
+fns = fieldnames(GS.dat);
+set(handles.selected_stimfile_popup, 'String', char(fns));   
+GS.selected_stimfile = fns{1};
+
+% ------------------------------------------------------------------------
+function update_selected_stim_idx_popup(handles)
+global GS;
+stimfile = GS.selected_stimfile;
+c = {}; 
+if isfield(GS.dat, stimfile)
+    [d1, d2] = size(GS.dat.(stimfile).raw_stim);
+    for i = 1:d1
+        c{i} = sprintf('%d',i); 
+    end
+    set(handles.selected_stim_idx_popup, 'String', char(c)); 
+    set(handles.selected_stim_idx_popup, 'Value', 1);
+else
+    log_err('Selected stimulus file not found: %s', stimfile);
+end
+
+% ------------------------------------------------------------------------
+function update_raw_stim_plot(handles)
+log_dbg('Updating raw_stim_plot');
+global GS;
+ 
+% Only update if all fields are defined
+if ~(isfield(GS, 'raw_stim_plot_type') & ...
+     isfield(GS, 'selected_stim_idx') & ...
+     isfield(GS, 'selected_stimfile'))
+     log_dbg('Ignoring raw stim plot update since not all fields ready.');
+   return  
+end
+
+plottype = GS.raw_stim_plot_type;
+stim_idx = GS.selected_stim_idx;
+stimfile = GS.selected_stimfile;
+obj = GS.dat.(stimfile);
+   
+axes(handles.stim_view_axes);cla;
 switch plottype
     case 'Time Series View'
-        plot(TIME, STIM(stim_idx,:), 'k-');
+        plot(obj.raw_time, obj.raw_stim(stim_idx,:), 'k-');
         axis tight;
     case 'Spectrogram View'
         % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
         nwin = 4048;
-        logfsgram(STIM(stim_idx,:)', nwin, SAMPFREQ, [], [], 500, 12);
-        %caxis([-20,40]); % TODO: use a 'smarter' caxis here which discards
+        logfsgram(obj.raw_stim(stim_idx,:)', nwin, 100000, [], [], 500, 12); % TODO: Remove 100000 here and use global
+        %caxis([-20,40]);
+        % TODO: use a 'smarter' caxis here which discards
         % information based on a histogram to get rid of outliers.
 end
 
+% ------------------------------------------------------------------------
+function update_raw_resp_plot(handles)
+log_dbg('Updating raw_resp_plot');
+global GS;
+ 
+% Only update if all fields are defined
+if ~(isfield(GS, 'raw_resp_plot_type') & ...
+     isfield(GS, 'selected_stim_idx') & ...
+     isfield(GS, 'selected_stimfile'))
+    log_dbg('Ignoring raw resp plot update since not all fields ready.');
+    return;
+end
 
-function update_raw_resp_plot(hObject, eventdata, handles)
-global TIME RESPAVG;
-nvals = cellstr(get(handles.selected_stimuli_popup, 'String'));
-stim_idx = str2num(nvals{get(handles.selected_stimuli_popup, 'Value')});
-axes(handles.resp_view_axes); cla;
-bar(TIME, RESPAVG(stim_idx,:), 0.01,'k');
-axis tight;
+plottype = GS.raw_resp_plot_type;
+stim_idx = GS.selected_stim_idx;
+stimfile = GS.selected_stimfile;
+obj = GS.dat.(stimfile);
+[S, N, R] = size(obj.raw_resp);
 
+axes(handles.resp_view_axes); cla; hold on;
+switch plottype
+    case 'Time Series View'
+        [xs,ys] = find(obj.raw_respavg(stim_idx, :) > 0);
+        bar(obj.raw_time(ys), obj.raw_respavg(stim_idx,ys), 0.01, 'k');
+        axis([0 obj.raw_time(end) 0 2])
+    case 'Dot Rasterization'
+        for j = 1:R
+            [xs,ys] = find(obj.raw_resp(stim_idx, :, j) > 0);
+            plot(obj.raw_time(ys), j/R*obj.raw_resp(stim_idx,ys,j), 'k.');
+        end
+        axis([0 obj.raw_time(end) 1/(2*R) 1+(1/(2*R))])
+end
+hold off;
 
-function raster_freq_CreateFcn(hObject, eventdata, handles)
-function raster_freq_Callback(hObject, eventdata, handles)
-% TODO: Save the raster frequency to a global somewhere
-%frq = str2double(get(hObject,'String'));
-
-% 
-% function select_training_set_button_Callback(hObject, eventdata, handles)
-% global STIM RESP TIME RESPAVG SAMPFREQ;
-% 
-% index=1;
-% options.includeprestim = 1;
-% options.unit     = cfd(index).unit;
-% options.channel  = cfd(index).channum;
-% options.rasterfs = 100000; 
-% SAMPFREQ = options.rasterfs; 
-% 
-% % TODO: make this load multiple stimulus and response files for a single
-% % cellid
-% 
-% fprintf('Loading stimulus file: %s%s\n', cfd(index).stimpath, cfd(index).stimfile);
-% stimfile = [cfd(index).stimpath cfd(index).stimfile];
-% stim     = loadstimfrombaphy(stimfile, [], [], 'wav', options.rasterfs, 1, 0, options.includeprestim);
-% 
-% fprintf('Loading response file: %s/%s\n', cfd(index).path, cfd(index).respfile);
-% respfile = [cfd(index).path cfd(index).respfile];
-% [resp, tags] = loadspikeraster(respfile, options);
-% 
-% [d1 d2 d3] = size(stim);
-% if d1 ~= 1
-%     disp([d1 d2 d3]);
-%     error('Stimulus matrix must initially have size 1xLxN, where L=length in samples, N=num of stimuli');
-% end
-% 
-% STIM = permute(stim, [3 2 1]);  % Remove the irrelevant first dimension
-% RESP = permute(resp, [3 1 2]);  % Rearrange to match (TODO: Try squeeze() instead)
-% RESP(isnan(RESP)) = 0;          % Replace all NaN's with 0's. TODO: is this the right behavior?
-% rsp = sum(RESP,3); 
-% [e1 e2 e3] = size(rsp);
-% RESPAVG = reshape(rsp, [e1 e2]); % Averaged response across all trials TODO: Squeeze()
-% TIME = (1/options.rasterfs).*[1:d2]';
-% 
-% % TODO: Check that STIM, RESP, RESPAVG, TIME are all the proper sizes
-% % PROBABLY this should be a function that you can call anytime to get
-% % global values checked.
-% 
-% % Update other parts of the GUI
-% set(handles.training_sets_listbox, 'String', char(cfd.stimfile));   
-% set(handles.cellid_text, 'String', char(cellids(1)));   
-% 
-% % Update the popup for selecting a particular stimuli to graph
-% c = {};
-% for i = 1:e1;
-%     c{i} = sprintf('%d',i);
-% end
-% set(handles.selected_stimuli_popup, 'String', char(c)); 
-% set(handles.selected_stimuli_popup, 'Value', 1);
-% 
-% update_raw_stim_plot(hObject, eventdata, handles);
-% update_raw_resp_plot(hObject, eventdata, handles);
 %------------------------------------------------------------------------
+function selected_stimfile_popup_CreateFcn(hObject, eventdata, handles)
+function selected_stimfile_popup_Callback(hObject, eventdata, handles)
+global GS;
+nvals = cellstr(get(handles.selected_stimfile_popup, 'String'));
+stimfile = nvals{get(handles.selected_stimfile_popup, 'Value')};
+GS.selected_stimfile = stimfile;
+update_selected_stim_idx_popup(handles);
+update_raw_stim_plot(handles);
+update_raw_resp_plot(handles);
+% TODO: update_preproc_view_plot(handles);
+% TODO: update_model_view_plot(handles);
 
-function view_strf_button_Callback(hObject, eventdata, handles)
-% TODO: If a TOR file exists in data_selection_table, use it to view
-%strf_offline2();
-% TODO: If a TOR file does NOT exist, print a dialog box saying so
+%------------------------------------------------------------------------
+function selected_stim_idx_popup_CreateFcn(hObject, eventdata, handles)
+function selected_stim_idx_popup_Callback(hObject, eventdata, handles)
+global GS;
+nvals = cellstr(get(handles.selected_stim_idx_popup, 'String'));
+stim_idx = str2num(nvals{get(handles.selected_stim_idx_popup, 'Value')});
+GS.selected_stim_idx = stim_idx;
+update_raw_stim_plot(handles);
+update_raw_resp_plot(handles);
+% TODO: update_preproc_view_plot(handles);
+% TODO: update_model_view_plot(handles);
 
+%------------------------------------------------------------------------
 function raw_stim_view_popup_CreateFcn(hObject, eventdata, handles)
 function raw_stim_view_popup_Callback(hObject, eventdata, handles)
-update_raw_stim_plot(hObject, eventdata, handles);
+global GS;
+nvals = cellstr(get(handles.raw_stim_view_popup, 'String'));
+plottype = nvals{get(handles.raw_stim_view_popup, 'Value')};
+GS.raw_stim_plot_type = plottype;
+update_raw_stim_plot(handles);
+% TODO: raw_stim_view_popup_Callback([],[],handles);
+% raw_stim_view_popup_Callback([],[],handles);
 
+%------------------------------------------------------------------------
 function raw_resp_view_popup_CreateFcn(hObject, eventdata, handles)
 function raw_resp_view_popup_Callback(hObject, eventdata, handles)
-update_raw_resp_plot(hObject, eventdata, handles);
+global GS;
+nvals = cellstr(get(handles.raw_resp_view_popup, 'String'));
+plottype = nvals{get(handles.raw_resp_view_popup, 'Value')};
+GS.raw_resp_plot_type = plottype;
+update_raw_resp_plot(handles);
 
-function training_sets_listbox_CreateFcn(hObject, eventdata, handles)
-function training_sets_listbox_Callback(hObject, eventdata, handles)
-% TODO: change the graphs of everything!
-
-function selected_stimuli_popup_CreateFcn(hObject, eventdata, handles)
-function selected_stimuli_popup_Callback(hObject, eventdata, handles)
-update_raw_stim_plot(hObject, eventdata, handles);
-update_raw_resp_plot(hObject, eventdata, handles);
+%------------------------------------------------------------------------
+function view_strf_button_Callback(hObject, eventdata, handles)
+log_dbg('view_strf_button pressed');
+global GS;
+for i = 1:length(GS.cfd);
+    % TODO: Replace magic number  1 with better description of TOR files
+    if (GS.cfd(i).runclassid == 1) 
+        log_dbg('Making STRF for ''%s''', GS.cfd(i).stimfile);
+        figure; 
+        strf_offline2([GS.cfd(i).stimpath GS.cfd(i).stimfile], ...
+            [GS.cfd(i).path GS.cfd(i).respfile], ...
+            GS.cfd(i).channum, GS.cfd(i).unit);
+    end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PREPROCESSING WIDGETS
@@ -368,8 +536,8 @@ global TIME STIM PF_COEFS RESPAVG PF_STIM SAMPFREQ;
 nvals = cellstr(get(handles.preprocessing_view_popup, 'String'));
 plottype = nvals{get(handles.preprocessing_view_popup, 'Value')};
 
-nvals = cellstr(get(handles.selected_stimuli_popup, 'String'));
-stim_idx = str2num(nvals{get(handles.selected_stimuli_popup, 'Value')});
+nvals = cellstr(get(handles.selected_stim_idx_popup, 'String'));
+stim_idx = str2num(nvals{get(handles.selected_stim_idx_popup, 'Value')});
 
 n_filts = length(PF_COEFS);
 
@@ -522,8 +690,8 @@ global FIRCOEFS DS_TIME DS_STIM DS_RESPAVG DS_PREDS DS_PRED FIRBINSIZE;
 nvals = cellstr(get(handles.model_view_popup, 'String'));
 plottype = nvals{get(handles.model_view_popup, 'Value')};
 
-nvals = cellstr(get(handles.selected_stimuli_popup, 'String'));
-stim_idx = str2num(nvals{get(handles.selected_stimuli_popup, 'Value')});
+nvals = cellstr(get(handles.selected_stim_idx_popup, 'String'));
+stim_idx = str2num(nvals{get(handles.selected_stim_idx_popup, 'Value')});
 
 [n_filts, n_coefs] = size(FIRCOEFS);
 
@@ -659,8 +827,8 @@ set(handle, 'String', char(menuopts));
 function setoptplot(handles, plothandle, plottype)
 global DS_RESPAVG DS_PRED;
 
-nvals = cellstr(get(handles.selected_stimuli_popup, 'String'));
-stim_idx = str2num(nvals{get(handles.selected_stimuli_popup, 'Value')});
+nvals = cellstr(get(handles.selected_stim_idx_popup, 'String'));
+stim_idx = str2num(nvals{get(handles.selected_stim_idx_popup, 'Value')});
 
 axes(plothandle); cla;
 hold on;
@@ -725,43 +893,5 @@ nvals = cellstr(get(handles.optplot4popup, 'String'));
 plottype = nvals{get(handles.optplot4popup, 'Value')};
 setoptplot(handles, handles.optplot4, plottype);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% REPORTING WIDGETS
-
-% Nothing so far!
-function select_test_set_button_Callback(hObject, eventdata, handles)
-
-function dump_data_button_Callback(hObject, eventdata, handles)
-
-tempdata = cell(4,3);
-tempdata{1,1} = true;
-tempdata{2,1} = false;
-tempdata{1,2} = 'Bandpass Lo Frq'; tempdata{1,3} = 9000;
-tempdata{2,2} = 'Bandpass Hi Frq'; tempdata{2,3} = 14000;
-
-set(handles.preproc_data_table, 'Data', tempdata)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-% --- Executes on selection change in popupmenu17.
-function popupmenu17_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu17 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu17 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu17
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu17_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu17 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
