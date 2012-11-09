@@ -1,8 +1,41 @@
+* Objects are a poor man's closures!
+  
+
+
+* Design of modular model components
+  1. At startup, directory is read, and preproc_filter_popup is initialized
+     - [ ] How is that converted into prettier strings? (By calling the filter with no arguments, the default arguments are returned)
+     - [ ] What happens if one filter has an error during eval? (It will be logged and dropped)
+  2. The preproc_data_table needs to be initialized with parameters.
+     - [ ] Where does the params come from? (By calling the filter with no arguments)
+     - [ ] Where is the data stored in the global GS? (GS.preproc_params, GS.downsampling_params, GS.model_params, GS.stochastic_params)
+  3. Some clicks are made on the preproc window
+     - [ ] the GS.preproc_params struct and preproc_params_mask is updated each time
+  4. Somebody clicks save
+     - [ ] Where is it saved? (Now: to a saved file via file dialog box. Later: To Baphy)
+     - [ ] What is the filename? (User-determined)
+  5. Somebody clicks load
+     - [ ] Which file is loaded (Now: from a saved file via dialog box. Later: from Baphy)
+  6. Eventually, somebody clicks the "preprocess" button  (OR A SCRIPT STARTS)
+     - [ ] A closed-over function is created, which all an automatic script would care about anyway.
+     - [ ] Data is verified
+     - [ ] raw_data is filtered 
+     - [ ] The plots are updated (If it's the first time being called, not all GS globals will be ready.)
+     - [ ] 
+  7. At a later point, somebody clicks "optimize"
+     - [ ] Using the GS.preproc_params_mask and GS.preproc_params, a vector is made and handed to the optimization thing. 
+     - [ ] During optimization, from the vector, GS.preproc_params_mask and GS.preproc_params, a 'preproc_params' structure is built
+     - [ ] As usual, this is turned into a closed-over function
+     - [ ] The filtering occurs, then other model steps.
+     - [ ] Performance is measured, and you go back to the beginning of this step a bunch of times. 
+     - [ ] At the end of the optimization, the preproc filter window is updated to reflect the new data. 
+* Complexities:
+  We may need to do an iteration procedure that treats one part of the model (IE, Linear FIR filters) differently from a nonlinear part (ie, 
+  When a function is called with no arguments, it returns a user-visible string and a default parameters struct.
+  Inner functions must return their parameters struct when given no arguments. 
+  If you modify a function after starting up narf_gui, what will happen? (Right now, changes to the pretty-name and params will not be altered without restarting narf_gui, however if you fix the function itself then that is fine.)
+
 * LEFT OFF THINKING ABOUT THIS
-  Today I mostly worked on the data selection pane, and how it is graphed in the raw stimulus/resp window. 
-  I think the next stage will be to try to pass the stimulus through the preprocessing filter. 
-  That's not so hard, but making it general could be tricky
-  So I think the first thing to try will be
   1. Try Loading a struct from an mfile,
   2. Try displaying the contents of a directory and selecting one of the mfiles
   3. Try pushing the loaded struct into a data table 
@@ -12,25 +45,22 @@
   7. Then start doing load_model(preproc, downsamp, modelfn) to initialize the GUI, using the above
   8. mod = load_model(preproc, model, stochasticity); % Load the model form
   9. Load the model parameters (save under cellid+stimfile in a 'saved' dir)
-  10. 
 
-* BACKLOG 
-  - Move Data selection to the right, and everything else down
-  - Renaem 'optimization plots' into 'STochasticity plots', and put histogram stuff and scatter stuff there
-  - Add a button to load a set of model params and initaialize the GUI accordingly
-  - Downsampling is also part of the model, since it is quite similar to the preprocessing transformation
+* BACKLOG
+  - Add a 'save' and 'load' button to every part of the model.
+  - Add a button to load a set of model params and initialize the GUI accordingly
   - Ad a button to load Bandpass information from the params struct  (Look at exptparams.TrialObject.ReferenceHandle object?)
   - Normalize the PSTH
-  - Downsampling should be a GUI-editable operation (We should be able to boxcar it, decimate it, or whatever)
   - Handle NaN's better
   - Use resample during the downsampling step. (which applies the Sinc() function)
   - Modularize the Prefilter setup, which must have
     1. A default parameters object
     2. A function which filters a sound response
-    3. A function which returns the 'stationary frequency response'
-    4. A pack function
+    3. A function which returns or plots the 'stationary frequency response'
+    4. A pack function, which accepts 
     5. An unpack function
   - Experiment with creating a GUI or doing a batch analysis from the command line
+  - Make the filtered raw data viewable as heat map(s)?
 
 * Modules
   - Automatic covering bands filter, which presents downsampled results of gamma or elliptical notched filters spaced across the domains and completely covering the input space
@@ -84,55 +114,24 @@
   - [ ] Try messing with creating GUIs for structs using 'structdlg.m'
   - [ ] Consider the data for this: /auto/data/daq/Portabello/por010/por010c08_p_SPN
 * LUXURY TODO
+  - [ ] Write a function which MAKES A BACKGROUND COPY of the GS data so that you can 'hold' a model as a reference and play around with other settings, and see the results graphically.
   - [ ] Write dbchoosecellfiles()
+  - [ ] Phase align in gammatone filter bank
+  - [ ] make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
   - [ ] Make DB loading have adjustable rasterization freqs
   - [ ] Use inter_curve_v3 to interactively make FIR things!
   - [ ] Make the stimulus data drive the windowing of the other visualizations
   - [ ] Try adding color to histograms and scatter plots
   - [ ] try improving contrast of various intensity plots
+  - [ ] Add BIC or AIC to model comparison data
+  - [ ] Optimization report card and status information logged
 * Possible problems or hacks to study
   - [ ] Negative effects of discretization on Inter-Spike Intervals histogram estimation (Use known data)
   - [ ] Infer the average rate of spiking from the data, then fit your model against that inferred lambd without doing EM all the time.
 * HIGH LEVEL TODO:
    1) [ ] Logging and recording multiple models and their performance
-   3) [ ] Plots the STRF of the best-fitting model?
+   2) [ ] Plots the STRF of the best-fitting model?
    4) [ ] Analyze:  'dai020a-c2', 'mag009b-b1', 'dai008a-c1', 'mag007d-d1' 
    5) [ ] Rank model fits and plot correlations
    6) [ ] Replicate Stephen's results with exitation/inhibition
 * ModelFit GUI Design Brainstorm
-* -----------------
-* Data Selection
-  CellID
-  Training set(s) 
-  Test set(s)
-  button to 
-  textbox: cellID#
-  dropbox: channel
-  dropbox: trial class of associated data (and # of responses?)
-  textbox: report of relevant data about the data?
-  textbox: stimulus frequency
-  textbox: response bin size (set to 0 for continuous timings?)
-  graph: Rendering of the sound
-  dropbox: toggle between rendering of the sound with spectrogram or time
-* Preprocessing
-   dropbox: filter class
-   graph: filter output
-   dropbox: graph view in time, graph white noise filtered by this, or as a heat map?
-   button: refresh graph
-*** Envelope
-    textbox: raster frequency
-*** Single Gammatone
-    textbox: center freq
-    textbox: bandwidth
-*** Gammatone filter bank
-    textbox: min freq
-    textbox: max freq
-    textbox: num filters (or maybe, vector of filter center freqs, so I could pick just the few that are important?)
-    checkbox: align phase
-* Model Class
-  dropbox: model
-  pane with checkboxes (editable or not) and editboxes: model params       (Hidden: will need on-the-fly generated functions which map structs to vectors and back)
-* Performance
-** TODO: Add BIC or AIC to the model-comparison part of my figure
-* Ask stephen
-  [ ] Split Keyboard?

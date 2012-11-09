@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 07-Nov-2012 16:29:28
+% Last Modified by GUIDE v2.5 09-Nov-2012 13:57:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -63,18 +63,13 @@ guidata(hObject, handles);
 % UIWAIT makes narf_gui wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
-% Add necessary directories to NARF's path
-NARFHOME = '/home/ivar/matlab/narf'
-addpath([NARFHOME filesep 'utils'], ...
-        [NARFHOME filesep 'samplers']);
-
 % Create a scrollable edit box in the status panel
 hEdit = uicontrol(handles.uipanel6, 'Style','edit', 'FontSize',9, ...
     'Min',0, 'Max',2, 'HorizontalAlignment','left', ...
     'Units','normalized', 'Position',[0 0 1 1], ...
     'String','GUI Initialized');
 
-global LOG_HANDLE LOG_LENGTH LOG_BUFFER LOG_LEVEL GS;
+global LOG_HANDLE LOG_LENGTH LOG_BUFFER LOG_LEVEL GS NARF_PATH;
 LOG_LEVEL = 0;      % 0=debug, 1=informative, 2=normal, 3=warnings, 4=errors % TODO: Make top-level constant
 LOG_HANDLE = hEdit;
 LOG_LENGTH = 6;      % 6 lines visible
@@ -84,6 +79,24 @@ for i = 1:LOG_LENGTH
 end
 
 GS = []; % Create a new global "Gui State" object GS
+
+% PATHS
+NARF_PATH = '/home/ivar/matlab/narf/';
+PREPROCESSING_DIR = 'stage_0_preprocessing/';
+DOWNSAMPLING_DIR  = 'stage_1_downsampling/';
+MODEL_DIR         = 'stage_2_model/';
+STOCHASTICITY_DIR = 'stage_3_stochasticity/';
+SAMPLING_DIR      = 'optim_0_sampling';
+PERF_METRIC_DIR   = 'optim_1_perf_metric/';
+TERMINATION_DIR   = 'optim_2_termination/';
+
+% Add necessary directories to NARF's path
+addpath([NARF_PATH filesep 'utils'], ...
+        [NARF_PATH filesep 'samplers'], ...
+        [NARF_PATH filesep PREPROCESSING_DIR], ...
+        [NARF_PATH filesep DOWNSAMPLING_DIR], ...
+        [NARF_PATH filesep MODEL_DIR], ...
+        [NARF_PATH filesep STOCHASTICITY_DIR]);
 
 % Invalidate all data tables
 set(handles.data_selection_table, 'Data', {});
@@ -156,10 +169,13 @@ function run_narf(cellid, dataset_sel_fn, opt_fn, perf_metric, term_cond)
 cfd = query_db(cellid);
 [train_set, test_set] = select_train_test_sets(cfd); 
 dat = load_stim_resps(cfd, train_set, test_set);
+% Load the preprocessing model
+% Load the preprocessing model params
+%    OR Autodetect the bands of the SPN (when doing single-filter analysis)
 % mod = load_model(preproc, model, stochasticity); % Load the model form
-% Load the model parameters (save under cellid+stimfile in a 'saved' dir)
-% Autodetect the bands of the SPN (when doing single-filter analysis)
-% Initialize the model
+% Initialize the model OR
+%    OR load the model parameters (save under cellid+stimfile in a 'saved' dir)
+
 % Prefilter the data
 % Downsample the filtered data
 % Run the optimization on the downsampled data
@@ -188,6 +204,8 @@ parms = cell(1, len);
 perfs = cell(1, len);
 
 % Load parms, perfs. Select set with the most repetitions as test set.
+% TODO: Right now this is not really choosing the most repetitions, just
+% the number of Ref_Subsets, which just works by coincidence?
 for i = 1:len;
     [parms{i}, perfs{i}] = dbReadData(cfd(i).rawid);
     if (isfield(parms{i}, 'Ref_Subsets') & ...
@@ -368,15 +386,12 @@ set(handles.selected_stimfile_popup, 'String', '');
 set(handles.selected_stim_idx_popup, 'String', '');
 drawnow;
 GS.dat = load_stim_resps(GS.cfd, GS.training_set, GS.test_set);
-update_selected_stimfile_popup(handles);
+update_selected_stimfile_popup(handles); % Push changes to GUI
 update_selected_stim_idx_popup(handles);
-% Refresh the plots
-nvals = cellstr(get(handles.raw_stim_view_popup, 'String'));
-GS.raw_stim_plot_type = nvals{get(handles.raw_stim_view_popup, 'Value')};
-nvals = cellstr(get(handles.raw_resp_view_popup, 'String'));
-GS.raw_resp_plot_type = nvals{get(handles.raw_resp_view_popup, 'Value')};
-update_raw_stim_plot(handles);
-update_raw_resp_plot(handles);
+selected_stimfile_popup_Callback([], [], handles); % Trigger GUI callbacks
+selected_stim_idx_popup_Callback([], [], handles);
+raw_stim_view_popup_Callback([],[],handles); % Will update
+raw_resp_view_popup_Callback([],[],handles);
 
 % ------------------------------------------------------------------------
 function update_selected_stimfile_popup(handles)
@@ -500,8 +515,6 @@ nvals = cellstr(get(handles.raw_stim_view_popup, 'String'));
 plottype = nvals{get(handles.raw_stim_view_popup, 'Value')};
 GS.raw_stim_plot_type = plottype;
 update_raw_stim_plot(handles);
-% TODO: raw_stim_view_popup_Callback([],[],handles);
-% raw_stim_view_popup_Callback([],[],handles);
 
 %------------------------------------------------------------------------
 function raw_resp_view_popup_CreateFcn(hObject, eventdata, handles)
@@ -530,126 +543,113 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PREPROCESSING WIDGETS
 
-function update_prefilter_plots(handles)
-global TIME STIM PF_COEFS RESPAVG PF_STIM SAMPFREQ;
 
-nvals = cellstr(get(handles.preprocessing_view_popup, 'String'));
-plottype = nvals{get(handles.preprocessing_view_popup, 'Value')};
 
-nvals = cellstr(get(handles.selected_stim_idx_popup, 'String'));
-stim_idx = str2num(nvals{get(handles.selected_stim_idx_popup, 'Value')});
+
+
+function update_preproc_view_plot(handles)
+global GS;
+
+% REPLACEMENTS
+stim_idx = GS.selected_stim_idx;
+GS.raw_time;
+GS.PF_COEFS;   % How can i get at this!?
+GS.samp_freq;  % Check if right?
+GS.PF_STIM
 
 n_filts = length(PF_COEFS);
 
 axes(handles.preproc_view_axes); cla;
 hold on;
-switch plottype
+switch GS.preproc_view_plot_type
     case 'Freq. Response'
         for filt_idx = 1:n_filts
-            % Old way
-            % [sos,g] = tf2sos(PF_COEFS{i}{1}, PF_COEFS{i}{2}); 
-            % Hd = dfilt.df2tsos(sos,g);  % Create a dfilt object
-            % h = fvtool(Hd);              % Plot magnitude response
-            % set(h,'Analysis','magnitude') % Freq Magnitude response
-            
-            % New way: 
             ww = 0:(pi/1000):pi;
             H = freqz(PF_COEFS{filt_idx}{1}, PF_COEFS{filt_idx}{2}, ww);
             loglog(ww, abs(H), pickcolor(filt_idx));
             setAxisLabelCallback(gca, @(f) (f*SAMPFREQ/(3.14*2)), 'X');
             axis tight;
-            % Best way?
-            % P = bodeoptions;
-            % P.PhaseVisible = 'off';
-            % P.FreqUnits = 'Hz'; 
-            % h = bodeplot(tf(PF_COEFS{filt_idx}{2}, PF_COEFS{filt_idx}{1}),P);               
         end
     case 'Filtered Stimulus'
         for filt_idx = 1:n_filts
             plot(TIME, squeeze(PF_STIM(stim_idx,:,filt_idx)), pickcolor(filt_idx));
             axis tight;
         end
+    case 'DwnSmp''d Stim'
+        % TODO: Plot the heat map for a particular filter
+        % TODO: Add a control that lets you select which preproc filter dim
+        % to visualize
+        
 end
 hold off;
 
+
+function preprocessing_view_popup_CreateFcn(hObject, eventdata, handles)
+function preprocessing_view_popup_Callback(hObject, eventdata, handles)
+global GS;
+nvals = cellstr(get(hObject, 'String'));
+plottype = nvals{get(hObject, 'Value')};
+GS.preproc_view_plot_type = plottype;
+update_preproc_plot(handles);
+
+function fns = scan_directory_for_functions(scandir)
+fp = fullfile(NARF_PATH, scandir)
+log_dbg('Scanning dir for functions: %s', fp);
+files = dir(fullfile(fp, '*.m'))
+fns = {};
+for i = 1:length(files)
+    log_dbg('\tFound ''%s''', files(i).name);
+    fn = str2fn(files(i).name);           % Make an executable function
+    [pretty_name, default_params] = fn(); % Execute once to get its info
+    fns{i} = [];                      % The struct to save
+    fns{i}.fn = fn;                   % Save handle
+    fns{i}.fn_name = {files(i).name}; % aka File name
+    fns{i}.pretty_name = pretty_name; % User-readable 
+    fns{i}.params = default_params;   % Param struct
+end
+set(hObject, 'String', char(c));
+
+log_dbg('\tFound ''%s''', 
+
 function preproc_filter_popup_CreateFcn(hObject, eventdata, handles)
-% TODO: On startup, find all the preprocessing filters in a directory
+log_dbg('preproc_filter_popup_CreateFcn()';
+global GS;
+files = dir(fullfile(NARF_PATH, 'model_0_preprocessing/*.m'))
+GS.preproc_filter_options = {};
+for i = 1:length(files)
+    fn = str2fn(files(i).name);           % Make an executable function
+    [pretty_name, default_params] = fn(); % Execute once to get its info
+    GS.preproc_filter_options{i} = []; 
+    GS.preproc_filter_options{i}.fn = fn;                   % Save handle
+    GS.preproc_filter_options{i}.fn_name = {files(i).name}; % aka File name
+    GS.preproc_filter_options{i}.pretty_name = pretty_name; % User-readable 
+    GS.preproc_filter_options{i}.params = default_params;   % Param struct
+end
+set(hObject, 'String', char(c));
 
 function preproc_filter_popup_Callback(hObject, eventdata, handles)
+% TODO: Set the global Preproc filter according to user selection
 %contents = cellstr(get(hObject,'String'));
 %disp(get(hObject,'String'));
 %fn_to_run = contents{get(hObject,'Value')};
 
-function low_freqs_CreateFcn(hObject, eventdata, handles)
-function low_freqs_Callback(hObject, eventdata, handles)
-function high_freqs_CreateFcn(hObject, eventdata, handles)
-function high_freqs_Callback(hObject, eventdata, handles)
-function smoothing_frqs_Callback(hObject, eventdata, handles)
-function smoothing_frqs_CreateFcn(hObject, eventdata, handles)
-
-function preprocessing_view_popup_CreateFcn(hObject, eventdata, handles)
-function preprocessing_view_popup_Callback(hObject, eventdata, handles)
-update_prefilter_plots(handles);
-
-function refresh_preproc_view_button_Callback(hObject, eventdata, handles)
-update_prefilter_plots(handles);
-
-% TODO: Make this work for a ANY prefilter selection and move this to a
-% prefilter model directory
 function apply_prefilter_button_Callback(hObject, eventdata, handles)
-global STIM SAMPFREQ PF_COEFS PF_STIM;
-[d1, d2] = size(STIM);
+global GS;
 
-% Get the low-pass and high-pass band limits
-lp = eval(get(handles.low_freqs, 'String'));
-hp = eval(get(handles.high_freqs, 'String'));
-sf = eval(get(handles.smoothing_frqs, 'String'));
+% Get the params
 
-% TODO: Check that the inputs are valid
-% if ~(isvector(lp) & isvector(hp) & isvector(sf))
-%     set(handles.prefilter_status, 'String', 'ERROR: ALL PREFILTER SETTINGS MUST BE VECTORS AND OF THE SAME LENGTH!');
-%     return;
-% end
+% Create the fn if it doesn't already exist
 
-n_filts = length(lp);
 
-% Make the bank of filters. I use a cell array here to allow different
-% filter sizes and orders, if such a case actually comes up. 
-PF_COEFS={}; 
-for i = 1:n_filts
-    [B,A] = ellip(4,0.5,50,[lp(i)/SAMPFREQ*2, hp(i)/SAMPFREQ*2]);   
-    PF_COEFS{i} = {B,A};
-end
 % Filter the data
-%set(handles.prefilter_status, 'String', 'Filtering...');
-PF_STIM=[];
-for i = 1:n_filts
-    pfstmp1 = filter(PF_COEFS{i}{1}, PF_COEFS{i}{2}, STIM,[],2);
-    pfstmp2 = abs(pfstmp1);
-    % OPTIONAL LOW_PASS SMOOTHING ALGORITHM
-    if sf ~= 0
-        [B,A] = ellip(6,3,50,[sf(i)/SAMPFREQ*2]);
-        pfs = filter(B,A, pfstmp2,[],2);
-    else
-        pfs = pfstmp2;
-    end
-    PF_STIM = cat(3, PF_STIM, pfs);
-end
+PF_STIM = ;
 
 % Plot either the data or the frequency response
 %set(handles.prefilter_status, 'String', 'Plotting...');
 update_prefilter_plots(handles);
 %set(handles.prefilter_status, 'String', 'Done.');
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MODEL CLASS WIDGETS
-function update_fir_model(handles)
-global PF_COEFS FIRHIST FIRBINSIZE FIRCOEFS;
-FIRHIST = str2num(get(handles.fir_history,'String'));
-FIRBINSIZE = str2num(get(handles.bin_size,'String'));
-d = length(PF_COEFS); % Since this is a cell array, this returns just nfilts
-l = ceil(FIRHIST/FIRBINSIZE);
-FIRCOEFS = zeros(d,l);
+%% DOWNSAMPLING WIDGETS
 
 function downsample_stimresp()
 global PF_STIM RESPAVG SAMPFREQ DS_FREQ DS_STIM DS_TIME DS_RESPAVG FIRBINSIZE;
@@ -660,6 +660,19 @@ DS_RESPAVG = conv_fn(RESPAVG, 2, @sum, SAMPFREQ/DS_FREQ, 0);
 DS_TIME = [0:1/DS_FREQ:l/DS_FREQ-1/DS_FREQ];
 DS_STIM = conv_fn(PF_STIM, 2, @mean, SAMPFREQ/DS_FREQ, 0);
 
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MODEL CLASS WIDGETS
+function update_fir_model(handles)
+global PF_COEFS FIRHIST FIRBINSIZE FIRCOEFS;
+FIRHIST = str2num(get(handles.fir_history,'String'));
+FIRBINSIZE = str2num(get(handles.bin_size,'String'));
+d = length(PF_COEFS); % Since this is a cell array, this returns just nfilts
+l = ceil(FIRHIST/FIRBINSIZE);
+FIRCOEFS = zeros(d,l);
 
 
 function make_predictions()
@@ -679,8 +692,6 @@ for filt_idx = 1:n_filts
 end
 
 DS_PRED = squeeze(sum(DS_PREDS, 3)); 
-
-
 
 
 
@@ -895,3 +906,126 @@ setoptplot(handles, handles.optplot4, plottype);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% --- Executes on button press in load_stochasticity_params_button.
+function load_stochasticity_params_button_Callback(hObject, eventdata, handles)
+% hObject    handle to load_stochasticity_params_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in load_model_params_button.
+function load_model_params_button_Callback(hObject, eventdata, handles)
+% hObject    handle to load_model_params_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in load_preproc_params_button.
+function load_preproc_params_button_Callback(hObject, eventdata, handles)
+% hObject    handle to load_preproc_params_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on selection change in popupmenu19.
+function popupmenu19_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu19 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu19 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu19
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu19_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu19 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton22.
+function pushbutton22_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton22 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in load_downsampling_params_button.
+function load_downsampling_params_button_Callback(hObject, eventdata, handles)
+% hObject    handle to load_downsampling_params_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on selection change in popupmenu20.
+function popupmenu20_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu20 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu20 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu20
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu20_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu20 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in save_downsampling_params_button.
+function save_downsampling_params_button_Callback(hObject, eventdata, handles)
+% hObject    handle to save_downsampling_params_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in save_stochasticity_params_button.
+function save_stochasticity_params_button_Callback(hObject, eventdata, handles)
+% hObject    handle to save_stochasticity_params_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in check_stochasticity_button.
+function check_stochasticity_button_Callback(hObject, eventdata, handles)
+% hObject    handle to check_stochasticity_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in save_model_params_button.
+function save_model_params_button_Callback(hObject, eventdata, handles)
+% hObject    handle to save_model_params_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in predict_response_button.
+function predict_response_button_Callback(hObject, eventdata, handles)
+% hObject    handle to predict_response_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in save_preproc_params_button.
+function save_preproc_params_button_Callback(hObject, eventdata, handles)
+% hObject    handle to save_preproc_params_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
