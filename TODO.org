@@ -1,8 +1,6 @@
-* Objects are a poor man's closures!
-  
+* Left off in line 74 of the file
 
-
-* Design of modular model components
+* Design of modular model components will rely on closures and zero-argument querying (No need to add a full protocol structure yet!)
   1. At startup, directory is read, and preproc_filter_popup is initialized
      - [ ] How is that converted into prettier strings? (By calling the filter with no arguments, the default arguments are returned)
      - [ ] What happens if one filter has an error during eval? (It will be logged and dropped)
