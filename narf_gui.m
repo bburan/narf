@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 12-Nov-2012 10:47:35
+% Last Modified by GUIDE v2.5 12-Nov-2012 14:26:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -123,13 +123,13 @@ set(handles.downsampling_data_table, 'Data', {});
 % Initialize the preprocessing popup menu and data table
 scanpath = fullfile(NARF_PATH, PREPROCESSING_DIR);
 GS.preprocs = scan_directory_for_functions(scanpath);
-GS.selected_preproc = GS.preprocs{1}; 
-GS.selected_preproc_name = GS.preprocs{1}.pretty_name;
-set(handles.preproc_popup, 'String', char(GS.preprocs{:}.pretty_name));
+fs = fieldnames(GS.preprocs);
+GS.selected_preproc_name = fs{1}; % Use the first as the default
+set(handles.preproc_popup, 'String', ...
+    char(GS.preprocs.(fs{1}).params.pretty_name));
 set(handles.preproc_popup, 'Value', 1);
-set(handles.preproc_index_popup, 'String', 'ALL');
+set(handles.preproc_index_popup, 'String', '1'); % Initialize display idx too
 set(handles.preproc_index_popup, 'Value', 1);
-
 preproc_popup_Callback(handles.preproc_popup, [], handles);
 drawnow;
 
@@ -326,17 +326,16 @@ log_dbg('Done loading stimulus and response files.');
 function fns = scan_directory_for_functions(scanpath)
 fprintf('Scanning dir for functions: %s\n', scanpath);
 files = dir(fullfile(scanpath, '*.m'));
-fns = {};
+fns = [];
 for i = 1:length(files)
-    fprintf('\tFound ''%s''\n', files(i).name);
-    fn = str2func(files(i).name(1:end-2));   % Make an executable function
-    params = fn();                           % Execute once to get its info
-    fns{i} = [];                             % The struct to save
-    fns{i}.fn = fn;                          % Save function handle
-    fns{i}.fn_name = files(i).name;          % aka File name
-    fns{i}.pretty_name = params.pretty_name; % User-readable 
-    fns{i}.params = params;                  % Param struct
-    fns{i}.params_mask = zeros();            % No search params by default
+    name = files(i).name;
+    fprintf('\tFound ''%s''\n', name);
+    s = [];                        % The struct to save
+    s.fn_name = name(1:end-2);     % File name minus the '.m' at end
+    fn = str2func(name(1:end-2));  % Make an executable function
+    s.fn = fn;                     % Save function handle
+    s.params = fn();               % Default param struct given by no args
+    fns.(s.fn_name) = s;           % Index under its function name
 end
 
 % ------------------------------------------------------------------------
@@ -353,6 +352,34 @@ elseif isa(obj, 'function_handle')
     s = ['@' func2str(obj)];
 else
     log_err('Not sure how to print: %s', obj);
+end
+
+%------------------------------------------------------------------------
+function s = extract_field_val_pairs(mytable, fieldname_col, value_col)
+% Return a new struct extracted from two columns
+d = get(mytable, 'Data');
+[r, c] = size(d);
+if (c < fieldname_colidx | c < value_colidx | fieldname_colidx < 1 | ...
+        value_colidx < 1)
+    err('A column index number is outside the data table''s range.');
+end
+s = {};
+for i = 1:r
+    s.(d{i,fieldname_col}) = eval(d{i,value_col});
+end
+
+%------------------------------------------------------------------------
+function s = extract_checked_fields(mytable, checkbox_col, fieldname_col)
+% Return a cell array of fields with checked boxes next to them.
+d = get(mytable, 'Data');
+[r, c] = size(d);
+j = 1;
+s = {};
+for i = 1:r
+    if d{i,checkbox_col}
+        s{j} = d{i,fieldname_col};
+        j = j+1;
+    end
 end
 
 
@@ -578,6 +605,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PREPROCESSING WIDGETS
 
+%------------------------------------------------------------------------
 function update_data_table(mytable, mystruct, myfields)
 l = length(myfields);
 c = cell(l,3);
@@ -592,33 +620,49 @@ end
 set(mytable, 'Data', c);
 drawnow;
 
+
+%------------------------------------------------------------------------
+function s = extract_field_val_pairs(mytable, fieldname_col, value_col)
+d = get(mytable, 'Data');
+[r, c] = size(d);
+if (c < fieldname_colidx | c < value_colidx | fieldname_colidx < 1 | ...
+        value_colidx < 1)
+    log_err('Column index number is outside the data table''s range.');
+end
+s = {};
+for i = 1:r
+    s.(d{i,fieldname_col}) = eval(d{i,value_col});
+end
+
 %------------------------------------------------------------------------
 function preproc_popup_CreateFcn(hObject, eventdata, handles)
 function preproc_popup_Callback(hObject, eventdata, handles)
 global GS; 
 c = cellstr(get(hObject,'String'));
-GS.selected_preproc_name = c{get(hObject,'Value')};
+pretty_name = c{get(hObject,'Value')};
 
 % Find the selected preproc filter
 % TODO: Replace me with find() idiom instead of a fucking for loop
 f = [];
-for i = 1:length(GS.preprocs)  
-    if isequal(GS.selected_preproc_name, ...
-               GS.preprocs{i}.pretty_name)
-           f = GS.preprocs{i};
+fnames = fieldnames(GS.preprocs);
+for i = 1:length(fnames)  
+    if isequal(pretty_name, GS.preprocs.(fnames{i}).params.pretty_name)
+        f = GS.preprocs.(fnames{i});
     end
 end
 
 % If f is not found throw an error
 if ~isequal(f, [])
-    GS.selected_preproc = f;
+    GS.selected_preproc_name = f.fn_name;
 else
-    log_err('Somehow, preproc was not found!?');
+	log_err('Somehow, the selected preproc name was not found!?');
 end
+% --------------------
 
-update_data_table(handles.preproc_data_table, ...
-                  GS.selected_preproc.params, ...
-                  GS.selected_preproc.params.editable_fields);
+% TODO: Replace with two function calls that set values and checkboxes independently?
+pp = GS.preprocs.(GS.selected_preproc_name).params;
+update_data_table(handles.preproc_data_table, pp, pp.editable_fields);
+              
 %------------------------------------------------------------------------
 function apply_preproc_button_Callback(hObject, eventdata, handles)
 global GS;
@@ -626,14 +670,15 @@ log_inf('Preprocessing...');
 
 % TODO: Move this core computation somewhere else!
 f = fieldnames(GS.dat);
+spp = GS.preprocs.(GS.selected_preproc_name);
 for i = 1:length(f)
-    fn = GS.selected_preproc.fn(GS.selected_preproc.params);
+    fn = spp.fn(spp.params);
     % Make filter
     GS.dat.(f{i}).pp_stim = fn(GS.dat.(f{i}).raw_stim) ; % Apply filter
 end
 
 % TODO: Check that the length of the preprocessed vector is the SAME size
-% as the original raw stimulus. 
+% as the original raw stimulus.
 
 % Call the callbacks which initialize thingscallback
 set(handles.preproc_index_popup, 'String', 'NONE');
@@ -649,7 +694,7 @@ global GS;
 
 % Only update if all fields are defined
 if ~(isfield(GS, 'selected_stimfile') & ...
-     isfield(GS, 'selected_preproc') & ...
+     isfield(GS, 'selected_preproc_name') & ...
      isfield(GS, 'selected_preproc_idx') & ...    
      isfield(GS, 'preproc_view_plot_type') & ...
      isfield(GS, 'dat') & ...
@@ -671,13 +716,15 @@ set(handles.preproc_index_popup, 'String', char(c));
 set(handles.preproc_index_popup, 'Enable', 'Off');
 set(handles.view_preproc_filter_label, 'Enable', 'Off');
 
+spp = GS.preprocs.(GS.selected_preproc_name);
+
 axes(handles.preproc_view_axes); cla;
 hold on;
 switch GS.preproc_view_plot_type
     case 'Frequency Response'
         % If the filter has a frequency response method defined, call it
-        if isfield(GS.selected_preproc.params, 'freq_resp_plot_fn')
-            GS.selected_preproc.params.freq_resp_plot_fn();
+        if isfield(spp.params, 'freq_resp_plot_fn')
+            spp.params.freq_resp_plot_fn(spp.params);
         else
             log_dbg('No fn found to plot freq response.');
         end
@@ -694,10 +741,10 @@ switch GS.preproc_view_plot_type
         logfsgram(dat.pp_stim(GS.selected_stim_idx,:,GS.selected_preproc_idx)', 4048, 100000, [], [], 500, 12); 
         caxis([-20,40]);
         drawnow;
-        
 end
 hold off;
 
+%------------------------------------------------------------------------
 function preprocessing_view_popup_CreateFcn(hObject, eventdata, handles)
 function preprocessing_view_popup_Callback(hObject, eventdata, handles)
 global GS;
@@ -705,7 +752,8 @@ nvals = cellstr(get(hObject, 'String'));
 plottype = nvals{get(hObject, 'Value')};
 GS.preproc_view_plot_type = plottype;
 update_preproc_view_plot(handles);
-                                
+
+%------------------------------------------------------------------------                                
 function preproc_index_popup_CreateFcn(hObject, eventdata, handles)
 function preproc_index_popup_Callback(hObject, eventdata, handles)
 global GS;
@@ -716,8 +764,28 @@ if isempty(GS.selected_preproc_idx)
 end
 update_preproc_view_plot(handles);
 
+%------------------------------------------------------------------------
 function load_preproc_params_button_Callback(hObject, eventdata, handles)
 function save_preproc_params_button_Callback(hObject, eventdata, handles)
+
+%------------------------------------------------------------------------
+function preproc_data_table_CellEditCallback(hObject, eventdata, handles)
+global GS;
+log_dbg('preproc_data_table modified. Click ''preprocess!'' to refresh.');
+% Whenever the data table is edited, do three things:
+% 1. Pull out the present values and store them in GS
+s = extract_field_val_pairs(hObject, 2, 3);
+fns = fieldnames(s);
+for i = 1:length(fns);
+    GS.preprocs{GS.selected_preproc_idx}.(fns{i}) = s.(fns{i});
+end
+% 2. Update which parameters are fittable
+GS.preprocs.(GS.selected_preproc_name).fittable_params = ...
+     extract_checked_fields(hObject, 1, 2);
+
+% 3. Invalidate by setting preprocessed data to [] and clearing plot
+GS.dat.(GS.selected_stim_filename).pp_stim = [];
+axes(handles.preproc_view_axes); cla
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DOWNSAMPLING WIDGETS
@@ -993,3 +1061,26 @@ function save_stochasticity_params_button_Callback(hObject, eventdata, handles)
 function check_stochasticity_button_Callback(hObject, eventdata, handles)
 
 function pushbutton22_Callback(hObject, eventdata, handles)
+
+
+% --- Executes on selection change in popupmenu21.
+function popupmenu21_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu21 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu21 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu21
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu21_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu21 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

@@ -30,19 +30,9 @@
   Inner functions must return their parameters struct when given no arguments. 
   If you modify a function after starting up narf_gui, what will happen? (Right now, changes to the pretty-name and params will not be altered without restarting narf_gui, however if you fix the function itself then that is fine.)
 
-* LEFT OFF THINKING ABOUT THIS
-  1. Try Loading a struct from an mfile,
-  2. Try displaying the contents of a directory and selecting one of the mfiles
-  3. Try pushing the loaded struct into a data table 
-  4. Try pushing the data table into a struct
-  5. Try going back down to an mfile again
-  6. Do steps 1-5 with a user-definabel function
-  7. Then start doing load_model(preproc, downsamp, modelfn) to initialize the GUI, using the above
-  8. mod = load_model(preproc, model, stochasticity); % Load the model form
-  9. Load the model parameters (save under cellid+stimfile in a 'saved' dir)
-
 * BACKLOG
   - Add a button to load a set of model params and initialize the GUI accordingly
+  - Think about how to do better invalidation of plots. Basing it upon the state of GS is fine, but needs manual knowledge of 'downstream' to work. 
   - Normalize the PSTH
   - Handle NaN's better
   - Use resample during the downsampling step. (which applies the Sinc() function)

@@ -37,6 +37,14 @@ if (nargin < 1)
     params.freq_resp_plot_fn = @do_plot_elliptic_bandpass_filter_bank_frq_resp;
     params.editable_fields = {'low_freqs', 'high_freqs', 'order', ...
                               'stop_dB'};
+    params.coefs={}; 
+    for i = 1:length(params.low_freqs);
+        [B,A] = ellip(params.order, 0.5, params.stop_dB, ...
+           [(params.low_freqs(i)/params.sampfs)*2,...
+            (params.high_freqs(i)/params.sampfs)*2]);   
+        params.coefs{i} = {B,A};
+    end       
+    
     fn = params;
     return;
 end
@@ -47,17 +55,17 @@ if ~(all(isfield(params, {'high_freqs', 'low_freqs', 'order', ...
      isvector(params.low_freqs) & isvector(params.high_freqs) & ...
      length(params.low_freqs) == length(params.high_freqs))
     error('Elliptic bandpass frequency settings are invalid or missing.');
-end
-
-% Compute the filter coefficients in a cell array 
-n_filts = length(params.low_freqs);
-params.coefs={}; 
-for i = 1:n_filts
-    [B,A] = ellip(params.order, 0.5, params.stop_dB, ...
-       [(params.low_freqs(i)/params.sampfs)*2,...
-        (params.high_freqs(i)/params.sampfs)*2]);   
-    params.coefs{i} = {B,A};
-end 
+ end
+% 
+% % Compute the filter coefficients in a cell array 
+% n_filts = length(params.low_freqs);
+% params.coefs={}; 
+% for i = 1:n_filts
+%     [B,A] = ellip(params.order, 0.5, params.stop_dB, ...
+%        [(params.low_freqs(i)/params.sampfs)*2,...
+%         (params.high_freqs(i)/params.sampfs)*2]);   
+%     params.coefs{i} = {B,A};
+% end 
 
 % ------------------------------------------------------------------------
 % DEFINE TWO INNER FUNCTIONS...who needs objects when you can use closures!
@@ -68,17 +76,15 @@ function filtered_x = do_elliptic_filter(x)
     if (nargin < 1) filtered_x = params; return; end
     % TODO: Check the structure of x to ensure its validity
     filtered_x=[];
-    for i = 1:n_filts
+    for i = 1:length(params.low_freqs)
         tmp = filter(params.coefs{i}{1}, params.coefs{i}{2}, x,[],2);
         filtered_x = cat(3, filtered_x, tmp); % TODO: Do abs here or not?
     end
 end % END INNER FUNCTION
 
-% BEGIN INNER FUNCTION (plot the response)
-function do_plot_elliptic_bandpass_filter_bank_frq_resp(ah, params)
-    % AH: Axes handle to plot on.
-    % PARAMS: Should be the same as above.
-    for filt_idx = 1:n_filts
+% BEGIN INNER FUNCTION (Doesn't close over any variables)
+function do_plot_elliptic_bandpass_filter_bank_frq_resp(params)
+    for filt_idx = 1:length(params.low_freqs)
         ww = 0:(pi/1000):pi;
         H = freqz(params.coefs{filt_idx}{1}, params.coefs{filt_idx}{2}, ww);
         loglog(ww, abs(H), pickcolor(filt_idx));
