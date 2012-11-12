@@ -16,11 +16,14 @@ function fn = elliptic_bandpass_filter_bank(params)
 %                  params.stop_dB    (Minimum stopband attenuation)
 %                  params.sampfs     (Sampling frequency in Hz)
 %              Optionally, it may also have these fields:
-%                  params.n_filts    (Number of filters)
 %                  params.coefs      (Filter coefficients cell array)
 %                  params.freq_resp_plot_fn (Function to plot frq response)
 %  
-% If no params are given get the defaults. 
+
+% TODO: Make this initialization work even if we only get SOME params but
+% not all of them. 
+
+% If no params are given get the defaults.
 if (nargin < 1)
     params = [];
     % TODO: Check that there is info in the CFD files about SPN band sizes,
@@ -31,6 +34,9 @@ if (nargin < 1)
     params.stop_dB = 50;
     params.sampfs = 100000;
     params.pretty_name = 'Elliptic Bandpass Filter Bank';
+    params.freq_resp_plot_fn = @do_plot_elliptic_bandpass_filter_bank_frq_resp;
+    params.editable_fields = {'low_freqs', 'high_freqs', 'order', ...
+                              'stop_dB'};
     fn = params;
     return;
 end
@@ -43,7 +49,6 @@ if ~(all(isfield(params, {'high_freqs', 'low_freqs', 'order', ...
     error('Elliptic bandpass frequency settings are invalid or missing.');
 end
 
-% TODO: IFF not already defined....
 % Compute the filter coefficients in a cell array 
 n_filts = length(params.low_freqs);
 params.coefs={}; 
@@ -54,42 +59,39 @@ for i = 1:n_filts
     params.coefs{i} = {B,A};
 end 
 
-% Close over the graphing function below. 
-params.freq_resp_plot_fn = @do_plot_elliptic_bandpass_filter_bank_frq_resp;
-        
-% Return a newly defined function
-fn = @do_elliptic_filter;
+% ------------------------------------------------------------------------
+% DEFINE TWO INNER FUNCTIONS...who needs objects when you can use closures!
 
-% This inner function closes over the params variable.
+% BEGIN INNER FUNCTION: 
 function filtered_x = do_elliptic_filter(x)
-% If we didn't get an x, return the param struct of this filter
-if (nargin < 1) filtered_x = params; return; end
+    % If we didn't get an x, return the param struct of this filter
+    if (nargin < 1) filtered_x = params; return; end
+    % TODO: Check the structure of x to ensure its validity
+    filtered_x=[];
+    for i = 1:n_filts
+        tmp = filter(params.coefs{i}{1}, params.coefs{i}{2}, x,[],2);
+        filtered_x = cat(3, filtered_x, tmp); % TODO: Do abs here or not?
+    end
+end % END INNER FUNCTION
 
-% TODO: Check the structure of X to ensure its validity
+% BEGIN INNER FUNCTION (plot the response)
+function do_plot_elliptic_bandpass_filter_bank_frq_resp(ah, params)
+    % AH: Axes handle to plot on.
+    % PARAMS: Should be the same as above.
+    for filt_idx = 1:n_filts
+        ww = 0:(pi/1000):pi;
+        H = freqz(params.coefs{filt_idx}{1}, params.coefs{filt_idx}{2}, ww);
+        loglog(ww, abs(H), pickcolor(filt_idx));
+        setAxisLabelCallback(gca, @(f) (f*params.sampfs/(3.14*2)), 'X');
+        axis tight;
+    end 
+end % END THE INNER FUNCTION
+% ------------------------------------------------------------------------
 
+% Return newly defined inner function
+fn = @(arg) do_elliptic_filter(arg);
 
-
-
-
-% LEFT OFF HERE: For some reason PARAMS is not showing up here!
-
-
-
-
-filtered_x=[];
-for i = 1:n_filts
-    tmp = filter(params.coefs{i}{1}, params.coefs{i}{2}, x,[],2);
-    filtered_x = cat(3, filtered_x, abs(tmp));
 end
 
-% This inner function closes over the 
-function do_plot_elliptic_bandpass_filter_bank_frq_resp(ah)
-% Accepts an axes handle to plot on.
-for filt_idx = 1:n_filts
-    ww = 0:(pi/1000):pi;
-    H = freqz(params.coefs{filt_idx}{1}, params.coefs{filt_idx}{2}, ww);
-    loglog(ww, abs(H), pickcolor(filt_idx));
-    setAxisLabelCallback(gca, @(f) (f*SAMPFREQ/(3.14*2)), 'X');
-    axis tight;
-end
+
 

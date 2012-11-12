@@ -1,12 +1,10 @@
-* Left off in line 74 of the file
-
 * Design of modular model components will rely on closures and zero-argument querying (No need to add a full protocol structure yet!)
   1. At startup, directory is read, and preproc_filter_popup is initialized
-     - [ ] How is that converted into prettier strings? (By calling the filter with no arguments, the default arguments are returned)
+     - [X] How is that converted into prettier strings? (By calling the filter with no arguments, the default arguments are returned)
      - [ ] What happens if one filter has an error during eval? (It will be logged and dropped)
   2. The preproc_data_table needs to be initialized with parameters.
-     - [ ] Where does the params come from? (By calling the filter with no arguments)
-     - [ ] Where is the data stored in the global GS? (GS.preproc_params, GS.downsampling_params, GS.model_params, GS.stochastic_params)
+     - [X] Where does the params come from? (By calling the filter with no arguments)
+     - [X] Where is the data stored in the global GS? (GS.preproc_params, GS.downsampling_params, GS.model_params, GS.stochastic_params)
   3. Some clicks are made on the preproc window
      - [ ] the GS.preproc_params struct and preproc_params_mask is updated each time
   4. Somebody clicks save
@@ -19,7 +17,6 @@
      - [ ] Data is verified
      - [ ] raw_data is filtered 
      - [ ] The plots are updated (If it's the first time being called, not all GS globals will be ready.)
-     - [ ] 
   7. At a later point, somebody clicks "optimize"
      - [ ] Using the GS.preproc_params_mask and GS.preproc_params, a vector is made and handed to the optimization thing. 
      - [ ] During optimization, from the vector, GS.preproc_params_mask and GS.preproc_params, a 'preproc_params' structure is built
@@ -28,7 +25,7 @@
      - [ ] Performance is measured, and you go back to the beginning of this step a bunch of times. 
      - [ ] At the end of the optimization, the preproc filter window is updated to reflect the new data. 
 * Complexities:
-  We may need to do an iteration procedure that treats one part of the model (IE, Linear FIR filters) differently from a nonlinear part (ie, 
+  We may need to do an iteration procedure that treats one part of the model (IE, Linear FIR filters) differently from a nonlinear part (In my opinion, this is just a special case sampler)
   When a function is called with no arguments, it returns a user-visible string and a default parameters struct.
   Inner functions must return their parameters struct when given no arguments. 
   If you modify a function after starting up narf_gui, what will happen? (Right now, changes to the pretty-name and params will not be altered without restarting narf_gui, however if you fix the function itself then that is fine.)
@@ -45,9 +42,7 @@
   9. Load the model parameters (save under cellid+stimfile in a 'saved' dir)
 
 * BACKLOG
-  - Add a 'save' and 'load' button to every part of the model.
   - Add a button to load a set of model params and initialize the GUI accordingly
-  - Ad a button to load Bandpass information from the params struct  (Look at exptparams.TrialObject.ReferenceHandle object?)
   - Normalize the PSTH
   - Handle NaN's better
   - Use resample during the downsampling step. (which applies the Sinc() function)
@@ -57,8 +52,7 @@
     3. A function which returns or plots the 'stationary frequency response'
     4. A pack function, which accepts 
     5. An unpack function
-  - Experiment with creating a GUI or doing a batch analysis from the command line
-  - Make the filtered raw data viewable as heat map(s)?
+  - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
 
 * Modules
   - Automatic covering bands filter, which presents downsampled results of gamma or elliptical notched filters spaced across the domains and completely covering the input space

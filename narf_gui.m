@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 09-Nov-2012 15:23:54
+% Last Modified by GUIDE v2.5 12-Nov-2012 10:47:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -119,6 +119,18 @@ set(handles.preproc_data_table, 'Data', {});
 set(handles.model_data_table, 'Data', {});
 set(handles.stochasticity_data_table, 'Data', {});
 set(handles.downsampling_data_table, 'Data', {});
+
+% Initialize the preprocessing popup menu and data table
+scanpath = fullfile(NARF_PATH, PREPROCESSING_DIR);
+GS.preprocs = scan_directory_for_functions(scanpath);
+GS.selected_preproc = GS.preprocs{1}; 
+GS.selected_preproc_name = GS.preprocs{1}.pretty_name;
+set(handles.preproc_popup, 'String', char(GS.preprocs{:}.pretty_name));
+set(handles.preproc_popup, 'Value', 1);
+set(handles.preproc_index_popup, 'String', 'ALL');
+set(handles.preproc_index_popup, 'Value', 1);
+
+preproc_popup_Callback(handles.preproc_popup, [], handles);
 drawnow;
 
 % --- Outputs from this function are returned to the command line.
@@ -168,7 +180,7 @@ dat = load_stim_resps(cfd, train_set, test_set);
 % Initialize the model OR
 %    OR load the model parameters (save under cellid+stimfile in a 'saved' dir)
 
-% Prefilter the data
+% preproc the data
 % Downsample the filtered data
 % Run the optimization on the downsampled data
 % Return the best fitting parameters and/or save them
@@ -337,6 +349,10 @@ elseif isstr(obj)       % Single strings
     s = obj; 
 elseif isnumeric(obj)   % Single numbers
     s = num2str(obj);
+elseif isa(obj, 'function_handle')
+    s = ['@' func2str(obj)];
+else
+    log_err('Not sure how to print: %s', obj);
 end
 
 
@@ -346,9 +362,8 @@ end
 function query_db_button_Callback(hObject, eventdata, handles)
 log_dbg('query_db_button pressed.');
 
-% Clear the global variable storing state for the GUI (GS = 'Gui State')
-global GS; 
-GS = [];
+% GS: Clear various parts of the global struct
+global GS;
 
 % Invalidate data_selection_table, and other parts of the GUI
 set(handles.data_selection_table, 'Data', {}); drawnow;
@@ -446,7 +461,7 @@ global GS;
 % Only update if all fields are defined
 if ~(isfield(GS, 'raw_stim_plot_type') & ...
      isfield(GS, 'selected_stim_idx') & ...
-     isfield(GS, 'selected_stimfile'))
+     isfield(GS, 'selected_stimfile'))  
      log_dbg('Ignoring raw stim plot update since not all fields ready.');
    return  
 end
@@ -463,12 +478,9 @@ switch plottype
         axis tight;
     case 'Spectrogram View'
         % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-        nwin = 4048;
-        logfsgram(obj.raw_stim(stim_idx,:)', nwin, 100000, [], [], 500, 12); 
-        % TODO: Remove 100000 here and use global
-        %caxis([-20,40]);
-        % TODO: use a 'smarter' caxis here which discards
-        % information based on a histogram to get rid of outliers.
+        logfsgram(obj.raw_stim(stim_idx,:)', 4048, 100000, [], [], 500, 12); 
+        % TODO: Remove 4048, 100000 here and use global
+        caxis([-20,40]);  % TODO: use a 'smarter' caxis here
 end
 
 % ------------------------------------------------------------------------
@@ -515,7 +527,7 @@ GS.selected_stimfile = stimfile;
 update_selected_stim_idx_popup(handles);
 update_raw_stim_plot(handles);
 update_raw_resp_plot(handles);
-% TODO: update_preproc_view_plot(handles);
+preprocessing_view_popup_Callback(handles.preprocessing_view_popup, [], handles);
 % TODO: update_model_view_plot(handles);
 
 %------------------------------------------------------------------------
@@ -527,7 +539,7 @@ stim_idx = str2num(nvals{get(handles.selected_stim_idx_popup, 'Value')});
 GS.selected_stim_idx = stim_idx;
 update_raw_stim_plot(handles);
 update_raw_resp_plot(handles);
-% TODO: update_preproc_view_plot(handles);
+preprocessing_view_popup_Callback(handles.preprocessing_view_popup, [], handles);
 % TODO: update_model_view_plot(handles);
 
 %------------------------------------------------------------------------
@@ -566,104 +578,125 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PREPROCESSING WIDGETS
 
-function preprocess_data()
-global GS;
-
+function update_data_table(mytable, mystruct, myfields)
+l = length(myfields);
+c = cell(l,3);
+for i = 1:l
+    if ~isfield(mystruct, myfields{i})
+        log_err('Could not find field: %s', myfields{i});
+    end
+    c{i,1} = false;
+    c{i,2} = myfields{i};
+    c{i,3} = repl_write(mystruct.(myfields{i})); % Ensure data becomes a str
+end
+set(mytable, 'Data', c);
+drawnow;
 
 %------------------------------------------------------------------------
-function preproc_filter_popup_CreateFcn(hObject, eventdata, handles)
-function preproc_filter_popup_Callback(hObject, eventdata, handles)
-global GS NARF_PATH PREPROCESSING_DIR;
-scanpath = fullfile(NARF_PATH, PREPROCESSING_DIR);
-GS.preproc_filters = scan_directory_for_functions(scanpath);
-set(hObject, 'String', char(GS.preproc_filters{:}.pretty_name));
-
+function preproc_popup_CreateFcn(hObject, eventdata, handles)
+function preproc_popup_Callback(hObject, eventdata, handles)
+global GS; 
 c = cellstr(get(hObject,'String'));
-GS.selected_preproc_filter_name = c{get(hObject,'Value')};
+GS.selected_preproc_name = c{get(hObject,'Value')};
 
 % Find the selected preproc filter
+% TODO: Replace me with find() idiom instead of a fucking for loop
 f = [];
-for i = 1:length(GS.preproc_filters)  % TODO: Replace me with find() idiom
-    if isequal(GS.selected_preproc_filter_name, ...
-               GS.preproc_filters{i}.pretty_name)
-           f = GS.preproc_filters{i};
+for i = 1:length(GS.preprocs)  
+    if isequal(GS.selected_preproc_name, ...
+               GS.preprocs{i}.pretty_name)
+           f = GS.preprocs{i};
     end
 end
 
-% If f is not 
+% If f is not found throw an error
 if ~isequal(f, [])
-    GS.selected_preproc_filter = f;
+    GS.selected_preproc = f;
 else
-    log_err('Somehow, preproc_filter was not found!?');
+    log_err('Somehow, preproc was not found!?');
 end
 
-% Update the data table
-ps = GS.selected_preproc_filter.params;
-fs = fieldnames(ps);
-l = length(fs);
-c = cell(l,3);
-for i = 1:l
-    c{i,1} = false;
-    c{i,2} = fs{i};
-    c{i,3} = repl_write(ps.(fs{i})); % Ensure all data becomes a string
-end
-set(handles.preproc_data_table, 'Data', c); drawnow;
-
+update_data_table(handles.preproc_data_table, ...
+                  GS.selected_preproc.params, ...
+                  GS.selected_preproc.params.editable_fields);
 %------------------------------------------------------------------------
-function apply_prefilter_button_Callback(hObject, eventdata, handles)
+function apply_preproc_button_Callback(hObject, eventdata, handles)
 global GS;
-log_inf('Prefiltering...');
+log_inf('Preprocessing...');
 
-% Apply the preproc to every loaded data file?
-% TODO: Or just the incrementally visible file?
+% TODO: Move this core computation somewhere else!
 f = fieldnames(GS.dat);
 for i = 1:length(f)
-    fn = GS.selected_preproc_filter.fn(GS.selected_preproc_filter.params);
+    fn = GS.selected_preproc.fn(GS.selected_preproc.params);
     % Make filter
     GS.dat.(f{i}).pp_stim = fn(GS.dat.(f{i}).raw_stim) ; % Apply filter
 end
 
-log_inf('Done prefiltering.');
-update_prefilter_plots(handles);
+% TODO: Check that the length of the preprocessed vector is the SAME size
+% as the original raw stimulus. 
+
+% Call the callbacks which initialize thingscallback
+set(handles.preproc_index_popup, 'String', 'NONE');
+preproc_index_popup_Callback(handles.preproc_index_popup, [], handles);
+
+log_inf('Done preprocessing.');
+preprocessing_view_popup_Callback(handles.preprocessing_view_popup, [], handles);
 
 %------------------------------------------------------------------------
 function update_preproc_view_plot(handles)
+log_dbg('Updating preproc_view_plot');
 global GS;
 
-% REPLACEMENTS
-% stim_idx = GS.selected_stim_idx;
-% GS.raw_time;
-% GS.PF_COEFS;   % How can i get at this!?
-% GS.samp_freq;  % Check if right?
-% GS.PF_STIM
+% Only update if all fields are defined
+if ~(isfield(GS, 'selected_stimfile') & ...
+     isfield(GS, 'selected_preproc') & ...
+     isfield(GS, 'selected_preproc_idx') & ...    
+     isfield(GS, 'preproc_view_plot_type') & ...
+     isfield(GS, 'dat') & ...
+     isfield(GS.dat, GS.selected_stimfile) & ...
+     isfield(GS.dat.(GS.selected_stimfile), 'pp_stim'))
+   log_dbg('Ignoring preproc plot update since not all fields ready.');
+   return  
+end
 
-n_filts = length(PF_COEFS);
+dat = GS.dat.(GS.selected_stimfile);
+[n_stims, n_samps, n_filts] = size(dat.pp_stim);
+
+% By default, set the preproc_index_popup to be disabled but populated
+c={};
+for i = 1:n_filts
+    c{i} = sprintf('%d', i);
+end    
+set(handles.preproc_index_popup, 'String', char(c));
+set(handles.preproc_index_popup, 'Enable', 'Off');
+set(handles.view_preproc_filter_label, 'Enable', 'Off');
 
 axes(handles.preproc_view_axes); cla;
 hold on;
 switch GS.preproc_view_plot_type
     case 'Frequency Response'
-%         for filt_idx = 1:n_filts
-%             ww = 0:(pi/1000):pi;
-%             H = freqz(PF_COEFS{filt_idx}{1}, PF_COEFS{filt_idx}{2}, ww);
-%             loglog(ww, abs(H), pickcolor(filt_idx));
-%             setAxisLabelCallback(gca, @(f) (f*SAMPFREQ/(3.14*2)), 'X');
-%             axis tight;
-%         end
+        % If the filter has a frequency response method defined, call it
+        if isfield(GS.selected_preproc.params, 'freq_resp_plot_fn')
+            GS.selected_preproc.params.freq_resp_plot_fn();
+        else
+            log_dbg('No fn found to plot freq response.');
+        end
     case 'Filtered Stimulus'
         for filt_idx = 1:n_filts
-            plot(TIME, squeeze(PF_STIM(stim_idx,:,filt_idx)), ...
-                 pickcolor(filt_idx));
+             plot(dat.raw_time, ...
+                  squeeze(dat.pp_stim(GS.selected_stim_idx,:,filt_idx)), ...
+                  pickcolor(filt_idx));
             axis tight;
         end
-    case 'Downsampled Stimulus'
-        % TODO: Plot the heat map for a particular filter
-        % TODO: Add a control that lets you select which preproc filter dim
-        % to visualize
+     case 'Filtered Spectrogram'
+        set(handles.preproc_index_popup, 'Enable', 'On');
+        set(handles.view_preproc_filter_label, 'Enable', 'On');
+        logfsgram(dat.pp_stim(GS.selected_stim_idx,:,GS.selected_preproc_idx)', 4048, 100000, [], [], 500, 12); 
+        caxis([-20,40]);
+        drawnow;
         
 end
 hold off;
-
 
 function preprocessing_view_popup_CreateFcn(hObject, eventdata, handles)
 function preprocessing_view_popup_Callback(hObject, eventdata, handles)
@@ -671,8 +704,20 @@ global GS;
 nvals = cellstr(get(hObject, 'String'));
 plottype = nvals{get(hObject, 'Value')};
 GS.preproc_view_plot_type = plottype;
-update_preproc_plot(handles);
+update_preproc_view_plot(handles);
+                                
+function preproc_index_popup_CreateFcn(hObject, eventdata, handles)
+function preproc_index_popup_Callback(hObject, eventdata, handles)
+global GS;
+nvals = cellstr(get(hObject, 'String'));
+GS.selected_preproc_idx = str2num(nvals{get(hObject, 'Value')});
+if isempty(GS.selected_preproc_idx)
+    GS.selected_preproc_idx = 1;
+end
+update_preproc_view_plot(handles);
 
+function load_preproc_params_button_Callback(hObject, eventdata, handles)
+function save_preproc_params_button_Callback(hObject, eventdata, handles)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DOWNSAMPLING WIDGETS
@@ -686,9 +731,9 @@ DS_RESPAVG = conv_fn(RESPAVG, 2, @sum, SAMPFREQ/DS_FREQ, 0);
 DS_TIME = [0:1/DS_FREQ:l/DS_FREQ-1/DS_FREQ];
 DS_STIM = conv_fn(PF_STIM, 2, @mean, SAMPFREQ/DS_FREQ, 0);
 
-
-
-
+% TODO: 
+%    case 'Downsampled Stimulus'
+%        % If the downsampled data exists, plot it.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MODEL CLASS WIDGETS
@@ -699,7 +744,6 @@ FIRBINSIZE = str2num(get(handles.bin_size,'String'));
 d = length(PF_COEFS); % Since this is a cell array, this returns just nfilts
 l = ceil(FIRHIST/FIRBINSIZE);
 FIRCOEFS = zeros(d,l);
-
 
 function make_predictions()
 % Apply the FIR filters to corresponding downsampled stimuli to get the model prediction
@@ -933,10 +977,6 @@ setoptplot(handles, handles.optplot4, plottype);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function preproc_filter_index_popup_CreateFcn(hObject, eventdata, handles)
-function preproc_filter_index_popup_Callback(hObject, eventdata, handles)
-function load_preproc_params_button_Callback(hObject, eventdata, handles)
-function save_preproc_params_button_Callback(hObject, eventdata, handles)
 
 
 function downsampling_popup_CreateFcn(hObject, eventdata, handles)
