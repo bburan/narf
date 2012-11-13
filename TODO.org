@@ -1,12 +1,13 @@
-* Default behaviors
-  Problem: No arguments to the fn gets default params. 
-           Some parameters created in this way (eg, freq_resp_plot_fn) are not automatically regenerated when outside people CHANGE the params. 
-	   Regenerating the primary closing function doesn't help member functions...and never could
-  Solution: Pass params to every method function. 
-  Solution: New default behavior
-     1. No arguments gets default params.
-     2. One argument is a 'modification' function, which returns a new, rebuilt params structure that you can set to replace the first
-     3. Two arguments is the same as one argument, but the filtering is actually performed.
+* New Default Behavior:
+  Like clojure's state; completely functional. I kind of like the idea of using continuations:
+      Function returns a handle to itself with an updated version of the data being closed over.
+      Call that function with no args to get the parameters (instance methods or instance data, either way)
+      Call that function with one arg to update it to have new values. 
+  Upsides: Easy to create multiple copies with their own histories.
+  Downsides: MATLAB is probably too stupid to garbage collect these, meaning they will be huge memory hogs.
+
+* More practical, simpler way
+  If an argument has an editable field in it, it will be used when creating the new param struct. 
 
 * Design of modular model components will rely on closures and zero-argument querying (No need to add a full protocol structure yet!)
   1. At startup, directory is read, and preproc_filter_popup is initialized

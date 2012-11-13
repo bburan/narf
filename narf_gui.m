@@ -381,7 +381,6 @@ for i = 1:r
     end
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DATA SELECTION GUI
 
@@ -654,14 +653,11 @@ global GS;
 log_inf('Preprocessing...');
 
 % TODO: Move this core computation somewhere else!
-f = fieldnames(GS.dat);
-spp = GS.preprocs.(GS.selected_preproc_name);
+f = fieldnames(GS.dat); 
+spp = GS.preprocs.(GS.selected_preproc_name).params;
 for i = 1:length(f)
-    % Rebuild the filter using the present params
-    fn = spp.fn(spp.params);
-    
     % Feed data into that new filter
-    GS.dat.(f{i}).pp_stim = fn(GS.dat.(f{i}).raw_stim); % Apply filter
+    GS.dat.(f{i}).pp_stim = spp.preproc_fn(spp, GS.dat.(f{i}).raw_stim); 
 end
 
 % TODO: Check that the length of the preprocessed vector is the SAME size
@@ -759,20 +755,21 @@ function save_preproc_params_button_Callback(hObject, eventdata, handles)
 function preproc_data_table_CellEditCallback(hObject, eventdata, handles)
 global GS;
 log_dbg('preproc_data_table modified. Click ''preprocess!'' to refresh.');
-% Whenever the data table is edited, do four things:
-% 1. Pull out the present values and store them in GS
+% Whenever the data table is edited, do three things:
+% 1. Pull out the present values and update the params struct first
 s = extract_field_val_pairs(hObject, 2, 3);
 fns = fieldnames(s);
+pp = GS.preprocs.(GS.selected_preproc_name);
 for i = 1:length(fns);
-    GS.preprocs.(GS.selected_preproc_name).params.(fns{i}) = s.(fns{i});
+    pp.params.(fns{i}) = s.(fns{i});
 end
-% 2. Update the cached function call
+GS.preprocs.(GS.selected_preproc_name).params = pp.fn(pp.params); 
 
-% 3. Update which parameters are fittable
+% 2. Update which parameters are desired to be fit with the optimization
 GS.preprocs.(GS.selected_preproc_name).fittable_params = ...
      extract_checked_fields(hObject, 1, 2);
 
-% 4. Invalidate by setting preprocessed data to [] and clearing plot
+% 3. Invalidate by setting preprocessed data to [] and clearing plot
 GS.dat.(GS.selected_stimfile).pp_stim = [];
 axes(handles.preproc_view_axes); cla
 
@@ -831,8 +828,6 @@ for filt_idx = 1:n_filts
 end
 
 DS_PRED = squeeze(sum(DS_PREDS, 3)); 
-
-
 
 function plot_model(handles)
 global FIRCOEFS DS_TIME DS_STIM DS_RESPAVG DS_PREDS DS_PRED FIRBINSIZE;
