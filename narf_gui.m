@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 12-Nov-2012 14:26:51
+% Last Modified by GUIDE v2.5 12-Nov-2012 16:11:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -258,7 +258,7 @@ function dat = load_stim_resps(cfd, training_set, test_set)
 %      R = repetition index #
 %      N = Time index at 100KHz sampling
 %      T = Time index in downsampled frequency
-%      F = Preprocessing filter index #
+%      F = Preprocessing index #
 
 log_dbg('load_stim_resps() was called');
 
@@ -359,9 +359,8 @@ function s = extract_field_val_pairs(mytable, fieldname_col, value_col)
 % Return a new struct extracted from two columns
 d = get(mytable, 'Data');
 [r, c] = size(d);
-if (c < fieldname_colidx | c < value_colidx | fieldname_colidx < 1 | ...
-        value_colidx < 1)
-    err('A column index number is outside the data table''s range.');
+if (c < fieldname_col | c < value_col | fieldname_col < 1 |  value_col < 1)
+    err('Column index number is outside the data table''s range.');
 end
 s = {};
 for i = 1:r
@@ -620,20 +619,6 @@ end
 set(mytable, 'Data', c);
 drawnow;
 
-
-%------------------------------------------------------------------------
-function s = extract_field_val_pairs(mytable, fieldname_col, value_col)
-d = get(mytable, 'Data');
-[r, c] = size(d);
-if (c < fieldname_colidx | c < value_colidx | fieldname_colidx < 1 | ...
-        value_colidx < 1)
-    log_err('Column index number is outside the data table''s range.');
-end
-s = {};
-for i = 1:r
-    s.(d{i,fieldname_col}) = eval(d{i,value_col});
-end
-
 %------------------------------------------------------------------------
 function preproc_popup_CreateFcn(hObject, eventdata, handles)
 function preproc_popup_Callback(hObject, eventdata, handles)
@@ -672,9 +657,11 @@ log_inf('Preprocessing...');
 f = fieldnames(GS.dat);
 spp = GS.preprocs.(GS.selected_preproc_name);
 for i = 1:length(f)
+    % Rebuild the filter using the present params
     fn = spp.fn(spp.params);
-    % Make filter
-    GS.dat.(f{i}).pp_stim = fn(GS.dat.(f{i}).raw_stim) ; % Apply filter
+    
+    % Feed data into that new filter
+    GS.dat.(f{i}).pp_stim = fn(GS.dat.(f{i}).raw_stim); % Apply filter
 end
 
 % TODO: Check that the length of the preprocessed vector is the SAME size
@@ -714,7 +701,7 @@ for i = 1:n_filts
 end    
 set(handles.preproc_index_popup, 'String', char(c));
 set(handles.preproc_index_popup, 'Enable', 'Off');
-set(handles.view_preproc_filter_label, 'Enable', 'Off');
+set(handles.view_preproc_index_label, 'Enable', 'Off');
 
 spp = GS.preprocs.(GS.selected_preproc_name);
 
@@ -737,7 +724,7 @@ switch GS.preproc_view_plot_type
         end
      case 'Filtered Spectrogram'
         set(handles.preproc_index_popup, 'Enable', 'On');
-        set(handles.view_preproc_filter_label, 'Enable', 'On');
+        set(handles.view_preproc_index_label, 'Enable', 'On');
         logfsgram(dat.pp_stim(GS.selected_stim_idx,:,GS.selected_preproc_idx)', 4048, 100000, [], [], 500, 12); 
         caxis([-20,40]);
         drawnow;
@@ -772,20 +759,33 @@ function save_preproc_params_button_Callback(hObject, eventdata, handles)
 function preproc_data_table_CellEditCallback(hObject, eventdata, handles)
 global GS;
 log_dbg('preproc_data_table modified. Click ''preprocess!'' to refresh.');
-% Whenever the data table is edited, do three things:
+% Whenever the data table is edited, do four things:
 % 1. Pull out the present values and store them in GS
 s = extract_field_val_pairs(hObject, 2, 3);
 fns = fieldnames(s);
 for i = 1:length(fns);
-    GS.preprocs{GS.selected_preproc_idx}.(fns{i}) = s.(fns{i});
+    GS.preprocs.(GS.selected_preproc_name).params.(fns{i}) = s.(fns{i});
 end
-% 2. Update which parameters are fittable
+% 2. Update the cached function call
+
+% 3. Update which parameters are fittable
 GS.preprocs.(GS.selected_preproc_name).fittable_params = ...
      extract_checked_fields(hObject, 1, 2);
 
-% 3. Invalidate by setting preprocessed data to [] and clearing plot
-GS.dat.(GS.selected_stim_filename).pp_stim = [];
+% 4. Invalidate by setting preprocessed data to [] and clearing plot
+GS.dat.(GS.selected_stimfile).pp_stim = [];
 axes(handles.preproc_view_axes); cla
+
+% --- Executes when entered data in editable cell(s) in preproc_data_table.
+function auto_preproc_data_table_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to preproc_data_table (see GCBO)
+% eventdata  structure with the following fields (see UITABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+% handles    structure with handles and user data (see GUIDATA)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DOWNSAMPLING WIDGETS

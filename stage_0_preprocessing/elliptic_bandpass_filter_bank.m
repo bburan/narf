@@ -58,14 +58,17 @@ if ~(all(isfield(params, {'high_freqs', 'low_freqs', 'order', ...
  end
 % 
 % % Compute the filter coefficients in a cell array 
-% n_filts = length(params.low_freqs);
-% params.coefs={}; 
-% for i = 1:n_filts
-%     [B,A] = ellip(params.order, 0.5, params.stop_dB, ...
-%        [(params.low_freqs(i)/params.sampfs)*2,...
-%         (params.high_freqs(i)/params.sampfs)*2]);   
-%     params.coefs{i} = {B,A};
-% end 
+n_filts = length(params.low_freqs);
+ params.coefs={}; 
+ for i = 1:n_filts
+     [B,A] = ellip(params.order, 0.5, params.stop_dB, ...
+        [(params.low_freqs(i)/params.sampfs)*2,...
+         (params.high_freqs(i)/params.sampfs)*2]);   
+     params.coefs{i} = {B,A};
+ end
+ 
+ % Compute the freq response plot function
+ params.freq_resp_plot_fn = @do_plot_elliptic_bandpass_filter_bank_frq_resp;
 
 % ------------------------------------------------------------------------
 % DEFINE TWO INNER FUNCTIONS...who needs objects when you can use closures!
