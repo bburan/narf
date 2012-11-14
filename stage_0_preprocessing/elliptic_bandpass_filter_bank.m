@@ -47,13 +47,13 @@ params.editable_fields = {'low_freqs', 'high_freqs', 'order', 'sampfs', 'stop_dB
 if nargin == 1
     fns = fieldnames(args);
     for idx = 1:length(fns);
-        if isfield(params.editable_fields, fns(idx))
-            params.(fns(idx)) = args.(fns(idx));
+        if any(ismember(params.editable_fields, fns{idx}))
+            params.(fns{idx}) = args.(fns{idx});
         end
     end
 end
 
-% These quantities will be auto-managed to keep us sane.
+% Below values are computed using above values and are not directly settable
 params.coefs={}; 
 for i = 1:length(params.low_freqs);
     [B,A] = ellip(params.order, 0.5, params.stop_dB, ...
@@ -105,4 +105,3 @@ params.preproc_fn = @do_elliptic_filter;
 ret = params;
 
 end
-

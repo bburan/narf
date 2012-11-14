@@ -773,6 +773,7 @@ GS.preprocs.(GS.selected_preproc_name).fittable_params = ...
 GS.dat.(GS.selected_stimfile).pp_stim = [];
 axes(handles.preproc_view_axes); cla
 
+
 % --- Executes when entered data in editable cell(s) in preproc_data_table.
 function auto_preproc_data_table_CellEditCallback(hObject, eventdata, handles)
 % hObject    handle to preproc_data_table (see GCBO)
