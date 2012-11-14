@@ -1,3 +1,23 @@
+* Next few steps:
+  - Create a FIR model function
+  - Expose parameters
+  - Essentially, just duplicate the downsampling GUI code 
+  - Finally, figure out how to go through and take the 'fittable_params' and wrap/unwrap them
+  - Adding a boosting algortihm would also be good.
+
+* BACKLOG
+  - Replace all the 'length' and 'size' things with 'numel' where appropriate
+  - Normalize the PSTH
+  - Handle NaN's better
+  - Use resample during the downsampling step. (which applies the Sinc() function)
+  - Modularize the Prefilter setup, which must have
+    1. A default parameters object
+    2. A function which filters a sound response
+    3. A function which returns or plots the 'stationary frequency response'
+    4. A pack function, which accepts 
+    5. An unpack function
+  - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
+
 * New Default Behavior:
   Like clojure's state; completely functional. I kind of like the idea of using continuations:
       Function returns a handle to itself with an updated version of the data being closed over.
@@ -26,7 +46,7 @@
   6. Eventually, somebody clicks the "preprocess" button  (OR A SCRIPT STARTS)
      - [ ] A closed-over function is created, which all an automatic script would care about anyway.
      - [ ] Data is verified
-     - [ ] raw_data is filtered 
+     - [ ] raw_data is filtered
      - [ ] The plots are updated (If it's the first time being called, not all GS globals will be ready.)
   7. At a later point, somebody clicks "optimize"
      - [ ] Using the GS.preproc_params_mask and GS.preproc_params, a vector is made and handed to the optimization thing. 
@@ -40,20 +60,6 @@
   When a function is called with no arguments, it returns a user-visible string and a default parameters struct.
   Inner functions must return their parameters struct when given no arguments. 
   If you modify a function after starting up narf_gui, what will happen? (Right now, changes to the pretty-name and params will not be altered without restarting narf_gui, however if you fix the function itself then that is fine.)
-
-* BACKLOG
-  - Add a button to load a set of model params and initialize the GUI accordingly
-  - Think about how to do better invalidation of plots. Basing it upon the state of GS is fine, but needs manual knowledge of 'downstream' to work. 
-  - Normalize the PSTH
-  - Handle NaN's better
-  - Use resample during the downsampling step. (which applies the Sinc() function)
-  - Modularize the Prefilter setup, which must have
-    1. A default parameters object
-    2. A function which filters a sound response
-    3. A function which returns or plots the 'stationary frequency response'
-    4. A pack function, which accepts 
-    5. An unpack function
-  - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
 
 * Modules
   - Automatic covering bands filter, which presents downsampled results of gamma or elliptical notched filters spaced across the domains and completely covering the input space
