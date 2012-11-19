@@ -1,0 +1,415 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+NARF
+\end_layout
+
+\begin_layout Author
+Ivar Thorson
+\end_layout
+
+\begin_layout Section
+Overview
+\end_layout
+
+\begin_layout Standard
+In Unix, the fundamental abstraction used is that everything on the system
+ can be accessed as if it were a file.
+ In NARF, everything is a pure function; side effects are NOT ALLOWED.
+\end_layout
+
+\begin_layout Standard
+TODO: Describe briefly what a pure function is.
+ 
+\end_layout
+
+\begin_layout Standard
+TODO: Describe interface programming as lightweight, mixable OOP.
+\end_layout
+
+\begin_layout Standard
+TODO: Describe continuation passing style
+\end_layout
+
+\begin_layout Subsection
+Directory structure
+\end_layout
+
+\begin_layout Subsection
+Data Representation
+\end_layout
+
+\begin_layout Standard
+Currently the heirarchy is like this
+\end_layout
+
+\begin_layout Description
+GS.dat Which is the big data structure
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+GS.dat.(stimfilename).raw_stim
+\end_layout
+
+\begin_layout Description
+GS.dat.(stimfilename).raw_resp
+\end_layout
+
+\begin_layout Description
+GS.dat.(stimfilename).raw_respavg
+\end_layout
+
+\begin_layout Description
+GS.dat.(stimfilename).raw_isi
+\end_layout
+
+\begin_layout Description
+GS.dat.(stimfilename).ds_stim
+\end_layout
+
+\begin_layout Description
+GS.dat.(stimfilename).ds_resp
+\end_layout
+
+\begin_layout Description
+GS.dat.(stimfilename).ds_respavg
+\end_layout
+
+\begin_layout Description
+GS.dat.(stimfilename).preds
+\end_layout
+
+\begin_layout Description
+GS.dat.(stimfilename).pred
+\end_layout
+
+\end_deeper
+\begin_layout Description
+GS.selected_stimfile
+\end_layout
+
+\begin_layout Description
+GS.selected_stim_idx
+\end_layout
+
+\begin_layout Description
+GS.selected_model_name
+\end_layout
+
+\begin_layout Description
+GS.selected_preproc_name
+\end_layout
+
+\begin_layout Description
+GS.selected_downsamp_name
+\end_layout
+
+\begin_layout Description
+GS.selected_
+\end_layout
+
+\begin_layout Standard
+Data is stored under a big DAT structure.
+\end_layout
+
+\begin_layout Standard
+Options:
+\end_layout
+
+\begin_layout Enumerate
+Give them each a fieldname under each file's DAT struct (because that's
+ the easiest way to check if compatible data exists
+\end_layout
+
+\begin_layout Enumerate
+Pass a cell array of all parameters and functions used up to this point
+ (because it's annoying having to set raw_sample_freq over and over again)
+\end_layout
+
+\begin_layout Subsection
+Invalidation of Data and Plots
+\end_layout
+
+\begin_layout Standard
+Define a 'run computation' function which closes over past state such that
+ callbacks pull up the old state and reset the GS value to before the computatio
+n occured?
+\end_layout
+
+\begin_layout Subsection
+Fitting functions
+\end_layout
+
+\begin_layout Standard
+I think this needs to happen first
+\end_layout
+
+\begin_layout Section
+Function Specification
+\end_layout
+
+\begin_layout Standard
+If 
+\series bold
+F()
+\series default
+ is a function to be used in the NARF architecture, it must satisfy a few
+ core requirements to be used properly.
+ These features are:
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+F()
+\series default
+ must be placed in a directory where NARF can find it.
+ 
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+F()
+\series default
+ must return a default parameter struct 
+\series bold
+params
+\series default
+ when given zero arguments.
+ The structure 
+\series bold
+params
+\series default
+ must satisfy the following requirements:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+It 
+\emph on
+must 
+\emph default
+have these required fields:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+params.pretty_name An alphanumeric string describing the function
+\end_layout
+
+\begin_layout Description
+params.fn A handle to a function which does the 'core computation' of 
+\series bold
+F().
+ 
+\series default
+It accepts two arguments (
+\series bold
+p
+\series default
+, 
+\series bold
+x
+\series default
+).
+ 
+\series bold
+p
+\series default
+ is a copy of the 
+\series bold
+params
+\series default
+ structure so that the state of
+\series bold
+ F()
+\series default
+ may be easily read.
+ 
+\series bold
+x
+\series default
+ is a data structure passed from a previous function.
+\end_layout
+
+\begin_layout Description
+params.input_validation_fn A function which accepts a two arguments (
+\series bold
+p
+\series default
+,
+\series bold
+ x
+\series default
+), and returns a true if 
+\series bold
+params.fn(p,x)
+\series default
+ can be run, otherwise it returns an error string.
+\end_layout
+
+\begin_layout Description
+params.editable_fields A cell array of field names.
+ These will be displayed to the GUI user for easy editing.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+It 
+\emph on
+may
+\emph default
+ also have these optional fields which enable special behavior:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+params.plot_fns A cell array of cell arrays with three elements each.
+ The first element in each sub-cell-array is a user-readable string naming
+ the plot function, the second is a function handle to a function which
+ plots on the default plot axes, and the third is a struct which contains
+ parameters that will be passed to the plot function.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Any fields listed in 
+\series bold
+params.editable_fields
+\series default
+ must have values with one of the following types: integer, floating point,
+ 1D or 2D matrix, string, boolean, or cell array of strings.
+ No other data types are allowed.
+\end_layout
+
+\begin_layout Enumerate
+The user is allowed to define any other field in
+\noun on
+ 
+\series bold
+\noun default
+params
+\series default
+ that they wish and store arbitrary data in it.
+ However, if it is not listed in 
+\series bold
+params.editable_fields
+\series default
+, it will not ever be directly editable.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+When 
+\series bold
+F() 
+\series default
+is given a single argument 
+\noun on
+args
+\noun default
+, it must: (Footnote: a useful function to accomplish these two things is
+ 
+\noun on
+update_narf_struct.m
+\noun default
+)
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Check in 
+\noun on
+args
+\noun default
+ for the existence of fields listed in .
+\end_layout
+
+\begin_layout Enumerate
+Any fields that exist in 
+\noun on
+args
+\noun default
+ will be copied into params
+\noun on
+ params
+\noun default
+ to overwrite the default values of 
+\noun on
+params.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+Example
+\end_layout
+
+\begin_layout Standard
+The following is an example function for NARF which 
+\end_layout
+
+\end_body
+\end_document

@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 14-Nov-2012 12:11:34
+% Last Modified by GUIDE v2.5 16-Nov-2012 14:37:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -121,7 +121,7 @@ set(handles.perf_metric_data_table, 'Data', {});
 set(handles.term_cond_data_table, 'Data', {});
 
 % Initialize the preproc popup menu and data table
-initialize_popup(PREPROC_DIR, 'preprocs', 'selected_preproc_name', handles.preproc_popup);
+initialize_popup(PREPROC_DIR, 'preproc', 'selected_preproc_name', handles.preproc_popup);
 set(handles.preproc_index_popup, 'String', '1'); % Initialize display idx too
 set(handles.preproc_index_popup, 'Value', 1);
 preproc_popup_Callback(handles.preproc_popup, [], handles);
@@ -130,7 +130,11 @@ preproc_popup_Callback(handles.preproc_popup, [], handles);
 initialize_popup(DOWNSAMP_DIR, 'downsamp', 'selected_downsamp_name', handles.downsamp_popup);
 downsamp_popup_Callback(handles.downsamp_popup, [], handles);
 
-% TODO: Initialize menu for model
+% Initialize menu for model
+initialize_popup(MODEL_DIR, 'model', 'selected_model_name', handles.model_popup);
+model_popup_Callback(handles.model_popup, [], handles);
+
+
 % TODO: Initialize menu for stochasticity
 
 drawnow;
@@ -638,7 +642,7 @@ update_selected_stim_idx_popup(handles);
 update_raw_stim_plot(handles);
 update_raw_resp_plot(handles);
 preproc_view_popup_Callback(handles.preproc_view_popup, [], handles);
-% TODO: update_model_view_plot(handles);
+update_model_view_plot(handles);
 
 %------------------------------------------------------------------------
 function selected_stim_idx_popup_CreateFcn(hObject, eventdata, handles)
@@ -650,7 +654,7 @@ GS.selected_stim_idx = stim_idx;
 update_raw_stim_plot(handles);
 update_raw_resp_plot(handles);
 preproc_view_popup_Callback(handles.preproc_view_popup, [], handles);
-% TODO: update_model_view_plot(handles);
+update_model_view_plot(handles);
 
 %------------------------------------------------------------------------
 function raw_stim_view_popup_CreateFcn(hObject, eventdata, handles)
@@ -692,20 +696,16 @@ end
 function preproc_popup_CreateFcn(hObject, eventdata, handles)
 function preproc_popup_Callback(hObject, eventdata, handles)
 generic_model_selecting_popup(hObject, ...
-    'preprocs', 'selected_preproc_name', handles.preproc_data_table);
+    'preproc', 'selected_preproc_name', handles.preproc_data_table);
 
 %------------------------------------------------------------------------
 function preproc_data_table_CellEditCallback(hObject, eventdata, handles)
 global GS;
 log_dbg('preproc_data_table modified. Click ''preprocess!'' to refresh.');
-generic_model_data_table_update(hObject, 'preprocs', 'selected_preproc_name');
+generic_model_data_table_update(hObject, 'preproc', 'selected_preproc_name');
 GS.dat.(GS.selected_stimfile).pp_stim = []; % Invalidate data
 axes(handles.preproc_view_axes); cla;       % Clear plot
 
-%------------------------------------------------------------------------
-function load_preproc_params_button_Callback(hObject, eventdata, handles)
-function save_preproc_params_button_Callback(hObject, eventdata, handles)
-    
 %------------------------------------------------------------------------
 function preproc_button_Callback(hObject, eventdata, handles)
 global GS;
@@ -715,7 +715,7 @@ log_inf('Preprocessing...');
 %-------
 % TODO: Move this core computation somewhere else!
 f = fieldnames(GS.dat); 
-spp = GS.preprocs.(GS.selected_preproc_name).params;
+spp = GS.preproc.(GS.selected_preproc_name).params;
 for i = 1:length(f)
     % Feed data into that new filter
     GS.dat.(f{i}).pp_stim = spp.preproc_fn(spp, GS.dat.(f{i}).raw_stim); 
@@ -780,7 +780,7 @@ set(handles.preproc_index_popup, 'String', char(c));
 set(handles.preproc_index_popup, 'Enable', 'Off');
 set(handles.view_preproc_index_label, 'Enable', 'Off');
 
-spp = GS.preprocs.(GS.selected_preproc_name);
+spp = GS.preproc.(GS.selected_preproc_name);
 
 axes(handles.preproc_view_axes); cla;
 hold on;
@@ -823,14 +823,10 @@ generic_model_selecting_popup(hObject, ...
 %------------------------------------------------------------------------
 function downsamp_data_table_CellEditCallback(hObject, eventdata, handles)
 global GS;
-log_dbg('downsampling_data_table modified. Click ''downsample!'' to refresh.');
+log_dbg('downsampling_data_table modified. Click ''downsample!'' to refresh plots.');
 generic_model_data_table_update(hObject, 'downsamp', 'selected_downsamp_name');
 GS.dat.(GS.selected_stimfile).ds_stim = []; % Invalidate data
 axes(handles.downsamp_view_axes); cla;    % Clear plot
-
-%------------------------------------------------------------------------
-function load_downsamp_params_button_Callback(hObject, eventdata, handles)
-function save_downsamp_params_button_Callback(hObject, eventdata, handles)
 
 %------------------------------------------------------------------------
 function downsample_button_Callback(hObject, eventdata, handles)
@@ -846,8 +842,10 @@ dsfs = p.ds_freq;
 ratio = ceil(fs/dsfs);
 % Process the stim, resp, and time matrices for each file
 for i = 1:length(f)
-    GS.dat.(f{i}).ds_stim = p.downsamp_fn(p, GS.dat.(f{i}).pp_stim); 
-    GS.dat.(f{i}).ds_respavg = p.downsamp_fn(p, GS.dat.(f{i}).raw_respavg);    
+    [ds_stim, ds_respavg] = p.downsamp_fn(p, GS.dat.(f{i}).pp_stim, ...
+                                             GS.dat.(f{i}).raw_respavg); 
+    GS.dat.(f{i}).ds_stim = ds_stim;
+    GS.dat.(f{i}).ds_respavg = ds_respavg; 
     % TODO: How should the time resampling occur?
     GS.dat.(f{i}).ds_time = linspace(1/dsfs, GS.dat.(f{i}).raw_time(end), ...
                                      length(GS.dat.(f{i}).ds_respavg));
@@ -911,84 +909,99 @@ hold off;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MODEL CLASS WIDGETS
-function update_fir_model(handles)
-global PF_COEFS FIRHIST FIRBINSIZE FIRCOEFS;
-FIRHIST = str2num(get(handles.fir_history,'String'));
-FIRBINSIZE = str2num(get(handles.bin_size,'String'));
-d = length(PF_COEFS); % Since this is a cell array, this returns just nfilts
-l = ceil(FIRHIST/FIRBINSIZE);
-FIRCOEFS = zeros(d,l);
 
-function make_predictions()
-% Apply the FIR filters to corresponding downsampled stimuli to get the model prediction
-% Since it is linear, the prediction is just the sum of the filters
-% We assume that there are no second order terms combining elements of both filters
+%------------------------------------------------------------------------
+function model_popup_CreateFcn(hObject, eventdata, handles)
+function model_popup_Callback(hObject, eventdata, handles)
+generic_model_selecting_popup(hObject, ...
+    'model', 'selected_model_name', handles.model_data_table);
 
-global DS_STIM DS_PREDS FIRCOEFS DS_PRED;
-TOTAL_INPUT = sum(DS_STIM, 3);
-DS_PREDS = [];
+%------------------------------------------------------------------------
+function model_data_table_CellEditCallback(hObject, eventdata, handles)
+global GS;
+log_dbg('model_data_table modified. Click ''predict!'' to refresh plots.');
+generic_model_data_table_update(hObject, 'model', 'selected_model_name');
+GS.dat.(GS.selected_stimfile).ds_pred = []; % Invalidate data
+axes(handles.model_view_axes); cla;    % Clear plot
 
-%disp('Applying FIR filters');
-[n_filts, l] = size(FIRCOEFS);
+%------------------------------------------------------------------------    
+function model_button_Callback(hObject, eventdata, handles)
+global GS;
+% TODO: Check that all data is ready for the model fn to run!
+% TODO: Check that the object has a .model_fn method!
+log_inf('Running model...');
+% TODO: Move this core computation somewhere else!
+f = fieldnames(GS.dat); 
+p = GS.model.(GS.selected_model_name).params;
+% Process the stim, resp, and time matrices for each file
+for i = 1:length(f)
+    GS.dat.(f{i}).ds_pred = p.model_fn(p, GS.dat.(f{i}).ds_stim); 
+end
+log_inf('Done running model.');
+% Reset the GUI using callbacks
+model_view_popup_Callback(handles.model_view_popup, [], handles);
 
-for filt_idx = 1:n_filts 
-    DS_PREDS = cat(3, DS_PREDS, sqrt(abs(filter(FIRCOEFS(filt_idx,:), ...
-        1, squeeze(DS_STIM(:,:,filt_idx)), [],2))));
+
+%------------------------------------------------------------------------
+function model_view_popup_CreateFcn(hObject, eventdata, handles)
+function model_view_popup_Callback(hObject, eventdata, handles)
+global GS;
+nvals = cellstr(get(hObject, 'String'));
+plottype = nvals{get(hObject, 'Value')};
+GS.model_view_plot_type = plottype;
+update_model_view_plot(handles);
+
+%------------------------------------------------------------------------
+function update_model_view_plot(handles)
+log_dbg('Updating model_view_plot');
+global GS;
+
+% Only update if all fields are defined
+if ~(isfield(GS, 'selected_stimfile') & ...
+     isfield(GS, 'selected_model_name') & ...
+     isfield(GS, 'model_view_plot_type') & ...
+     isfield(GS, 'dat') & ...
+     isfield(GS.dat, GS.selected_stimfile) & ...
+     isfield(GS.dat.(GS.selected_stimfile), 'ds_stim') & ...
+     isfield(GS.dat.(GS.selected_stimfile), 'ds_pred') & ...
+     isfield(GS.dat.(GS.selected_stimfile), 'ds_respavg'))
+    log_dbg('Ignoring model plot update since not all fields ready.');
+   return  
 end
 
-DS_PRED = squeeze(sum(DS_PREDS, 3)); 
+mod = GS.model.(GS.selected_model_name);
+dat = GS.dat.(GS.selected_stimfile);
+plottype = GS.model_view_plot_type;
 
-
-function plot_model(handles)
-global FIRCOEFS DS_TIME DS_STIM DS_RESPAVG DS_PREDS DS_PRED FIRBINSIZE;
-
-nvals = cellstr(get(handles.downsamp_view_popup, 'String'));
-plottype = nvals{get(handles.downsamp_view_popup, 'Value')};
-
-nvals = cellstr(get(handles.selected_stim_idx_popup, 'String'));
-stim_idx = str2num(nvals{get(handles.selected_stim_idx_popup, 'Value')});
-
-[n_filts, n_coefs] = size(FIRCOEFS);
-
-axes(handles.downsamp_view_axes); cla;
+axes(handles.model_view_axes); cla;
 hold on;
 switch plottype
-	case 'Model Predictions'
-        make_predictions();
-        for filt_idx = 1:n_filts
-            plot(DS_TIME, DS_PREDS(stim_idx,:,filt_idx), pickcolor(filt_idx));
-        end
-        setAxisLabelCallback(gca, @(t) (t), 'X');
+	case 'Prediction vs. Reality'
+        % Scale the response and prediction in case they have wildly
+        % different scales (a common problem when using a correlation
+        % coefficient-type performance metric is used to fit the model
+        respavg = squeeze(dat.ds_respavg(GS.selected_stim_idx,:));
+        rs = mean(respavg);
+        stim = squeeze(dat.ds_pred(GS.selected_stim_idx,:));
+        ss = mean(stim);
+        % Plot 
+        plot(dat.ds_time, (1/rs)*respavg, 'k-', ...
+             dat.ds_time, (1/ss)*stim, 'r-');
+        %setAxisLabelCallback(gca, @(t) (t), 'X');
         axis tight;
-    case 'FIR Shape'
-        for filt_idx = 1:n_filts
-            stem([1:n_coefs], FIRCOEFS(filt_idx,:), pickcolor(filt_idx));
+    case 'FIR Coefs'
+        if isfield(mod.params, 'plot_coefs_fn')
+            mod.params.plot_coefs_fn(mod.params);
+        else
+            log_dbg('No fn found to plot coefficients');
         end
-        setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
-        axis tight;
-    case 'Downsampled Resp'
-        %plot(DS_TIME, DS_RESPAVG(stim_idx,:));
-        s1 = 1/max(DS_RESPAVG(stim_idx,:));
-        s2 = 1/max(DS_PRED(stim_idx,:));
-            plot(DS_TIME, s1*DS_RESPAVG(stim_idx,:), pickcolor(0), ...
-             DS_TIME, s2*DS_PRED(stim_idx,:), pickcolor(1));
-        plot(DS_TIME, s1*DS_RESPAVG(stim_idx,:), pickcolor(0));
-        setAxisLabelCallback(gca, @(t) (t), 'X');
-        axis tight; 
 end
 hold off;
 
-function model_class_popup_CreateFcn(hObject, eventdata, handles)
-function model_class_popup_Callback(hObject, eventdata, handles)
-% TODO: In the future choose the model class here 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% STOCHASTICITY AND ITS PLOTS
 
-function fir_history_CreateFcn(hObject, eventdata, handles)
-function fir_history_Callback(hObject, eventdata, handles)
-update_fir_model(handles);
 
-function model_view_popup_CreateFcn(hObject, eventdata, handles)
-function model_view_popup_Callback(hObject, eventdata, handles)
-plot_model(handles);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% OPTIMIZATION WIDGETS
@@ -1001,7 +1014,6 @@ global PF_COEFS FIRHIST FIRBINSIZE;
 d = length(PF_COEFS);
 l = ceil(FIRHIST/FIRBINSIZE);
 FC = reshape(x, d, l);
-
 
 function z = correlation_of_downsampled_signals(x)
 % Returns the correlation of the binned stimulus and binned response
@@ -1027,7 +1039,6 @@ V2 = reshape(DS_RESPAVG.',[],1);
 R = corrcoef(V1,V2);
 R(isnan(R)) = 0;
 z = R(2,1);
-
 
 function sampling_algorithm_popup_CreateFcn(hObject, eventdata, handles)
 function sampling_algorithm_popup_Callback(hObject, eventdata, handles)
@@ -1060,31 +1071,22 @@ unpak_FIRCOEFS(x_bst);
 
 % ------------------------
 function initialize_optplot_menu(handle)
-menuopts = {'Param Likelihoods', 'Pred/PSTH scatter', ...
-        'KS Plot', 'Raw ISI', 'Time-Scaled ISI', ...
-        'Cond. Intensity Fn', 'Time Scaling Fn'};
+menuopts = {'Pred/Resp Scatter', 'Raw ISI', 'Intensity-Scaled ISI', ...
+        'KS Plot'};
 
 set(handle, 'String', char(menuopts));
 
 function setoptplot(handles, plothandle, plottype)
-global DS_RESPAVG DS_PRED;
+global GS;
 
-nvals = cellstr(get(handles.selected_stim_idx_popup, 'String'));
-stim_idx = str2num(nvals{get(handles.selected_stim_idx_popup, 'Value')});
+stim_idx = GS.selected_stim_idx;
+dat = GS.dat.(GS.selected_stimfile);
 
 axes(plothandle); cla;
 hold on;
 switch plottype
-    case 'Param Likelihoods'
-        %plot(DS_PRED, DS_RESPAVG, 'k.');
-        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
-        axis tight;
-    case 'Pred/PSTH scatter'
-        plot(DS_PRED(stim_idx,:), DS_RESPAVG(stim_idx,:), 'k.');
-        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
-        axis tight;
-    case 'KS Plot'
-        %plot(DS_PRED, DS_RESPAVG, 'k.');
+    case 'Pred/Resp Scatter'
+        plot(dat.ds_respavg(stim_idx,:), dat.ds_pred(stim_idx,:), 'k.');
         %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
         axis tight;
     case 'Raw ISI'
@@ -1095,11 +1097,7 @@ switch plottype
         %plot(DS_PRED, DS_RESPAVG, 'k.');
         %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
         axis tight;
-    case 'Cond. Intensity Fn'
-        %plot(DS_PRED, DS_RESPAVG, 'k.');
-        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
-        axis tight;        
-    case 'Time Scaling Fn'
+    case 'KS Plot'
         %plot(DS_PRED, DS_RESPAVG, 'k.');
         %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
         axis tight;
@@ -1135,14 +1133,29 @@ nvals = cellstr(get(handles.optplot4popup, 'String'));
 plottype = nvals{get(handles.optplot4popup, 'Value')};
 setoptplot(handles, handles.optplot4, plottype);
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-function load_model_params_button_Callback(hObject, eventdata, handles)
-function save_model_params_button_Callback(hObject, eventdata, handles)
-function predict_response_button_Callback(hObject, eventdata, handles)
-
-function load_stochast_params_button_Callback(hObject, eventdata, handles)
-function save_stochast_params_button_Callback(hObject, eventdata, handles)
 function check_stochast_button_Callback(hObject, eventdata, handles)
+
+
+% --- Executes on button press in auto_recalc_checkbox.
+function auto_recalc_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to auto_recalc_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of auto_recalc_checkbox
+
+
+% --- Executes on button press in save_model_params_button.
+function save_model_params_button_Callback(hObject, eventdata, handles)
+% hObject    handle to save_model_params_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in load_model_params_button.
+function load_model_params_button_Callback(hObject, eventdata, handles)
+% hObject    handle to load_model_params_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

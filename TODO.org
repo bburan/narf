@@ -1,92 +1,49 @@
-* Next few steps:
-  - Create a FIR model function
-  - Expose parameters
-  - Essentially, just duplicate the downsampling GUI code 
-  - Finally, figure out how to go through and take the 'fittable_params' and wrap/unwrap them
-  - Adding a boosting algortihm would also be good.
-
-* BACKLOG
+* Next steps:
+  - How can I define functions such that the input of one chains to the other, using a proper data structure
+  - Instead of loading in response at 100Khz, load it in at 10Khz. (The first function should be the load_from_baphy_rasterization functions)
+  - Write a generic pack/unpack function to expose parameters to the optimization
+  - Make a function that accepts a cell array of parameter structs and a parameter vector, and returns a new cell array of parameter structs
+  - Add a gammatone bank preprocessing stage
+  - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
+  - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
+  - Allow plot methods of objects to use a popup menu and label. 
   - Replace all the 'length' and 'size' things with 'numel' where appropriate
-  - Normalize the PSTH
-  - Handle NaN's better
+  - Normalize the binning as a rate in the very first step
+  - Add error handling (catch/throw) around calls to user defined functions
+  - Handle NaN's better...right now they cause problems!
   - Use resample during the downsampling step. (which applies the Sinc() function)
-  - Modularize the Prefilter setup, which must have
-    1. A default parameters object
-    2. A function which filters a sound response
-    3. A function which returns or plots the 'stationary frequency response'
-    4. A pack function, which accepts 
-    5. An unpack function
   - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
+  - Add a filter that processess phase information from a stimulus
+  - make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
+  - Make DB loading have adjustable rasterization freqs
+  - Go through the TODO's in my files and look for more
 
-* New Default Behavior:
-  Like clojure's state; completely functional. I kind of like the idea of using continuations:
-      Function returns a handle to itself with an updated version of the data being closed over.
-      Call that function with no args to get the parameters (instance methods or instance data, either way)
-      Call that function with one arg to update it to have new values. 
-  Upsides: Easy to create multiple copies with their own histories.
-  Downsides: MATLAB is probably too stupid to garbage collect these, meaning they will be huge memory hogs.
+* Stage Three (For a Later Version)
+  The next step up the abstraction tree, if we need to, is to replace the fixed number of function calls with an arbitrary number.
+  I envision the modeling process being a chain of function calls, each of which accept a cell array of parameter structs P and a N-dimensional matrix X, and return a new P and new X.
+  Outputs of one function are chained to the inputs of the next. 
+  If any intermediate parameter struct is modified, then it invalidates all cells after it and the computation must recommence from that point. (I think continuation-passing-style works well here)
+     If you need to do different 'branches' of computation, you can store the pointer to the current computation point and save them.
+  I envision each function being loaded from a directory and having its parameters GUI editable in the way that they are now. 
+  I envision that each function has an associated graph window with a dropdown, and is populated by asking that function object which plotting methods it has.
+  When we put code in the DB, we should ALSO carefully record the GIT hash which the analysis was run on. Subtle differences or changes my occur over time.
 
-* More practical, simpler way
-  If an argument has an editable field in it, it will be used when creating the new param struct. 
+* Allowed Dimensions: How should can we accomodate the later addition of extra dimensions in the future, such as behavioral characteristics?
+  Right now we have:
+  1. StimFile               (Which is not indexed, but uses a keyword)
+  2. Stimulus # 
+  3. Value at time
+  4. Repetition #
+  5. Preprocessor Index #   (Because preprocessing may have multiple dimensions)
+  In the future, we may have more. 
+  The only way I can think about allowing multiple dimensions to vary arbitrarily would be to either:
+  A) Somehow keep track of their numerical indexes as you go along, using a struct
+  B) Avoid numerical indexes and use struct arrays or cell arrays everywhere? 
+  Overall, option A sounds like the more efficient choice
 
-* Design of modular model components will rely on closures and zero-argument querying (No need to add a full protocol structure yet!)
-  1. At startup, directory is read, and preproc_filter_popup is initialized
-     - [X] How is that converted into prettier strings? (By calling the filter with no arguments, the default arguments are returned)
-     - [ ] What happens if one filter has an error during eval? (It will be logged and dropped)
-  2. The preproc_data_table needs to be initialized with parameters.
-     - [X] Where does the params come from? (By calling the filter with no arguments)
-     - [X] Where is the data stored in the global GS? (GS.preproc_params, GS.downsampling_params, GS.model_params, GS.stochastic_params)
-  3. Some clicks are made on the preproc window
-     - [ ] the GS.preproc_params struct and preproc_params_mask is updated each time
-  4. Somebody clicks save
-     - [ ] Where is it saved? (Now: to a saved file via file dialog box. Later: To Baphy)
-     - [ ] What is the filename? (User-determined)
-  5. Somebody clicks load
-     - [ ] Which file is loaded (Now: from a saved file via dialog box. Later: from Baphy)
-  6. Eventually, somebody clicks the "preprocess" button  (OR A SCRIPT STARTS)
-     - [ ] A closed-over function is created, which all an automatic script would care about anyway.
-     - [ ] Data is verified
-     - [ ] raw_data is filtered
-     - [ ] The plots are updated (If it's the first time being called, not all GS globals will be ready.)
-  7. At a later point, somebody clicks "optimize"
-     - [ ] Using the GS.preproc_params_mask and GS.preproc_params, a vector is made and handed to the optimization thing. 
-     - [ ] During optimization, from the vector, GS.preproc_params_mask and GS.preproc_params, a 'preproc_params' structure is built
-     - [ ] As usual, this is turned into a closed-over function
-     - [ ] The filtering occurs, then other model steps.
-     - [ ] Performance is measured, and you go back to the beginning of this step a bunch of times. 
-     - [ ] At the end of the optimization, the preproc filter window is updated to reflect the new data. 
-* Complexities:
+* Tricky things:
   We may need to do an iteration procedure that treats one part of the model (IE, Linear FIR filters) differently from a nonlinear part (In my opinion, this is just a special case sampler)
-  When a function is called with no arguments, it returns a user-visible string and a default parameters struct.
-  Inner functions must return their parameters struct when given no arguments. 
   If you modify a function after starting up narf_gui, what will happen? (Right now, changes to the pretty-name and params will not be altered without restarting narf_gui, however if you fix the function itself then that is fine.)
-
-* Modules
-  - Automatic covering bands filter, which presents downsampled results of gamma or elliptical notched filters spaced across the domains and completely covering the input space
-  - Make a second prefilter (full-coverage gammatone bank)
-  - Make a 3rd prefilter (full-coverage elliptic filter bank)
-  - Increase the size of the GUI viewports  and clean up the labeling
-
-* Koans to reflect upon
-  1. Is it faster to prefilter with many different settings, then fit or correlate to each of them, rather than include it in the optimization loop?
-
-* Notes on Stephen's Brain + Code Dump
-  cellxcmaster('por012c-b1',238); % intelligently performs batch analysis 238 on cellid 'por012c-b1'
-  After the execution of the above, 'params' contains the details of how the analysis was performed.
-  params.resploadparms{1} is a way of getting
-  params.respfiles gives a list of the files being used during the analysis
-  dbget('sBatch', 238); % Returns details about which experiment is actually being performed
-  
-* There are three very important functions to look at:
-  [cellfiledata, times, ...] = cellfiletimes()      % Note that times contains important info about the training set/test set split, such as the fitting method used?
-  xcloadfiles      % Performs analysis on multiple files, queries from the database
-  xcloadstimresp   % A cleaner, gentler version of the previous file that is probably what I should base my analysis off of. 
- 
-* Analysis on paper
-  Where should the line be drawn between analysis in the DB, partitionining things for your search within the DB, holding out data, etc?
-  How should the code accomodate extra dimensions of training in the future, such as behavioral ones? (Even though we don't think we need it now)
-  CellID Dimensions: RespFile(), Stimulus #, repetition #, Value at Time
-  Other dimensions: PreFilter #, Central filter #, 
 
 * Issues for Stephen :
   1. Where is 'repetitions' visible? The closest thing I see is the 'Ref_Subsets' field returned in the 'parms' struct by 'dbReadData'
@@ -100,37 +57,36 @@
   3.  Rewrite of dbchooserawfile() because it's so damn useful for selecting a file, but let's make it work for multiple stimulus files
       (Should also display well, site and have selectors for channel, unit, etc
   4. Use squeeze() to remove unneeded dimensions from a matrix.
-  5. Try filtfilt to avoid affecting the phase of the response
-  6. Why is it 'stimpath' and 'stimfile' but 'path' and 'respfile'. it should be 'resppath'?
+  5. Why is it 'stimpath' and 'stimfile' but 'path' and 'respfile'. it should be 'resppath'?
   7. Why is loadspikeraster the only thing that cares about the 'options' struct?
+  8. Where should the line be drawn between analysis in the DB, partitionining things for your search within the DB, holding out data, etc?
 
-* CODE TO REVIEW LATER
+* CODE TO REVIEW
+  - [X] cellxcmaster('por012c-b1',238); % intelligently performs batch analysis 238 on cellid 'por012c-b1'
+  - [ ] After the execution of the above, 'params' contains the details of how the analysis was performed.
+  - [ ] params.resploadparms{1} is a way of getting
+  - [ ] params.respfiles gives a list of the files being used during the analysis
+  - [ ] dbget('sBatch', 238); % Returns details about which experiment is actually being performed
+  - [ ] [cellfiledata, times, ...] = cellfiletimes()      % Note that times contains important info about the training set/test set split, such as the fitting method used?
+  - [ ] xcloadfiles      % Performs analysis on multiple files, queries from the database
+  - [X] xcloadstimresp   % A cleaner, gentler version of the previous file that is probably what I should base my analysis off of. 
   - [X] meska_pca()                              Used for doing the spike sorting, the front end. 
   - [ ] RemoteAnalysis/boost_online.m
   - [ ] Utilities/cacheevpspikes.m
-  - [ ] cellDB/dbchooserawfile.m
-  - [ ] Config/lbhb/BaphyMainGuiItems.m  has some hard-coded defaults for the GUI
-  - [ ] Try messing with creating GUIs for structs using 'structdlg.m'
-  - [ ] Consider the data for this: /auto/data/daq/Portabello/por010/por010c08_p_SPN
+  - [X] cellDB/dbchooserawfile.m
+  - [X] Config/lbhb/BaphyMainGuiItems.m  has some hard-coded defaults for the GUI
+
 * LUXURY TODO
-  - [ ] Write a function which MAKES A BACKGROUND COPY of the GS data so that you can 'hold' a model as a reference and play around with other settings, and see the results graphically.
+  - [ ] Write a function which swaps out the GS into the BACKGROUND so you can 'hold' a model as a reference and play around with other settings, and see the results graphically by switching back and forth.
   - [ ] Write dbchoosecellfiles()
-  - [ ] Phase align in gammatone filter bank
-  - [ ] make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
-  - [ ] Make DB loading have adjustable rasterization freqs
-  - [ ] Use inter_curve_v3 to interactively make FIR things!
-  - [ ] Make the stimulus data drive the windowing of the other visualizations
+  - [ ] Use inter_curve_v3 to interactively make FIR things
   - [ ] Try adding color to histograms and scatter plots
   - [ ] try improving contrast of various intensity plots
   - [ ] Add BIC or AIC to model comparison data
   - [ ] Optimization report card and status information logged
-* Possible problems or hacks to study
-  - [ ] Negative effects of discretization on Inter-Spike Intervals histogram estimation (Use known data)
-  - [ ] Infer the average rate of spiking from the data, then fit your model against that inferred lambd without doing EM all the time.
-* HIGH LEVEL TODO:
-   1) [ ] Logging and recording multiple models and their performance
-   2) [ ] Plots the STRF of the best-fitting model?
-   4) [ ] Analyze:  'dai020a-c2', 'mag009b-b1', 'dai008a-c1', 'mag007d-d1' 
-   5) [ ] Rank model fits and plot correlations
-   6) [ ] Replicate Stephen's results with exitation/inhibition
-* ModelFit GUI Design Brainstorm
+  - [ ] Take the STRF of a model, not of the data!
+  - [ ] Analyze:  'dai020a-c2', 'mag009b-b1', 'dai008a-c1', 'mag007d-d1'
+  - [ ] Rank model fits and plot correlations
+
+* KOANS
+  The fastest way to climb a tall mountain is to accept that you must occasionally descend when you find yourself on the wrong path.
