@@ -1,32 +1,101 @@
+* How could functions be passed from one to the next?
+  All functions are assumed to accept TWO arguments and return TWO arguments
+  Those arguments are the STACK data structure and the X data structure
+
+* STACK data structure
+  A cell array, with the present params struct being first, containing the functions and their parameters that were applied to reach this point. 
+ 
+  |---------------------+---------------------------------------------------------------------------------------|
+  | STACK{}.params      | Parameters passed to the function (only present AFTER evaluation?)                    |
+  | STACK{}.fn          | The function handle                                                                   |
+  | STACK{}.name        | Function file name                                                                    |
+  | STACK{}.pretty_name | User readable pretty function name                                                    |
+  | STACK{}.plot_fns    | Struct array with fields (pretty_name, handle, plot_gui_controls )                    |
+  | STACK{}.ready_pred  | A predicate function that is passed (STACK, X) and returns true iff it's ready to run |
+  |---------------------+---------------------------------------------------------------------------------------|
+
+* X data structure
+  A cell array, with the most recent data being first. The contents of each cell could be anything. For my cases a struct seems to be most convenient.
+  
+  |------------------------+--------------------------------------------------------------|
+  | X{}.dat.().cellid      | String, name of the cellid                                   |
+  | X{}.dat.().stimfile    | String, name of the stimfile                                 |
+  | X{}.dat.().raw_stim_fs | Raw stimulus frequnecy                                       |
+  | X{}.dat.().raw_resp_fs | Raw response frequency                                       |
+  | X{}.dat.().raw_time    | Time vector                                                  |
+  | X{}.dat.().raw_stim    | Raw stimulus                                                 |
+  | X{}.dat.().raw_resp    | Raw spike timings                                            |
+  | X{}.dat.().raw_isi     | Raw inter-spike intervals                                    |
+  | X{}.dat.().pp_stim     | Preprocessed stim                                            |
+  | X{}.dat.().pp_resp     | Preprocessed response                                        |
+  | X{}.dat.().pp_respavg  | Histogram of response                                        |
+  | X{}.dat.().ds_stim     | Downsampled, preprocessed stim                               |
+  | X{}.dat.().ds_resp     | Downsampled, preprocessed response                           |
+  | X{}.dat.().ds_respavg  | Downsampled, preprocessed histogram                          |
+  | X{}.dat.().lf_stim     | Linear filtered stimulus                                     |
+  | X{}.dat.().nl_stim     | Nonlinearly scaled stimulus                                  |
+  | X{}.dat.().pred        | Sum of the nonlinear stimuli; ie the prediction of the model |
+  | ...                    |                                                              |
+  |------------------------+--------------------------------------------------------------|
+
+* How does it work?
+** EVALUATION
+   Essentially, there is a chain of function calls, with the output of one function pushed onto the inputs of the next.
+** INVALIDATION
+   If any intermediate parameter struct is modified, then it invalidates all cells after it and the computation must recommence from that point. (I think continuation-passing-style would work well here, if such a thing were possible in matlab.)
+   When you want to invalidate a model, just jump to the Nth part of the STACK and the X data structures
+** DIFFERENT TREES
+   If you need to do different 'branches' of computation, you can store the current computation STACK and save them.
+** MODULE LOADING
+   The only functions available are isted in the "modules" directory, which is read ONCE, at startup. (or if you click 'refresh modules')
+   They are only available from the popup selection when their ready_pred() function returns a true. 
+** EDITING
+   The "params" struct is GUI editable in much the same way that other things are.  
+** GRAPHING
+   Each module has (multiple) associated graphing functions which cann be seleceted via a dropdown
+** ERROR HANDLING
+   Whenever you load or run a user-loadable function, you put a try-catch block around it. 
+** SAVING AND LOADING
+   When you want to save a model, just save the STACK data structure somewhere along with the GIT hash tag and initial data. Data from that point can always be reconstructed.
+   When you want to load a model, loop through the STACK structure, starting from the first data X, and reconstruct the data as you go along.
+** OPTIMIZATION PACK/UNPACK
+   PACK goes through the STACK sequentially, pulling out any args with a FIT checkbox (and returns a vector)
+   UNPACK goes through the STACK sequentially, pushing in any args with a FIT checkbox (accepts a vector as the input)
+   During optimization, all controls must be disabled to avoid invalidation problems?
+** OPTIMIZATION PERFORMANCE METRIC, TERMINATION, SAMPLING
+   These are not part of the model explicitly. 
+   Instead, they run at the END of the function tree's execution to determine the score
+   They have their own error graphs?
+   I'm not interested in making their data directly viewable, 
+
 * Next steps:
+  - Git commit and fork narf_gui into narf.m (the overarching GUI part) and narf_model.m (The model-related part)
+  - Make my code actually work on a data struct
+    1. Pass an argument to the FN chain which holds some arbitrary value to start with. Let's pass it 'time' for testing. Later we'll use 'stim_fs' and 'resp_fs'
+    2. On startup, scan the 'modules' directory and create default params.
+    3. Add a callback to the popus that pulls up the appropriate defaults
+    5. Put a 'sine' function module in the directory
+    6. Put a 'sqrt' function that works only on the sine? or that takes an argument of which signal to apply to?
+    7. See if I can make a chain of 2-3 sine waves, added together
+  - Insert the GUI object into my existing NARF code?
+  - Write a module which loads stimuli and responses from baphy (given a cell array of IDs)
   - How can I define functions such that the input of one chains to the other, using a proper data structure
   - Instead of loading in response at 100Khz, load it in at 10Khz. (The first function should be the load_from_baphy_rasterization functions)
   - Write a generic pack/unpack function to expose parameters to the optimization
   - Make a function that accepts a cell array of parameter structs and a parameter vector, and returns a new cell array of parameter structs
   - Add a gammatone bank preprocessing stage
   - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
+  - Add error handling (catch/throw) around calls to user defined functions
   - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
   - Allow plot methods of objects to use a popup menu and label. 
   - Replace all the 'length' and 'size' things with 'numel' where appropriate
   - Normalize the binning as a rate in the very first step
-  - Add error handling (catch/throw) around calls to user defined functions
   - Handle NaN's better...right now they cause problems!
   - Use resample during the downsampling step. (which applies the Sinc() function)
-  - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
   - Add a filter that processess phase information from a stimulus
+  - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
   - make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
-  - Make DB loading have adjustable rasterization freqs
   - Go through the TODO's in my files and look for more
-
-* Stage Three (For a Later Version)
-  The next step up the abstraction tree, if we need to, is to replace the fixed number of function calls with an arbitrary number.
-  I envision the modeling process being a chain of function calls, each of which accept a cell array of parameter structs P and a N-dimensional matrix X, and return a new P and new X.
-  Outputs of one function are chained to the inputs of the next. 
-  If any intermediate parameter struct is modified, then it invalidates all cells after it and the computation must recommence from that point. (I think continuation-passing-style works well here)
-     If you need to do different 'branches' of computation, you can store the pointer to the current computation point and save them.
-  I envision each function being loaded from a directory and having its parameters GUI editable in the way that they are now. 
-  I envision that each function has an associated graph window with a dropdown, and is populated by asking that function object which plotting methods it has.
-  When we put code in the DB, we should ALSO carefully record the GIT hash which the analysis was run on. Subtle differences or changes my occur over time.
 
 * Allowed Dimensions: How should can we accomodate the later addition of extra dimensions in the future, such as behavioral characteristics?
   Right now we have:

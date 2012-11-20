@@ -155,7 +155,6 @@ function del_fn_block(hObj, evts, unknown)
     scroll_view_to_bottom(n_fns-1);
 end
 
-
 % Create the add/remove function buttons
 handles.add_fn_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
@@ -170,8 +169,10 @@ handles.del_fn_button = uicontrol('Parent', handles.container_panel, ...
     'Callback', @del_fn_block);
 
 % Make the scroll bar dynamically update while being dragged
-hJScrollBar = findjobj(handles.container_slider);
-hJScrollBar.AdjustmentValueChangedCallback = @on_scrollbar_slide;
+% hJScrollBar = findjobj(handles.container_slider);
+% hJScrollBar.AdjustmentValueChangedCallback = @on_scrollbar_slide;
+
+% TODO: Scroll down once to make sure things are initialized 
 
 % Use an evil, undocumented function to trigger the firstcallback
 hgfeval(get(handles.container_slider,'Callback'), handles.container_slider, []);

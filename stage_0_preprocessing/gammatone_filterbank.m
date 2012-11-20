@@ -41,8 +41,6 @@ function filtered_x = do_gammatone_filter(parm, x)
                       parm.num_gammatone_filters, parm.stim_sample_freq, ...
                       parm.alignphase);                  
     
-                  
-                  
     N_win = round(t_win * stim_fs);        % Number of samples in each window
     N_hop = round(t_hop * stim_fs);        % Number of samples to hop center by
     N_cols = 1 + floor((length(stim) - N_win) / N_hop); % Total number of windows

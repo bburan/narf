@@ -810,7 +810,6 @@ switch GS.preproc_view_plot_type
 end
 hold off;
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DOWNSAMPLING WIDGETS
 
@@ -1002,7 +1001,6 @@ hold off;
 %% STOCHASTICITY AND ITS PLOTS
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% OPTIMIZATION WIDGETS
 
@@ -1134,9 +1132,7 @@ plottype = nvals{get(handles.optplot4popup, 'Value')};
 setoptplot(handles, handles.optplot4, plottype);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function check_stochast_button_Callback(hObject, eventdata, handles)
-
 
 % --- Executes on button press in auto_recalc_checkbox.
 function auto_recalc_checkbox_Callback(hObject, eventdata, handles)
