@@ -1,4 +1,4 @@
-function varargout = narf_gui(varargin)
+function varargout = narf(varargin)
 % NARF_GUI MATLAB code for narf_gui.fig
 %      NARF_GUI, by itself, creates a new NARF_GUI or raises the existing
 %      singleton*.
@@ -110,14 +110,33 @@ addpath([NARF_PATH filesep 'utils'], ...
         [NARF_PATH filesep PERF_METRIC_DIR], ...
         [NARF_PATH filesep TERMINATION_DIR]);
 
-% Add the model pane
-narf_modelpane(handles.model_structure_panel, [], []);
-    
-% % Invalidate all data tables
+% Invalidate all data tables
 set(handles.data_selection_table, 'Data', {});
+set(handles.preproc_data_table, 'Data', {});
+set(handles.downsamp_data_table, 'Data', {});
+set(handles.model_data_table, 'Data', {});
+set(handles.stochast_data_table, 'Data', {});
 set(handles.sampling_data_table, 'Data', {});
 set(handles.perf_metric_data_table, 'Data', {});
 set(handles.term_cond_data_table, 'Data', {});
+
+% Initialize the preproc popup menu and data table
+initialize_popup(PREPROC_DIR, 'preproc', 'selected_preproc_name', handles.preproc_popup);
+set(handles.preproc_index_popup, 'String', '1'); % Initialize display idx too
+set(handles.preproc_index_popup, 'Value', 1);
+preproc_popup_Callback(handles.preproc_popup, [], handles);
+
+% Initialize the downsamp popup menu and data table
+initialize_popup(DOWNSAMP_DIR, 'downsamp', 'selected_downsamp_name', handles.downsamp_popup);
+downsamp_popup_Callback(handles.downsamp_popup, [], handles);
+
+% Initialize menu for model
+initialize_popup(MODEL_DIR, 'model', 'selected_model_name', handles.model_popup);
+model_popup_Callback(handles.model_popup, [], handles);
+
+
+% TODO: Initialize menu for stochasticity
+
 drawnow;
 
 % --- Outputs from this function are returned to the command line.
@@ -181,7 +200,7 @@ log_dbg('query_db(''%s'');', cellid);
 
 % If there is not exactly one cell file returned, throw an error.
 if ~isequal(length(cellids), 1)
-    log_err('BAPHY gave %d cellids yet I want only 1.', length(cellids));
+    log_err('BAPHY gave me %d cellids yet I need one.', length(cellids));
 end
 
 % ------------------------------------------------------------------------
@@ -462,15 +481,15 @@ global GS;
 
 % Invalidate data_selection_table, and other parts of the GUI
 set(handles.data_selection_table, 'Data', {}); drawnow;
-%axes(handles.stim_view_axes); cla;
-%axes(handles.resp_view_axes); cla;
-%axes(handles.preproc_view_axes); cla;
-%axes(handles.downsamp_view_axes); cla;
-%axes(handles.optplot1); cla;
-%axes(handles.optplot2); cla;
-%axes(handles.optplot3); cla;
-%set(handles.selected_stimfile_popup, 'String', '');   
-%set(handles.selected_stim_idx_popup, 'String', '');  
+axes(handles.stim_view_axes); cla;
+axes(handles.resp_view_axes); cla;
+axes(handles.preproc_view_axes); cla;
+axes(handles.downsamp_view_axes); cla;
+axes(handles.optplot1); cla;
+axes(handles.optplot2); cla;
+axes(handles.optplot3); cla;
+set(handles.selected_stimfile_popup, 'String', '');   
+set(handles.selected_stim_idx_popup, 'String', '');  
 
 % Query the DB and select the train/test sets
 GS.cellid = get(handles.cellid_text, 'String');

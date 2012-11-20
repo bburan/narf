@@ -1,3 +1,32 @@
+* Next steps:
+  - make Narf_model.m have the model and buttons at the TOP left, not bottom left
+  - Make my code actually work on a data struct
+    1. Pass an argument to the FN chain which holds some arbitrary value to start with. Let's pass it 'time' for testing. Later we'll use 'stim_fs' and 'resp_fs'
+    2. On startup, scan the 'modules' directory and create default params.
+    3. Add a callback to the popus that pulls up the appropriate defaults
+    5. Put a 'sine' function module in the directory
+    6. Put a 'sqrt' function that works only on the sine? or that takes an argument of which signal to apply to?
+    7. See if I can make a chain of 2-3 sine waves, added together
+  - Insert the GUI object into my existing NARF code?
+  - Write a module which loads stimuli and responses from baphy (given a cell array of IDs)
+  - How can I define functions such that the input of one chains to the other, using a proper data structure
+  - Instead of loading in response at 100Khz, load it in at 10Khz. (The first function should be the load_from_baphy_rasterization functions)
+  - Write a generic pack/unpack function to expose parameters to the optimization
+  - Make a function that accepts a cell array of parameter structs and a parameter vector, and returns a new cell array of parameter structs
+  - Add a gammatone bank preprocessing stage
+  - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
+  - Add error handling (catch/throw) around calls to user defined functions
+  - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
+  - Allow plot methods of objects to use a popup menu and label. 
+  - Replace all the 'length' and 'size' things with 'numel' where appropriate
+  - Normalize the binning as a rate in the very first step
+  - Handle NaN's better...right now they cause problems!
+  - Use resample during the downsampling step. (which applies the Sinc() function)
+  - Add a filter that processess phase information from a stimulus
+  - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
+  - make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
+  - Go through the TODO's in my files and look for more
+
 * How could functions be passed from one to the next?
   All functions are assumed to accept TWO arguments and return TWO arguments
   Those arguments are the STACK data structure and the X data structure
@@ -66,36 +95,7 @@
    These are not part of the model explicitly. 
    Instead, they run at the END of the function tree's execution to determine the score
    They have their own error graphs?
-   I'm not interested in making their data directly viewable, 
-
-* Next steps:
-  - Git commit and fork narf_gui into narf.m (the overarching GUI part) and narf_model.m (The model-related part)
-  - Make my code actually work on a data struct
-    1. Pass an argument to the FN chain which holds some arbitrary value to start with. Let's pass it 'time' for testing. Later we'll use 'stim_fs' and 'resp_fs'
-    2. On startup, scan the 'modules' directory and create default params.
-    3. Add a callback to the popus that pulls up the appropriate defaults
-    5. Put a 'sine' function module in the directory
-    6. Put a 'sqrt' function that works only on the sine? or that takes an argument of which signal to apply to?
-    7. See if I can make a chain of 2-3 sine waves, added together
-  - Insert the GUI object into my existing NARF code?
-  - Write a module which loads stimuli and responses from baphy (given a cell array of IDs)
-  - How can I define functions such that the input of one chains to the other, using a proper data structure
-  - Instead of loading in response at 100Khz, load it in at 10Khz. (The first function should be the load_from_baphy_rasterization functions)
-  - Write a generic pack/unpack function to expose parameters to the optimization
-  - Make a function that accepts a cell array of parameter structs and a parameter vector, and returns a new cell array of parameter structs
-  - Add a gammatone bank preprocessing stage
-  - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
-  - Add error handling (catch/throw) around calls to user defined functions
-  - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
-  - Allow plot methods of objects to use a popup menu and label. 
-  - Replace all the 'length' and 'size' things with 'numel' where appropriate
-  - Normalize the binning as a rate in the very first step
-  - Handle NaN's better...right now they cause problems!
-  - Use resample during the downsampling step. (which applies the Sinc() function)
-  - Add a filter that processess phase information from a stimulus
-  - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
-  - make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
-  - Go through the TODO's in my files and look for more
+   I'm not interested in making their data directly viewable.
 
 * Allowed Dimensions: How should can we accomodate the later addition of extra dimensions in the future, such as behavioral characteristics?
   Right now we have:

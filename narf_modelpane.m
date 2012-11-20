@@ -1,26 +1,24 @@
-function fn_blocks = toy_scrollable(init_fns, init_params)
+function fn_blocks = narf_modelpane(parent_handle, STACK, X)
 % A dynamic GUI for chaining together a large number of function calls with
 % associated plotting functions to display the input/outputs of the
 % function call. The number of functions that may be chained is dynamic and
 % can be adjusted on the fly.
 
-fn_blocks = {}; % All handles
+fn_blocks = {}; % All handles will go in here
 
-w = 1600;  % Total pane width, including slider
-h = 800;   % Total pane height
+pos = get(parent_handle, 'Position');
+w = pos(3);
+h = pos(4);
+
 bh = 35;   % Add/del function block button height, +5 pixel padding per side
 ph = 170;  % Function panel height
 
-% Create the figure
-handles.hFig = figure('Menubar','figure', 'Resize','off', ...
-    'Units','pixels', 'Position',[20 50 w h]);
-
 % Create a panel inside it which will slide
-handles.container_panel = uipanel('Parent',handles.hFig, ...
+handles.container_panel = uipanel('Parent',parent_handle, ...
     'Units','pixels', 'Position',[0 0 w-20 h]);
 
 % Create the scroll bar
-handles.container_slider = uicontrol('Parent',handles.hFig, ...
+handles.container_slider = uicontrol('Parent',parent_handle, ...
     'Style','slider', 'Enable','off', ...
     'Units','pixels', 'Position',[w-20 0 20 h], ...
     'Min',0-eps, 'Max',0, 'Value',0, ...
@@ -29,7 +27,7 @@ handles.container_slider = uicontrol('Parent',handles.hFig, ...
 function on_scrollbar_slide(hSld, ev, hPan)
     offset = get(hSld,'Value');
     p = get(hPan, 'Position');
-    set(hPan, 'Position',[p(1) -offset p(3) p(4)])
+    set(hPan, 'Position',[p(1) -offset p(3) p(4)]);
 end
 
 function scroll_view_to_bottom(N)
@@ -50,10 +48,12 @@ function block_handles = create_fn_block_panel(x, y, w, h, parent_handle, state)
     % table, a plot type dropdown, and a plot axes.
     %
     % INPUTS:
-    %    w is the width of the panel created
-    %    h is the height of the panel created
-    %    x is the horizontal location is the parent panel, where 0 is the left
-    %    y is the vertical location, where 0 is the bottom
+    %    pos is the position of the panel [x y w h] where
+    %       x is the horizontal location is the parent panel and 0=left
+    %       y is the vertical location and 0=bottom
+    %       w is the width of the panel created
+    %       h is the height of the panel created
+    
     %    parent_handle is the parent panel this will be created inside
     %    state is a global structure which reflects GUI state. IT MUST:
     %       1. Have the following fields:
