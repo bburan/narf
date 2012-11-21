@@ -1,14 +1,23 @@
-function fn_blocks = narf_modelpane(parent_handle, STACK, X)
+function fn_blocks = narf_modelpane(parent_handle, stack, x, modules)
 % A dynamic GUI for chaining together a large number of function calls with
 % associated plotting functions to display the input/outputs of the
 % function call. The number of functions that may be chained is dynamic and
 % can be adjusted on the fly.
 
+% Unfortunately, limitations of MATLAB seem to prevent the easy way of
+% implementing this function, which would be to start at 0 and render each
+% module along the negative y axis. If you actually try this, it seems that
+% the matlab 'axes' function doesn't render plots placed at negative
+% positions. This somewhat obfuscated the implementation of the GUI, since
+% everything then has to be shifted around in the positive spaces.
+%
+% 
+
 fn_blocks = {}; % All handles will go in here
 
 pos = get(parent_handle, 'Position');
-w = pos(3);
-h = pos(4);
+w = pos(3); % Width of the parent panel
+h = pos(4); % Height of the parent panel
 
 bh = 35;   % Add/del function block button height, +5 pixel padding per side
 ph = 170;  % Function panel height
@@ -42,6 +51,19 @@ function scroll_view_to_bottom(N)
     drawnow;
 end
 
+function s = populate_with_ready_modules(hndle, mods)  
+    ready_mods = {};
+    fns = fieldnames(mods);
+    for idx = 1:length(fns);
+        ready_mods{idx} = mods.(fns{idx}).pretty_name;
+    end
+    set(hndle, 'String', char(ready_mods{:}));
+end
+
+function select_modules(a, b, c)
+    
+end
+
 % Define a function that makes new function blocks
 function block_handles = create_fn_block_panel(x, y, w, h, parent_handle, state)
     % Creates a function panel, with a dropdown to select the function, a data
@@ -73,7 +95,8 @@ function block_handles = create_fn_block_panel(x, y, w, h, parent_handle, state)
         'Style', 'popupmenu', 'Enable', 'on', ...
         'String', state.pretty_name, ...
         'Units', 'pixels', 'Position', [5 (h-30) 300 25], ...
-        'Callback', @(a,b,c) disp('FN popup callback TODO.'));
+        'Callback', @(a,b,c) disp('FN popup callback TODO.'), ...
+        'ButtonDownFcn', @(h,evts, handles) populate_with_ready_modules(h, modules));
     
     % Create the data table inside that panel
     block_handles.fn_data_table = uitable('Parent', block_handles.fn_panel, ...
@@ -110,7 +133,6 @@ function block_handles = create_fn_block_panel(x, y, w, h, parent_handle, state)
     block_handles.plot_axes = axes('Parent', parent_handle, ...
         'Units','pixels', 'Position', [520+x 20+y (w-520) (h-25)]);
 end
-
 
 % Define callbacks for adding and deleting function blocks
 function add_fn_block(hObj, evts, unknown)
@@ -168,11 +190,9 @@ handles.del_fn_button = uicontrol('Parent', handles.container_panel, ...
     'Units', 'pixels', 'Position', [210 5 200 25], ...
     'Callback', @del_fn_block);
 
-% Make the scroll bar dynamically update while being dragged
+% TODO: Make the scroll bar dynamically update while being dragged
 % hJScrollBar = findjobj(handles.container_slider);
 % hJScrollBar.AdjustmentValueChangedCallback = @on_scrollbar_slide;
-
-% TODO: Scroll down once to make sure things are initialized 
 
 % Use an evil, undocumented function to trigger the firstcallback
 hgfeval(get(handles.container_slider,'Callback'), handles.container_slider, []);

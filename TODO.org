@@ -1,14 +1,15 @@
+* MILESTONE
+  Fit using TORC data to produce an STRF, show to Stephen and make him happy. (One STRF for inhibition, one for excitation)
+  
 * Next steps:
-  - make Narf_model.m have the model and buttons at the TOP left, not bottom left
-  - Make my code actually work on a data struct
+  - Write a module which loads stimuli and responses from baphy (given a cell array of IDs)
+  - Make my code actually work on a data struct...
     1. Pass an argument to the FN chain which holds some arbitrary value to start with. Let's pass it 'time' for testing. Later we'll use 'stim_fs' and 'resp_fs'
     2. On startup, scan the 'modules' directory and create default params.
     3. Add a callback to the popus that pulls up the appropriate defaults
     5. Put a 'sine' function module in the directory
     6. Put a 'sqrt' function that works only on the sine? or that takes an argument of which signal to apply to?
     7. See if I can make a chain of 2-3 sine waves, added together
-  - Insert the GUI object into my existing NARF code?
-  - Write a module which loads stimuli and responses from baphy (given a cell array of IDs)
   - How can I define functions such that the input of one chains to the other, using a proper data structure
   - Instead of loading in response at 100Khz, load it in at 10Khz. (The first function should be the load_from_baphy_rasterization functions)
   - Write a generic pack/unpack function to expose parameters to the optimization
@@ -26,46 +27,80 @@
   - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
   - make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
   - Go through the TODO's in my files and look for more
+  - make Narf_model.m have the model and buttons at the TOP left, not bottom left
+    (Requires a bit of trickery)
 
 * How could functions be passed from one to the next?
   All functions are assumed to accept TWO arguments and return TWO arguments
   Those arguments are the STACK data structure and the X data structure
 
+* When called with no arguments, each function returns 2 arguments:
+  1. The 'meta' information about the function
+  2. The 'params' struct, which specificies the default parameters
+
 * STACK data structure
   A cell array, with the present params struct being first, containing the functions and their parameters that were applied to reach this point. 
  
-  |---------------------+---------------------------------------------------------------------------------------|
-  | STACK{}.params      | Parameters passed to the function (only present AFTER evaluation?)                    |
-  | STACK{}.fn          | The function handle                                                                   |
-  | STACK{}.name        | Function file name                                                                    |
-  | STACK{}.pretty_name | User readable pretty function name                                                    |
-  | STACK{}.plot_fns    | Struct array with fields (pretty_name, handle, plot_gui_controls )                    |
-  | STACK{}.ready_pred  | A predicate function that is passed (STACK, X) and returns true iff it's ready to run |
-  |---------------------+---------------------------------------------------------------------------------------|
+  |-------------------------+---------------------------------------------------------------------------------------|
+  | STACK{}.name            | Function file name                                                                    |
+  | STACK{}.fn              | The function handle                                                                   |
+  | STACK{}.params          | Parameters passed to the function (only present AFTER evaluation?)                    |
+  | STACK{}.pretty_name     | User readable pretty function name                                                    |
+  | STACK{}.plot_fns        | Struct array with fields (pretty_name, handle, plot_gui_controls )                    |
+  | STACK{}.editable_fields | Fields that may be user edited                                                        |
+  | STACK{}.isready_pred    | A predicate function that is passed (STACK, X) and returns true iff it's ready to run |
+  |-------------------------+---------------------------------------------------------------------------------------|
 
 * X data structure
   A cell array, with the most recent data being first. The contents of each cell could be anything. For my cases a struct seems to be most convenient.
   
-  |------------------------+--------------------------------------------------------------|
-  | X{}.dat.().cellid      | String, name of the cellid                                   |
-  | X{}.dat.().stimfile    | String, name of the stimfile                                 |
-  | X{}.dat.().raw_stim_fs | Raw stimulus frequnecy                                       |
-  | X{}.dat.().raw_resp_fs | Raw response frequency                                       |
-  | X{}.dat.().raw_time    | Time vector                                                  |
-  | X{}.dat.().raw_stim    | Raw stimulus                                                 |
-  | X{}.dat.().raw_resp    | Raw spike timings                                            |
-  | X{}.dat.().raw_isi     | Raw inter-spike intervals                                    |
-  | X{}.dat.().pp_stim     | Preprocessed stim                                            |
-  | X{}.dat.().pp_resp     | Preprocessed response                                        |
-  | X{}.dat.().pp_respavg  | Histogram of response                                        |
-  | X{}.dat.().ds_stim     | Downsampled, preprocessed stim                               |
-  | X{}.dat.().ds_resp     | Downsampled, preprocessed response                           |
-  | X{}.dat.().ds_respavg  | Downsampled, preprocessed histogram                          |
-  | X{}.dat.().lf_stim     | Linear filtered stimulus                                     |
-  | X{}.dat.().nl_stim     | Nonlinearly scaled stimulus                                  |
-  | X{}.dat.().pred        | Sum of the nonlinear stimuli; ie the prediction of the model |
-  | ...                    |                                                              |
-  |------------------------+--------------------------------------------------------------|
+  |----------------------------+--------------------------------------------------------------+------|
+  | X{}.dat.().cellid          | String, name of the cellid                                   |      |
+  | X{}.dat.().stimfile        | String, name of the stimfile                                 |      |
+  | X{}.dat.().include_prestim | Boolean. 1 prestim was included, 0 otherwise                 | DONE |
+  | X{}.dat.().raw_stim_fs     | Raw stimulus frequnecy                                       | DONE |
+  | X{}.dat.().raw_resp_fs     | Raw response frequency                                       | DONE |
+  | X{}.dat.().raw_stim        | Raw stimulus                                                 | DONE |
+  | X{}.dat.().raw_resp        | Raw spike timings                                            | DONE |
+  | X{}.dat.().raw_stim_time   | Time vector for stimulus                                     |      |
+  | X{}.dat.().raw_resp_time   | Time vector for response                                     |      |
+  | X{}.dat.().raw_isi         | Raw inter-spike intervals                                    |      |
+  | X{}.dat.().pp_stim         | Preprocessed stim                                            |      |
+  | X{}.dat.().pp_resp         | Preprocessed response                                        |      |
+  | X{}.dat.().pp_respavg      | Histogram of response                                        |      |
+  | X{}.dat.().ds_stim         | Downsampled, preprocessed stim                               |      |
+  | X{}.dat.().ds_resp         | Downsampled, preprocessed response                           |      |
+  | X{}.dat.().ds_respavg      | Downsampled, preprocessed histogram                          |      |
+  | X{}.dat.().lf_stim         | Linear filtered stimulus                                     |      |
+  | X{}.dat.().nl_stim         | Nonlinearly scaled stimulus                                  |      |
+  | X{}.dat.().pred            | Sum of the nonlinear stimuli; ie the prediction of the model |      |
+  | ...                        |                                                              |      |
+  |----------------------------+--------------------------------------------------------------+------|
+
+  % Return a 'dat' struct with 100Khz rasterized stims and responses. 'dat'
+  % struct has field names that are the stimfiles found in training_set and
+  % test_set, and so may be accessed using 'dat.mystimfilename.raw_stim', for
+  % example. The following fields will eventually be defined for the
+  % sub-structures held under each stimfile key:
+  %
+  %    raw_stim    The 100Khz rasterized stimulus signal    [SxN]
+  %    raw_resp    The 100Khz rasterized response signal    [SxNxR]
+  %    raw_respavg The 100Khz average response signal       [SxN]
+  %    raw_time    The 100Khz rasterized time index         [1xN]
+  %    pp_stim     The preprocessed stimulus                [SxNxF]
+  %    pp_resp     The preprocessed response                [SxNxRxF] 
+  %    pp_respavg  The preprocessed average response        [SxNxF]
+  %    ds_stim     The downsampled, preprocessed stimulus   [SxTxF]
+  %    ds_resp     The downsampled, preprocessed response   [SxTxRxF]
+  %    ds_time     The downsampled time index               [1xT]
+  %    ds_psth     The downsampled, averaged response       [SxTxF]
+  %
+  % In the above, dimensions are indicated with
+  %      S = sound stimulus index #
+  %      R = repetition index #
+  %      N = Time index at 100KHz sampling
+  %      T = Time index in downsampled frequency
+  %      F = Preprocessing index #
 
 * How does it work?
 ** EVALUATION

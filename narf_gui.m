@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 16-Nov-2012 14:37:26
+% Last Modified by GUIDE v2.5 21-Nov-2012 14:08:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -219,111 +219,6 @@ end
 log_dbg('Training sets selected: %s', ...
     strtrim(sprintf('%s ', training_set{:})));
 log_dbg('Test set selected: %s', char(test_set{:}));
-
-% ------------------------------------------------------------------------
-function dat = load_stim_resps(cfd, training_set, test_set)
-% Return a 'dat' struct with 100Khz rasterized stims and responses. 'dat'
-% struct has field names that are the stimfiles found in training_set and
-% test_set, and so may be accessed using 'dat.mystimfilename.raw_stim', for
-% example. The following fields will eventually be defined for the
-% sub-structures held under each stimfile key:
-%
-%    raw_stim    The 100Khz rasterized stimulus signal    [SxN]
-%    raw_resp    The 100Khz rasterized response signal    [SxNxR]
-%    raw_respavg The 100Khz average response signal       [SxN]
-%    raw_time    The 100Khz rasterized time index         [1xN]
-%    pp_stim     The preprocessed stimulus                [SxNxF]
-%    pp_resp     The preprocessed response                [SxNxRxF] 
-%    pp_respavg  The preprocessed average response        [SxNxF]
-%    ds_stim     The downsampled, preprocessed stimulus   [SxTxF]
-%    ds_resp     The downsampled, preprocessed response   [SxTxRxF]
-%    ds_time     The downsampled time index               [1xT]
-%    ds_psth     The downsampled, averaged response       [SxTxF]
-%
-% In the above, dimensions are indicated with
-%      S = sound stimulus index #
-%      R = repetition index #
-%      N = Time index at 100KHz sampling
-%      T = Time index in downsampled frequency
-%      F = Preprocessing index #
-
-log_dbg('load_stim_resps() was called');
-
-rasterfreq = 100000;   % TODO: Make user editable
-includeprestim = 1;    % TODO: Make user editable
-
-% Merge the training and test set names, which may overlap
-files_to_load = unique({training_set{:}, test_set{:}});
-
-% Create the 'dat' cell array and its entries
-len = length(files_to_load);
-dat = cell(1, len);
-for i = 1:len;
-    f = files_to_load{i};
-    
-    % Find the right index of cfd corresponding to the file, call it idx
-    idx = 0;
-    for j = 1:length(cfd)
-        if isequal(cfd(j).stimfile, f)
-            idx = j;
-        end
-    end
-    if idx == 0 log_err('Not found in cfd: %s', f); end
-    
-    % Load the raw_stim part of the data structure
-    stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
-    log_msg('Loading stimulus: %s', stimfile);
-    stim = loadstimfrombaphy(stimfile, [], [], 'wav', rasterfreq, 1, 0,...
-                             includeprestim);
-    [d1 d2 d3] = size(stim);
-    if d1 ~= 1
-         log_dbg('Stimulus matrix was: [%d %d %d]', d1, d2, d3);
-         log_err('Stimulus size was not [1xNxS]!?');
-    end
-    dat.(f).raw_stim = permute(stim, [3 2 1]); 
-    
-    % Create the raw_time index
-    dat.(f).raw_time = (1/rasterfreq).*[1:d2]';
-    
-    % Load the raw_resp part of the data structure
-    respfile = [cfd(idx).path, cfd(idx).respfile];
-    log_msg('Loading response: %s', respfile);
-    options = [];
-    options.includeprestim = includeprestim;
-    options.unit = cfd(idx).unit;
-    options.channel  = cfd(idx).channum;
-    options.rasterfs = rasterfreq; 
-    [resp, tags] = loadspikeraster(respfile, options);   
-    dat.(f).raw_resp = permute(resp, [3 1 2]);    
-    dat.(f).raw_respavg = squeeze(sum(dat.(f).raw_resp, 3));
-    
-    % Check raw_stim, raw_resp, and raw_time signal sizes match.
-    [s1 s2]    = size(dat.(f).raw_stim);
-    [r1 r2 r3] = size(dat.(f).raw_resp);
-    [a1 a2]    = size(dat.(f).raw_respavg);
-    if ~(isequal(s1, r1, a1) & isequal(s2, r2, a2))
-        log_dbg('Stim [%d %d], Resp: [%d %d %d] Respavg=[%d %d]',...
-                s1,s2,r1,r2,r3, a1,a2);
-        log_err('Stimulus, Response, and Average matrices size mismatch.');
-    end
-end
-log_dbg('Done loading stimulus and response files.');
-
-% ------------------------------------------------------------------------
-function fns = scan_directory_for_functions(scanpath)
-fprintf('Scanning dir for functions: %s\n', scanpath);
-files = dir(fullfile(scanpath, '*.m'));
-fns = [];
-for i = 1:length(files)
-    name = files(i).name;
-    fprintf('Found ''%s''\n', name);
-    s = [];                        % The struct to save
-    s.fn_name = name(1:end-2);     % File name minus the '.m' at end
-    fn = str2func(name(1:end-2));  % Make an executable function
-    s.fn = fn;                     % Save function handle
-    s.params = fn();               % Default param struct given by no args
-    fns.(s.fn_name) = s;           % Index under its function name
-end
 
 % ------------------------------------------------------------------------
 function initialize_popup(scandir, GSfield, GSselected_name, popup_handle)
@@ -546,36 +441,6 @@ if isfield(GS.dat, stimfile)
     set(handles.selected_stim_idx_popup, 'Value', 1);
 else
     log_err('Selected stimulus file not found: %s', stimfile);
-end
-
-% ------------------------------------------------------------------------
-function update_raw_stim_plot(handles)
-log_dbg('Updating raw_stim_plot');
-global GS;
- 
-% Only update if all fields are defined
-if ~(isfield(GS, 'raw_stim_plot_type') & ...
-     isfield(GS, 'selected_stim_idx') & ...
-     isfield(GS, 'selected_stimfile'))  
-     log_dbg('Ignoring raw stim plot update since not all fields ready.');
-   return  
-end
-
-plottype = GS.raw_stim_plot_type;
-stim_idx = GS.selected_stim_idx;
-stimfile = GS.selected_stimfile;
-obj = GS.dat.(stimfile);
-   
-axes(handles.stim_view_axes);cla;
-switch plottype
-    case 'Time Series View'
-        plot(obj.raw_time, obj.raw_stim(stim_idx,:), 'k-');
-        axis tight;
-    case 'Spectrogram View'
-        % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-        logfsgram(obj.raw_stim(stim_idx,:)', 4048, 100000, [], [], 500, 12); 
-        % TODO: Remove 4048, 100000 here and use global
-        caxis([-20,40]);  % TODO: use a 'smarter' caxis here
 end
 
 % ------------------------------------------------------------------------
@@ -1136,3 +1001,5 @@ function load_model_params_button_Callback(hObject, eventdata, handles)
 % hObject    handle to load_model_params_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
