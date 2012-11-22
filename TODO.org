@@ -1,19 +1,15 @@
 * MILESTONE
-  Fit using TORC data to produce an STRF, show to Stephen and make him happy. (One STRF for inhibition, one for excitation)
+  Fit using TORC data to produce an STRF, show to Stephen and make him happy. (Bonus fun: If you can get one STRF for inhibition, one for excitation, that would be neat.)
   
+* Conclusions on scoping
+  If I define X in one file as a local, and pass it as an argument, nothing I do in that function seems to affect it's value unless it is spelled exactly the same and also declared as a global in the sub functions.
+  Sub functions given the same value can pass it around and both contribute to modifying that value. In this sense, the function call just 'initializes' the global.
+  I guess the STACK and X variables must be global for this to work. 
+  But that is going to make it impossible to have multiple instances of the GUI exist, unless they are keyed.  
+
 * Next steps:
-  - Write a module which loads stimuli and responses from baphy (given a cell array of IDs)
-  - Make my code actually work on a data struct...
-    1. Pass an argument to the FN chain which holds some arbitrary value to start with. Let's pass it 'time' for testing. Later we'll use 'stim_fs' and 'resp_fs'
-    2. On startup, scan the 'modules' directory and create default params.
-    3. Add a callback to the popus that pulls up the appropriate defaults
-    5. Put a 'sine' function module in the directory
-    6. Put a 'sqrt' function that works only on the sine? or that takes an argument of which signal to apply to?
-    7. See if I can make a chain of 2-3 sine waves, added together
-  - How can I define functions such that the input of one chains to the other, using a proper data structure
-  - Instead of loading in response at 100Khz, load it in at 10Khz. (The first function should be the load_from_baphy_rasterization functions)
+  - Get BAPHY working within the new framework
   - Write a generic pack/unpack function to expose parameters to the optimization
-  - Make a function that accepts a cell array of parameter structs and a parameter vector, and returns a new cell array of parameter structs
   - Add a gammatone bank preprocessing stage
   - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
   - Add error handling (catch/throw) around calls to user defined functions
@@ -28,7 +24,7 @@
   - make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
   - Go through the TODO's in my files and look for more
   - make Narf_model.m have the model and buttons at the TOP left, not bottom left
-    (Requires a bit of trickery)
+    (Requires a bit of positioning trickery)
 
 * How could functions be passed from one to the next?
   All functions are assumed to accept TWO arguments and return TWO arguments
@@ -37,6 +33,14 @@
 * When called with no arguments, each function returns 2 arguments:
   1. The 'meta' information about the function
   2. The 'params' struct, which specificies the default parameters
+
+* What is narf_modelpane used for?
+  It was written:
+  1. To visualize a model's behavior on data
+  2. To edit a model easily and explicitly
+  3. To encapsulate all assumptions about the model in a stack
+  4. To select which parameters are to be optimized with an optimization routine. 
+     (The optimization routine GETS a copy of the stack, plays around with the data, then SETS the stack again after optimization is complete.)
 
 * STACK data structure
   A cell array, with the present params struct being first, containing the functions and their parameters that were applied to reach this point. 
@@ -49,6 +53,7 @@
   | STACK{}.plot_fns        | Struct array with fields (pretty_name, handle, plot_gui_controls )                    |
   | STACK{}.editable_fields | Fields that may be user edited                                                        |
   | STACK{}.isready_pred    | A predicate function that is passed (STACK, X) and returns true iff it's ready to run |
+  | STACK{}.gh              | "Gui Handles" structure.                                                              |
   |-------------------------+---------------------------------------------------------------------------------------|
 
 * X data structure

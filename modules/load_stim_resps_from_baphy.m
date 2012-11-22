@@ -8,7 +8,7 @@ m = [];
 m.mdl = @load_stim_resps_from_baphy;
 m.name = 'load_stim_resps_from_baphy';
 m.fn = @do_load_from_baphy;
-m.pretty_name = 'Load Stim + Resp From Baphy';
+m.pretty_name = 'Load stim+resp from BAPHY';
 m.editable_fields = {'raw_stim_fs', 'raw_resp_fs', 'include_prestim'};
 m.plot_fns = {'Special Plot', @do_plot_special};
 m.isready_pred = @module_isready;
@@ -174,10 +174,11 @@ function hs = create_gui(parent_handle)
 
 end
 
+% This module can be run if all necessary fields have been defined in the
+% topmost part of the stack
 function isready = module_isready(stack, x)
     mdl = stack{end};
-    % Check that all necessary fields have been defined in mdl
-    isready = false; 
+    isready = all(isfield(mdl, {'cellid', 'training_set', 'test_set'}));
 end
 
 end

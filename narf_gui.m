@@ -90,11 +90,8 @@ GS = [];
 global NARF_PATH PREPROC_DIR DOWNSAMP_DIR MODEL_DIR ...
     STOCHAST_DIR SAMPLING_DIR PERF_METRIC_DIR TERMINATION_DIR;
 NARF_PATH       = '/home/ivar/matlab/narf/';
-PREPROC_DIR     = 'stage_0_preprocessing/';
-DOWNSAMP_DIR    = 'stage_1_downsampling/';
-MODEL_DIR       = 'stage_2_model/';
-STOCHAST_DIR    = 'stage_3_stochasticity/';
-SAMPLING_DIR    = 'optim_0_sampling';
+MODULES_DIR     = 'modules/'
+SAMPLING_DIR    = 'optim_0_sampling/';
 PERF_METRIC_DIR = 'optim_1_perf_metric/';
 TERMINATION_DIR = 'optim_2_termination/';
 
@@ -102,10 +99,7 @@ TERMINATION_DIR = 'optim_2_termination/';
 
 % Add necessary directories to NARF's path
 addpath([NARF_PATH filesep 'utils'], ...
-        [NARF_PATH filesep PREPROC_DIR], ...
-        [NARF_PATH filesep DOWNSAMP_DIR], ...
-        [NARF_PATH filesep MODEL_DIR], ...
-        [NARF_PATH filesep STOCHAST_DIR], ...
+        [NARF_PATH filesep MODULES_DIR], ...
         [NARF_PATH filesep SAMPLING_DIR], ...
         [NARF_PATH filesep PERF_METRIC_DIR], ...
         [NARF_PATH filesep TERMINATION_DIR]);
@@ -154,23 +148,6 @@ global LOG_LEVEL; if(LOG_LEVEL < 5)  feval(@printlog, varargin{:}); end
 error(feval(@sprintf, varargin{:}));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Core functionality of the system should be independent of the GUI
-
-function run_narf(cellid, dataset_sel_fn, opt_fn, perf_metric, term_cond)
-cfd = query_db(cellid);
-[train_set, test_set] = select_train_test_sets(cfd); 
-dat = load_stim_resps(cfd, train_set, test_set);
-% Load the preprocessing model
-% Load the preprocessing model params
-%    OR Autodetect the bands of the SPN (when doing single-filter analysis)
-% mod = load_model(preproc, model, stochasticity); % Load the model form
-% Initialize the model OR
-%    OR load the model parameters (save under cellid+stimfile in a 'saved' dir)
-
-% preproc the data
-% Downsample the filtered data
-% Run the optimization on the downsampled data
-% Return the best fitting parameters and/or save them
 
 % ------------------------------------------------------------------------
 function cfd = query_db(cellid)
@@ -220,80 +197,6 @@ log_dbg('Training sets selected: %s', ...
     strtrim(sprintf('%s ', training_set{:})));
 log_dbg('Test set selected: %s', char(test_set{:}));
 
-% ------------------------------------------------------------------------
-function initialize_popup(scandir, GSfield, GSselected_name, popup_handle)
-global GS NARF_PATH;
-scanpath = fullfile(NARF_PATH, scandir);
-GS.(GSfield) = scan_directory_for_functions(scanpath);
-fs = fieldnames(GS.(GSfield));  
-GS.(GSselected_name) = fs{1};   % Use the first found item as default
-s = {}; % Build up the string...whee!
-for i = 1:numel(fs)
-    s{i} = GS.(GSfield).(fs{i}).params.pretty_name;
-end
-set(popup_handle, 'String', char(s));
-set(popup_handle, 'Value', 1);
-
-% ------------------------------------------------------------------------
-function s = repl_write(obj)
-% Prints obj in a readable manner. 
-if ismatrix(obj) & isnumeric(obj) & any(size(obj) ~= 1)  % Matrices
-    s = strcat('[', num2str(obj), ']');
-    s = regexprep(s, '\n', '; ');
-elseif isstr(obj)       % Single strings
-    s = obj; 
-elseif isnumeric(obj)   % Single numbers
-    s = num2str(obj);
-elseif isa(obj, 'function_handle')
-    s = ['@' func2str(obj)];
-else
-    log_err('Not sure how to print: %s', obj);
-end
-
-%------------------------------------------------------------------------
-function s = extract_field_val_pairs(mytable, fieldname_col, value_col)
-% Return a new struct extracted from two columns
-d = get(mytable, 'Data');
-[r, c] = size(d);
-if (c < fieldname_col | c < value_col | fieldname_col < 1 |  value_col < 1)
-    err('Column index number is outside the data table''s range.');
-end
-s = {};
-for i = 1:r
-    s.(d{i,fieldname_col}) = eval(d{i,value_col});
-end
-
-%------------------------------------------------------------------------
-function s = extract_checked_fields(mytable, checkbox_col, fieldname_col)
-% Return a cell array of fields with checked boxes next to them.
-d = get(mytable, 'Data');
-[r, c] = size(d);
-j = 1;
-s = {};
-for i = 1:r
-    if d{i,checkbox_col}
-        s{j} = d{i,fieldname_col};
-        j = j+1;
-    end
-end
-
-%------------------------------------------------------------------------
-function generic_update_data_table(mytable, mystruct, myfields)
-% Since data tables are updated in pretty much the same way everywhere, I
-% decided to abstract the updating process to avoid code repetition.
-l = length(myfields);
-c = cell(l,3);
-for i = 1:l
-    if ~isfield(mystruct, myfields{i})
-        log_err('Could not find field: %s', myfields{i});
-    end
-    c{i,1} = false;
-    c{i,2} = myfields{i};
-    c{i,3} = repl_write(mystruct.(myfields{i})); % Ensure data becomes a str
-end
-set(mytable, 'Data', c);
-drawnow;
-
 %------------------------------------------------------------------------
 function generic_model_data_table_update(hObject, GSfield, GSselected_name)
 % Since the data tables look the same for preprocessing, downsampling,
@@ -313,38 +216,6 @@ GS.(GSfield).(GS.(GSselected_name)).params = dt.fn(dt.params);
 % 2. Update which parameters are desired to be fit with the optimization
 GS.(GSfield).(GS.(GSselected_name)).fittable_params = ...
      extract_checked_fields(hObject, 1, 2);
-
-%------------------------------------------------------------------------
- function generic_model_selecting_popup(hObject, ...
-         GSfield, GSselected_name, data_table_handle)
-% Since most model selection popups do the same thing (list available
-% function files found in the directory, select one, and update the data
-% table accordingly, let's abstract that process here.
-% Does two things:
-%   1. Finds the selected model in the GS data structure
-%   2. Using this model, updates the data table based on the editable
-global GS; 
-c = cellstr(get(hObject,'String'));
-pretty_name = c{get(hObject,'Value')};
-
-% I dream of replacing this with find() idiom instead of a fucking for loop
-f = [];
-fnames = fieldnames(GS.(GSfield));
-for i = 1:length(fnames)  
-    if isequal(pretty_name, GS.(GSfield).(fnames{i}).params.pretty_name)
-        f = GS.(GSfield).(fnames{i});
-    end
-end
-% If f is not found throw an error
-if ~isequal(f, []) 
-    GS.(GSselected_name) = f.fn_name;
-else
-	log_err('Somehow, the selected field name was not found!?');
-end
-% TODO: Replace with two function calls that set values and checkboxes independently?
-pp = GS.(GSfield).(GS.(GSselected_name)).params;
-generic_update_data_table(data_table_handle, pp, pp.editable_fields);
-
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DATA SELECTION GUI
@@ -357,15 +228,15 @@ global GS;
 
 % Invalidate data_selection_table, and other parts of the GUI
 set(handles.data_selection_table, 'Data', {}); drawnow;
-%axes(handles.stim_view_axes); cla;
-%axes(handles.resp_view_axes); cla;
-%axes(handles.preproc_view_axes); cla;
-%axes(handles.downsamp_view_axes); cla;
-%axes(handles.optplot1); cla;
-%axes(handles.optplot2); cla;
-%axes(handles.optplot3); cla;
-%set(handles.selected_stimfile_popup, 'String', '');   
-%set(handles.selected_stim_idx_popup, 'String', '');  
+% axes(handles.stim_view_axes); cla;
+% axes(handles.resp_view_axes); cla;
+% axes(handles.preproc_view_axes); cla;
+% axes(handles.downsamp_view_axes); cla;
+% axes(handles.optplot1); cla;
+% axes(handles.optplot2); cla;
+% axes(handles.optplot3); cla;
+% set(handles.selected_stimfile_popup, 'String', '');   
+% set(handles.selected_stim_idx_popup, 'String', '');
 
 % Query the DB and select the train/test sets
 GS.cellid = get(handles.cellid_text, 'String');
