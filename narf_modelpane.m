@@ -30,7 +30,6 @@ function refresh_modelpane = narf_modelpane(parent_handle, modules)
 % everything then has to be shifted around in the positive spaces as the
 % number of module blocks changes.
 
-
 global STACK XXX;
 
 pos = get(parent_handle, 'Position');
@@ -49,25 +48,31 @@ handles.container_slider = uicontrol('Parent',parent_handle, ...
     'Style','slider', 'Enable','off', ...
     'Units','pixels', 'Position', [w-20 0 20 h], ...
     'Min', 0-eps, 'Max', 0, 'Value', 0, ...
-    'Callback',{@update_scrolling_on_scrollbar_slide, handles.container_panel});
+    'Callback', @(h,evts,hds) update_scrolling_on_scrollbar_slide(h, handles.container_panel));
+
+% Create GUIs for any modules that already exist in STACK
+% TODO:
 
 % Use as a callback which moves the internal panel around
-function update_scrolling_on_scrollbar_slide(hSld, evts, hPan)
+function update_scrolling_on_scrollbar_slide(hSld, hPan)
     offset = get(hSld,'Value');
     p = get(hPan, 'Position');
-    set(hPan, 'Position',[p(1) -offset p(3) p(4)]);
+    set(hPan, 'Position', [p(1) -offset p(3) p(4)]);
 end
 
 % Make the scroll bar dynamically update while being dragged
 hJScrollBar = findjobj(handles.container_slider);
-hJScrollBar.AdjustmentValueChangedCallback = @update_scrolling_on_scrollbar_slide;
+hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_scrolling_on_scrollbar_slide(handles.container_slider, handles.container_panel);
 
 % Update scrollbar and panel sizes whenever the number of modules changes
-function update_scrolling_on_module_count_change(hSld, hPan)
+function update_scrolling_on_module_count_change()
    N = length(STACK);
+   hSld = handles.container_slider;
+   hPan = handles.container_panel;
    set(hPan, 'Position', [0 0 w (bh+ph*N)])
    set(hSld, 'Enable', 'on', 'Min', 0, 'Max', max(eps, bh+ph*N-h), 'Value', 0); 
-   hgfeval(get(hSld,'Callback'), hSld, []);
+   hgfeval(get(hPan, 'Callback'), hPan, []);
+   hgfeval(get(hSld, 'Callback'), hSld, []);
    drawnow;
 end
 
@@ -75,17 +80,15 @@ end
 function update_module_panel_positions()
     % Calculate the topmost point of the GUI
     N = length(STACK);
-    top = N*ph + bh;
-    for yi = 0:N-1
-        set(STACK{1}.gh.fn_panel, 'Position', [0 (top-ph*yi) 495 bh])
-        set(STACK{1}.gh.plot_axes, 'Position', [520 (top-ph*pi+20) (w-520) (ph-25)]);
+    top = (N)*ph + bh;
+    for yi = 1:N
+        set(STACK{yi}.gh.fn_panel, 'Position', [0 (top-ph*yi) 495 bh]);
+        set(STACK{yi}.gh.plot_axes, 'Position', [520 (top-ph*yi+20) (w-520) (ph-25)]);
+        
+        % Call 
+        % hgfeval(get(STACK{yi}.gh.fn_panel,'Callback'), STACK{yi}.gh.fn_panel, []);
+        
     end
-end
-
-% Scroll the view to show the bottom of the window
-function scroll_view_to_bottom(hSld)
-    set(hSld, 'Value', 0);
-    hgfeval(get(hSld,'Callback'), hSld, []);
     drawnow;
 end
 
@@ -117,7 +120,7 @@ function s = populate_popup_with_available_plots(h_mod_panel, mod_name)
     set(hObject, 'String', char(plot_fns{:}));
 end
 
-function module_selected_callback (hObject, events, handles, D)
+function module_selected_callback (hObject, D)
     % Which module was selected?
     c = cellstr(get(hObject,'String'));
     pretty_name = c{get(hObject,'Value')};
@@ -127,7 +130,7 @@ function module_selected_callback (hObject, events, handles, D)
     f = [];
     fns = fieldnames(modules);
     for i = 1:length(fns)  
-        if isequal(pretty_name, modules.(fns{i}).params.pretty_name)
+        if isequal(pretty_name, modules.(fns{i}).pretty_name)
             f = modules.(fns{i});
         end    
     end
@@ -136,33 +139,25 @@ function module_selected_callback (hObject, events, handles, D)
     if ~isequal(f, []) 
         selected = f.fn_name;
     elseif isequal(pretty_name, 'No Modules Ready')
-        % Do nothing, since this is a plausible result.
+        return; 
+    elseif isequal(pretty_name, 'Right Click to Initialize')
+        return; 
     else
-    	log_err('Somehow, the selected field name was not found!?');
+    	error('Somehow, the selected field name was not found!?');
     end
     
     % All the above work just to find out what was selected! Oof!
     % Set the stack at this point to be the selected module. 
     STACK{D} = merge_structs(STACK{D}, modules.(selected));
-    
-    
-    LEFT OFF HERE
-    
-    
-    
-    
-    
-    
-    
-    
    
-    % Destroy the stack block BELOW this one so errors don't propogate
+    % Invalidate stack block BELOW this one so errors don't propogate
     % Be sure to destroy the GUI objects too!
-    STACK = STACK(1:D);
+    % STACK = STACK(1:D);
+    % TODO:
     
     % Update the data table values
-    pp = modules.(f).params;
-    generic_checkbox_data_table(data_table_handle, pp, pp.editable_fields); 
+    mhl = modules.(f);
+    generic_checkbox_data_table(stack{D}.gh.fn_table, mdl, mdl.editable_fields); 
     
     % Update the plotting popup menu
     % TODO: populate_popup_with_available_plots();
@@ -172,7 +167,7 @@ function module_selected_callback (hObject, events, handles, D)
 end
 
 % Define a function that makes new module gui blocks
-function gh = create_mod_block_panel(parent_handle, N)
+function gh = create_mod_block_panel(parent_handle, mod_idx)
     % Returns a module panel placed at the origin. 
     %
     % The returned 'gui handle' gh has these fields:
@@ -197,37 +192,39 @@ function gh = create_mod_block_panel(parent_handle, N)
     
     % Create a panel that will hold all the controls for the fn.
     gh.fn_panel = uipanel('Parent', parent_handle, ...
-        'Units','pixels', 'Position', [xx yy 495 hh]);
+        'Units','pixels', 'Position', [0 0 495 ph]);
     
     % Create the popup to select which graph to display
-    gh.plot_type = uicontrol('Parent', gh.fn_panel, ...
+    gh.plot_popup = uicontrol('Parent', gh.fn_panel, ...
         'Style', 'popupmenu', 'Enable', 'on', ...
         'String', 'Uninitialized', ...
-        'Units', 'pixels', 'Position', [310 (hh-30) 180 25], ...
+        'Units', 'pixels', 'Position', [310 (ph-30) 180 25], ...
         'Callback', @(a,b,c) disp('FN popup callback TODO.'));
     
     % Create a plot-type modification panel for changing visualizations
     gh.plot_panel = uipanel('Parent', gh.fn_panel, ...
-        'Units', 'pixels', 'Position', [310 5 180 (hh-40)]);
+        'Units', 'pixels', 'Position', [310 5 180 (ph-40)]);
     
     % Create the popup inside that panel
     gh.fn_popup = uicontrol('Parent', gh.fn_panel, ...
         'Style', 'popupmenu', 'Enable', 'on', ...
         'String', 'Right Click to Initialize', ...
-        'Units', 'pixels', 'Position', [5 (hh-30) 300 25], ...
-        'Callback', @(h, evts, handles) select_module(h, modules, stack, x), ...
-        'ButtonDownFcn', @(h,evts, handles) populate_with_ready_modules(h, modules));
+        'Units', 'pixels', 'Position', [5 (ph-30) 300 25], ...
+        'Callback', @(h, evts, hdls) module_selected_callback(h, mod_idx), ...
+        'ButtonDownFcn', @(a,b,c) disp('whee'));
+ %       'ButtonDownFcn', @(h, evts, hdls) populate_with_ready_modules(h, mod_idx));
     
+ 
     % Create the data table inside that panel
     gh.fn_table = uitable('Parent', gh.fn_panel, ...
         'Enable', 'on', ...
-        'Units', 'pixels', 'Position', [5 35 300 (hh-70)], ...
+        'Units', 'pixels', 'Position', [5 35 300 (ph-70)], ...
         'CellEditCallback', @(a,b,c) disp('FN Data Table callback TODO.'));
     
     % Create a button at the bottom to apply the function
     gh.fn_apply = uicontrol('Parent', gh.fn_panel, ...
         'Style', 'pushbutton', 'Enable', 'on', ...
-        'String', state.button_name, ...
+        'String', 'Apply!', ...
         'Units', 'pixels', 'Position', [185 5 120 25], ...
         'Callback', @(a,b,c) disp('FN Data Table callback TODO.'));
     
@@ -240,51 +237,40 @@ function gh = create_mod_block_panel(parent_handle, N)
     % remember that when you move the fn_panel around, you also need to update
     % the axes object associated with that panel.
     gh.plot_axes = axes('Parent', parent_handle, ...
-        'Units','pixels', 'Position', [520+x 20+y (ww-520) (hh-25)]);
+        'Units','pixels', 'Position', [520 20 (w-520) (ph-25)]);
 end
 
 % Callback for creating a module block
-function add_mod_block(hObj)
-    n_fns = length(mod_panels);
-    N = n_fns+1;
-    
-    % Slide all existing panels into their new positions
-    for i = 1:n_fns
-        set(mod_panels{i}.plot_axes, 'Position', [520 20+bh+ph*(N-i) (w-520) (ph-25)]);
-        set(mod_panels{i}.fn_panel, 'Position', [0, bh+ph*(N-i) 495 bh]);
-    end
-    
-    % Add a new function block
-    menu = [];
-    menu.pretty_name = 'Select Function';
-    menu.plot_name = 'Select Plot Type';
-    menu.button_name = ['Apply Function' num2str(N)];
-    mod_pos = [0, bh, w-20, ph];
-    mod_panels{N} = create_mod_block_panel(mod_pos, handles.container_panel, menu);
-    
-    scroll_view_to_bottom(N);
+function add_mod_block()
+    % Add a new model block, update the stack, and finally the view
+    idx = (length(STACK)+1);
+    STACK{idx}.gh = create_mod_block_panel(parent_handle, idx);
+    update_module_panel_positions();    
+    update_scrolling_on_module_count_change();
 end
 
 % Callback for deleting a module block
-function del_mod_block(hObj)
-    n_fns = length(mod_panels);
+function del_mod_block()
+    n_fns = length(STACK);
     
-    % Slide all existing panels into their new positions
-    for i = 1:n_fns-1
-        set(mod_panels{i}.plot_axes, 'Position', [520 20+bh+ph*(n_fns-i-1) (w-520) (ph-25)]);
-        set(mod_panels{i}.fn_panel,  'Position', [0, bh+ph*(n_fns-i-1) 495 bh]);
+    if n_fns == 0
+        return;
     end
     
-    % Remove last function block explicitly since we don't trust matlab to
+    % Remove GUI handles explicitly since I don't trust matlab to
     % garbage collect everything properly
-    delete(mod_panels{n_fns}.plot_axes);
-    delete(mod_panels{n_fns}.plot_settings_pane);
-    delete(mod_panels{n_fns}.fn_apply_button);
-    delete(mod_panels{n_fns}.fn_data_table);
-    delete(mod_panels{n_fns}.fn_popup);
-    delete(mod_panels{n_fns}.fn_panel);
-    mod_panels = mod_panels(1:n_fns-1);
-    scroll_view_to_bottom(n_fns-1);
+    delete(STACK{n_fns}.gh.plot_axes);
+    delete(STACK{n_fns}.gh.plot_popup);
+    delete(STACK{n_fns}.gh.plot_panel);
+    delete(STACK{n_fns}.gh.fn_apply);
+    delete(STACK{n_fns}.gh.fn_table);
+    delete(STACK{n_fns}.gh.fn_popup);
+    delete(STACK{n_fns}.gh.fn_panel);
+    
+    % Update the stack, the remaining module posiitons, and the view
+    STACK = STACK(1:n_fns-1);
+    update_module_panel_positions();    
+    update_scrolling_on_module_count_change();
 end
 
 % Create the add/remove function buttons
@@ -292,22 +278,23 @@ handles.add_fn_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Add function block', ...
     'Units', 'pixels', 'Position', [5 5 200 25], ...
-    'Callback', @(h,b,c) add_mod_block(h));
+    'Callback', @(h,b,c) add_mod_block());
 
 handles.del_fn_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Delete function block', ...
     'Units', 'pixels', 'Position', [210 5 200 25], ...
-    'Callback', @(h,b,c) del_mod_block(h));
+    'Callback', @(h,b,c) del_mod_block());
 
 % Use an evil, undocumented function to trigger the firstcallback
 hgfeval(get(handles.container_slider,'Callback'), handles.container_slider, []);
 drawnow;
 
 % COMMENT:
-% I would love to make mouse wheel scrolling work for the panel, and not 
-% just for the scroll bar, but unfortunately findjobj() cannot return a
-% java object for a panel because...MATLAB doesn't use Java swing panels! 
+% I would love to make mouse wheel scrolling work with the cursor over the
+% entire panel, and not when the cursor is over  the scroll bar. 
+% Unfortunately findjobj() cannot return a  java object for a panel 
+% because...MATLAB doesn't use Java swing panels! 
 % Therefore, the closest we could do would be to make mouse wheel scrolling
 % work just for the scrollbar, although that isn't nearly as much fun.
 %

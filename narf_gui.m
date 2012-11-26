@@ -104,8 +104,11 @@ addpath([NARF_PATH filesep 'utils'], ...
         [NARF_PATH filesep PERF_METRIC_DIR], ...
         [NARF_PATH filesep TERMINATION_DIR]);
 
+% Build a list of the files in the 'modules/' directory
+mods = scan_directory_for_modules('~/matlab/narf/modules/');
+
 % Add the model pane
-narf_modelpane(handles.model_structure_panel, [], []);
+narf_modelpane(handles.model_structure_panel, mods);
     
 % % Invalidate all data tables
 set(handles.data_selection_table, 'Data', {});
