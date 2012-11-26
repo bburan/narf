@@ -179,6 +179,7 @@ end
 function isready = module_isready(stack, x)
     mdl = stack{end};
     isready = all(isfield(mdl, {'cellid', 'training_set', 'test_set'}));
+    isready = true;
 end
 
 end

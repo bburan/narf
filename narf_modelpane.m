@@ -58,6 +58,13 @@ function update_scrolling_on_scrollbar_slide(hSld, hPan)
     offset = get(hSld,'Value');
     p = get(hPan, 'Position');
     set(hPan, 'Position', [p(1) -offset p(3) p(4)]);
+    N = length(STACK);
+    top = (N)*ph + bh;
+    for yi = 1:N
+        set(STACK{yi}.gh.fn_panel, 'Position', [0 (top-ph*yi-offset) 495 bh]);
+        set(STACK{yi}.gh.plot_axes, 'Position', [520 (top-ph*yi+20-offset) (w-520) (ph-25)]);
+    end
+    drawnow;
 end
 
 % Make the scroll bar dynamically update while being dragged
@@ -69,9 +76,13 @@ function update_scrolling_on_module_count_change()
    N = length(STACK);
    hSld = handles.container_slider;
    hPan = handles.container_panel;
-   set(hPan, 'Position', [0 0 w (bh+ph*N)])
-   set(hSld, 'Enable', 'on', 'Min', 0, 'Max', max(eps, bh+ph*N-h), 'Value', 0); 
-   hgfeval(get(hPan, 'Callback'), hPan, []);
+   set(hPan, 'Position', [0 0 w (bh+ph*N)]);
+   H = max(eps, bh+ph*N-h);
+   if H ~= eps
+       set(hSld, 'Enable', 'on', 'Min', 0, 'Max', H, 'Value', 0); 
+   else
+       set(hSld, 'Enable', 'off', 'Min', 0, 'Max', H, 'Value', 0);
+   end       
    hgfeval(get(hSld, 'Callback'), hSld, []);
    drawnow;
 end
@@ -84,26 +95,27 @@ function update_module_panel_positions()
     for yi = 1:N
         set(STACK{yi}.gh.fn_panel, 'Position', [0 (top-ph*yi) 495 bh]);
         set(STACK{yi}.gh.plot_axes, 'Position', [520 (top-ph*yi+20) (w-520) (ph-25)]);
-        
-        % Call 
-        % hgfeval(get(STACK{yi}.gh.fn_panel,'Callback'), STACK{yi}.gh.fn_panel, []);
-        
     end
     drawnow;
 end
 
-% Fill a popup menu with modules that are ready to execute at stack depth D
-function s = populate_popup_with_ready_modules(hObject, D)
+% Fill a popup menu with modules that are ready to execute at stack depth
+% mod_idx
+function populate_popup_with_ready_modules(hObject, mod_idx)
     ready_mods = {};
     fns = fieldnames(modules);
+    j=1;
     for idx = 1:length(fns);
-        if modules(fns{idx}).isready_pred(STACK, XXX)
-            ready_mods{idx} = modules.(fns{idx}).pretty_name;
+        if modules.(fns{idx}).isready_pred(STACK(1:mod_idx), XXX(1:mod_idx-1))
+            ready_mods{j} = modules.(fns{idx}).pretty_name;
+            j = j+1;
         end 
     end
     
-    if isempty(ready_mods)
-        set(hObject, 'String', 'No Modules Ready');
+    % TODO: Select the first option? Or leave it as previously initialized?
+    
+    if j == 1
+        set(hObject, 'String', 'Select Module');
     else
         set(hObject, 'String', char(ready_mods{:}));
     end
@@ -111,16 +123,18 @@ end
 
 % Given a module panel handle and selected module name, update the module
 % panel to reflect the available plot options.
-function s = populate_popup_with_available_plots(h_mod_panel, mod_name)  
+function populate_popup_with_available_plots(hObject, mod_name)  
     plot_fns = {};
     fns = fieldnames(modules.(mod_name).plot_fns);
+    j = 1;
     for idx = 1:length(fns);
-        plot_fns{idx} = mod.(fns{idx}).plot_pretty_name;
+        plot_fns{j} = mod.(fns{idx}).plot_pretty_name;
+        j = j+1;
     end
     set(hObject, 'String', char(plot_fns{:}));
 end
 
-function module_selected_callback (hObject, D)
+function module_selected_callback (hObject, mod_idx)
     % Which module was selected?
     c = cellstr(get(hObject,'String'));
     pretty_name = c{get(hObject,'Value')};
@@ -138,9 +152,8 @@ function module_selected_callback (hObject, D)
     % If f is not found throw an error
     if ~isequal(f, []) 
         selected = f.fn_name;
-    elseif isequal(pretty_name, 'No Modules Ready')
-        return; 
-    elseif isequal(pretty_name, 'Right Click to Initialize')
+    elseif isequal(pretty_name, 'Select Module')
+        populate_popup_with_ready_modules(hObject, mod_idx);
         return; 
     else
     	error('Somehow, the selected field name was not found!?');
@@ -148,16 +161,16 @@ function module_selected_callback (hObject, D)
     
     % All the above work just to find out what was selected! Oof!
     % Set the stack at this point to be the selected module. 
-    STACK{D} = merge_structs(STACK{D}, modules.(selected));
+    STACK{mod_idx} = merge_structs(STACK{mod_idx}, modules.(selected));
    
     % Invalidate stack block BELOW this one so errors don't propogate
     % Be sure to destroy the GUI objects too!
-    % STACK = STACK(1:D);
+    % STACK = STACK(1:mod_idx);
     % TODO:
     
     % Update the data table values
     mhl = modules.(f);
-    generic_checkbox_data_table(stack{D}.gh.fn_table, mdl, mdl.editable_fields); 
+    generic_checkbox_data_table(stack{mod_idx}.gh.fn_table, mdl, mdl.editable_fields); 
     
     % Update the plotting popup menu
     % TODO: populate_popup_with_available_plots();
@@ -199,7 +212,7 @@ function gh = create_mod_block_panel(parent_handle, mod_idx)
         'Style', 'popupmenu', 'Enable', 'on', ...
         'String', 'Uninitialized', ...
         'Units', 'pixels', 'Position', [310 (ph-30) 180 25], ...
-        'Callback', @(a,b,c) disp('FN popup callback TODO.'));
+        'Callback', @(a,b,c) fprintf('plot_popup callback for block %d\n', mod_idx));
     
     % Create a plot-type modification panel for changing visualizations
     gh.plot_panel = uipanel('Parent', gh.fn_panel, ...
@@ -208,25 +221,22 @@ function gh = create_mod_block_panel(parent_handle, mod_idx)
     % Create the popup inside that panel
     gh.fn_popup = uicontrol('Parent', gh.fn_panel, ...
         'Style', 'popupmenu', 'Enable', 'on', ...
-        'String', 'Right Click to Initialize', ...
+        'String', 'Select Module', ...
         'Units', 'pixels', 'Position', [5 (ph-30) 300 25], ...
-        'Callback', @(h, evts, hdls) module_selected_callback(h, mod_idx), ...
-        'ButtonDownFcn', @(a,b,c) disp('whee'));
- %       'ButtonDownFcn', @(h, evts, hdls) populate_with_ready_modules(h, mod_idx));
-    
- 
+        'Callback', @(h, evts, hdls) module_selected_callback(h, mod_idx));
+
     % Create the data table inside that panel
     gh.fn_table = uitable('Parent', gh.fn_panel, ...
         'Enable', 'on', ...
         'Units', 'pixels', 'Position', [5 35 300 (ph-70)], ...
-        'CellEditCallback', @(a,b,c) disp('FN Data Table callback TODO.'));
+        'CellEditCallback', @(a,b,c) disp('FN Data Table callback TODO.\n'));
     
     % Create a button at the bottom to apply the function
     gh.fn_apply = uicontrol('Parent', gh.fn_panel, ...
         'Style', 'pushbutton', 'Enable', 'on', ...
         'String', 'Apply!', ...
         'Units', 'pixels', 'Position', [185 5 120 25], ...
-        'Callback', @(a,b,c) disp('FN Data Table callback TODO.'));
+        'Callback', @(a,b,c) fprintf('fn_apply callback for mod %d\n', mod_idx));
     
     % Create the plot axes
     % NOTE: Unfortunately, I cannot figure out how to propogate changes from
