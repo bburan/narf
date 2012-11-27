@@ -11,5 +11,10 @@ for i = 1:l
     c{i,2} = myfields{i};
     c{i,3} = repl_write(mystruct.(myfields{i})); % Ensure data becomes a str
 end
+set(mytable, 'ColumnName', {'Fit?', 'Field', 'Value'});
+set(mytable, 'ColumnEditable', [true false true]);
+set(mytable, 'ColumnWidth', {25 150 100});
+set(mytable, 'RowName', {});
 set(mytable, 'Data', c);
+
 drawnow;

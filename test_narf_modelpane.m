@@ -14,10 +14,11 @@ mods = scan_directory_for_modules('~/matlab/narf/modules/');
 global STACK XXX;
 
 STACK = {};
-% STACK{1} = [];
-% STACK{1}.cellid = 'por012c-b1';
-% STACK{1}.training_set = {'por012c02_p_TOR', 'por012c03_p_SPN'};
-% STACK{1}.test_set = {};
+XXX = {};
+XXX{1} = [];
+XXX{1}.cellid = 'por012c-b1';
+XXX{1}.training_set = {'por012c02_p_TOR', 'por012c03_p_SPN'};
+XXX{1}.test_set = {};
 
-% Pass modelpane the STACK and X
+% Pass modelpane the parent panel and all modules
 narf_modelpane(pf, mods); 

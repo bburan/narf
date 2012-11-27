@@ -22,7 +22,7 @@ function varargout = narf_gui(varargin)
 
 % Edit the above text to modify the response to help narf_gui
 
-% Last Modified by GUIDE v2.5 21-Nov-2012 14:08:42
+% Last Modified by GUIDE v2.5 26-Nov-2012 13:41:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -787,7 +787,6 @@ stepsize = 1.0;
 unpak_FIRCOEFS(x_bst);
 
 
-% ------------------------
 function initialize_optplot_menu(handle)
 menuopts = {'Pred/Resp Scatter', 'Raw ISI', 'Intensity-Scaled ISI', ...
         'KS Plot'};
@@ -875,5 +874,3 @@ function load_model_params_button_Callback(hObject, eventdata, handles)
 % hObject    handle to load_model_params_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-

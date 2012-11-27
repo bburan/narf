@@ -10,12 +10,19 @@ m.name = 'load_stim_resps_from_baphy';
 m.fn = @do_load_from_baphy;
 m.pretty_name = 'Load stim+resp from BAPHY';
 m.editable_fields = {'raw_stim_fs', 'raw_resp_fs', 'include_prestim'};
-m.plot_fns = {'Special Plot', @do_plot_special};
 m.isready_pred = @module_isready;
 
 % Optional fields
+m.plot_fns = {};
+m.plot_fns{1}.fn = @do_plot_stim;
+m.plot_fns{1}.pretty_name = 'Stimulus vs Time';
+m.plot_fns{2}.fn = @do_plot_stim_log_spectrogram;
+m.plot_fns{2}.pretty_name = 'Stimulus Log Spectrogram';
+m.plot_fns{3}.fn = @do_plot_respavg;
+m.plot_fns{3}.pretty_name = 'Response Average vs Time';
+m.plot_fns{4}.fn = @do_plot_response_rastered;
+m.plot_fns{4}.pretty_name = 'Response Raster Plot';
 m.plot_gui_create_fn = @create_gui;
-m.plot_gui = [];
 
 % Module fields that are specific to THIS MODULE
 m.raw_stim_fs = 100000;
@@ -34,12 +41,25 @@ end
 
 % NONE for this module.
 
+% ------------------------------------------------------------------------
+
 % Finally, define the 'methods' of this module, as if it were a class
-function x = do_load_from_baphy(stack, x)
-    mdl = stack{end};
+function x = do_load_from_baphy(stack, xxx)
+    n = length(stack);
+    mdl = stack{n};
+    x = xxx{n};
     
     % Merge the training and test set names, which may overlap
-    files_to_load = unique({mdl.training_set{:}, mdl.test_set{:}});
+    files_to_load = unique({x.training_set{:}, x.test_set{:}});
+    
+    % Returns a list of raw files with this cell ID
+    [cfd, cellids, cellfileids] = dbgetscellfile('cellid', x.cellid);
+    x.cfd = cfd;
+    
+    % If there is not exactly one cell file returned, throw an error.
+    if ~isequal(length(cellids), 1)
+        error('BAPHY gave %d cellids yet I want only 1.', length(cellids));
+    end
     
     % Create the 'dat' cell array and its entries
     len = length(files_to_load);
@@ -47,139 +67,214 @@ function x = do_load_from_baphy(stack, x)
     for f_idx = 1:len;
         f = files_to_load{f_idx};
         
-        % Find the index number of mdl.cfd corresponding to the file
+        % Find the index number of cfd corresponding to the file
         idx = 0;
-        for j = 1:length(mdl.cfd)
-            if isequal(mdl.cfd(j).stimfile, f)
+        for j = 1:length(cfd)
+            if isequal(cfd(j).stimfile, f)
                 idx = j;
             end
         end
         if idx == 0 
-            error('Not found in mdl.cfd: %s', f); 
+            error('Not found in cfd: %s\n', f); 
         end        
           
         % Load the raw_stim part of the data structure
-        stimfile = [mdl.cfd(idx).stimpath mdl.cfd(idx).stimfile];
-        log_msg('Loading stimulus: %s', stimfile);
+        stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
+        fprintf('Loading stimulus: %s\n', stimfile);
         stim = loadstimfrombaphy(stimfile, [], [], 'wav', ...
             mdl.raw_stim_fs, 1, 0, mdl.include_prestim);
         [d1 d2 d3] = size(stim);
         if d1 ~= 1
-            log_dbg('Stimulus matrix was: [%d %d %d]', d1, d2, d3);
-            log_err('Stimulus size was not [1xNxS]!?');
+            log_dbg('Stimulus matrix was: [%d %d %d]\n', d1, d2, d3);
+            log_err('Stimulus size was not [1xNxS]!?\n');
         end
         x.dat.(f).raw_stim = permute(stim, [3 2 1]);
-        x.dat.(f).raw_stim_fs = mdl.raw_stim_fs;
-        x.dat.(f).include_prestim = mdl.include_prestim;
+        x.dat.(f).raw_stim_fs = mdl.raw_stim_fs;         % TODO: Remove this SPOT violation
+        x.dat.(f).include_prestim = mdl.include_prestim; % TODO: Remove this SPOT violation
         
         % Load the raw_resp part of the data structure
         options = [];
-        options.includeprestim = includeprestim;
-        options.unit = mdl.cfd(idx).unit;
-        options.channel  = mdl.cfd(idx).channum;
+        options.includeprestim = mdl.include_prestim;
+        options.unit = cfd(idx).unit;
+        options.channel  = cfd(idx).channum;
         options.rasterfs = mdl.raw_resp_fs;
-        respfile = [mdl.cfd(idx).path, mdl.cfd(idx).respfile];
-        log_msg('Loading response: %s', respfile);
+        respfile = [cfd(idx).path, cfd(idx).respfile];
+        fprintf('Loading response: %s\n', respfile);
         [resp, tags] = loadspikeraster(respfile, options);
         x.dat.(f).raw_resp = permute(resp, [3 1 2]);
         x.dat.(f).raw_respavg = squeeze(sum(x.dat.(f).raw_resp, 3));
         x.dat.(f).raw_resp_fs = mdl.raw_resp_fs;
         
         % Check raw_stim, raw_resp, and raw_time signal sizes match.
+        % TODO: This is no longer relevant if stim and resp are sampled at
+        % different frequencies!
+%         if ~(isequal(s1, r1, a1) & isequal(s2, r2, a2))
+%             fprintf('Stim [%d %d], Resp: [%d %d %d] Respavg=[%d %d]\n',...
+%                 s1,s2,r1,r2,r3, a1,a2);
+%             error('Stimulus, Response, and Average matrices size mismatch.\n');
+%         end
+        
+        % Create time signals for convenience
         [s1 s2]    = size(x.dat.(f).raw_stim);
         [r1 r2 r3] = size(x.dat.(f).raw_resp);
         [a1 a2]    = size(x.dat.(f).raw_respavg);
-        if ~(isequal(s1, r1, a1) & isequal(s2, r2, a2))
-            log_dbg('Stim [%d %d], Resp: [%d %d %d] Respavg=[%d %d]',...
-                s1,s2,r1,r2,r3, a1,a2);
-            log_err('Stimulus, Response, and Average matrices size mismatch.');
-        end
-        
-        % Create time signals for convenience
         x.dat.(f).raw_stim_time = (1/mdl.raw_stim_fs).*[1:s2]';
         x.dat.(f).raw_resp_time = (1/mdl.raw_resp_fs).*[1:r2]';
         
     end
 end
 
-function do_plot_stim(stack, x)
+function do_plot_stim(stack, xxx)
     mdl = stack{end};
-    dat = x.dat.(mdl.plot_gui.selected_stimfile);
+    x = xxx{end};
+    
+    % Read the GUI to find out the selected stim files
+    c = cellstr(get(mdl.plot_gui.selected_stimfile_popup, 'String'));
+    sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
+    idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
+    dat = x.dat.(sf);
+
+    % TODO: If there was any problem in the above, report it
+    
     cla;
-    plot(dat.raw_stim_time, dat.raw_stim(mdl.plot_gui.selected_stim_idx,:), 'k-');
+    plot(dat.raw_stim_time, dat.raw_stim(idx,:), 'k-');
     axis tight;    
 end
 
-function do_plot_stim_log_spectrogram(stack, x)
+function do_plot_stim_log_spectrogram(stack, xxx)
     mdl = stack{end};    
-    dat = x.dat.(mdl.plot_gui.selected_stimfile);
-    cla;
+    x = xxx{end};
+    
+    % Read the GUI to find out the selected stim files
+    c = cellstr(get(mdl.plot_gui.selected_stimfile_popup, 'String'));
+    sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
+    idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
+    dat = x.dat.(sf);
+    
     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-    logfsgram(dat.raw_stim(mdl.plot_gui.stim_idx,:)', 4048, 100000, [], [], 500, 12); 
-    % TODO: Remove 4048, 100000 here and use global
+    logfsgram(dat.raw_stim(idx,:)', 4048, 100000, [], [], 500, 12); 
     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
     axis tight;
     
 end
 
-function do_plot_respavg(stack, x)
-    mdl = stack{end};
-    dat = x.dat.(mdl.plot_gui.selected_stimfile);
-    stim_idx = mdl.plot_gui.selected_stim_idx;
-    [S, N, R] = size(dat.raw_resp);
-	[xs,ys] = find(dat.raw_respavg(stim_idx, :) > 0);
-    bar(dat.raw_time(ys), dat.raw_respavg(stim_idx,ys), 0.01, 'k');
-    axis([0 dat.raw_time(end) 0 2]);
+function do_plot_respavg(stack, xxx)
+    mdl = stack{end};    
+    x = xxx{end};
+    
+    % Read the GUI to find out the selected stim files
+    c = cellstr(get(mdl.plot_gui.selected_stimfile_popup, 'String'));
+    sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
+    idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
+    dat = x.dat.(sf);
+    
+	[xs,ys] = find(dat.raw_respavg(idx, :) > 0);
+    bar(dat.raw_resp_time(ys), dat.raw_respavg(idx,ys), 0.01, 'k');
+    axis([0 dat.raw_resp_time(end) 0 2]);
 end
 
-function do_plot_response_rastered(stack, x)
-    mdl = stack{end};
-    dat = x.dat.(mdl.plot_gui.selected_stimfile);
-    stim_idx = mdl.plot_gui.selected_stim_idx;
+function do_plot_response_rastered(stack, xxx)
+    disp('called');
+    mdl = stack{end};    
+    x = xxx{end};
+    
+    % Read the GUI to find out the selected stim files
+    c = cellstr(get(mdl.plot_gui.selected_stimfile_popup, 'String'));
+    sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
+    idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
+    dat = x.dat.(sf);
+        
     [S, N, R] = size(dat.raw_resp);
-    axes(handles.resp_view_axes); cla; hold on;
+    cla;
+    hold on;
     for j = 1:R
-        [xs,ys] = find(dat.raw_resp(stim_idx, :, j) > 0);
-        plot(dat.raw_time(ys), j/R*dat.raw_resp(stim_idx,ys,j), 'k.');
+        [xs,ys] = find(dat.raw_resp(idx, :, j) > 0);
+        plot(dat.raw_resp_time(ys), j/R*dat.raw_resp(idx,ys,j), 'k.');
 	end
-    axis([0 dat.raw_time(end) 1/(2*R) 1+(1/(2*R))]);
+    axis([0 dat.raw_resp_time(end) 1/(2*R) 1+(1/(2*R))]);
+    hold off;
 end
 
-function hs = create_gui(parent_handle)
+function hs = create_gui(parent_handle, stack, xxx)
     pos = get(parent_handle, 'Position');
-    w = pos(3);
-    h = pos(4);
+    w = pos(3) - 10;
+    h = pos(4) - 10;
+    hs = [];
 
+    mod_idx = length(stack);
+    m = stack{end};
+    x = xxx{end};
+    stimfiles = fieldnames(x.dat);
+    
     % Create a popup which selects
     uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
-        'String', 'StimFile:', 'Units', 'pixels', 'Position', [5 (h-20) 50 25]);
-    select_stimfile_popup = uicontrol('Parent', parent_handle, ...
-        'Style', 'popupmenu', 'Enable', 'on', ...
-        'String', 'NONE', ...
-        'Units', 'pixels', 'Position', [55 (h-20) 80 25], ...
-        'Callback', @(a,b,c) disp('FN popup callback TODO.'));
+        'HorizontalAlignment', 'left',  'String', 'StimFile:', ...
+        'Units', 'pixels', 'Position', [5 (h-25) w 25]);
+    hs.selected_stimfile_popup = uicontrol('Parent', parent_handle, ...
+        'Style', 'popupmenu', 'Enable', 'on', 'String', 'NONE', ...
+        'Units', 'pixels', 'Position', [5 (h-50) w 25], ...
+        'Callback', @(a,b,c) selected_stimfile_popup_callback());
     
     % Create a stimfile selector
     uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
-        'String', 'Stim Num:', 'Units', 'pixels', 'Position', [5 (h-60) 50 25]);
-    select_stim_idx_popup = uicontrol('Parent', parent_handle, ...
+        'HorizontalAlignment', 'left', 'String', 'Stim Num:', ...
+        'Units', 'pixels', 'Position', [5 (h-75) w 25]);
+    hs.selected_stim_idx_popup = uicontrol('Parent', parent_handle, ...
         'Style', 'popupmenu', 'Enable', 'on', ...
         'String', 'NONE', ...
-        'Units', 'pixels', 'Position', [55 (h-60) 80 25], ...
-        'Callback', @(a,b,c) disp('FN popup callback TODO.'));
-    
-    hs = [];
-    hs.selected_stimfile = select_stimfile_popup;
-    hs.selected_stim_idx = select_stim_idx_popup;
+        'Units', 'pixels', 'Position', [5 (h-100) w 25], ...
+        'Callback', @(a,b,c) selected_stim_idx_popup_callback());
 
+    % Two functions to populate the two popup menus
+    function update_selected_stimfile_popup()
+        fns = fieldnames(x.dat);
+        set(hs.selected_stimfile_popup, 'String', char(fns));
+    end
+    
+    function update_selected_stim_idx_popup()
+        % Get the selected stim files
+        c = cellstr(get(hs.selected_stimfile_popup, 'String'));
+        sf = c{get(hs.selected_stimfile_popup, 'Value')};
+        
+        if isfield(x.dat, sf)
+            [d1, d2] = size(x.dat.(sf).raw_respavg);
+            d = {};
+            for i = 1:d1
+                d{i} = sprintf('%d',i);
+            end
+            set(hs.selected_stim_idx_popup, 'String', char(d));
+            set(hs.selected_stim_idx_popup, 'Value', 1);
+        else
+            error('Selected stimulus file not found: %s', sf);
+        end
+    end
+    
+    % Call the two update functions once to build the lists
+    update_selected_stimfile_popup();
+    update_selected_stim_idx_popup();
+    
+    % Define two callbacks, one for each popup.
+    function selected_stimfile_popup_callback()
+        % Update the selected_stim_idx_popup string to reflect new choices
+        update_selected_stim_idx_popup();
+        
+        % Call the next popup callback to trigger a redraw
+        selected_stim_idx_popup_callback();
+    end
+    
+    function selected_stim_idx_popup_callback()
+        % Call the plot function again via a sneaky, undocumented callback
+        hgfeval(get(m.gh.plot_popup,'Callback'), mod_idx, []);
+        drawnow;
+    end
 end
 
 % This module can be run if all necessary fields have been defined in the
 % topmost part of the stack
-function isready = module_isready(stack, x)
+function isready = module_isready(stack, xxx)
     mdl = stack{end};
-    isready = all(isfield(mdl, {'cellid', 'training_set', 'test_set'}));
-    isready = true;
+    x = xxx{end};
+    isready = all(isfield(x, {'cellid', 'training_set', 'test_set'}));
 end
 
 end
