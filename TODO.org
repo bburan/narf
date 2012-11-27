@@ -1,6 +1,6 @@
 * MILESTONE
   Fit using TORC data to produce an STRF, show to Stephen and make him happy. (Bonus fun: If you can get one STRF for inhibition, one for excitation, that would be neat.)
-  
+    
 * Conclusions on scoping
   If I define X in one file as a local, and pass it as an argument, nothing I do in that function seems to affect it's value unless it is spelled exactly the same and also declared as a global in the sub functions.
   Sub functions given the same value can pass it around and both contribute to modifying that value. In this sense, the function call just 'initializes' the global.
@@ -8,11 +8,11 @@
   But that is going to make it impossible to have multiple instances of the GUI exist, unless they are keyed.  
 
 * Next steps:
-  - Get BAPHY working within the new framework
+  - Initialize the plot controls after the data 
   - Write a generic pack/unpack function to expose parameters to the optimization
   - Add a gammatone bank preprocessing stage
   - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
-  - Add error handling (catch/throw) around calls to user defined functions
+  - Add error handling (catch/throw) around EVERY CALL to a user defined function
   - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
   - Allow plot methods of objects to use a popup menu and label. 
   - Replace all the 'length' and 'size' things with 'numel' where appropriate
@@ -23,9 +23,6 @@
   - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
   - make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
   - Go through the TODO's in my files and look for more
-  - make Narf_model.m have the model and buttons at the TOP left, not bottom left
-    (Requires a bit of positioning trickery)
-
 * How could functions be passed from one to the next?
   All functions are assumed to accept TWO arguments and return TWO arguments
   Those arguments are the STACK data structure and the X data structure
@@ -44,13 +41,11 @@
 
 * STACK data structure
   A cell array, with the present params struct being first, containing the functions and their parameters that were applied to reach this point. 
- 
   |-------------------------+---------------------------------------------------------------------------------------|
   | STACK{}.name            | Function file name                                                                    |
   | STACK{}.fn              | The function handle                                                                   |
-  | STACK{}.params          | Parameters passed to the function (only present AFTER evaluation?)                    |
   | STACK{}.pretty_name     | User readable pretty function name                                                    |
-  | STACK{}.plot_fns        | Struct array with fields (pretty_name, handle, plot_gui_controls )                    |
+  | STACK{}.plot_fns        | Struct array with fields (pretty_name, fn)                                            |
   | STACK{}.editable_fields | Fields that may be user edited                                                        |
   | STACK{}.isready_pred    | A predicate function that is passed (STACK, X) and returns true iff it's ready to run |
   | STACK{}.gh              | "Gui Handles" structure.                                                              |
@@ -58,61 +53,43 @@
 
 * X data structure
   A cell array, with the most recent data being first. The contents of each cell could be anything. For my cases a struct seems to be most convenient.
-  
-  |----------------------------+--------------------------------------------------------------+------|
-  | X{}.dat.().cellid          | String, name of the cellid                                   |      |
-  | X{}.dat.().stimfile        | String, name of the stimfile                                 |      |
-  | X{}.dat.().include_prestim | Boolean. 1 prestim was included, 0 otherwise                 | DONE |
-  | X{}.dat.().raw_stim_fs     | Raw stimulus frequnecy                                       | DONE |
-  | X{}.dat.().raw_resp_fs     | Raw response frequency                                       | DONE |
-  | X{}.dat.().raw_stim        | Raw stimulus                                                 | DONE |
-  | X{}.dat.().raw_resp        | Raw spike timings                                            | DONE |
-  | X{}.dat.().raw_stim_time   | Time vector for stimulus                                     |      |
-  | X{}.dat.().raw_resp_time   | Time vector for response                                     |      |
-  | X{}.dat.().raw_isi         | Raw inter-spike intervals                                    |      |
-  | X{}.dat.().pp_stim         | Preprocessed stim                                            |      |
-  | X{}.dat.().pp_resp         | Preprocessed response                                        |      |
-  | X{}.dat.().pp_respavg      | Histogram of response                                        |      |
-  | X{}.dat.().ds_stim         | Downsampled, preprocessed stim                               |      |
-  | X{}.dat.().ds_resp         | Downsampled, preprocessed response                           |      |
-  | X{}.dat.().ds_respavg      | Downsampled, preprocessed histogram                          |      |
-  | X{}.dat.().lf_stim         | Linear filtered stimulus                                     |      |
-  | X{}.dat.().nl_stim         | Nonlinearly scaled stimulus                                  |      |
-  | X{}.dat.().pred            | Sum of the nonlinear stimuli; ie the prediction of the model |      |
-  | ...                        |                                                              |      |
-  |----------------------------+--------------------------------------------------------------+------|
+  |----------------------------+--------------------------------------------------------------+---------|
+  | X{}.dat.().cellid          | Name of the cellid                                           | String  |
+  | X{}.dat.().stimfile        | Name of the stimfile                                         | String  |
+  | X{}.dat.().include_prestim | Boolean. 1 prestim was included, 0 otherwise                 | Boolean |
+  | X{}.dat.().raw_stim_fs     | Raw stimulus frequency                                       | Double  |
+  | X{}.dat.().raw_resp_fs     | Raw response frequency                                       | Double  |
+  | X{}.dat.().raw_stim        | Raw stimulus                                                 | [SxN]   |
+  | X{}.dat.().raw_resp        | Raw spike timings                                            | [SxMxR] |
+  | X{}.dat.().raw_stim_time   | Time vector for stimulus                                     | [1xN]   |
+  | X{}.dat.().raw_resp_time   | Time vector for response                                     | [1xM]   |
+  | X{}.dat.().raw_isi         | Raw inter-spike intervals                                    |         |
+  | X{}.dat.().pp_stim         | Preprocessed stim                                            |         |
+  | X{}.dat.().pp_resp         | Preprocessed response                                        |         |
+  | X{}.dat.().pp_respavg      | Histogram of response                                        |         |
+  | X{}.dat.().ds_stim         | Downsampled, preprocessed stim                               |         |
+  | X{}.dat.().ds_resp         | Downsampled, preprocessed response                           |         |
+  | X{}.dat.().ds_respavg      | Downsampled, preprocessed histogram                          |         |
+  | X{}.dat.().lf_stim         | Linear filtered stimulus                                     |         |
+  | X{}.dat.().nl_stim         | Nonlinearly scaled stimulus                                  |         |
+  | X{}.dat.().pred            | Sum of the nonlinear stimuli; ie the prediction of the model |         |
+  | ...                        |                                                              |         |
+  |----------------------------+--------------------------------------------------------------+---------|
 
-  % Return a 'dat' struct with 100Khz rasterized stims and responses. 'dat'
-  % struct has field names that are the stimfiles found in training_set and
-  % test_set, and so may be accessed using 'dat.mystimfilename.raw_stim', for
-  % example. The following fields will eventually be defined for the
-  % sub-structures held under each stimfile key:
-  %
-  %    raw_stim    The 100Khz rasterized stimulus signal    [SxN]
-  %    raw_resp    The 100Khz rasterized response signal    [SxNxR]
-  %    raw_respavg The 100Khz average response signal       [SxN]
-  %    raw_time    The 100Khz rasterized time index         [1xN]
-  %    pp_stim     The preprocessed stimulus                [SxNxF]
-  %    pp_resp     The preprocessed response                [SxNxRxF] 
-  %    pp_respavg  The preprocessed average response        [SxNxF]
-  %    ds_stim     The downsampled, preprocessed stimulus   [SxTxF]
-  %    ds_resp     The downsampled, preprocessed response   [SxTxRxF]
-  %    ds_time     The downsampled time index               [1xT]
-  %    ds_psth     The downsampled, averaged response       [SxTxF]
-  %
-  % In the above, dimensions are indicated with
-  %      S = sound stimulus index #
-  %      R = repetition index #
-  %      N = Time index at 100KHz sampling
-  %      T = Time index in downsampled frequency
-  %      F = Preprocessing index #
+  In the above, dimensions are indicated with
+        S = sound stimulus index #
+        R = repetition index #
+        N = Time index at the sampling rate of the stimulus. 
+        M = Time index at the sampling rate of the response
+        T = Time index in downsampled frequency
+        F = Preprocessing index #
 
 * How does it work?
 ** EVALUATION
    Essentially, there is a chain of function calls, with the output of one function pushed onto the inputs of the next.
+   XXX{i+1} = STACK{i}.fn evaluated with data XXX{i}
 ** INVALIDATION
-   If any intermediate parameter struct is modified, then it invalidates all cells after it and the computation must recommence from that point. (I think continuation-passing-style would work well here, if such a thing were possible in matlab.)
-   When you want to invalidate a model, just jump to the Nth part of the STACK and the X data structures
+   If any intermediate parameter struct is modified, then it erases all XXX cells after it and the computation must recommence from that point. (I think continuation-passing-style would work well here, if such a thing were possible in matlab.)
 ** DIFFERENT TREES
    If you need to do different 'branches' of computation, you can store the current computation STACK and save them.
 ** MODULE LOADING
