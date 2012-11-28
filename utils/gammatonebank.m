@@ -1,4 +1,4 @@
-function [bms,envs,instfs,delays]=gammatonebank(x,lowcf,highcf,numchans,fs,align)
+function [bms,envs,instfs,delays,cfs]=gammatonebank(x,lowcf,highcf,numchans,fs,align)
 
 % GAMMATONEBANK Bank of fourth order gammatone filters
 % 

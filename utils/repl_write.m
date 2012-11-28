@@ -7,6 +7,12 @@ elseif isstr(obj)       % Single strings
     s = obj; 
 elseif isnumeric(obj)   % Single numbers
     s = num2str(obj);
+elseif islogical(obj) % Booleans
+    if obj
+        s = 'true'; 
+    else
+        s = 'false';
+    end
 elseif isa(obj, 'function_handle')
     s = ['@' func2str(obj)];
 else

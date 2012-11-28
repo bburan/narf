@@ -821,7 +821,6 @@ switch plottype
 end
 hold off;
 
-
 function optplot1popup_CreateFcn(hObject, eventdata, handles)
 initialize_optplot_menu(hObject);
 function optplot1popup_Callback(hObject, eventdata, handles)

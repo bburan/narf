@@ -13,21 +13,21 @@ m.editable_fields = {'bank_min_freq', 'bank_max_freq', 'num_gammatone_filters', 
 m.isready_pred = @preproc_filter_isready;
 
 % Module fields that are specific to THIS MODULE
-m.bank_min_freq = 100;
+m.bank_min_freq = 500;
 m.bank_max_freq = 30000;
-m.num_gammatone_filters = 32;
-m.align_phase = 0;
+m.num_gammatone_filters = 5;
+m.align_phase = false;
 m.raw_stim_freq = 100000;
            
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_filtered_stim;
+m.plot_fns{1}.fn = @do_plot_filtered_stim; % TODO: make this call a generic like plot_time_series('raw_stim_time', 'pp_stim')
 m.plot_fns{1}.pretty_name = 'Filtered Stimulus vs Time';
 m.plot_fns{2}.fn = @do_plot_filtered_spectrogram;
 m.plot_fns{2}.pretty_name = 'Filtered Stimulus Spectrogram';
 m.plot_fns{3}.fn = @do_plot_frequency_response;
 m.plot_fns{3}.pretty_name = 'Filter Frequency Responses';
-m.plot_fns{4}.fn = @do_plot_frequency_response;
+m.plot_fns{4}.fn = @do_plot_gammatone_filter_as_colormap;
 m.plot_fns{4}.pretty_name = 'Gammatonegram';
 m.plot_gui_create_fn = @create_gui;
 
@@ -44,13 +44,20 @@ function x = do_gammatone_filter(stack, xxx)
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
     
     sfs = fieldnames(x.dat);
-    for s_idx = 1:length(sfs)
-        [gamma_resp, gamma_envs, gamma_frqs] = ...
-            gammatonebank(x.dat.(sfs{s_idx}).raw_stim(s_idx, :), ...
-                          m.bank_min_freq, m.bank_max_freq, ...
-                          m.num_gammatone_filters, baphy_mod.raw_stim_fs, ...
-                          m.align_phase);                  
-        x.dat.(sfs{s_idx}).pp_stim = gamma_resp;
+    
+    for sf_idx = 1:length(sfs)
+        [S, N] = size(x.dat.(sfs{sf_idx}).raw_stim);
+        ret = [];
+        for s = 1:S
+            fprintf('%d\n', s);
+            [gamma_resp, gamma_envs, gamma_frqs] = ...
+                gammatonebank(x.dat.(sfs{sf_idx}).raw_stim(s, :), ...
+                              m.bank_min_freq, m.bank_max_freq, ...
+                              m.num_gammatone_filters, baphy_mod.raw_stim_fs, ...
+                              m.align_phase);         
+            ret = cat(3, ret, gamma_resp);
+        end
+        x.dat.(sfs{sf_idx}).pp_stim = permute(ret, [3,2,1]); 
     end
 end
 
@@ -96,15 +103,44 @@ end
 
 function do_plot_frequency_response(stack, xxx)   
     mdl = stack{end};
-    x = xxx{end};
-    % TODO
-    plot([1,2,3],[3,4,3]);
+    
+    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
+    
+    % Stupid approximation using white noise
+    sr=baphy_mod.raw_stim_fs;   % Sample rate
+    noise = wgn(5*sr, 1,0);  % 5 secs of noisy samples
+
+    filt_idx = get(mdl.plot_gui.selected_elliptic_filter_popup, 'Value');
+    frqs = MakeErbCFs(mdl.bank_min_freq, mdl.bank_max_freq, mdl.num_gammatone_filters);   
+    fc = frqs(filt_idx);  % Center frequency of gamma filter
+        
+    y1 = gammatone(noise, sr, fc, mdl.align_phase);
+    L=length(y1);
+    NFFT = 2^nextpow2(L);
+    Y0 = fft(y1,NFFT);
+    Y1 = sqrt((Y0(1:NFFT/2+1)/L).^2);
+    faxis = sr/2*linspace(0,1,NFFT/2+1);
+    
+    % We could plot faxis and Y1 now, but we'll "smooth" first...
+    % Just for visualization!
+    n_smooth = 50; % How many samples to bring together to smooth. EVEN
+    n = length(Y1);
+    n_bins = fix(n/n_smooth);
+    Y_smoothed = mean(reshape(Y1(1:n_bins*n_smooth), n_smooth, n_bins));
+    F_smoothed = mean(reshape(faxis(1:n_bins*n_smooth), n_smooth, n_bins));
+    
+    % Plot single-sided amplitude spectrum
+    loglog(F_smoothed, 20*Y_smoothed, 'k-');
+    axis([mdl.bank_min_freq, mdl.bank_max_freq, 10^-6, 1]);
+    %loglog(faxis, Y1, 'k-');
+    
 end
 
 function do_plot_gammatone_filter_as_colormap(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
-    
+    cla;
+    % TODO:
     % Find log intensity and smooth slightly
     %     gamma_sqr = [gamma_resp.^2];        
     %     gamma_pow = zeros(N_gfs, N_cols);
@@ -112,7 +148,6 @@ function do_plot_gammatone_filter_as_colormap(stack, xxx)
     %         gamma_pow(:,i) = 20*log10(sqrt(mean(gamma_sqr(:,(i-1)*N_hop + [1:N_win]),2)));
     %         %gamma_pow(:,i) = sqrt(mean(gamma_sqr(:,(i-1)*N_hop + [1:N_win]),2));
     %     end
-    % TODO:
     % imagesc(gamma_pow);
 end
 
@@ -137,7 +172,7 @@ function hs = create_gui(parent_handle, stack, xxx)
         
     % Fill that popup with the number of filters
     d = {};
-    for ii = 1:length(mdl.low_freqs)
+    for ii = 1:mdl.num_gammatone_filters
         d{ii} = sprintf('%d',ii);
     end
     set(hs.selected_elliptic_filter_popup, 'String', char(d));
