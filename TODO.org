@@ -2,12 +2,22 @@
   Fit using TORC data to produce an STRF, show to Stephen and make him happy. (Bonus fun: If you can get one STRF for inhibition, one for excitation, that would be neat.)
     
 * Cleaning/Refactoring
+  - Replace any '1:length()' bullshit with just iterating through the fieldname elements directly...if you like that style better?
+  - Rename the create_gui stuff for both gammatone and elliptic ilter to be identical, since they are
   - Avoid cla's in user-space functions
   - Provide a more concise way of finding user-space guis in the call tree above
   - Add a few useful functions to generic_methods
   - Replace all the 'length' and 'size' things with 'numel' where appropriate
   - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
   - Go through the TODO's in my files and do a triage
+
+* Downsampling
+  I could implement them as two different blocks. 
+  + No irrelevant computation when doing ISIs
+  + Or, I could implement them as a single block. 
+  + MAX, MIN, etc
+  + When doing ISIs, I will be downsampling the response for no reason
+  + I could add a switch to avoid this, but that smells like wonky code
 
 * Next steps:
   - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.

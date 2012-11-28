@@ -43,21 +43,20 @@ function x = do_gammatone_filter(stack, xxx)
     
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
     
-    sfs = fieldnames(x.dat);
-    
-    for sf_idx = 1:length(sfs)
-        [S, N] = size(x.dat.(sfs{sf_idx}).raw_stim);
-        ret = [];
+    % Exotic way to loop over field names using ' and {1}...
+    for sf = fieldnames(x.dat)', sf = sf{1};
+        [S, N] = size(x.dat.(sf).raw_stim);
+        ret = zeros(m.num_gammatone_filters, N, S);
         for s = 1:S
             fprintf('%d\n', s);
-            [gamma_resp, gamma_envs, gamma_frqs] = ...
-                gammatonebank(x.dat.(sfs{sf_idx}).raw_stim(s, :), ...
+            [ret(:,:, s), gamma_envs, gamma_frqs] = ...
+                gammatonebank(x.dat.(sf).raw_stim(s, :), ...
                               m.bank_min_freq, m.bank_max_freq, ...
                               m.num_gammatone_filters, baphy_mod.raw_stim_fs, ...
                               m.align_phase);         
-            ret = cat(3, ret, gamma_resp);
+            % ret = cat(3, ret, gamma_resp);
         end
-        x.dat.(sfs{sf_idx}).pp_stim = permute(ret, [3,2,1]); 
+        x.dat.(sf).pp_stim = permute(ret, [3,2,1]); 
     end
 end
 

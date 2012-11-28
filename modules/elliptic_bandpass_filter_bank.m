@@ -10,7 +10,7 @@ m.name = 'elliptic_bandpass_filter_bank';
 m.fn = @do_elliptic_filter;
 m.pretty_name = 'Elliptic Bandpass Filter Bank';
 m.editable_fields = {'low_freqs', 'high_freqs', 'order', 'sampfs', 'stop_dB'};
-m.isready_pred = @elliptic_bandpass_isready;
+m.isready_pred = @preproc_filter_isready;
 
 % Optional fields
 m.plot_fns = {};
@@ -129,7 +129,6 @@ function hs = create_gui(parent_handle, stack, xxx)
     mod_idx = length(stack);
     x = xxx{end};
     
-    
     % Create a popup which selects
     uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
         'HorizontalAlignment', 'left',  'String', 'Filter#:', ...
@@ -151,26 +150,6 @@ function hs = create_gui(parent_handle, stack, xxx)
         % Call the plot function again via a sneaky, undocumented callback
         hgfeval(get(mdl.gh.plot_popup,'Callback'), mod_idx, []);
         drawnow;
-    end
-end
-
-
-function isready = elliptic_bandpass_isready(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    % We are ready iff the necessary fields exist for every data file
-    % in the .dat substructure
-    
-    % TODO: We also need to check that load_stim_resps_from_baphy exists
-    if all(isfield(x, {'dat'})) 
-        sfs = fieldnames(x.dat);
-        isready = true;
-        for idx = 1:length(sfs)
-            isready = isready && ...
-                      all(isfield(x.dat.(sfs{idx}), {'raw_stim', 'raw_stim_time', 'raw_stim_fs'}));
-        end     
-    else
-        isready =false;
     end
 end
 
