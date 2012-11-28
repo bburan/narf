@@ -1,65 +1,56 @@
-function m = elliptic_bandpass_filter_bank(args)
-% An elliptic bandpass filter bank module creation function.
+function m = gammatone_filter_bank(args)
+% A gammatone filter bank module creation function.
 % Returns a function module 'm' which implements the MODULE interface.
 % See documentation for more information. TODO.
 
 % Module fields that must ALWAYS be defined
 m = [];
-m.mdl = @elliptic_bandpass_filter_bank;
-m.name = 'elliptic_bandpass_filter_bank';
-m.fn = @do_elliptic_filter;
-m.pretty_name = 'Elliptic Bandpass Filter Bank';
-m.editable_fields = {'low_freqs', 'high_freqs', 'order', 'sampfs', 'stop_dB'};
-m.isready_pred = @elliptic_bandpass_isready;
+m.mdl = @gammatone_filter_bank;
+m.name = 'gammatone_filter_bank';
+m.fn = @do_gammatone_filter;
+m.pretty_name = 'Gammatone Filter Bank';
+m.editable_fields = {'bank_min_freq', 'bank_max_freq', 'num_gammatone_filters', 'align_phase'};
+m.isready_pred = @preproc_filter_isready;
 
+% Module fields that are specific to THIS MODULE
+m.bank_min_freq = 100;
+m.bank_max_freq = 30000;
+m.num_gammatone_filters = 32;
+m.align_phase = 0;
+m.raw_stim_freq = 100000;
+           
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_filtered_stim;
 m.plot_fns{1}.pretty_name = 'Filtered Stimulus vs Time';
 m.plot_fns{2}.fn = @do_plot_filtered_spectrogram;
 m.plot_fns{2}.pretty_name = 'Filtered Stimulus Spectrogram';
-m.plot_fns{3}.fn = @do_plot_elliptic_bandpass_filter_bank_frq_resp;
-m.plot_fns{3}.pretty_name = 'Filter Frequency Response';
+m.plot_fns{3}.fn = @do_plot_frequency_response;
+m.plot_fns{3}.pretty_name = 'Filter Frequency Responses';
+m.plot_fns{4}.fn = @do_plot_frequency_response;
+m.plot_fns{4}.pretty_name = 'Gammatonegram';
 m.plot_gui_create_fn = @create_gui;
-
-% Module fields that are specific to THIS MODULE
-m.low_freqs = [2000 20000];  % Bottom frequencies of bandpass filters
-m.high_freqs = [4000 27000]; % Top frequencies of bandpass filters
-m.order = 4;                 % What order should the filter be?
-m.sampfs = 100000;           % TODO: REMOVE THIS AND AUTODETECT IT
-m.stop_dB = 50;              % Ratio of passband/stopband attenuation
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
     m = merge_structs(m, args);
 end
 
-% Values computed from here on are not directly editable, but are based on
-% the above values in a deterministic manner.
-m.coefs={}; 
-for i = 1:length(m.low_freqs);
-    [B,A] = ellip(m.order, 0.5, m.stop_dB, ...
-                  [(m.low_freqs(i)/m.sampfs)*2,...
-                   (m.high_freqs(i)/m.sampfs)*2]);   
-    m.coefs{i} = {B,A};
-end 
-
 % Finally, define the 'methods' of this module, as if it were a class
-function x = do_elliptic_filter(stack, xxx)
+function x = do_gammatone_filter(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    % For each data file...
+    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
+    
     sfs = fieldnames(x.dat);
     for s_idx = 1:length(sfs)
-        % make a matrix to store all the filter responses...
-        filtered_x = [];
-        for idx = 1:length(mdl.low_freqs)
-            tmp = filter(mdl.coefs{idx}{1}, mdl.coefs{idx}{2}, x.dat.(sfs{s_idx}).raw_stim,[],2);
-            filtered_x = cat(3, filtered_x, tmp); 
-        end
-        % Store that matrix in our data structure
-        x.dat.(sfs{s_idx}).pp_stim = filtered_x;
+        [gamma_resp, gamma_envs, gamma_frqs] = ...
+            gammatonebank(x.dat.(sfs{s_idx}).raw_stim(s_idx, :), ...
+                          m.bank_min_freq, m.bank_max_freq, ...
+                          m.num_gammatone_filters, baphy_mod.raw_stim_fs, ...
+                          m.align_phase);                  
+        x.dat.(sfs{s_idx}).pp_stim = gamma_resp;
     end
 end
 
@@ -102,22 +93,28 @@ function do_plot_filtered_spectrogram(stack, xxx)
     caxis([-20,40]);
     drawnow;
 end
-        
-function do_plot_elliptic_bandpass_filter_bank_frq_resp(stack, xxx)   
+
+function do_plot_frequency_response(stack, xxx)   
     mdl = stack{end};
     x = xxx{end};
-
-    hold on;
-    for filt_idx = 1:length(mdl.low_freqs)
-        ww = 0:(pi/1000):pi;
-        H = freqz(mdl.coefs{filt_idx}{1}, mdl.coefs{filt_idx}{2}, ww);
-        loglog(ww, abs(H), pickcolor(filt_idx));
-        setAxisLabelCallback(gca, @(f) (f*mdl.sampfs/(3.14*2)), 'X');
-        axis tight;
-    end 
-    hold off;
+    % TODO
+    plot([1,2,3],[3,4,3]);
 end
 
+function do_plot_gammatone_filter_as_colormap(stack, xxx)
+    mdl = stack{end};
+    x = xxx{end};
+    
+    % Find log intensity and smooth slightly
+    %     gamma_sqr = [gamma_resp.^2];        
+    %     gamma_pow = zeros(N_gfs, N_cols);
+    %     for i = 1:N_cols
+    %         gamma_pow(:,i) = 20*log10(sqrt(mean(gamma_sqr(:,(i-1)*N_hop + [1:N_win]),2)));
+    %         %gamma_pow(:,i) = sqrt(mean(gamma_sqr(:,(i-1)*N_hop + [1:N_win]),2));
+    %     end
+    % TODO:
+    % imagesc(gamma_pow);
+end
 
 function hs = create_gui(parent_handle, stack, xxx)
     pos = get(parent_handle, 'Position');
@@ -128,7 +125,6 @@ function hs = create_gui(parent_handle, stack, xxx)
     mdl = stack{end};
     mod_idx = length(stack);
     x = xxx{end};
-    
     
     % Create a popup which selects
     uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
@@ -154,24 +150,5 @@ function hs = create_gui(parent_handle, stack, xxx)
     end
 end
 
-
-function isready = elliptic_bandpass_isready(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    % We are ready iff the necessary fields exist for every data file
-    % in the .dat substructure
-    
-    % TODO: We also need to check that load_stim_resps_from_baphy exists
-    if all(isfield(x, {'dat'})) 
-        sfs = fieldnames(x.dat);
-        isready = true;
-        for idx = 1:length(sfs)
-            isready = isready && ...
-                      all(isfield(x.dat.(sfs{idx}), {'raw_stim', 'raw_stim_time', 'raw_stim_fs'}));
-        end     
-    else
-        isready =false;
-    end
-end
 
 end

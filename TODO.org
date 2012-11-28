@@ -1,28 +1,22 @@
 * MILESTONE
   Fit using TORC data to produce an STRF, show to Stephen and make him happy. (Bonus fun: If you can get one STRF for inhibition, one for excitation, that would be neat.)
     
-* Conclusions on scoping
-  If I define X in one file as a local, and pass it as an argument, nothing I do in that function seems to affect it's value unless it is spelled exactly the same and also declared as a global in the sub functions.
-  Sub functions given the same value can pass it around and both contribute to modifying that value. In this sense, the function call just 'initializes' the global.
-  I guess the STACK and X variables must be global for this to work. 
-  But that is going to make it impossible to have multiple instances of the GUI exist, unless they are keyed.  
+* Cleaning/Refactoring
+  - Avoid cla's in user-space functions
+  - Provide a more concise way of finding user-space guis in the call tree above
+  - Add a few useful functions to generic_methods
+  - Replace all the 'length' and 'size' things with 'numel' where appropriate
+  - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
+  - Go through the TODO's in my files and do a triage
 
 * Next steps:
-  - Initialize the plot controls after the data 
+  - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
   - Write a generic pack/unpack function to expose parameters to the optimization
-  - Add a gammatone bank preprocessing stage
   - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
   - Add error handling (catch/throw) around EVERY CALL to a user defined function
-  - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
-  - Allow plot methods of objects to use a popup menu and label. 
-  - Replace all the 'length' and 'size' things with 'numel' where appropriate
   - Normalize the binning as a rate in the very first step
   - Handle NaN's better...right now they cause problems!
-  - Use resample during the downsampling step. (which applies the Sinc() function)
-  - Add a filter that processess phase information from a stimulus
-  - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
-  - make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
-  - Go through the TODO's in my files and look for more
+
 * How could functions be passed from one to the next?
   All functions are assumed to accept TWO arguments and return TWO arguments
   Those arguments are the STACK data structure and the X data structure
@@ -53,28 +47,28 @@
 
 * X data structure
   A cell array, with the most recent data being first. The contents of each cell could be anything. For my cases a struct seems to be most convenient.
-  |----------------------------+--------------------------------------------------------------+---------|
-  | X{}.dat.().cellid          | Name of the cellid                                           | String  |
-  | X{}.dat.().stimfile        | Name of the stimfile                                         | String  |
-  | X{}.dat.().include_prestim | Boolean. 1 prestim was included, 0 otherwise                 | Boolean |
-  | X{}.dat.().raw_stim_fs     | Raw stimulus frequency                                       | Double  |
-  | X{}.dat.().raw_resp_fs     | Raw response frequency                                       | Double  |
-  | X{}.dat.().raw_stim        | Raw stimulus                                                 | [SxN]   |
-  | X{}.dat.().raw_resp        | Raw spike timings                                            | [SxMxR] |
-  | X{}.dat.().raw_stim_time   | Time vector for stimulus                                     | [1xN]   |
-  | X{}.dat.().raw_resp_time   | Time vector for response                                     | [1xM]   |
-  | X{}.dat.().raw_isi         | Raw inter-spike intervals                                    |         |
-  | X{}.dat.().pp_stim         | Preprocessed stim                                            |         |
-  | X{}.dat.().pp_resp         | Preprocessed response                                        |         |
-  | X{}.dat.().pp_respavg      | Histogram of response                                        |         |
-  | X{}.dat.().ds_stim         | Downsampled, preprocessed stim                               |         |
-  | X{}.dat.().ds_resp         | Downsampled, preprocessed response                           |         |
-  | X{}.dat.().ds_respavg      | Downsampled, preprocessed histogram                          |         |
-  | X{}.dat.().lf_stim         | Linear filtered stimulus                                     |         |
-  | X{}.dat.().nl_stim         | Nonlinearly scaled stimulus                                  |         |
-  | X{}.dat.().pred            | Sum of the nonlinear stimuli; ie the prediction of the model |         |
-  | ...                        |                                                              |         |
-  |----------------------------+--------------------------------------------------------------+---------|
+  |----------------------------+--------------------------------------------------------------+---------+------------------------------|
+  | SYMBOL                     | DESCRIPTION                                                  | TYPE    | SET OR MODIFIABLE BY         |
+  |----------------------------+--------------------------------------------------------------+---------+------------------------------|
+  | X{}.dat.().cellid          | Name of the cellid                                           | String  | -                            |
+  | X{}.dat.().stimfile        | Name of the stimfile                                         | String  | -                            |
+  | X{}.dat.().include_prestim | Boolean. 1 prestim was included, 0 otherwise                 | Boolean | load_stim_resps_from_baphy.m |
+  | X{}.dat.().raw_stim_fs     | Raw stimulus frequency                                       | Double  | load_stim_resps_from_baphy.m |
+  | X{}.dat.().raw_resp_fs     | Raw response frequency                                       | Double  | load_stim_resps_from_baphy.m |
+  | X{}.dat.().raw_stim        | Raw stimulus                                                 | [SxN]   | load_stim_resps_from_baphy.m |
+  | X{}.dat.().raw_resp        | Raw spike timings                                            | [SxMxR] | load_stim_resps_from_baphy.m |
+  | X{}.dat.().raw_stim_time   | Time vector for stimulus                                     | [1xN]   | load_stim_resps_from_baphy.m |
+  | X{}.dat.().raw_resp_time   | Time vector for response                                     | [1xM]   | load_stim_resps_from_baphy.m |
+  | X{}.dat.().raw_isi         | Raw inter-spike intervals                                    |         |                              |
+  | X{}.dat.().pp_stim         | Preprocessed stim                                            |         |                              |
+  | X{}.dat.().ds_stim         | Downsampled, preprocessed stim                               |         |                              |
+  | X{}.dat.().ds_resp         | Downsampled, preprocessed response                           |         |                              |
+  | X{}.dat.().ds_respavg      | Downsampled, preprocessed histogram                          |         |                              |
+  | X{}.dat.().lf_stim         | Linear filtered stimulus                                     |         |                              |
+  | X{}.dat.().nl_stim         | Nonlinearly scaled stimulus                                  |         |                              |
+  | X{}.dat.().pred            | Sum of the nonlinear stimuli; ie the prediction of the model |         |                              |
+  | ...                        |                                                              |         |                              |
+  |----------------------------+--------------------------------------------------------------+---------+------------------------------|
 
   In the above, dimensions are indicated with
         S = sound stimulus index #
@@ -163,6 +157,8 @@
   - [X] Config/lbhb/BaphyMainGuiItems.m  has some hard-coded defaults for the GUI
 
 * LUXURY TODO
+  - [ ] make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
+  - [ ]  Add a filter that processess phase information from a stimulus, not just the magnitude
   - [ ] Write a function which swaps out the GS into the BACKGROUND so you can 'hold' a model as a reference and play around with other settings, and see the results graphically by switching back and forth.
   - [ ] Write dbchoosecellfiles()
   - [ ] Use inter_curve_v3 to interactively make FIR things

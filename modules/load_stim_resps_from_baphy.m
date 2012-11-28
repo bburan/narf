@@ -22,6 +22,8 @@ m.plot_fns{3}.fn = @do_plot_respavg;
 m.plot_fns{3}.pretty_name = 'Response Average vs Time';
 m.plot_fns{4}.fn = @do_plot_response_rastered;
 m.plot_fns{4}.pretty_name = 'Response Raster Plot';
+m.plot_fns{5}.fn = @do_plot_spectro_and_raster;
+m.plot_fns{5}.pretty_name = 'Spectrogram + Raster';
 m.plot_gui_create_fn = @create_gui;
 
 % Module fields that are specific to THIS MODULE
@@ -152,7 +154,7 @@ function do_plot_stim_log_spectrogram(stack, xxx)
     dat = x.dat.(sf);
     
     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-    logfsgram(dat.raw_stim(idx,:)', 4048, 100000, [], [], 500, 12); 
+    logfsgram(dat.raw_stim(idx,:)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
     axis tight;
     
@@ -174,7 +176,6 @@ function do_plot_respavg(stack, xxx)
 end
 
 function do_plot_response_rastered(stack, xxx)
-    disp('called');
     mdl = stack{end};    
     x = xxx{end};
     
@@ -183,17 +184,46 @@ function do_plot_response_rastered(stack, xxx)
     sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
     idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
     dat = x.dat.(sf);
-        
+    
     [S, N, R] = size(dat.raw_resp);
     cla;
     hold on;
     for j = 1:R
         [xs,ys] = find(dat.raw_resp(idx, :, j) > 0);
-        plot(dat.raw_resp_time(ys), j/R*dat.raw_resp(idx,ys,j), 'k.');
+        plot(dat.raw_resp_time(ys), j*dat.raw_resp(idx,ys,j), 'k.');
 	end
-    axis([0 dat.raw_resp_time(end) 1/(2*R) 1+(1/(2*R))]);
+    axis([0 dat.raw_resp_time(end) 0 R+1]);
+    %setAxisLabelCallback(gca, @(y)(y), 'Y');
     hold off;
 end
+
+function do_plot_spectro_and_raster(stack, xxx)
+    mdl = stack{end};    
+    x = xxx{end};
+    
+    % Read the GUI to find out the selected stim files
+    c = cellstr(get(mdl.plot_gui.selected_stimfile_popup, 'String'));
+    sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
+    idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
+    dat = x.dat.(sf);
+    
+    cla;
+    hold on;
+    % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
+    logfsgram(dat.raw_stim(idx,:)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
+    caxis([-20,40]);  % TODO: use a 'smarter' caxis here
+    h = get(gca, 'YLim');
+    d = h(2) - h(1);
+    axis tight;
+    [S, N, R] = size(dat.raw_resp);
+    for j = 1:R
+        [xs,ys] = find(dat.raw_resp(idx, :, j) > 0);
+        plot(dat.raw_resp_time(ys), ...
+             h(1) + (j/R)*d*(d/(d+d/R))*dat.raw_resp(idx,ys,j), 'k.');
+    end
+    hold off;
+end
+
 
 function hs = create_gui(parent_handle, stack, xxx)
     pos = get(parent_handle, 'Position');
@@ -201,8 +231,9 @@ function hs = create_gui(parent_handle, stack, xxx)
     h = pos(4) - 10;
     hs = [];
 
-    mod_idx = length(stack);
+    %mod_idx = length(stack);
     m = stack{end};
+    mod_idx = length(stack);
     x = xxx{end};
     stimfiles = fieldnames(x.dat);
     
@@ -274,7 +305,8 @@ end
 function isready = module_isready(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
-    isready = all(isfield(x, {'cellid', 'training_set', 'test_set'}));
+    isready = (length(stack) == 1) && ...
+              all(isfield(x, {'cellid', 'training_set', 'test_set'}));
 end
 
 end

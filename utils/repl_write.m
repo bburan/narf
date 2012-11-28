@@ -10,5 +10,5 @@ elseif isnumeric(obj)   % Single numbers
 elseif isa(obj, 'function_handle')
     s = ['@' func2str(obj)];
 else
-    log_err('Not sure how to print: %s', obj);
+    error('Not sure how to print: %s', obj);
 end
