@@ -108,6 +108,9 @@ addpath([NARF_PATH filesep 'utils'], ...
 mods = scan_directory_for_modules('~/matlab/narf/modules/');
 
 % Add the model pane
+global STACK XXX;
+STACK = {};
+XXX = {};
 narf_modelpane(handles.model_structure_panel, mods);
     
 % % Invalidate all data tables
@@ -282,117 +285,16 @@ GS.test_set = test_set;
 
 % ------------------------------------------------------------------------
 function load_above_files_button_Callback(hObject, eventdata, handles)
-global GS;
-set(handles.selected_stimfile_popup, 'String', '');  
-set(handles.selected_stim_idx_popup, 'String', '');
-drawnow;
-GS.dat = load_stim_resps(GS.cfd, GS.training_set, GS.test_set);
-update_selected_stimfile_popup(handles); % Push changes to GUI
-update_selected_stim_idx_popup(handles);
-selected_stimfile_popup_Callback([], [], handles); % Trigger GUI callbacks
-selected_stim_idx_popup_Callback([], [], handles);
-raw_stim_view_popup_Callback([],[],handles); % Will update
-raw_resp_view_popup_Callback([],[],handles);
+global GS STACK XXX;
 
-% ------------------------------------------------------------------------
-function update_selected_stimfile_popup(handles)
-global GS;
-fns = fieldnames(GS.dat);
-set(handles.selected_stimfile_popup, 'String', char(fns));   
-GS.selected_stimfile = fns{1};
+XXX = {};
+XXX{1} = [];
+XXX{1}.cellid = GS.cellid;
+XXX{1}.training_set = GS.training_set;
+XXX{1}.test_set = GS.test_set;
 
-% ------------------------------------------------------------------------
-function update_selected_stim_idx_popup(handles)
-global GS;
-stimfile = GS.selected_stimfile;
-c = {}; 
-if isfield(GS.dat, stimfile)
-    [d1, d2] = size(GS.dat.(stimfile).raw_stim);
-    for i = 1:d1
-        c{i} = sprintf('%d',i); 
-    end
-    set(handles.selected_stim_idx_popup, 'String', char(c)); 
-    set(handles.selected_stim_idx_popup, 'Value', 1);
-else
-    log_err('Selected stimulus file not found: %s', stimfile);
-end
-
-% ------------------------------------------------------------------------
-function update_raw_resp_plot(handles)
-log_dbg('Updating raw_resp_plot');
-global GS;
- 
-% Only update if all fields are defined
-if ~(isfield(GS, 'raw_resp_plot_type') & ...
-     isfield(GS, 'selected_stim_idx') & ...
-     isfield(GS, 'selected_stimfile'))
-    log_dbg('Ignoring raw resp plot update since not all fields ready.');
-    return;
-end
-
-plottype = GS.raw_resp_plot_type;
-stim_idx = GS.selected_stim_idx;
-stimfile = GS.selected_stimfile;
-obj = GS.dat.(stimfile);
-[S, N, R] = size(obj.raw_resp);
-
-axes(handles.resp_view_axes); cla; hold on;
-switch plottype
-    case 'Time Series View'
-        [xs,ys] = find(obj.raw_respavg(stim_idx, :) > 0);
-        bar(obj.raw_time(ys), obj.raw_respavg(stim_idx,ys), 0.01, 'k');
-        axis([0 obj.raw_time(end) 0 2])
-    case 'Dot Rasterization'
-        for j = 1:R
-            [xs,ys] = find(obj.raw_resp(stim_idx, :, j) > 0);
-            plot(obj.raw_time(ys), j/R*obj.raw_resp(stim_idx,ys,j), 'k.');
-        end
-        axis([0 obj.raw_time(end) 1/(2*R) 1+(1/(2*R))])
-end
-hold off;
-
-%------------------------------------------------------------------------
-function selected_stimfile_popup_CreateFcn(hObject, eventdata, handles)
-function selected_stimfile_popup_Callback(hObject, eventdata, handles)
-global GS;
-nvals = cellstr(get(handles.selected_stimfile_popup, 'String'));
-stimfile = nvals{get(handles.selected_stimfile_popup, 'Value')};
-GS.selected_stimfile = stimfile;
-update_selected_stim_idx_popup(handles);
-update_raw_stim_plot(handles);
-update_raw_resp_plot(handles);
-preproc_view_popup_Callback(handles.preproc_view_popup, [], handles);
-update_model_view_plot(handles);
-
-%------------------------------------------------------------------------
-function selected_stim_idx_popup_CreateFcn(hObject, eventdata, handles)
-function selected_stim_idx_popup_Callback(hObject, eventdata, handles)
-global GS;
-nvals = cellstr(get(handles.selected_stim_idx_popup, 'String'));
-stim_idx = str2num(nvals{get(handles.selected_stim_idx_popup, 'Value')});
-GS.selected_stim_idx = stim_idx;
-update_raw_stim_plot(handles);
-update_raw_resp_plot(handles);
-preproc_view_popup_Callback(handles.preproc_view_popup, [], handles);
-update_model_view_plot(handles);
-
-%------------------------------------------------------------------------
-function raw_stim_view_popup_CreateFcn(hObject, eventdata, handles)
-function raw_stim_view_popup_Callback(hObject, eventdata, handles)
-global GS;
-nvals = cellstr(get(handles.raw_stim_view_popup, 'String'));
-plottype = nvals{get(handles.raw_stim_view_popup, 'Value')};
-GS.raw_stim_plot_type = plottype;
-update_raw_stim_plot(handles);
-
-%------------------------------------------------------------------------
-function raw_resp_view_popup_CreateFcn(hObject, eventdata, handles)
-function raw_resp_view_popup_Callback(hObject, eventdata, handles)
-global GS;
-nvals = cellstr(get(handles.raw_resp_view_popup, 'String'));
-plottype = nvals{get(handles.raw_resp_view_popup, 'Value')};
-GS.raw_resp_plot_type = plottype;
-update_raw_resp_plot(handles);
+% TODO: Request that the model recompute values, if autocalc'd
+% TODO: Request that the model recompute plots, if autoplot'd
 
 %------------------------------------------------------------------------
 function view_strf_button_Callback(hObject, eventdata, handles)
@@ -412,219 +314,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PREPROCESSING WIDGETS
 
-%------------------------------------------------------------------------
-function preproc_popup_CreateFcn(hObject, eventdata, handles)
-function preproc_popup_Callback(hObject, eventdata, handles)
-generic_model_selecting_popup(hObject, ...
-    'preproc', 'selected_preproc_name', handles.preproc_data_table);
-
-%------------------------------------------------------------------------
-function preproc_data_table_CellEditCallback(hObject, eventdata, handles)
-global GS;
-log_dbg('preproc_data_table modified. Click ''preprocess!'' to refresh.');
-generic_model_data_table_update(hObject, 'preproc', 'selected_preproc_name');
-GS.dat.(GS.selected_stimfile).pp_stim = []; % Invalidate data
-axes(handles.preproc_view_axes); cla;       % Clear plot
-
-%------------------------------------------------------------------------
-function preproc_button_Callback(hObject, eventdata, handles)
-global GS;
-% TODO: Check that data is already loaded and is available for preprocing!
-% TODO: Check that the object dhas a .preproc_fn method!
-log_inf('Preprocessing...');
-%-------
-% TODO: Move this core computation somewhere else!
-f = fieldnames(GS.dat); 
-spp = GS.preproc.(GS.selected_preproc_name).params;
-for i = 1:length(f)
-    % Feed data into that new filter
-    GS.dat.(f{i}).pp_stim = spp.preproc_fn(spp, GS.dat.(f{i}).raw_stim); 
-end
-% TODO: Check that the length of the preprocessed vector is the SAME size
-% as the original raw stimulus.
-%-------
-log_inf('Done preprocessing.');
-% Reset the GUI using callbacks
-set(handles.preproc_index_popup, 'String', 'NONE');
-preproc_index_popup_Callback(handles.preproc_index_popup, [], handles);
-preproc_view_popup_Callback(handles.preproc_view_popup, [], handles);
-
-%------------------------------------------------------------------------
-function preproc_view_popup_CreateFcn(hObject, eventdata, handles)
-function preproc_view_popup_Callback(hObject, eventdata, handles)
-global GS;
-nvals = cellstr(get(hObject, 'String'));
-plottype = nvals{get(hObject, 'Value')};
-GS.preproc_view_plot_type = plottype;
-update_preproc_view_plot(handles);
-update_downsamp_view_plot(handles);
-
-%------------------------------------------------------------------------                                
-function preproc_index_popup_CreateFcn(hObject, eventdata, handles)
-function preproc_index_popup_Callback(hObject, eventdata, handles)
-global GS;
-nvals = cellstr(get(hObject, 'String'));
-GS.selected_preproc_idx = str2num(nvals{get(hObject, 'Value')});
-if isempty(GS.selected_preproc_idx)
-    GS.selected_preproc_idx = 1;
-end
-update_preproc_view_plot(handles);
-update_downsamp_view_plot(handles);
-
-%------------------------------------------------------------------------
-function update_preproc_view_plot(handles)
-log_dbg('Updating preproc_view_plot');
-global GS;
-
-% Only update if all fields are defined
-if ~(isfield(GS, 'selected_stimfile') & ...
-     isfield(GS, 'selected_preproc_name') & ...
-     isfield(GS, 'selected_preproc_idx') & ...    
-     isfield(GS, 'preproc_view_plot_type') & ...
-     isfield(GS, 'dat') & ...
-     isfield(GS.dat, GS.selected_stimfile) & ...
-     isfield(GS.dat.(GS.selected_stimfile), 'pp_stim'))
-   log_dbg('Ignoring preproc plot update since not all fields ready.');
-   return  
-end
-
-dat = GS.dat.(GS.selected_stimfile);
-[n_stims, n_samps, n_filts] = size(dat.pp_stim);
-
-% By default, set the preproc_index_popup to be disabled but populated
-c={};
-for i = 1:n_filts
-    c{i} = sprintf('%d', i);
-end    
-set(handles.preproc_index_popup, 'String', char(c));
-set(handles.preproc_index_popup, 'Enable', 'Off');
-set(handles.view_preproc_index_label, 'Enable', 'Off');
-
-spp = GS.preproc.(GS.selected_preproc_name);
-
-axes(handles.preproc_view_axes); cla;
-hold on;
-switch GS.preproc_view_plot_type
-    case 'Frequency Response'
-        % If the filter has a frequency response method defined, call it
-        if isfield(spp.params, 'freq_resp_plot_fn')
-            spp.params.freq_resp_plot_fn(spp.params);
-        else
-            log_dbg('No fn found to plot freq response.');
-        end
-    case 'Filtered Stimulus'
-        for filt_idx = 1:n_filts
-             plot(dat.raw_time, ...
-                  squeeze(dat.pp_stim(GS.selected_stim_idx,:,filt_idx)), ...
-                  pickcolor(filt_idx));
-        end
-        setAxisLabelCallback(gca, @(t) (t), 'X');
-        axis tight;
-     case 'Filtered Spectrogram'
-        set(handles.preproc_index_popup, 'Enable', 'On');
-        set(handles.view_preproc_index_label, 'Enable', 'On');
-        logfsgram(dat.pp_stim(GS.selected_stim_idx,:,GS.selected_preproc_idx)', 4048, 100000, [], [], 500, 12); 
-        caxis([-20,40]);
-        setAxisLabelCallback(gca, @(t) (t), 'X');
-        drawnow;
-end
-hold off;
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DOWNSAMPLING WIDGETS
-
-%------------------------------------------------------------------------
-function downsamp_popup_CreateFcn(hObject, eventdata, handles)
-function downsamp_popup_Callback(hObject, eventdata, handles)
-generic_model_selecting_popup(hObject, ...
-    'downsamp', 'selected_downsamp_name', handles.downsamp_data_table);
-
-%------------------------------------------------------------------------
-function downsamp_data_table_CellEditCallback(hObject, eventdata, handles)
-global GS;
-log_dbg('downsampling_data_table modified. Click ''downsample!'' to refresh plots.');
-generic_model_data_table_update(hObject, 'downsamp', 'selected_downsamp_name');
-GS.dat.(GS.selected_stimfile).ds_stim = []; % Invalidate data
-axes(handles.downsamp_view_axes); cla;    % Clear plot
-
-%------------------------------------------------------------------------
-function downsample_button_Callback(hObject, eventdata, handles)
-global GS;
-% TODO: Check that all data is ready for the downsampling!
-% TODO: Check that the object has a .downsamp_fn method!
-log_inf('Downsampling...');
-% TODO: Move this core computation somewhere else!
-f = fieldnames(GS.dat); 
-p = GS.downsamp.(GS.selected_downsamp_name).params;
-fs = p.raw_freq;
-dsfs = p.ds_freq;
-ratio = ceil(fs/dsfs);
-% Process the stim, resp, and time matrices for each file
-for i = 1:length(f)
-    [ds_stim, ds_respavg] = p.downsamp_fn(p, GS.dat.(f{i}).pp_stim, ...
-                                             GS.dat.(f{i}).raw_respavg); 
-    GS.dat.(f{i}).ds_stim = ds_stim;
-    GS.dat.(f{i}).ds_respavg = ds_respavg; 
-    % TODO: How should the time resampling occur?
-    GS.dat.(f{i}).ds_time = linspace(1/dsfs, GS.dat.(f{i}).raw_time(end), ...
-                                     length(GS.dat.(f{i}).ds_respavg));
-end
-log_inf('Done downsampling.');
-% Reset the GUI using callbacks
-downsamp_view_popup_Callback(handles.downsamp_view_popup, [], handles);
-
-%------------------------------------------------------------------------
-function downsamp_view_popup_CreateFcn(hObject, eventdata, handles)
-function downsamp_view_popup_Callback(hObject, eventdata, handles)
-global GS;
-nvals = cellstr(get(hObject, 'String'));
-plottype = nvals{get(hObject, 'Value')};
-GS.downsamp_view_plot_type = plottype;
-update_downsamp_view_plot(handles);
-
-%------------------------------------------------------------------------
-function update_downsamp_view_plot(handles)
-log_dbg('Updating downsamp_view_plot');
-global GS;
-
-% Only update if all fields are defined
-if ~(isfield(GS, 'selected_stimfile') & ...
-     isfield(GS, 'selected_downsamp_name') & ...
-     isfield(GS, 'downsamp_view_plot_type') & ...
-     isfield(GS, 'dat') & ...
-     isfield(GS.dat, GS.selected_stimfile) & ...
-     isfield(GS.dat.(GS.selected_stimfile), 'pp_stim') & ...
-     isfield(GS.dat.(GS.selected_stimfile), 'ds_stim') & ...
-     isfield(GS.dat.(GS.selected_stimfile), 'ds_respavg'))
-    log_dbg('Ignoring downsample plot update since not all fields ready.');
-   return  
-end
-
-% Get at the selected downsamp data
-dat = GS.dat.(GS.selected_stimfile);
-[n_stims, n_samps, n_filts] = size(dat.ds_stim);
-sds = GS.downsamp.(GS.selected_downsamp_name);
-
-% Depending on the type of downsamp plot desired
-axes(handles.downsamp_view_axes); cla;
-hold on;
-switch GS.downsamp_view_plot_type
-    case 'Downsampled Stimulus'
-        for filt_idx = 1:n_filts
-             plot(dat.ds_time, ...
-                  squeeze(dat.ds_stim(GS.selected_stim_idx,:,filt_idx)), ...
-                  pickcolor(filt_idx));
-            axis tight;
-        end
-    case 'Downsampled Response'
-        for filt_idx = 1:n_filts
-             plot(dat.ds_time, ...
-                  squeeze(dat.ds_respavg(GS.selected_stim_idx,:)), ...
-                  pickcolor(filt_idx));
-            axis tight;
-        end
-end
-hold off;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MODEL CLASS WIDGETS
@@ -851,15 +542,6 @@ setoptplot(handles, handles.optplot4, plottype);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function check_stochast_button_Callback(hObject, eventdata, handles)
-
-% --- Executes on button press in auto_recalc_checkbox.
-function auto_recalc_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to auto_recalc_checkbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of auto_recalc_checkbox
-
 
 % --- Executes on button press in save_model_params_button.
 function save_model_params_button_Callback(hObject, eventdata, handles)

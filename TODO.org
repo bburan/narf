@@ -10,13 +10,6 @@
   - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
   - Go through the TODO's in my files and do a triage
 
-* Downsampling
-  I decided that downsampling should only occur on the stimulus side, since the response already just be loaded at the frequency that you wish.
-  If you are just doing simple correlation comparisons, you will want to downsample to the same frequency as your response. 
-  The same if you are doing some sort of interpolated response comparison, but you will leave your response freq high, and apply a convolution over your response to 'smooth' it a bit.
-  However, if you are doing ISI comparisons, you will NOT care about your response sampling frequency, and instead compute the ISI times. 
-  To accomodate all theses cases, downsampling only works on the stimulus side.
-
 * Next steps:
   - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
   - Write a generic pack/unpack function to expose parameters to the optimization
@@ -95,9 +88,9 @@
 * How does it work?
 ** EVALUATION
    Essentially, there is a chain of function calls, with the output of one function pushed onto the inputs of the next.
-   XXX{i+1} = STACK{i}.fn evaluated with data XXX{i}
+   Mathematically, it's easy to understand: XXX{i+1} = STACK{i}.fn(XXX{i}) 
 ** INVALIDATION
-   If any intermediate parameter struct is modified, then it erases all XXX cells after it and the computation must recommence from that point. (I think continuation-passing-style would work well here, if such a thing were possible in matlab.)
+   If any intermediate parameter struct is modified, then it erases all XXX cells after it and the computation must recommence from that point. 
 ** DIFFERENT TREES
    If you need to do different 'branches' of computation, you can store the current computation STACK and save them.
 ** MODULE LOADING
@@ -121,6 +114,17 @@
    Instead, they run at the END of the function tree's execution to determine the score
    They have their own error graphs?
    I'm not interested in making their data directly viewable.
+
+* MODULE FUNCTIONALITY
+** Preprocessing: Anything that creates the dat.().pp_stim field
+   The big two filters are an elliptical bandpass and gammatone filters
+         
+** Downsampling: Anything that creates the dat.().ds_stim and dat.().ds_stim_time fields.
+   I decided that downsampling should only occur on the stimulus side, since the response already just be loaded at the frequency that you wish.
+   If you are just doing simple correlation comparisons, you will want to downsample to the same frequency as your response. 
+   The same if you are doing some sort of interpolated response comparison, but you will leave your response freq high, and apply a convolution over your response to 'smooth' it a bit.
+   However, if you are doing ISI comparisons, you will NOT care about your response sampling frequency, and instead compute the ISI times. 
+   To accomodate all theses cases, downsampling only works on the stimulus side.
 
 * Allowed Dimensions: How should can we accomodate the later addition of extra dimensions in the future, such as behavioral characteristics?
   Right now we have:
@@ -186,3 +190,5 @@
 
 * KOANS
   The fastest way to climb a tall mountain is to accept that you must occasionally descend when you find yourself on the wrong path.
+
+
