@@ -5,7 +5,7 @@ l = length(myfields);
 c = cell(l,3);
 for i = 1:l
     if ~isfield(mystruct, myfields{i})
-        log_err('Could not find field: %s', myfields{i});
+        error('Could not find field: %s', myfields{i});
     end
     c{i,1} = false;
     c{i,2} = myfields{i};

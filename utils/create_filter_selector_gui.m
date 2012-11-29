@@ -1,0 +1,33 @@
+function hs = create_filter_selector_gui(parent_handle, stack, xxx)
+    pos = get(parent_handle, 'Position');
+    w = pos(3) - 10;
+    h = pos(4) - 10;
+    hs = [];
+
+    mdl = stack{end};
+    mod_idx = length(stack);
+    x = xxx{end};
+    
+    % Create a popup which selects
+    uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
+        'HorizontalAlignment', 'left',  'String', 'Filter#:', ...
+        'Units', 'pixels', 'Position', [5 (h-25) w 25]);
+    hs.selected_filter_popup = uicontrol('Parent', parent_handle, ...
+        'Style', 'popupmenu', 'Enable', 'on', 'String', 'NONE', ...
+        'Units', 'pixels', 'Position', [5 (h-50) w 25], ...
+        'Callback', @(a,b,c) selected_filter_popup_callback());
+    
+    % Fill that popup with the number of filters
+    d = {};
+    for ii = 1:length(mdl.low_freqs)
+        d{ii} = sprintf('%d',ii);
+    end
+    set(hs.selected_filter_popup, 'String', char(d));
+    set(hs.selected_filter_popup, 'Value', 1);
+    
+    function selected_filter_popup_callback()
+        % Call the plot function again via a sneaky, undocumented callback
+        hgfeval(get(mdl.gh.plot_popup,'Callback'), mod_idx, []);
+        drawnow;
+    end
+end

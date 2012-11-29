@@ -3,7 +3,6 @@
     
 * Cleaning/Refactoring
   - Replace any '1:length()' bullshit with just iterating through the fieldname elements directly...if you like that style better?
-  - Rename the create_gui stuff for both gammatone and elliptic ilter to be identical, since they are
   - Avoid cla's in user-space functions
   - Provide a more concise way of finding user-space guis in the call tree above
   - Add a few useful functions to generic_methods
@@ -12,12 +11,11 @@
   - Go through the TODO's in my files and do a triage
 
 * Downsampling
-  I could implement them as two different blocks. 
-  + No irrelevant computation when doing ISIs
-  + Or, I could implement them as a single block. 
-  + MAX, MIN, etc
-  + When doing ISIs, I will be downsampling the response for no reason
-  + I could add a switch to avoid this, but that smells like wonky code
+  I decided that downsampling should only occur on the stimulus side, since the response already just be loaded at the frequency that you wish.
+  If you are just doing simple correlation comparisons, you will want to downsample to the same frequency as your response. 
+  The same if you are doing some sort of interpolated response comparison, but you will leave your response freq high, and apply a convolution over your response to 'smooth' it a bit.
+  However, if you are doing ISI comparisons, you will NOT care about your response sampling frequency, and instead compute the ISI times. 
+  To accomodate all theses cases, downsampling only works on the stimulus side.
 
 * Next steps:
   - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
@@ -34,6 +32,12 @@
 * When called with no arguments, each function returns 2 arguments:
   1. The 'meta' information about the function
   2. The 'params' struct, which specificies the default parameters
+
+* What should I do about optimizing across multiple models?
+  Nothing at all, just yet! But I guess it could be done by iterating across the models as well.
+
+* Besides optimization, it would be useful to be able to run the optimization-type thing to get plots which answer certain questions:
+  Example: what is the effect on correlation as you vary the downsampling frequency, for each of these training groups? (Would be a nice graph)
 
 * What is narf_modelpane used for?
   It was written:

@@ -91,8 +91,7 @@ function update_scrollbar_size()
    drawnow;
 end
 
-% Fill a popup menu with modules that are ready to execute at stack depth
-% mod_idx
+% Fill a popup menu with modules that are ready at stack depth 'mod_idx'
 function update_ready_modules(mod_idx)
     ready_mods = {'Select Module'};
     fns = fieldnames(modules);
@@ -178,9 +177,14 @@ function module_apply_callback(mod_idx)
         XXX{mod_idx+1} = m.fn(STACK(1:mod_idx), XXX); 
         % Enable graphing
         set(m.gh.plot_popup, 'Enable', 'on');
-        % Build the relevant plot panel
-        STACK{mod_idx}.plot_gui = m.plot_gui_create_fn(m.gh.plot_panel, STACK, XXX);
-        
+        % Build the relevant plot panel, if it exists
+        if isfield(m, 'plot_gui_create_fn')
+            STACK{mod_idx}.plot_gui = m.plot_gui_create_fn(m.gh.plot_panel, STACK, XXX);
+        end
+        % Trigger a redraw of the gui
+        hgfeval(get(m.gh.plot_popup,'Callback'), mod_idx, []);
+        drawnow;
+                
          % If auto-recalc of the NEXT fn is checked, go down the stack
         if length(STACK) > mod_idx + 1 && ...
            isequal(true, get(STACK{mod_idx+1}.gh.fn_recalc, 'Value'))
@@ -294,6 +298,9 @@ function add_mod_block()
     % Add a new model block, update the stack, and finally the view
     idx = (length(STACK)+1);
     STACK{idx}.gh = create_mod_block_panel(parent_handle, idx);
+    % Trigger the popup callback to initialize it
+    hgfeval(get(STACK{idx}.gh.fn_popup, 'Callback'), idx, []);
+    % Update the view
     update_scrollbar_size();
     update_panel_positions();    
 end

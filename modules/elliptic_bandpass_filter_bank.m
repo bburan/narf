@@ -20,7 +20,7 @@ m.plot_fns{2}.fn = @do_plot_filtered_spectrogram;
 m.plot_fns{2}.pretty_name = 'Filtered Stimulus Spectrogram';
 m.plot_fns{3}.fn = @do_plot_elliptic_bandpass_filter_bank_frq_resp;
 m.plot_fns{3}.pretty_name = 'Filter Frequency Response';
-m.plot_gui_create_fn = @create_gui;
+m.plot_gui_create_fn = @create_filter_selector_gui;
 
 % Module fields that are specific to THIS MODULE
 m.low_freqs = [2000 20000];  % Bottom frequencies of bandpass filters
@@ -75,7 +75,7 @@ function do_plot_filtered_stim(stack, xxx)
     sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
     stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
     dat = x.dat.(sf);
-    filt_idx = get(mdl.plot_gui.selected_elliptic_filter_popup, 'Value');
+    filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
     
     plot(dat.raw_stim_time, ...
          squeeze(dat.pp_stim(stim_idx,:,filt_idx)), ...
@@ -96,14 +96,15 @@ function do_plot_filtered_spectrogram(stack, xxx)
     stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
     dat = x.dat.(sf);
     
-    filt_idx = get(mdl.plot_gui.selected_elliptic_filter_popup, 'Value');
+    filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
     
     logfsgram(dat.pp_stim(stim_idx,:, filt_idx)', 4048, baphy_mod.raw_stim_fs, [], [], 500, 12); 
     caxis([-20,40]);
     drawnow;
 end
-        
-function do_plot_elliptic_bandpass_filter_bank_frq_resp(stack, xxx)   
+
+
+function do_plot_elliptic_bandpass_filter_bank_frq_resp(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
 
@@ -118,39 +119,5 @@ function do_plot_elliptic_bandpass_filter_bank_frq_resp(stack, xxx)
     hold off;
 end
 
-
-function hs = create_gui(parent_handle, stack, xxx)
-    pos = get(parent_handle, 'Position');
-    w = pos(3) - 10;
-    h = pos(4) - 10;
-    hs = [];
-
-    mdl = stack{end};
-    mod_idx = length(stack);
-    x = xxx{end};
-    
-    % Create a popup which selects
-    uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
-        'HorizontalAlignment', 'left',  'String', 'Filter#:', ...
-        'Units', 'pixels', 'Position', [5 (h-25) w 25]);
-    hs.selected_elliptic_filter_popup = uicontrol('Parent', parent_handle, ...
-        'Style', 'popupmenu', 'Enable', 'on', 'String', 'NONE', ...
-        'Units', 'pixels', 'Position', [5 (h-50) w 25], ...
-        'Callback', @(a,b,c) selected_elliptic_filter_popup_callback());
-        
-    % Fill that popup with the number of filters
-    d = {};
-    for ii = 1:length(mdl.low_freqs)
-        d{ii} = sprintf('%d',ii);
-    end
-    set(hs.selected_elliptic_filter_popup, 'String', char(d));
-    set(hs.selected_elliptic_filter_popup, 'Value', 1);
-    
-    function selected_elliptic_filter_popup_callback()
-        % Call the plot function again via a sneaky, undocumented callback
-        hgfeval(get(mdl.gh.plot_popup,'Callback'), mod_idx, []);
-        drawnow;
-    end
-end
 
 end
