@@ -46,6 +46,8 @@ function x = do_downsampling(stack, xxx)
                     linspace(1/mdl.downsampled_freq, ...
                              x.dat.(sf).raw_stim_time(end), ...
                              length(x.dat.(sf).ds_stim));
+                         
+        x.dat.(sf).ds_stim_fs = mdl.downsampled_freq;
     end
                      
 end

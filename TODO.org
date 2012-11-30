@@ -10,11 +10,13 @@
   - Replace all the 'length' and 'size' things with 'numel' where appropriate
   - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
   - Go through the TODO's in my files and do a triage
+  - Rename things to be more clear. Preprocessing inputs should be called 'channels', to make them distinct from the linear model filters. 
+  - Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
 
 * Next steps:
-  - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
   - Write a generic pack/unpack function to expose parameters to the optimization
   - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
+  - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
   - Add error handling (catch/throw) around EVERY CALL to a user defined function
   - Normalize the binning as a rate in the very first step
   - Handle NaN's better...right now they cause problems!
@@ -64,15 +66,14 @@
   | X{}.dat.().raw_stim_fs     | Raw stimulus frequency                                       | Double  | load_stim_resps_from_baphy.m |
   | X{}.dat.().raw_resp_fs     | Raw response frequency                                       | Double  | load_stim_resps_from_baphy.m |
   | X{}.dat.().raw_stim        | Raw stimulus                                                 | [SxN]   | load_stim_resps_from_baphy.m |
-  | X{}.dat.().raw_resp        | Raw spike timings                                            | [SxMxR] | load_stim_resps_from_baphy.m |
   | X{}.dat.().raw_stim_time   | Time vector for stimulus                                     | [1xN]   | load_stim_resps_from_baphy.m |
+  | X{}.dat.().raw_resp        | Raw spike timings                                            | [SxMxR] | load_stim_resps_from_baphy.m |
   | X{}.dat.().raw_resp_time   | Time vector for response                                     | [1xM]   | load_stim_resps_from_baphy.m |
   | X{}.dat.().raw_isi         | Raw inter-spike intervals                                    |         |                              |
   | X{}.dat.().pp_stim         | Preprocessed stim                                            |         |                              |
   | X{}.dat.().ds_stim         | Downsampled, preprocessed stim                               |         |                              |
-  | X{}.dat.().ds_resp         | Downsampled, preprocessed response                           |         |                              |
-  | X{}.dat.().ds_respavg      | Downsampled, preprocessed histogram                          |         |                              |
-  | X{}.dat.().lf_stim         | Linear filtered stimulus                                     |         |                              |
+  | X{}.dat.().ds_stim_time    | Time vector for downsampled stimulus                         |         |                              |
+  | X{}.dat.().lf_stim         | Linear filtered stimulus (FIR or whatever)                   |         |                              |
   | X{}.dat.().nl_stim         | Nonlinearly scaled stimulus                                  |         |                              |
   | X{}.dat.().pred            | Sum of the nonlinear stimuli; ie the prediction of the model |         |                              |
   | ...                        |                                                              |         |                              |
@@ -126,6 +127,10 @@
    The same if you are doing some sort of interpolated response comparison, but you will leave your response freq high, and apply a convolution over your response to 'smooth' it a bit.
    However, if you are doing ISI comparisons, you will NOT care about your response sampling frequency, and instead compute the ISI times. 
    To accomodate all theses cases, downsampling only works on the stimulus side.
+
+** FIR filters
+   Your free paremeters are the number of coefficients in the filter, and how many filters you want.
+   Each filter spans all of the input channels. (I think it makes more sense to have one filter which acts across all channels than many filters which only act on one channel each)
 
 * Allowed Dimensions: How should can we accomodate the later addition of extra dimensions in the future, such as behavioral characteristics?
   Right now we have:
