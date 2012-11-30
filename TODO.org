@@ -4,6 +4,7 @@
 * Cleaning/Refactoring
   - Replace any '1:length()' bullshit with just iterating through the fieldname elements directly...if you like that style better?
   - Avoid cla's in user-space functions
+  - Rename the terrible 'generic_model_data_table_update.m' file and other crappy ones
   - Provide a more concise way of finding user-space guis in the call tree above
   - Add a few useful functions to generic_methods
   - Replace all the 'length' and 'size' things with 'numel' where appropriate

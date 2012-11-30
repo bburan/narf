@@ -549,7 +549,6 @@ function save_model_params_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
 % --- Executes on button press in load_model_params_button.
 function load_model_params_button_Callback(hObject, eventdata, handles)
 % hObject    handle to load_model_params_button (see GCBO)

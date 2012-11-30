@@ -96,6 +96,9 @@ function update_ready_modules(mod_idx)
     ready_mods = {'Select Module'};
     fns = fieldnames(modules);
     j=2;
+    if mod_idx > length(XXX)  % If there is no data, don't do anything
+        return
+    end
     for idx = 1:length(fns);
         if modules.(fns{idx}).isready_pred(STACK(1:mod_idx), XXX(1:mod_idx))
             ready_mods{j} = modules.(fns{idx}).pretty_name;
@@ -188,7 +191,7 @@ function module_apply_callback(mod_idx)
          % If auto-recalc of the NEXT fn is checked, go down the stack
         if length(STACK) > mod_idx + 1 && ...
            isequal(true, get(STACK{mod_idx+1}.gh.fn_recalc, 'Value'))
-            module_apply_callback(mod_idx+ii);
+           module_apply_callback(mod_idx+ii);
         end
     else
         fprintf('Sorry, Dave, I''m afraid I can''t do that...\n');
@@ -211,7 +214,42 @@ function module_plot_callback(mod_idx)
         cla;
         fn = m.plot_fns{idx}.fn;
         fn(STACK(1:mod_idx), XXX(1:mod_idx+1));
+        replot_from_depth(mod_idx+1);
     end
+end
+
+function recalc_from_depth(mod_idx)
+    % Try to rebuild XXX, starting at stack depth mod_idx
+    % Stop trying to rebuild as soon as you hit an unchecked checkbox
+    for ii = mod_idx:length(STACK);
+        if get(STACK{ii}.gh.fn_recalc, 'Value')
+            module_apply_callback(ii);
+        else
+            return
+        end
+    end
+end
+
+function replot_from_depth(mod_idx)
+    % Try to replot everything from mod_idx onward
+    % Stop trying to plot as soon as you hit an unchecked checkbox
+    for ii = mod_idx:length(STACK);
+        if get(STACK{ii}.gh.fn_replot, 'Value')
+            module_plot_callback(ii);
+        else
+            return
+        end
+    end
+end
+
+
+% When the data table changes, invalidate the data, plot and plot gui
+function module_data_table_callback(mod_idx)
+    % Update the model using the data table
+    STACK{mod_idx} = generic_model_data_table_update(STACK{mod_idx}.gh.fn_table, STACK{mod_idx});
+    
+    % Request a recalculation from this point onwards. 
+    recalc_from_depth(mod_idx);
 end
 
 
@@ -228,7 +266,8 @@ function gh = create_mod_block_panel(parent_handle, mod_idx)
     %   .plot_panel  A panel for user-defined plot controls.
     %   .fn_apply    A button to apply the function.
     %   .fn_recalc   A checkbox to determine if it should auto-recalc
-    %
+    %   .fn_replot   A checkbox to determine if it should auto-plot
+    % 
     %    parent_handle is the parent panel this will be created inside
     %    state is a global structure which reflects GUI state. IT MUST:
     %       1. Have the following fields:
@@ -265,15 +304,8 @@ function gh = create_mod_block_panel(parent_handle, mod_idx)
     gh.fn_table = uitable('Parent', gh.fn_panel, ...
         'Enable', 'on', ...
         'Units', 'pixels', 'Position', [5 35 300 (ph-70)], ...
-        'CellEditCallback', @(a,b,c) fprintf('fn_table callback for mod %d.\n', mod_idx));
-    
-    
-   %  generic_model_data_table_update(hObject, 'downsamp', 'selected_downsamp_name');
-
-    
-    
-    
-    
+        'CellEditCallback', @(a,b,c) module_data_table_callback(mod_idx));
+       
     % Create a button at the bottom to apply the function
     gh.fn_apply = uicontrol('Parent', gh.fn_panel, ...
         'Style', 'pushbutton', 'Enable', 'on', ...
@@ -284,16 +316,25 @@ function gh = create_mod_block_panel(parent_handle, mod_idx)
     % Create a automatic recalc checkbox
     gh.fn_recalc = uicontrol('Parent', gh.fn_panel, ...
         'Style', 'checkbox', 'Enable', 'on', 'Value', false, ...
-        'String', 'AutoCalc', ...
-        'Units', 'pixels', 'Position', [5 5 80 25], ...
-        'Callback', @(a,b,c) fprintf('fn_recalc callback for mod %d\n', mod_idx));
+        'String', 'AutoApply', ...
+        'Units', 'pixels', 'Position', [5 5 90 25], ...
+        'Callback', @(a,b,c) enable_or_disable_button());
+    
+    function enable_or_disable_button()
+        autoapply = get(gh.fn_recalc, 'Value');
+        if autoapply
+            set(gh.fn_apply, 'Enable', 'off');
+            module_apply_callback(mod_idx);
+        else
+            set(gh.fn_apply, 'Enable', 'on');
+        end
+    end
     
     % Create an automatic replot checkbox
     gh.fn_replot = uicontrol('Parent', gh.fn_panel, ...
         'Style', 'checkbox', 'Enable', 'on', 'Value', true, ...
         'String', 'AutoPlot', ...
-        'Units', 'pixels', 'Position', [85 5 80 25], ...
-        'Callback', @(a,b,c) fprintf('fn_replot callback for mod %d\n', mod_idx));
+        'Units', 'pixels', 'Position', [95 5 90 25]);
     
     % Create the plot axes
     % NOTE: Unfortunately, I cannot figure out how to propogate changes from
