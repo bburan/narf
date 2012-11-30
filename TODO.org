@@ -14,12 +14,13 @@
   - Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
 
 * Next steps:
+  - FIR filters should NOT use the same GUI control as the preprocessing filters. NEW POPUP NEEDED.
   - Write a generic pack/unpack function to expose parameters to the optimization
   - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
   - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
   - Add error handling (catch/throw) around EVERY CALL to a user defined function
   - Normalize the binning as a rate in the very first step
-  - Handle NaN's better...right now they cause problems!
+  - Handle NaN's better...right now they cause problems! (Use nanmean())
 
 * How could functions be passed from one to the next?
   All functions are assumed to accept TWO arguments and return TWO arguments

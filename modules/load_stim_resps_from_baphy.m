@@ -28,7 +28,7 @@ m.plot_gui_create_fn = @create_gui;
 
 % Module fields that are specific to THIS MODULE
 m.raw_stim_fs = 100000;
-m.raw_resp_fs = 10000;
+m.raw_resp_fs = 200;
 m.include_prestim = 1;
 m.training_set = {};
 m.t_set = {};
@@ -171,8 +171,10 @@ function do_plot_respavg(stack, xxx)
     dat = x.dat.(sf);
     
 	[xs,ys] = find(dat.raw_respavg(idx, :) > 0);
-    bar(dat.raw_resp_time(ys), dat.raw_respavg(idx,ys), 0.01, 'k');
-    axis([0 dat.raw_resp_time(end) 0 2]);
+    plot(dat.raw_resp_time(ys), dat.raw_respavg(idx,ys), 'k-');
+    % bar(dat.raw_resp_time(ys), dat.raw_respavg(idx,ys), 0.01, 'k-');
+    % axis([0 dat.raw_resp_time(end) 0 2]);
+    axis tight;
 end
 
 function do_plot_response_rastered(stack, xxx)
