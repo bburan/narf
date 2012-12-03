@@ -169,12 +169,12 @@ function do_plot_respavg(stack, xxx)
     sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
     idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
     dat = x.dat.(sf);
-    
-	[xs,ys] = find(dat.raw_respavg(idx, :) > 0);
-    plot(dat.raw_resp_time(ys), dat.raw_respavg(idx,ys), 'k-');
+	
+    plot(dat.raw_resp_time(:), dat.raw_respavg(idx,:), 'k-');
+    %[xs,ys] = find(dat.raw_respavg(idx, :) > 0);
     % bar(dat.raw_resp_time(ys), dat.raw_respavg(idx,ys), 0.01, 'k-');
     % axis([0 dat.raw_resp_time(end) 0 2]);
-    axis tight;
+    axis([0 dat.raw_resp_time(end) 0 max(dat.raw_respavg(idx,:))]);
 end
 
 function do_plot_response_rastered(stack, xxx)

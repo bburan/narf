@@ -1,4 +1,4 @@
-function generic_checked_data_table(mytable, mystruct, myfields)
+function generic_checkbox_data_table(mytable, mystruct, myfields)
 % Since data tables are updated in pretty much the same way everywhere, I
 % decided to abstract the updating process to avoid code repetition.
 l = length(myfields);
@@ -7,7 +7,9 @@ for i = 1:l
     if ~isfield(mystruct, myfields{i})
         error('Could not find field: %s', myfields{i});
     end
-    c{i,1} = false;
+    if isfield(mystruct, 'fittable_params')
+        c{i,1} = isfield(mystruct.fittable_params, myfields{i});
+    end
     c{i,2} = myfields{i};
     c{i,3} = repl_write(mystruct.(myfields{i})); % Ensure data becomes a str
 end

@@ -1,26 +1,42 @@
 * MILESTONE
-  Fit using TORC data to produce an STRF, show to Stephen and make him happy. (Bonus fun: If you can get one STRF for inhibition, one for excitation, that would be neat.)
-    
+  REPAIR: I'm using ALL the stimfiles at present, not just the TRAINING_SET like I should be
+  REPAIR: Remember to invalidate data BELOW the present point on a table-edit callback, and to UPdate the gui to reflect this!
+  Fit using TORC data to produce an STRF
+  Fit using other data to produce an STRF
+  Write a programmatic demo for loading a model
+  Write a programmatic demo which steps through values in a particular model class and saves some result
+  Crash course guide on using NARF
+  Bonus: Separate FIR filters with inhibitory only and excitory only behaviors
+
+* Optimization
+  Optimization should NOT be treated the way that I did it
+  Rather, it should be an operation you perform repeatedly on the stack
+
+* TODO:
+  ONLINE COURSEWORK
+
 * Cleaning/Refactoring
   - Replace any '1:length()' bullshit with just iterating through the fieldname elements directly...if you like that style better?
   - Avoid cla's in user-space functions
   - Rename the terrible 'generic_model_data_table_update.m' file and other crappy ones
-  - Provide a more concise way of finding user-space guis in the call tree above
+  - Provide a more concise way of finding user-space guis in the call tree above (Right now there's too much copy & paste!)
   - Add a few useful functions to generic_methods
   - Replace all the 'length' and 'size' things with 'numel' where appropriate
   - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
   - Go through the TODO's in my files and do a triage
   - Rename things to be more clear. Preprocessing inputs should be called 'channels', to make them distinct from the linear model filters. 
   - Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+  - make it so that all 'update' functions are purely for side effects
 
 * Next steps:
-  - FIR filters should NOT use the same GUI control as the preprocessing filters. NEW POPUP NEEDED.
-  - Write a generic pack/unpack function to expose parameters to the optimization
+  - Smoothing of the RESPAVG signal with gaussian convolution
+  - An option for taking correlation in a different method than sheer concatenation could be interesting
   - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
   - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
   - Add error handling (catch/throw) around EVERY CALL to a user defined function
-  - Normalize the binning as a rate in the very first step
+  - Normalize the binning as a rate?
   - Handle NaN's better...right now they cause problems! (Use nanmean())
+  - Add a GUI button to load_stim_from_baphy to play the stimulus as a sound!
 
 * How could functions be passed from one to the next?
   All functions are assumed to accept TWO arguments and return TWO arguments
@@ -30,11 +46,12 @@
   1. The 'meta' information about the function
   2. The 'params' struct, which specificies the default parameters
 
-* What should I do about optimizing across multiple models?
+* What should I do about optimizing parameters for multiple models?
   Nothing at all, just yet! But I guess it could be done by iterating across the models as well.
 
 * Besides optimization, it would be useful to be able to run the optimization-type thing to get plots which answer certain questions:
   Example: what is the effect on correlation as you vary the downsampling frequency, for each of these training groups? (Would be a nice graph)
+  Example: Does using a certain preprocessing function improve or reduce the accuracy of most models' predictions?
 
 * What is narf_modelpane used for?
   It was written:
@@ -58,27 +75,28 @@
 
 * X data structure
   A cell array, with the most recent data being first. The contents of each cell could be anything. For my cases a struct seems to be most convenient.
-  |----------------------------+--------------------------------------------------------------+---------+------------------------------|
-  | SYMBOL                     | DESCRIPTION                                                  | TYPE    | SET OR MODIFIABLE BY         |
-  |----------------------------+--------------------------------------------------------------+---------+------------------------------|
-  | X{}.dat.().cellid          | Name of the cellid                                           | String  | -                            |
-  | X{}.dat.().stimfile        | Name of the stimfile                                         | String  | -                            |
-  | X{}.dat.().include_prestim | Boolean. 1 prestim was included, 0 otherwise                 | Boolean | load_stim_resps_from_baphy.m |
-  | X{}.dat.().raw_stim_fs     | Raw stimulus frequency                                       | Double  | load_stim_resps_from_baphy.m |
-  | X{}.dat.().raw_resp_fs     | Raw response frequency                                       | Double  | load_stim_resps_from_baphy.m |
-  | X{}.dat.().raw_stim        | Raw stimulus                                                 | [SxN]   | load_stim_resps_from_baphy.m |
-  | X{}.dat.().raw_stim_time   | Time vector for stimulus                                     | [1xN]   | load_stim_resps_from_baphy.m |
-  | X{}.dat.().raw_resp        | Raw spike timings                                            | [SxMxR] | load_stim_resps_from_baphy.m |
-  | X{}.dat.().raw_resp_time   | Time vector for response                                     | [1xM]   | load_stim_resps_from_baphy.m |
-  | X{}.dat.().raw_isi         | Raw inter-spike intervals                                    |         |                              |
-  | X{}.dat.().pp_stim         | Preprocessed stim                                            |         |                              |
-  | X{}.dat.().ds_stim         | Downsampled, preprocessed stim                               |         |                              |
-  | X{}.dat.().ds_stim_time    | Time vector for downsampled stimulus                         |         |                              |
-  | X{}.dat.().lf_stim         | Linear filtered stimulus (FIR or whatever)                   |         |                              |
-  | X{}.dat.().nl_stim         | Nonlinearly scaled stimulus                                  |         |                              |
-  | X{}.dat.().pred            | Sum of the nonlinear stimuli; ie the prediction of the model |         |                              |
-  | ...                        |                                                              |         |                              |
-  |----------------------------+--------------------------------------------------------------+---------+------------------------------|
+  |----------------------------+--------------------------------------------------------------+---------+------------------------------+---|
+  | SYMBOL                     | DESCRIPTION                                                  | TYPE    | SET OR MODIFIABLE BY         |   |
+  |----------------------------+--------------------------------------------------------------+---------+------------------------------+---|
+  | X{}.dat.().cellid          | Name of the cellid                                           | String  | -                            |   |
+  | X{}.dat.().stimfile        | Name of the stimfile                                         | String  | -                            |   |
+  | X{}.dat.().include_prestim | Boolean. 1 prestim was included, 0 otherwise                 | Boolean | load_stim_resps_from_baphy.m |   |
+  | X{}.dat.().raw_stim_fs     | Raw stimulus frequency                                       | Double  | load_stim_resps_from_baphy.m |   |
+  | X{}.dat.().raw_resp_fs     | Raw response frequency                                       | Double  | load_stim_resps_from_baphy.m |   |
+  | X{}.dat.().raw_stim        | Raw stimulus                                                 | [SxN]   | load_stim_resps_from_baphy.m |   |
+  | X{}.dat.().raw_stim_time   | Time vector for stimulus                                     | [1xN]   | load_stim_resps_from_baphy.m |   |
+  | X{}.dat.().raw_resp        | Raw spike timings                                            | [SxMxR] | load_stim_resps_from_baphy.m |   |
+  | X{}.dat.().raw_resp_time   | Time vector for response                                     | [1xM]   | load_stim_resps_from_baphy.m |   |
+  | X{}.dat.().raw_isi         | Raw inter-spike intervals                                    |         |                              |   |
+  | X{}.dat.().pp_stim         | Preprocessed stim                                            |         |                              |   |
+  | X{}.dat.().ds_stim         | Downsampled, preprocessed stim                               |         |                              |   |
+  | X{}.dat.().ds_stim_time    | Time vector for downsampled stimulus                         |         |                              |   |
+  | X{}.dat.().lf_stim         | Linear filtered stimulus (FIR or whatever)                   |         |                              |   |
+  | .lf_preds                  | Needs to be RENAMED                                          |         |                              |   |
+  | X{}.dat.().nl_stim         | Nonlinearly scaled stimulus                                  |         |                              |   |
+  | X{}.dat.().pred            | Sum of the nonlinear stimuli; ie the prediction of the model |         |                              |   |
+  | ...                        |                                                              |         |                              |   |
+  |----------------------------+--------------------------------------------------------------+---------+------------------------------+---|
 
   In the above, dimensions are indicated with
         S = sound stimulus index #
@@ -121,7 +139,7 @@
 * MODULE FUNCTIONALITY
 ** Preprocessing: Anything that creates the dat.().pp_stim field
    The big two filters are an elliptical bandpass and gammatone filters
-         
+
 ** Downsampling: Anything that creates the dat.().ds_stim and dat.().ds_stim_time fields.
    I decided that downsampling should only occur on the stimulus side, since the response already just be loaded at the frequency that you wish.
    If you are just doing simple correlation comparisons, you will want to downsample to the same frequency as your response. 
@@ -182,8 +200,8 @@
   - [X] Config/lbhb/BaphyMainGuiItems.m  has some hard-coded defaults for the GUI
 
 * LUXURY TODO
-  - [ ] make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
-  - [ ]  Add a filter that processess phase information from a stimulus, not just the magnitude
+  - [ ] Make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
+  - [ ] Add a filter that processess phase information from a stimulus, not just the magnitude
   - [ ] Write a function which swaps out the GS into the BACKGROUND so you can 'hold' a model as a reference and play around with other settings, and see the results graphically by switching back and forth.
   - [ ] Write dbchoosecellfiles()
   - [ ] Use inter_curve_v3 to interactively make FIR things
@@ -196,6 +214,4 @@
   - [ ] Rank model fits and plot correlations
 
 * KOANS
-  The fastest way to climb a tall mountain is to accept that you must occasionally descend when you find yourself on the wrong path.
-
-
+  The fastest way to climb a tall mountain is to descend when you find yourself on the wrong path.

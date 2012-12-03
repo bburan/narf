@@ -323,43 +323,73 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% STOCHASTICITY AND ITS PLOTS
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% OPTIMIZATION WIDGETS
 
-function x = pak_FIRCOEFS(FC)
-x = FC(:)';
+function w = pack_fittables(stack)
 
-function FC = unpak_FIRCOEFS(x)
-global PF_COEFS FIRHIST FIRBINSIZE;
-d = length(PF_COEFS);
-l = ceil(FIRHIST/FIRBINSIZE);
-FC = reshape(x, d, l);
+w = [];
+for ii = 1:length(stack)
+    if isfield(stack{ii}, 'fittable_params')
+        for p = stack{ii}.fittable_params', p=p{1};
+            w = cat(1, w, reshape(stack{ii}.(p), numel(stack{ii}.(p)), 1));
+        end
+    end
+end
 
-function z = correlation_of_downsampled_signals(x)
-% Returns the correlation of the binned stimulus and binned response
-global DS_RESPAVG DS_PREDS DS_PRED FIRCOEFS;
-FIRCOEFS = unpak_FIRCOEFS(x);  % Update the global
-make_predictions(); % TODO: This should be more functional!
+function unpack_fittables(w)
+global STACK;
 
-[n_stims, n_ds_samps] = size(DS_RESPAVG);
+jj = 1;
+for ii = 1:length(STACK)
+    if isfield(STACK{ii}, 'fittable_params')
+        for p = STACK{ii}.fittable_params', p=p{1};
+            n = numel(STACK{ii}.(p));
+            tmp = w(jj:n);
+            STACK{ii}.(p) = reshape(tmp, size(STACK{ii}.(p)));
+            j =+ n;
+        end
+    end
+end
 
-corrs = zeros(1, n_stims);
+function d = find_fit_start_depth(stack)
+% Find the depth at which to start recalculating the stack
+for d = 1:length(stack)
+    if isfield(stack{d}, 'fittable_params') && ~isempty(stack{d}.fittable_params)
+        return;
+    end
+end
 
-% The average correlation across ALL trials is what we care about
-% for stim_idx = 1:n_stims
-%     R = corrcoef(DS_PRED(stim_idx,:), DS_RESPAVG(stim_idx,:));
-%     R(isnan(R)) = 0; % Replace NaN's with 0 correlations again.
-%     corrs(stim_idx) = R(2,1);
-% end
-%z = mean(corrs);
+function z = correlation_of_downsampled_signals(w)
+% Returns the correlation of lf_stim and raw_resp
+global STACK XXX;
 
-% TODO: Allow option to do correlation average or concatenated.
-V1 = reshape(DS_PRED.',[],1);
-V2 = reshape(DS_RESPAVG.',[],1);
+% Unpack the vector and set the stack up to reflect it
+unpack_fittables(w);
+
+% Recalculate the stack, starting at the needed point
+start_depth = find_fit_start_depth(STACK);
+XXX = XXX(1:start_depth);  % Invalidate later data so it cannot be used
+for ii = start_depth:length(STACK);
+    if ~STACK{ii}.isready_pred(STACK(1:ii), XXX);
+        error('Stack was not fully ready at depth %d', ii);
+    end
+    XXX{ii+1} = STACK{ii}.fn(STACK(1:ii), XXX);
+end
+
+% Compute correlation after concatenating everything together
+x = XXX{end};
+V1 = [];
+V2 = [];
+for sf = fieldnames(x.dat)', sf = sf{1};
+    [S, T] = size(x.dat.(sf).lf_stim);
+    V1 = cat(1, V1, reshape(x.dat.(sf).raw_respavg',[],1));
+    V2 = cat(1, V2, reshape(x.dat.(sf).lf_stim',[],1));
+end
 R = corrcoef(V1,V2);
-R(isnan(R)) = 0;
-z = R(2,1);
+R(isnan(R)) = 0; % corrcoef returns NaNs if FIR had all zero coefficients
+z = R(2,1)^2;  % Return r^2
+
 
 function sampling_algorithm_popup_CreateFcn(hObject, eventdata, handles)
 function sampling_algorithm_popup_Callback(hObject, eventdata, handles)
@@ -377,52 +407,70 @@ function termination_iterations_CreateFcn(hObject, eventdata, handles)
 function termination_iterations_Callback(hObject, eventdata, handles)
 
 
+function update_tables_and_plots()
+global STACK;
+
+start_depth = find_fit_start_depth(STACK);
+for ii = start_depth:length(STACK);
+    generic_checkbox_data_table(STACK{ii}.gh.fn_table, STACK{ii}, STACK{ii}.editable_fields); 
+    
+    hgfeval(get(STACK{ii}.gh.plot_popup, 'Callback'), ...
+            STACK{ii}.gh.plot_popup, []);
+end
+
+
 function fit_model_button_Callback(hObject, eventdata, handles)
-global FIRCOEFS;
+global STACK;
 % Get the number of iterations
-n_iters = str2num(get(handles.termination_iterations, 'String'));
+n_iters = 10;
 
 % Get the starting score of the current filter
-x_0 = pak_FIRCOEFS(FIRCOEFS);
+x_0 = pack_fittables(STACK);
+
+if isempty(x_0)
+    log_msg('No parameters were selected to be fit.');
+    return;
+end
 
 stepsize = 1.0;
-[x_bst, s_bst] = boosting(x_0, @correlation_of_downsampled_signals, @(n,x,s)(n > n_iters), stepsize);
-unpak_FIRCOEFS(x_bst);
+[x_bst, s_bst] = boosting(x_0', @correlation_of_downsampled_signals, @(n,x,s)(n > n_iters), stepsize);
 
+unpack_fittables(x_bst);
+
+% Finally, update the GUI's data tables and plots 
+update_tables_and_plots();
 
 function initialize_optplot_menu(handle)
 menuopts = {'Pred/Resp Scatter', 'Raw ISI', 'Intensity-Scaled ISI', ...
         'KS Plot'};
-
 set(handle, 'String', char(menuopts));
 
 function setoptplot(handles, plothandle, plottype)
 global GS;
 
-stim_idx = GS.selected_stim_idx;
-dat = GS.dat.(GS.selected_stimfile);
-
-axes(plothandle); cla;
-hold on;
-switch plottype
-    case 'Pred/Resp Scatter'
-        plot(dat.ds_respavg(stim_idx,:), dat.ds_pred(stim_idx,:), 'k.');
-        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
-        axis tight;
-    case 'Raw ISI'
-        %plot(DS_PRED, DS_RESPAVG, 'k.');
-        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
-        axis tight;        
-    case 'Time-Scaled ISI'
-        %plot(DS_PRED, DS_RESPAVG, 'k.');
-        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
-        axis tight;
-    case 'KS Plot'
-        %plot(DS_PRED, DS_RESPAVG, 'k.');
-        %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
-        axis tight;
-end
-hold off;
+% stim_idx = GS.selected_stim_idx;
+% dat = GS.dat.(GS.selected_stimfile);
+% 
+% axes(plothandle); cla;
+% hold on;
+% switch plottype
+%     case 'Pred/Resp Scatter'
+%         plot(dat.ds_respavg(stim_idx,:), dat.ds_pred(stim_idx,:), 'k.');
+%         axis tight;
+%     case 'Raw ISI'
+%         %plot(DS_PRED, DS_RESPAVG, 'k.');
+%         %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
+%         axis tight;        
+%     case 'Time-Scaled ISI'
+%         %plot(DS_PRED, DS_RESPAVG, 'k.');
+%         %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
+%         axis tight;
+%     case 'KS Plot'
+%         %plot(DS_PRED, DS_RESPAVG, 'k.');
+%         %setAxisLabelCallback(gca, @(t) (FIRBINSIZE*(t-1)), 'X');
+%         axis tight;
+% end
+% hold off;
 
 function optplot1popup_CreateFcn(hObject, eventdata, handles)
 initialize_optplot_menu(hObject);
@@ -430,27 +478,6 @@ function optplot1popup_Callback(hObject, eventdata, handles)
 nvals = cellstr(get(handles.optplot1popup, 'String'));
 plottype = nvals{get(handles.optplot1popup, 'Value')};
 setoptplot(handles, handles.optplot1, plottype);
-
-function optplot2popup_CreateFcn(hObject, eventdata, handles)
-initialize_optplot_menu(hObject);
-function optplot2popup_Callback(hObject, eventdata, handles)
-nvals = cellstr(get(handles.optplot2popup, 'String'));
-plottype = nvals{get(handles.optplot2popup, 'Value')};
-setoptplot(handles, handles.optplot2, plottype);
-
-function optplot3popup_CreateFcn(hObject, eventdata, handles)
-initialize_optplot_menu(hObject);
-function optplot3popup_Callback(hObject, eventdata, handles)
-nvals = cellstr(get(handles.optplot3popup, 'String'));
-plottype = nvals{get(handles.optplot3popup, 'Value')};
-setoptplot(handles, handles.optplot3, plottype);
-
-function optplot4popup_CreateFcn(hObject, eventdata, handles)
-initialize_optplot_menu(hObject);
-function optplot4popup_Callback(hObject, eventdata, handles)
-nvals = cellstr(get(handles.optplot4popup, 'String'));
-plottype = nvals{get(handles.optplot4popup, 'Value')};
-setoptplot(handles, handles.optplot4, plottype);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function check_stochast_button_Callback(hObject, eventdata, handles)

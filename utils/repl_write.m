@@ -1,8 +1,12 @@
 function s = repl_write(obj)
 % Prints obj in a readable manner. 
 if ismatrix(obj) & isnumeric(obj) & any(size(obj) ~= 1)  % Matrices
-    s = strcat('[', num2str(obj), ']');
-    s = regexprep(s, '\n', '; ');
+    s = '[';
+    [M, N] = size(obj);
+    for ii = 1:M-1
+        s = strcat(s, num2str(obj(ii,:)), '; ');
+    end
+    s = strcat(s, num2str(obj(M,:)), ']');
 elseif isstr(obj)       % Single strings
     s = obj; 
 elseif isnumeric(obj)   % Single numbers
