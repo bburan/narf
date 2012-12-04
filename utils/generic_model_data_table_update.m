@@ -7,7 +7,7 @@ for fs = fieldnames(s)', fs=fs{1};
     module.(fs) = s.(fs);
 end
 
-module.fittable_params = extract_checked_fields(hDataTable, 1, 2);
+module.fit_fields = extract_checked_fields(hDataTable, 1, 2);
 
 module = module.mdl(module);  % Give the module a chance to run its own code
 

@@ -220,7 +220,7 @@ end
 GS.(GSfield).(GS.(GSselected_name)).params = dt.fn(dt.params); 
 
 % 2. Update which parameters are desired to be fit with the optimization
-GS.(GSfield).(GS.(GSselected_name)).fittable_params = ...
+GS.(GSfield).(GS.(GSselected_name)).fit_fields = ...
      extract_checked_fields(hObject, 1, 2);
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -330,8 +330,8 @@ function w = pack_fittables(stack)
 
 w = [];
 for ii = 1:length(stack)
-    if isfield(stack{ii}, 'fittable_params')
-        for p = stack{ii}.fittable_params', p=p{1};
+    if isfield(stack{ii}, 'fit_fields')
+        for p = stack{ii}.fit_fields', p=p{1};
             w = cat(1, w, reshape(stack{ii}.(p), numel(stack{ii}.(p)), 1));
         end
     end
@@ -342,8 +342,8 @@ global STACK;
 
 jj = 1;
 for ii = 1:length(STACK)
-    if isfield(STACK{ii}, 'fittable_params')
-        for p = STACK{ii}.fittable_params', p=p{1};
+    if isfield(STACK{ii}, 'fit_fields')
+        for p = STACK{ii}.fit_fields', p=p{1};
             n = numel(STACK{ii}.(p));
             tmp = w(jj:n);
             STACK{ii}.(p) = reshape(tmp, size(STACK{ii}.(p)));
@@ -355,7 +355,7 @@ end
 function d = find_fit_start_depth(stack)
 % Find the depth at which to start recalculating the stack
 for d = 1:length(stack)
-    if isfield(stack{d}, 'fittable_params') && ~isempty(stack{d}.fittable_params)
+    if isfield(stack{d}, 'fit_fields') && ~isempty(stack{d}.fit_fields)
         return;
     end
 end

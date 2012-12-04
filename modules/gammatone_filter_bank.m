@@ -9,16 +9,21 @@ m.mdl = @gammatone_filter_bank;
 m.name = 'gammatone_filter_bank';
 m.fn = @do_gammatone_filter;
 m.pretty_name = 'Gammatone Filter Bank';
-m.editable_fields = {'bank_min_freq', 'bank_max_freq', 'num_gammatone_filters', 'align_phase'};
+m.editable_fields = {'bank_min_freq', 'bank_max_freq', 'num_channels', 'align_phase'};
 m.isready_pred = @preproc_filter_isready;
 
 % Module fields that are specific to THIS MODULE
 m.bank_min_freq = 500;
 m.bank_max_freq = 30000;
-m.num_gammatone_filters = 5;
+m.num_channels = 5;
 m.align_phase = false;
 m.raw_stim_freq = 100000;
            
+% Overwrite the default module fields with arguments 
+if nargin == 1
+    m = merge_structs(m, args);
+end
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_filtered_stim; % TODO: make this call a generic like plot_time_series('raw_stim_time', 'pp_stim')
@@ -29,12 +34,7 @@ m.plot_fns{3}.fn = @do_plot_frequency_response;
 m.plot_fns{3}.pretty_name = 'Filter Frequency Responses';
 m.plot_fns{4}.fn = @do_plot_gammatone_filter_as_colormap;
 m.plot_fns{4}.pretty_name = 'Gammatonegram';
-m.plot_gui_create_fn = @create_filter_selector_gui;
-
-% Overwrite the default module fields with arguments 
-if nargin == 1
-    m = merge_structs(m, args);
-end
+m.plot_gui_create_fn = @(h, stk, xx) create_filter_selector_gui(h, stk, xx, m.num_channels);
 
 % Finally, define the 'methods' of this module, as if it were a class
 function x = do_gammatone_filter(stack, xxx)
@@ -46,13 +46,13 @@ function x = do_gammatone_filter(stack, xxx)
     % Exotic way to loop over field names using ' and {1}...
     for sf = fieldnames(x.dat)', sf = sf{1};
         [S, N] = size(x.dat.(sf).raw_stim);
-        ret = zeros(m.num_gammatone_filters, N, S);
+        ret = zeros(m.num_channels, N, S);
         for s = 1:S
             fprintf('%d\n', s);
             [ret(:,:, s), gamma_envs, gamma_frqs] = ...
                 gammatonebank(x.dat.(sf).raw_stim(s, :), ...
                               m.bank_min_freq, m.bank_max_freq, ...
-                              m.num_gammatone_filters, baphy_mod.raw_stim_fs, ...
+                              m.num_channels, baphy_mod.raw_stim_fs, ...
                               m.align_phase);         
             % ret = cat(3, ret, gamma_resp);
         end
@@ -110,7 +110,7 @@ function do_plot_frequency_response(stack, xxx)
     noise = wgn(5*sr, 1,0);  % 5 secs of noisy samples
 
     filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
-    frqs = MakeErbCFs(mdl.bank_min_freq, mdl.bank_max_freq, mdl.num_gammatone_filters);   
+    frqs = MakeErbCFs(mdl.bank_min_freq, mdl.bank_max_freq, mdl.num_channels);   
     fc = frqs(filt_idx);  % Center frequency of gamma filter
         
     y1 = gammatone(noise, sr, fc, mdl.align_phase);

@@ -1,11 +1,10 @@
 * MILESTONE
+  Remove Load Above Files button and use callback to initialize model structure
   REPAIR: I'm using ALL the stimfiles at present, not just the TRAINING_SET like I should be
   REPAIR: Remember to invalidate data BELOW the present point on a table-edit callback, and to UPdate the gui to reflect this!
-  Fit using TORC data to produce an STRF
-  Fit using other data to produce an STRF
-  Write a programmatic demo for loading a model
+  Write a programmatic demo for loading a model which fit using TORC data to produce an STRF
   Write a programmatic demo which steps through values in a particular model class and saves some result
-  Crash course guide on using NARF
+  Write a crash course guide on using NARF
   Bonus: Separate FIR filters with inhibitory only and excitory only behaviors
 
 * Optimization

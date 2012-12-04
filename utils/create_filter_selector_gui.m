@@ -1,4 +1,4 @@
-function hs = create_filter_selector_gui(parent_handle, stack, xxx)
+function hs = create_filter_selector_gui(parent_handle, stack, xxx, n_filts)
     pos = get(parent_handle, 'Position');
     w = pos(3) - 10;
     h = pos(4) - 10;
@@ -19,7 +19,7 @@ function hs = create_filter_selector_gui(parent_handle, stack, xxx)
     
     % Fill that popup with the number of filters
     d = {};
-    for ii = 1:length(mdl.low_freqs)
+    for ii = 1:n_filts
         d{ii} = sprintf('%d',ii);
     end
     set(hs.selected_filter_popup, 'String', char(d));

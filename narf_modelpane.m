@@ -50,9 +50,6 @@ handles.container_slider = uicontrol('Parent',parent_handle, ...
     'Min', 0-eps, 'Max', 0, 'Value', 0, ...
     'Callback', @(h,evts,hds) update_panel_positions());
 
-% Create GUIs for any modules that already exist in STACK
-% TODO:
-
 % Move all panels around to their proper positions
 function update_panel_positions()
     hSld = handles.container_slider;
@@ -71,9 +68,7 @@ function update_panel_positions()
     drawnow;
 end
 
-% Make the scroll bar dynamically update while being dragged
-hJScrollBar = findjobj(handles.container_slider);
-hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions();
+
 
 % Update scrollbar and panel sizes whenever the number of modules changes
 function update_scrollbar_size()
@@ -191,7 +186,7 @@ function module_apply_callback(mod_idx)
          % If auto-recalc of the NEXT fn is checked, go down the stack
         if length(STACK) > mod_idx + 1 && ...
            isequal(true, get(STACK{mod_idx+1}.gh.fn_recalc, 'Value'))
-           module_apply_callback(mod_idx+ii);
+           module_apply_callback(mod_idx+1);
         end
     else
         fprintf('Sorry, Dave, I''m afraid I can''t do that...\n');
@@ -398,9 +393,31 @@ handles.del_fn_button = uicontrol('Parent', handles.container_panel, ...
     'Units', 'pixels', 'Position', [210 5 200 25], ...
     'Callback', @(h,b,c) del_mod_block());
 
-% Use an evil, undocumented function to trigger the firstcallback
-hgfeval(get(handles.container_slider,'Callback'), handles.container_slider, []);
-drawnow;
+% Create GUIs for any modules that already exist in STACK
+for ii = 1:length(STACK)
+    STACK{ii}.gh = create_mod_block_panel(parent_handle, ii);
+end
+
+% Refresh the GUIs and make them not changable
+for ii = 1:length(STACK)
+    % update_ready_modules(ii);
+    set(STACK{ii}.gh.fn_popup, 'String', STACK{ii}.pretty_name, 'Value', 1);
+    generic_checkbox_data_table(STACK{ii}.gh.fn_table, STACK{ii}, ...
+                                STACK{ii}.editable_fields); 
+    update_available_plots(ii);
+    % Recompute the data only if we need to
+    if length(XXX) <= ii
+        module_apply_callback(ii);
+    end
+end
+
+% Make the scroll bar dynamically update while being dragged
+hJScrollBar = findjobj(handles.container_slider);
+hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions();
+
+% Trigger the first drawing
+update_scrollbar_size();
+update_panel_positions();
 
 % COMMENT:
 % I would love to make mouse wheel scrolling work with the cursor over the

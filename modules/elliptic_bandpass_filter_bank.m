@@ -12,16 +12,6 @@ m.pretty_name = 'Elliptic Bandpass Filter Bank';
 m.editable_fields = {'low_freqs', 'high_freqs', 'order', 'sampfs', 'stop_dB'};
 m.isready_pred = @preproc_filter_isready;
 
-% Optional fields
-m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_filtered_stim;
-m.plot_fns{1}.pretty_name = 'Filtered Stimulus vs Time';
-m.plot_fns{2}.fn = @do_plot_filtered_spectrogram;
-m.plot_fns{2}.pretty_name = 'Filtered Stimulus Spectrogram';
-m.plot_fns{3}.fn = @do_plot_elliptic_bandpass_filter_bank_frq_resp;
-m.plot_fns{3}.pretty_name = 'Filter Frequency Response';
-m.plot_gui_create_fn = @create_filter_selector_gui;
-
 % Module fields that are specific to THIS MODULE
 m.low_freqs = [2000 20000];  % Bottom frequencies of bandpass filters
 m.high_freqs = [4000 27000]; % Top frequencies of bandpass filters
@@ -33,6 +23,16 @@ m.stop_dB = 50;              % Ratio of passband/stopband attenuation
 if nargin == 1
     m = merge_structs(m, args);
 end
+
+% Optional fields
+m.plot_fns = {};
+m.plot_fns{1}.fn = @do_plot_filtered_stim;
+m.plot_fns{1}.pretty_name = 'Filtered Stimulus vs Time';
+m.plot_fns{2}.fn = @do_plot_filtered_spectrogram;
+m.plot_fns{2}.pretty_name = 'Filtered Stimulus Spectrogram';
+m.plot_fns{3}.fn = @do_plot_elliptic_bandpass_filter_bank_frq_resp;
+m.plot_fns{3}.pretty_name = 'Filter Frequency Response';
+m.plot_gui_create_fn = @(h, stk, xx) create_filter_selector_gui(h, stk, xx, length(m.low_freqs));
 
 % Values computed from here on are not directly editable, but are based on
 % the above values in a deterministic manner.

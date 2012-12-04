@@ -7,8 +7,10 @@ for i = 1:l
     if ~isfield(mystruct, myfields{i})
         error('Could not find field: %s', myfields{i});
     end
-    if isfield(mystruct, 'fittable_params')
-        c{i,1} = isfield(mystruct.fittable_params, myfields{i});
+    if isfield(mystruct, 'fit_fields')
+        c{i,1} = isfield(mystruct.fit_fields, myfields{i});
+    else
+        c{i,1} = false;
     end
     c{i,2} = myfields{i};
     c{i,3} = repl_write(mystruct.(myfields{i})); % Ensure data becomes a str

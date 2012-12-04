@@ -435,7 +435,7 @@ end
 GS.(GSfield).(GS.(GSselected_name)).params = dt.fn(dt.params); 
 
 % 2. Update which parameters are desired to be fit with the optimization
-GS.(GSfield).(GS.(GSselected_name)).fittable_params = ...
+GS.(GSfield).(GS.(GSselected_name)).fit_fields = ...
      extract_checked_fields(hObject, 1, 2);
 
 %------------------------------------------------------------------------

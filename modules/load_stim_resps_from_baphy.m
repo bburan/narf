@@ -12,6 +12,16 @@ m.pretty_name = 'Load stim+resp from BAPHY';
 m.editable_fields = {'raw_stim_fs', 'raw_resp_fs', 'include_prestim'};
 m.isready_pred = @module_isready;
 
+% Module fields that are specific to THIS MODULE
+m.raw_stim_fs = 100000;
+m.raw_resp_fs = 200;
+m.include_prestim = 1;
+
+% Overwrite the default module fields with arguments 
+if nargin == 1
+    m = merge_structs(m, args);
+end
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_stim;
@@ -26,26 +36,8 @@ m.plot_fns{5}.fn = @do_plot_spectro_and_raster;
 m.plot_fns{5}.pretty_name = 'Spectrogram + Raster';
 m.plot_gui_create_fn = @create_gui;
 
-% Module fields that are specific to THIS MODULE
-m.raw_stim_fs = 100000;
-m.raw_resp_fs = 200;
-m.include_prestim = 1;
-m.training_set = {};
-m.t_set = {};
-
-% Overwrite the default module fields with arguments 
-if nargin == 1
-    m = merge_structs(m, args);
-end
-
-% Values computed below this point are not directly editable. Instead, 
-% they are computed from the above values in a deterministic manner.
-
-% NONE for this module.
-
 % ------------------------------------------------------------------------
-
-% Finally, define the 'methods' of this module, as if it were a class
+% Define the 'methods' of this module, as if it were a class
 function x = do_load_from_baphy(stack, xxx)
     n = length(stack);
     mdl = stack{n};
