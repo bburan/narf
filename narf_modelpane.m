@@ -404,7 +404,9 @@ for ii = 1:length(STACK)
     set(STACK{ii}.gh.fn_popup, 'String', STACK{ii}.pretty_name, 'Value', 1);
     generic_checkbox_data_table(STACK{ii}.gh.fn_table, STACK{ii}, ...
                                 STACK{ii}.editable_fields); 
-    update_available_plots(ii);
+    update_available_plots(ii);                        
+    update_scrollbar_size();
+    update_panel_positions();
     % Recompute the data only if we need to
     if length(XXX) <= ii
         module_apply_callback(ii);

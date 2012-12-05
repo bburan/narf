@@ -1,5 +1,6 @@
 * MILESTONE
   Remove Load Above Files button and use callback to initialize model structure
+  Give the STACK (and XXX?) to the model to help it initialize?
   REPAIR: I'm using ALL the stimfiles at present, not just the TRAINING_SET like I should be
   REPAIR: Remember to invalidate data BELOW the present point on a table-edit callback, and to UPdate the gui to reflect this!
   Write a programmatic demo for loading a model which fit using TORC data to produce an STRF

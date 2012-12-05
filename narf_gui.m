@@ -326,71 +326,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% OPTIMIZATION WIDGETS
 
-function w = pack_fittables(stack)
-
-w = [];
-for ii = 1:length(stack)
-    if isfield(stack{ii}, 'fit_fields')
-        for p = stack{ii}.fit_fields', p=p{1};
-            w = cat(1, w, reshape(stack{ii}.(p), numel(stack{ii}.(p)), 1));
-        end
-    end
-end
-
-function unpack_fittables(w)
-global STACK;
-
-jj = 1;
-for ii = 1:length(STACK)
-    if isfield(STACK{ii}, 'fit_fields')
-        for p = STACK{ii}.fit_fields', p=p{1};
-            n = numel(STACK{ii}.(p));
-            tmp = w(jj:n);
-            STACK{ii}.(p) = reshape(tmp, size(STACK{ii}.(p)));
-            j =+ n;
-        end
-    end
-end
-
-function d = find_fit_start_depth(stack)
-% Find the depth at which to start recalculating the stack
-for d = 1:length(stack)
-    if isfield(stack{d}, 'fit_fields') && ~isempty(stack{d}.fit_fields)
-        return;
-    end
-end
-
-function z = correlation_of_downsampled_signals(w)
-% Returns the correlation of lf_stim and raw_resp
-global STACK XXX;
-
-% Unpack the vector and set the stack up to reflect it
-unpack_fittables(w);
-
-% Recalculate the stack, starting at the needed point
-start_depth = find_fit_start_depth(STACK);
-XXX = XXX(1:start_depth);  % Invalidate later data so it cannot be used
-for ii = start_depth:length(STACK);
-    if ~STACK{ii}.isready_pred(STACK(1:ii), XXX);
-        error('Stack was not fully ready at depth %d', ii);
-    end
-    XXX{ii+1} = STACK{ii}.fn(STACK(1:ii), XXX);
-end
-
-% Compute correlation after concatenating everything together
-x = XXX{end};
-V1 = [];
-V2 = [];
-for sf = fieldnames(x.dat)', sf = sf{1};
-    [S, T] = size(x.dat.(sf).lf_stim);
-    V1 = cat(1, V1, reshape(x.dat.(sf).raw_respavg',[],1));
-    V2 = cat(1, V2, reshape(x.dat.(sf).lf_stim',[],1));
-end
-R = corrcoef(V1,V2);
-R(isnan(R)) = 0; % corrcoef returns NaNs if FIR had all zero coefficients
-z = R(2,1)^2;  % Return r^2
-
-
 function sampling_algorithm_popup_CreateFcn(hObject, eventdata, handles)
 function sampling_algorithm_popup_Callback(hObject, eventdata, handles)
 
@@ -405,19 +340,6 @@ function termination_condition_popup_Callback(hObject, eventdata, handles)
 
 function termination_iterations_CreateFcn(hObject, eventdata, handles)
 function termination_iterations_Callback(hObject, eventdata, handles)
-
-
-function update_tables_and_plots()
-global STACK;
-
-start_depth = find_fit_start_depth(STACK);
-for ii = start_depth:length(STACK);
-    generic_checkbox_data_table(STACK{ii}.gh.fn_table, STACK{ii}, STACK{ii}.editable_fields); 
-    
-    hgfeval(get(STACK{ii}.gh.plot_popup, 'Callback'), ...
-            STACK{ii}.gh.plot_popup, []);
-end
-
 
 function fit_model_button_Callback(hObject, eventdata, handles)
 global STACK;
