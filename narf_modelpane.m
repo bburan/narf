@@ -68,8 +68,6 @@ function update_panel_positions()
     drawnow;
 end
 
-
-
 % Update scrollbar and panel sizes whenever the number of modules changes
 function update_scrollbar_size()
    N = length(STACK);
@@ -175,14 +173,14 @@ function module_apply_callback(mod_idx)
         XXX{mod_idx+1} = m.fn(STACK(1:mod_idx), XXX); 
         % Enable graphing
         set(m.gh.plot_popup, 'Enable', 'on');
-        % Build the relevant plot panel, if it exists
-        if isfield(m, 'plot_gui_create_fn')
+        % Build the plot panel, now that we know XXX{mod_idx+1}
+        if isfield(m, 'plot_gui_create_fn') && ~isfield(m, 'plot_gui')
             STACK{mod_idx}.plot_gui = m.plot_gui_create_fn(m.gh.plot_panel, STACK(1:mod_idx), XXX);
         end
         % Trigger a redraw of the gui
         hgfeval(get(m.gh.plot_popup,'Callback'), mod_idx, []);
         drawnow;
-                
+
          % If auto-recalc of the NEXT fn is checked, go down the stack
         if length(STACK) > mod_idx + 1 && ...
            isequal(true, get(STACK{mod_idx+1}.gh.fn_recalc, 'Value'))
@@ -193,8 +191,9 @@ function module_apply_callback(mod_idx)
     end
 end
 
-
-% When the user changes something, update the plot
+% When the user changes the popup selection update the plot
+% TODO: Right now this is used as the general-purpose interface to the
+% plotting subsystem and it's a little hacky. 
 function module_plot_callback(mod_idx)
     m = STACK{mod_idx};
 
@@ -207,17 +206,16 @@ function module_plot_callback(mod_idx)
         % Set the axes, clear it, and run the plot function
         axes(m.gh.plot_axes);
         cla;
-        fn = m.plot_fns{idx}.fn;
-        fn(STACK(1:mod_idx), XXX(1:mod_idx+1));
+        m.plot_fns{idx}.fn(STACK(1:mod_idx), XXX(1:mod_idx+1));
         replot_from_depth(mod_idx+1);
-    end
+    end 
 end
 
 function recalc_from_depth(mod_idx)
     % Try to rebuild XXX, starting at stack depth mod_idx
     % Stop trying to rebuild as soon as you hit an unchecked checkbox
     for ii = mod_idx:length(STACK);
-        if get(STACK{ii}.gh.fn_recalc, 'Value')
+        if isfield(STACK{ii}, 'gh') && get(STACK{ii}.gh.fn_recalc, 'Value')
             module_apply_callback(ii);
         else
             return
@@ -229,14 +227,13 @@ function replot_from_depth(mod_idx)
     % Try to replot everything from mod_idx onward
     % Stop trying to plot as soon as you hit an unchecked checkbox
     for ii = mod_idx:length(STACK);
-        if get(STACK{ii}.gh.fn_replot, 'Value')
+        if isfield(STACK{ii}, 'gh') && get(STACK{ii}.gh.fn_replot, 'Value')
             module_plot_callback(ii);
         else
             return
         end
     end
 end
-
 
 % When the data table changes, invalidate the data, plot and plot gui
 function module_data_table_callback(mod_idx)
@@ -246,7 +243,6 @@ function module_data_table_callback(mod_idx)
     % Request a recalculation from this point onwards. 
     recalc_from_depth(mod_idx);
 end
-
 
 % Define a function that makes new module gui blocks
 function gh = create_mod_block_panel(parent_handle, mod_idx)
@@ -393,37 +389,64 @@ handles.del_fn_button = uicontrol('Parent', handles.container_panel, ...
     'Units', 'pixels', 'Position', [210 5 200 25], ...
     'Callback', @(h,b,c) del_mod_block());
 
+% TODO: Create save/load model buttons
+handles.save_model_button = uicontrol('Parent', handles.container_panel, ...
+    'Style', 'pushbutton', 'Enable', 'on', ...
+    'String', 'Save Module Stack', ...
+    'Units', 'pixels', 'Position', [415 5 200 25], ...
+    'Callback', @(h,b,c) disp('save_module_stack()'));
+
+handles.load_model_button = uicontrol('Parent', handles.container_panel, ...
+    'Style', 'pushbutton', 'Enable', 'on', ...
+    'String', 'Load Module Stack', ...
+    'Units', 'pixels', 'Position', [620 5 200 25], ...
+    'Callback', @(h,b,c) disp('load_module_stack()'));
+
 % Create GUIs for any modules that already exist in STACK
 for ii = 1:length(STACK)
     STACK{ii}.gh = create_mod_block_panel(parent_handle, ii);
-end
-
-% Refresh the GUIs and make them not changable
-for ii = 1:length(STACK)
-    % update_ready_modules(ii);
+    % Set the popup to display the selected model type
+    % TODO: Also make it display 'Select Module' so it's not locked in
     set(STACK{ii}.gh.fn_popup, 'String', STACK{ii}.pretty_name, 'Value', 1);
     generic_checkbox_data_table(STACK{ii}.gh.fn_table, STACK{ii}, ...
                                 STACK{ii}.editable_fields); 
-    update_available_plots(ii);                        
-    update_scrollbar_size();
-    update_panel_positions();
-    % Recompute the data only if we need to
-    if length(XXX) <= ii
-        module_apply_callback(ii);
-    end
+    update_available_plots(ii);                         
+    
 end
-
-% Make the scroll bar dynamically update while being dragged
-hJScrollBar = findjobj(handles.container_slider);
-hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions();
 
 % Trigger the first drawing
 update_scrollbar_size();
 update_panel_positions();
 
+% The plotting and plot_gui's need to know about the XXX struct to work
+% So we rebuild the XXX struct as needed, and then call replot. 
+for ii = 1:length(STACK)    
+    % Recompute the data 
+    if length(XXX) <= ii
+        XXX{mod_idx+1} = m.fn(STACK(1:mod_idx), XXX); 
+    end
+    
+    % Now everything is ready to rebuild the GUI if there is one
+    if ~isfield(STACK{ii}, 'plot_gui') && isfield(STACK{ii}, 'plot_gui_create_fn')
+        STACK{ii}.plot_gui = STACK{ii}.plot_gui_create_fn(STACK{ii}.gh.plot_panel, STACK(1:ii), XXX(1:ii+1));
+    end
+end
+
+% If any modules are defined, we should now be able to update the graphs
+% I would have done this earlier, but module_plot_callback works down the
+% whole stack and is recursive, so it can't be run until everything is
+% ready.
+if 0 < length(STACK)
+    module_plot_callback(1);
+end
+
+% Make the scroll bar dynamically update whenever it is being dragged
+hJScrollBar = findjobj(handles.container_slider);
+hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions();
+
 % COMMENT:
 % I would love to make mouse wheel scrolling work with the cursor over the
-% entire panel, and not when the cursor is over  the scroll bar. 
+% entire panel.
 % Unfortunately findjobj() cannot return a  java object for a panel 
 % because...MATLAB doesn't use Java swing panels! 
 % Therefore, the closest we could do would be to make mouse wheel scrolling
@@ -431,5 +454,36 @@ update_panel_positions();
 %
 % hJ = findjobj(handles.container_slider);
 % hJ.MouseWheelMovedCallback = @(ch, evt, z) disp(get(evt, 'wheelRotation'));
+
+% Define a close window callback which will remove all GUI hooks from the
+% STACK. Useful if you close the GUI and want to open it up again without
+% recomputing the whole damn STACK.
+function delete_gui_and_close(a,b,c)
+   selection = questdlg('Close the GUI? (STACK and XXX will still be there)',...
+      'Close Request Function', 'Yes', 'No', 'Yes'); 
+   switch selection, 
+      case 'Yes',
+         for ii = 1:length(STACK)
+             if isfield(STACK{ii}, 'gh')
+                delete(STACK{ii}.gh.plot_axes);
+                delete(STACK{ii}.gh.plot_popup);
+                delete(STACK{ii}.gh.plot_panel);
+                delete(STACK{ii}.gh.fn_apply);
+                delete(STACK{ii}.gh.fn_table);
+                delete(STACK{ii}.gh.fn_popup);
+                delete(STACK{ii}.gh.fn_panel);
+                rmfield(STACK{ii}, 'gh');
+             end
+            if isfield(STACK{ii}, 'plot_gui')
+                rmfield(STACK{ii}, 'plot_gui');
+            end
+         end
+         delete(parent_handle);
+      case 'No'
+      return 
+   end
+end
+
+set(parent_handle, 'CloseRequestFcn', @delete_gui_and_close);
 
 end

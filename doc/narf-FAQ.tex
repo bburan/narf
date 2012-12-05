@@ -3,234 +3,329 @@
 \newcommand{\Q}{\bigskip\bfseries Q: }
 \newcommand{\A}{\par\textbf{A:} \normalfont}
 \newcommand{\definition}{\textbf{#1}}
+\newcommand{\matlab}{\textbf{#1}}
 
-\title{FAQ of Neural Activity Regression Framework (NARF)}
+\title{Neural Activity Regression Framework (NARF)}
 \author{Ivar Thorson}
 
 \begin{document}
   
-This document was written to clarify and document design decisions made regarding the neural activity model-fitting code implemented in the Brain, Hearing and Behavior Laboratory of the Oregon Health and Science University (OHSU), under the supervision of Prof. Stephen David. It is a work in progress of questions about why the design should be the way it is and is a document intended for developers rather than end users.
+This document was written to clarify and document design decisions made regarding the Neural Activity Regression Framework (NARF) implemented in the Brain, Hearing and Behavior Laboratory of the Oregon Health and Science University (OHSU), under the supervision of Prof. Stephen David. As such, it is intended for developers rather and is very much a work in progress. 
 
-\section{Architecture}
+\section{Problem and Approach}
 
-The software architecture of NARF is similar to the Generalized Nonlinear Model (GNNM) framework proposed by McFarland, Cui, Butts). There are three main parts, which for brevity will be referenced using the following mathematical symbols adopted from standard engineering control theory nomenclature:
+\subsection{The Problem}
 
-\begin{eqnarray}
- \dot{x} & = A(x) + B(u)\\
- \dot{y} & = C(x) \\
-\end{eqnarray}
+There are many possible mathematical models which could be used describe the spiking activity of a neuron given some sensory stimulus. In our case, we will be considering mostly models of neurons in the auditory cortex of a mammal, usually a ferret, and usually near the 'A1' region. Neurons in this region of the brain often respond preferentially to a particular auditory frequency. For example, some neurons may spike often whenever a sound with accoustic energy near 1.2kHz is heard. Another neuron may spike frequently whenever a 28kHz tone is heard. Our goal is to play recordings of various sounds, measure neural activity, and attempt to discover as much as we can about the neuron(s) we are studying.
 
-where $x$ is the state of the system, $u$ 
+Mathematically, the problem is that of developing a mathematical model which can accurately predict how a neuron will fire when a new, as-yet-unheard sound is played. This is a classic inference problem, in which we seek to infer which system produced the neural response that we measured. If the model's prediction closely matches the measured response of the neuron, then we have learned something significant about the neuron. The better our ability to predict the neuron's activity, the better our understanding of it, and the more we may learn through experiment about how neural activity is affected by various factors. Our ability to learn about the dynamics of neurons through experiment is thus closely related to our ability to model each neuron.
+
+Fortunately or unfortunately, while the neuroscientist community has developed a plethora of mathematical models which can describe this behavior, there remain few guidelines on which model should be used or how model parameters should be found. The difficulty for most scientists is in the implementation of existing models; it is often a significant amount of work to adapt another person's model to your needs, and significantly more work to develop one yourself. Ideally, we would have some way of fitting several different models to the measured activity of the neuron, so that we might quickly identify the characteristics of the neuron under study. It would also be advantageous to be able to recombine parts of the model which were particularly useful in describing neural activity such that variations on successfully predictive models could be quickly examined. 
+
+\subsection{NARF's Approach: Pure Function Composition}
+
+While there can likely never be a completely general solution to the neural model fitting problem, borrowing well-developed concepts from mathematics can at least get us part of the way there. If we consider each aspect of a mathematical model to be a \definition{pure function} $f_1$ which accepts an argument $x_1$ and returns a value $x_2$, we can write it as
+
+\begin{equation}
+  f_1(x_1) \rightarrow x_2
+\end{equation}
+
+The notion of a 'pure' function is simply that it will always produce the same result when given the same input. In the domain of computer science, this necessarily means that there are no side effects; no print statements, saving to disk, and no use of global variables. If a function's computation is based in any way on a global variable, then it is possible for the same function, given the same arguments, to produce different results depending on the value of the global variable at the time it was run. This is in general a very bad way to write programs, and can be very confusing. 
+
+If we make our model out of more than one pure function (e.g. $f_1, f_2, ..., f_n$), then we could potentially chain the output of one function to the input of the next:
+
+\begin{eqnarray*}
+f_{1}(x_{1}) & \rightarrow & x_{2}\\
+f_{2}(x_{2}) & \rightarrow & x_{3}\\
+ & \vdots\\
+f_{n}(x_{n}) & \rightarrow & x_{n+1}
+\end{eqnarray*}
+
+And we will always get the same output ($x_{n+1}$) at the end of the computational chain. In a perhaps more familiar notation we could have written
+
+\begin{equation}
+x_{4} = f_3(f_2(f_1(x_1)))
+\end{equation}
+
+All of the above has assumed that every function has no parameters. If we had a function which added 23 to it's input argument and then divided by three ($f_1(x_1) = (f_1 + 23) / 3 $), then we would be required to define a completely new function $f_1$ if we wanted to try adding 25 or dividing by a different number. If some part of the function's behavior will be changing regularly and many values must be tried, then it makes sense to bundle these changing parts into a model parameter vector $\phi_1 = [\phi_{11} \phi_{12}$. 
+
+Now each function should look like this:
+
+\begin{equation}
+  f_1(x_1, \phi_1) \rightarrow x_2
+\end{equation}
+
+And we chain them together as before:
+
+\begin{eqnarray*}
+f_{1}(x_{1}, \phi_1) & \rightarrow & x_{2}\\
+f_{2}(x_{2}, \phi_2) & \rightarrow & x_{3}\\
+ & \vdots\\
+f_{n}(x_{n}, \phi_n) & \rightarrow & x_{n+1}
+\end{eqnarray*}
+
+Now we can describe nearly any neural model by specifying some initial conditions $x_1$, a list of functions $f_1, f_2, ..., f_n$, and a list of parameter vectors $\phi_1, \phi_2, ..., \phi_n$. By executing the functions one after another, our prediction about the neural activity will finally be held in $x_{n+1}$. If we want, we can observe intermediate values of $x$ to better understand how the model is functioning as a whole. 
+
+The bundling of $f$ and $\phi$ together is tentatively being called a \definition{module}, for lack of a better way to describe each block of modeling functionality. 
+
+\section{Module Technical Details}
+
+MATLAB's data types prohibit us from being completely general in allowing functions $f$ could to do almost anything and data $x$ to represent almost anything. We will chose to use MATLAB's cell arrays because of their generality and default behavior of reference-passing. The structure which holds the list of functions $f_1, f_2, ...$ is called \matlab{STACK}, and the structure which holds all the $x_1, x_2, ..., x_{n+1}$ is called \matlab{XXX}. Each cell of \matlab{STACK} and \matlab{XXX} is a structure containing named fields. You may put any fields you like in each cell, except for the fields defined in the next section, which have special meaning.
 
 
-\begin{description}[]
-  \item [$A(s)\rightarrow u$] A \definition{filter} $p$ which transforms the time-indexed sound wave $x$ into stimulus intensity vector $u$. It models how the cochlea transforms the stimulus sound wave to the vibration of the basilar membrane. Vector $s$ has several components which may correspond to different filters. 
-  \item [$q(u,x_{i-1})\rightarrow x_i$] A probably nonlinear \definition{activity function} $q$ which maps stimulus intensity $u$ and previous internal state $x_{i-1}$ to a new activity state $x_{i}$. 
-  \item [$C(x) \rightarrow y$] A \definiton{spike noise function} describing the probabilistic nature of when spiking is observed. 
-  \item [$m() \rightarrow z$] A \definiton{performance metric} describing 
-\end{description}
+\subsection{STACK}
+
+\subsection{XXX}
 
 
-\begin{qanda}
+\section{Example Script}
 
-\Q How do we find both the model parameters and also the average rate of fire for the neuron? We know neither: our data just shows 'observed' firings from which we infer the true rate.
-\A Treat both of them as unknowns. Use Expectation Maximization (EM) algorithm, a nonlinear model, and an Unscented Kalman Filter (UKF) to iterate between estimating the best model prameters and re-interpreting the data in light of those parameters until convergence occurs. % TODO: Insert blog diagram figure here.
+\section{}
 
-\Q Pearson's r coefficient of correlation is a linear measure -- how can we use it to compare nonlinear systems?
-\A Use feedback-linearization-style model inversion of the observation system, and we do the comparison in a linearized space. Let's use 'average rate of fire' since that is an easy place to start, and it neatly partitions the system model and observational model.
+A GUI will automatically be created for your module. 
 
-\Q How big should PSTH bins be? Small bins are very discontinuous and large bins smooth so much that significant information is lost. 
-\A Trick question; let's avoid binning at all and instead use a method, such as a Kalman filter with a Poisson process observation model, which allows use of very small bins and interpolates the spiking rate between measurements, maximizing the information gleaned from the spiking data. PSTHs have other problems: there is no error bounds, they are just data. 
+TODO: figure
 
-\Q Will the EM algorithm and Kalman filters cause phase lag in the model estimation?
-\A I don't think so, but I've been wrong before.
+You may define your own
 
-\Q How should we include the preprocessing (like stimulus envelope discovery or gammatone filtering) in our framework?
-\A Consider the preprocessing to be part of the model itself. That way, all variable parameters can be accomodated in the same fashion.
+\subsection{Global Variables}
 
-\Q What method will be used to optimize the values for a large number of parameters?
-\A Several methods could be used: \begin{enumerate}
-  \item Boosting
-  \item Simulated annealing
-  \item Conjugate gradient descent
+\section{Further Development}
+
+Some planned changes to NARF include the following:
+
+\begin{enumerate}
+\item Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
+\item A modular jacknifing function which optimization can use to do better regression
 \end{enumerate}
 
-\Q What about evaluation of the performance? MUST be cross-validated for sanity.
-\A \begin{enumerate}
-  \item Simple correlation
-  \item Jackknifed correlation (with error bars)
-  \item N-fold cross validation error
-  \item Error under L1, L2, Linfty norms
-  \item Log-likelihood of the model (given some variance)
-  \item Monte-carlo swarm average (checks log-likelihood of many many points)
-\end{enumerate} 
+\subsection{Unfixed Bugs}
+\begin{enumerate}
+\item You can only instantiate a single GUI at a time. If you close this GUI, it cannot be recreated from the STACK. This is bad behavior and should be fixed by putting GUI handles in their own separate structure, or by providing a function that will clear all the GH's from the stack.
+\end{enumerate}
 
-\Q What is the to the optimization engine?
-\A Optimization engines need
-   ARGUMENTS:
-       An initial parameter vector $\theta$
-       An initial search variance $\sigma_{\theta}$ expressing some priors about the parameter vector. Setting a prior to variance 0 makes it act like a constant.
-       A model function $M(\theta) \rightarrow {P, N, Q}$ that creates a model corresponding to those parameters $\theta$, where
-          $P(\theta) \rightarrow G$ is the prefilter creation function 
-          $N(\theta) \rightarrow Z$ is a nonlinear, state space model creation function
-          $Q(\theta) \rightarrow \hat{Z}$ is the inverse observational model creation function
-       An evaluation function $E(Z,\hat{Z}) \rightarrow r$ which measures the model's goodness of fit to the observed measurements
-       Optimization state $\psi$, which is just a vector to store whatever relevant values the optimization function needs to make its decisions
-       An optimization function $O(\theta, \psi, r) \rightarrow \theta$ which improves the estimate of the parameters based on the model performance
-       A termination condition function $\Omega(\psi)$ which returns a boolean indicating that the optimization is complete. For example, a limit on the number of optimization iterations or a measurement of convergence. 
 
-\Q What components must be defined for each model?
-\A A model of a neuron has three parts ($P,N,Q$ as introduced above above): \begin{enumerate}
-
-  \item[PREFILTER:] Turns raw waveform into a pseudo frequency-domain signal (may not be the true linear frequency domain, however). Models the cochlea and mechanotransduction.
-      A. Gammatone filter (center frequency, bandwidth, phase locked or not, averaging window size)
-      B. Square wavelet filter, ie DFT. (center frequency, bandwidth, averaging window size)
-      C. Arbitrary FIR wavelet filter
-      D. Possibly, a physical model-based representation such as a damped harmonic oscillator.
-      E. Exotic wavelets: sinc, lanczos, mexican hat, meyer
-      F. Envelope of the stimulus
-
-      Prefilters can be created with functions $P(\theta) \rightarrow G$ which return filter functions $G(X,f_X) \rightarrow $. Functions $G$ have the following properties:
-
-       ARGUMENTS:
-           $X$    1xN vector of the stimulus
-           $T_X$  Stimulus sample spacing interval [s]
-        
-       RETURNS:
-           $Z$    1xM vector that is the filter's response
-           $T_Z$  Filtered stimulus sampling interval [s]
-   
-   Prefilter creation functions $P$ accept model parameters $\theta$ that define precisely how the stimulus is filtered. If you wish to treat this as a hyperparameter, you may set it.
-
-   \item [MODEL:] Turns that pseudo frequency domain signal into an average rate of neural activity. Models the neuron. 
-      A. First order linear model with fixed delay
-      B. Linear model with a finite impulse response
-      C. Synaptic depression model. (Filter bank + weights)
-      D. Multiple synapses with different latencies (Timing + weights)
-      E. Self-referential ``Tire after firing'' stimulus model: increase threshold as stimulus increases (Refractory period)
-      F. Log or sqrt compression at input or on output
-      
-   \item [SPIKING/OBSERVATIONAL INVERSE MODEL] Turns the discrete spike events into an estimate of the probabilistic process that generated them. 
-      A. Poisson spiking with a smoothly varying average rate of fire (what I have now)
-      B. No model, just binning spike events.
-      \end{enumerate}
-
-\Q What is the interface between data selection and model fitting?
-\A A ragged vector of vectors of stimuli, X, a matrix of the responses to each stimuli Y, and the sample rates of each. Example:
-
-   X = [stim1@t0, stim1@t1, ..., stim1@tn;
-        stim2@t0, stim2@t2, ..., stim2@tn];
-   Xfs = [0.01;  % 100Hz
-         0.02]; % 50Hz
-   Y = [resp1@t0, ...; 
-     resp2@t1, ...]; 
-   Yfs = [0.01; % Sample rate
-          0.02];
-
-   Requirements:
-       All of the above must have the same number of rows
-       cols(Y(i)) * Yfs(i) == cols(X(i)) * Xfs(i) must be true for any i
-
-   This interface can therefore be used for fitting a model to a single data set, or even to multiple data sets. In the latter case, the data sets cannot be directly concatenated because that would create discontinuities in state that wouldn't fit the model. 
-
-\Q What is the interface to the optimization system or systems?
-\A The optimization function:
-   ARGUMENTS: 
-     params      An initial parameter vector $\theta$.
-     mapfn       A function that returns a model function corresponding to parameters $\theta$. 
-     modelfn     A function that returns a model function using parameters. 
-     
-\Q How can I map a large number of parameters into a model?
-\A Define a function for each model that provides a mapping from a vector to a EM-runnable object.
-   For example, 
-
-\Q How can I visualize how well the model is doing?
-\A Plot the scatter plots, correlation, and best fitting line. Also, plot the residuals!
-
-\Q How can I visualize the effect of the parameters?
-\A Plot the function defined by the parameters and histogram where the data falls on that function.
-
-\Q How can I make a simple system for graphing results?
-\A Flat files loadable by matlabe are probably the easiest. Each data file gets its own folder. Variables get names
-   stim_fs.mat     Stimulus file at a particular frequency, channel 1
-   resp_fs.mat     Response file at a particular frequency
-   envelope.mat    The stimulus envelope at a particular frequnecy.
-    
-\Q How should I structure the model-estimation script to save results incrementally, be interruptable, and incrementally visible?
-\A Basically, the main script will a file doesn't exist, then a function is called to create it. 
-    setdatafile()    -> Sets the path to look at a particular directory.
-    querydb()        -> original data files
-    run_gammagram()  -> Creates a gramma spectrogram
-    run_filter()     -> Created filter'd stimulus trace using the model (or envelope funciton)
-    run_em()         -> Do expectation maximization algorithm (ON EVERY PART OF THE DATAFILE, WHICH MAY BE MULTIPLE EXPERIMENTS!)
-    run_strf()       -> compute the STRF from convolving the gammagram and response data
-    run_residuals()  -> compute the residuals
-    run_bestfit()    -> compute best 2nd order linear fits for correlations of this model
-    run_plotreport() -> Plots an all-encompassing report of the model
-
-    Higher level functions:
-    run_plotcorr()   -> Plot correlation scatter plots between various models. (to help you hunt for next nonlinearity). 
-                        Plots signal histogram on diagonal, scatter plots on lower trinagle, residuals on upper triangle. 
-                        Where to plot residual histograms or residual power spectra?
-
-\Q How do I convert a function call with various parameters into a file name, and back again?
-\A Define a function that converts that into a simple text string, and another that 
-    run_fn(fn, params)     Returns a string
-    
-\Q What about higher level?
-     Accepts a function to run
-     Accepts some arguments
-     Checks if arguments exist. If not, errors. 
-     Converts 
-     Checks if the function results already exist
-     If not, checks arguments.
-   
-Function to generate new sample points in the unknown space
-1. Sample uniformly in the Nx2 vector between bottom a and top limits b
-2. Samples according to a gaussian with mean mu and covariance matrix Sig
-3.  
-
-Checking assumptions are correct:
-   1. Try a forward model structure with your initial starting model, getting an avg rate. 
-   2. Plot the distribution of Inter-Spike Intervals, scaling time accordingly.
-   3. Check the fit of various observational noise distributions against the ISIs
-   4. Infer what the true state must have been in the context of that noise distribution.
-   5. Fit model using that smoothed data and EM
-   6. Do evaluation with the improved model
-
-% Interesting algorithm could be: 
-% Define limits on the space (center + gaussianity)
-% Partition space into two halves
-% sample randomly in each, evaluate the best point
-% Pick the better of the two spaces as your new limits
-
-% The gaussian k-means sampling algorithm (May not converge!)
-% 1. Sample randomly at first, evaluate them.
-% 2. Sort the samples tested by their scores (Create a matrix, use sortrows() to sort by first column)
-% 3. Take the first 30 samples or so,
-% 4. Work out the mean, variance on those top samples
-% 5. Generate 1000 more samples with that mean and variance, evaluate them.
-% 6. Loop to 2. 
-
-% SCAAT Boosting algorithm
-%  Possible problems: no guaranteed convergence for nonlinear systems. 
-%      Randomizing the step size would help avoid loops of death
-%      Allowing different step sizes for each vector element would help avoid scaling problems where one parameter is 0.001 and the other is 10000.
-%      Having periodic random sampling of the space could also help
-%      Having a second loop which samples many many points along the free vector until the optimum value is found, migth also help.
-
-\end{qanda}
-
- Extend depression model to include presynaptic calcium concentrations (4 parameter depression/facilitation model)
-          Presynaptic calcium concentration (and/or synaptic cleft neurotransmitter concentration), a function of presynaptic potential
-	  Calcium (and/or synaptic cleft neurotransmitter concentration) recovery rate
-	  Vesicle depletion rate as a function of presynaptic calcium concentration
-	  Vesicle recovery rate 
-   3. [ ] Mechanotransduction potassium effects (depression model?)
-   4. [ ] Nonlinearity of frequency sensitivity over A1 (and presumably middle-ear transfer fn)
-
-\begin{itemize}
-\item Replace the correlation coefficient with the jackknifed version.
-\item mag007d-d1 	Pen 	12-03-13 	0.719+/-0.044* looks pretty good!
-\end{itemize}
 \end{document}
+
+%% The software architecture of NARF is similar to the Generalized Nonlinear Model (GNNM) framework proposed by McFarland, Cui, Butts). There are three main parts, which for brevity will be referenced using the following mathematical symbols adopted from standard engineering control theory nomenclature:
+
+%% \begin{eqnarray}
+%%  \dot{x} & = A(x) + B(u)\\
+%%  \dot{y} & = C(x) \\
+%% \end{eqnarray}
+
+%% where $x$ is the state of the system, $u$ 
+
+
+%% \begin{description}[]
+%%   \item [$A(s)\rightarrow u$] A \definition{filter} $p$ which transforms the time-indexed sound wave $x$ into stimulus intensity vector $u$. It models how the cochlea transforms the stimulus sound wave to the vibration of the basilar membrane. Vector $s$ has several components which may correspond to different filters. 
+%%   \item [$q(u,x_{i-1})\rightarrow x_i$] A probably nonlinear \definition{activity function} $q$ which maps stimulus intensity $u$ and previous internal state $x_{i-1}$ to a new activity state $x_{i}$. 
+%%   \item [$C(x) \rightarrow y$] A \definiton{spike noise function} describing the probabilistic nature of when spiking is observed. 
+%%   \item [$m() \rightarrow z$] A \definiton{performance metric} describing 
+%% \end{description}
+
+
+%% \begin{qanda}
+
+%% \Q How do we find both the model parameters and also the average rate of fire for the neuron? We know neither: our data just shows 'observed' firings from which we infer the true rate.
+%% \A Treat both of them as unknowns. Use Expectation Maximization (EM) algorithm, a nonlinear model, and an Unscented Kalman Filter (UKF) to iterate between estimating the best model prameters and re-interpreting the data in light of those parameters until convergence occurs. % TODO: Insert blog diagram figure here.
+
+%% \Q Pearson's r coefficient of correlation is a linear measure -- how can we use it to compare nonlinear systems?
+%% \A Use feedback-linearization-style model inversion of the observation system, and we do the comparison in a linearized space. Let's use 'average rate of fire' since that is an easy place to start, and it neatly partitions the system model and observational model.
+
+%% \Q How big should PSTH bins be? Small bins are very discontinuous and large bins smooth so much that significant information is lost. 
+%% \A Trick question; let's avoid binning at all and instead use a method, such as a Kalman filter with a Poisson process observation model, which allows use of very small bins and interpolates the spiking rate between measurements, maximizing the information gleaned from the spiking data. PSTHs have other problems: there is no error bounds, they are just data. 
+
+%% \Q Will the EM algorithm and Kalman filters cause phase lag in the model estimation?
+%% \A I don't think so, but I've been wrong before.
+
+%% \Q How should we include the preprocessing (like stimulus envelope discovery or gammatone filtering) in our framework?
+%% \A Consider the preprocessing to be part of the model itself. That way, all variable parameters can be accomodated in the same fashion.
+
+%% \Q What method will be used to optimize the values for a large number of parameters?
+%% \A Several methods could be used: \begin{enumerate}
+%%   \item Boosting
+%%   \item Simulated annealing
+%%   \item Conjugate gradient descent
+%% \end{enumerate}
+
+%% \Q What about evaluation of the performance? MUST be cross-validated for sanity.
+%% \A \begin{enumerate}
+%%   \item Simple correlation
+%%   \item Jackknifed correlation (with error bars)
+%%   \item N-fold cross validation error
+%%   \item Error under L1, L2, Linfty norms
+%%   \item Log-likelihood of the model (given some variance)
+%%   \item Monte-carlo swarm average (checks log-likelihood of many many points)
+%% \end{enumerate} 
+
+%% \Q What is the to the optimization engine?
+%% \A Optimization engines need
+%%    ARGUMENTS:
+%%        An initial parameter vector $\theta$
+%%        An initial search variance $\sigma_{\theta}$ expressing some priors about the parameter vector. Setting a prior to variance 0 makes it act like a constant.
+%%        A model function $M(\theta) \rightarrow {P, N, Q}$ that creates a model corresponding to those parameters $\theta$, where
+%%           $P(\theta) \rightarrow G$ is the prefilter creation function 
+%%           $N(\theta) \rightarrow Z$ is a nonlinear, state space model creation function
+%%           $Q(\theta) \rightarrow \hat{Z}$ is the inverse observational model creation function
+%%        An evaluation function $E(Z,\hat{Z}) \rightarrow r$ which measures the model's goodness of fit to the observed measurements
+%%        Optimization state $\psi$, which is just a vector to store whatever relevant values the optimization function needs to make its decisions
+%%        An optimization function $O(\theta, \psi, r) \rightarrow \theta$ which improves the estimate of the parameters based on the model performance
+%%        A termination condition function $\Omega(\psi)$ which returns a boolean indicating that the optimization is complete. For example, a limit on the number of optimization iterations or a measurement of convergence. 
+
+%% \Q What components must be defined for each model?
+%% \A A model of a neuron has three parts ($P,N,Q$ as introduced above above): \begin{enumerate}
+
+%%   \item[PREFILTER:] Turns raw waveform into a pseudo frequency-domain signal (may not be the true linear frequency domain, however). Models the cochlea and mechanotransduction.
+%%       A. Gammatone filter (center frequency, bandwidth, phase locked or not, averaging window size)
+%%       B. Square wavelet filter, ie DFT. (center frequency, bandwidth, averaging window size)
+%%       C. Arbitrary FIR wavelet filter
+%%       D. Possibly, a physical model-based representation such as a damped harmonic oscillator.
+%%       E. Exotic wavelets: sinc, lanczos, mexican hat, meyer
+%%       F. Envelope of the stimulus
+
+%%       Prefilters can be created with functions $P(\theta) \rightarrow G$ which return filter functions $G(X,f_X) \rightarrow $. Functions $G$ have the following properties:
+
+%%        ARGUMENTS:
+%%            $X$    1xN vector of the stimulus
+%%            $T_X$  Stimulus sample spacing interval [s]
+        
+%%        RETURNS:
+%%            $Z$    1xM vector that is the filter's response
+%%            $T_Z$  Filtered stimulus sampling interval [s]
+   
+%%    Prefilter creation functions $P$ accept model parameters $\theta$ that define precisely how the stimulus is filtered. If you wish to treat this as a hyperparameter, you may set it.
+
+%%    \item [MODEL:] Turns that pseudo frequency domain signal into an average rate of neural activity. Models the neuron. 
+%%       A. First order linear model with fixed delay
+%%       B. Linear model with a finite impulse response
+%%       C. Synaptic depression model. (Filter bank + weights)
+%%       D. Multiple synapses with different latencies (Timing + weights)
+%%       E. Self-referential ``Tire after firing'' stimulus model: increase threshold as stimulus increases (Refractory period)
+%%       F. Log or sqrt compression at input or on output
+      
+%%    \item [SPIKING/OBSERVATIONAL INVERSE MODEL] Turns the discrete spike events into an estimate of the probabilistic process that generated them. 
+%%       A. Poisson spiking with a smoothly varying average rate of fire (what I have now)
+%%       B. No model, just binning spike events.
+%%       \end{enumerate}
+
+%% \Q What is the interface between data selection and model fitting?
+%% \A A ragged vector of vectors of stimuli, X, a matrix of the responses to each stimuli Y, and the sample rates of each. Example:
+
+%%    X = [stim1@t0, stim1@t1, ..., stim1@tn;
+%%         stim2@t0, stim2@t2, ..., stim2@tn];
+%%    Xfs = [0.01;  % 100Hz
+%%          0.02]; % 50Hz
+%%    Y = [resp1@t0, ...; 
+%%      resp2@t1, ...]; 
+%%    Yfs = [0.01; % Sample rate
+%%           0.02];
+
+%%    Requirements:
+%%        All of the above must have the same number of rows
+%%        cols(Y(i)) * Yfs(i) == cols(X(i)) * Xfs(i) must be true for any i
+
+%%    This interface can therefore be used for fitting a model to a single data set, or even to multiple data sets. In the latter case, the data sets cannot be directly concatenated because that would create discontinuities in state that wouldn't fit the model. 
+
+%% \Q What is the interface to the optimization system or systems?
+%% \A The optimization function:
+%%    ARGUMENTS: 
+%%      params      An initial parameter vector $\theta$.
+%%      mapfn       A function that returns a model function corresponding to parameters $\theta$. 
+%%      modelfn     A function that returns a model function using parameters. 
+     
+%% \Q How can I map a large number of parameters into a model?
+%% \A Define a function for each model that provides a mapping from a vector to a EM-runnable object.
+%%    For example, 
+
+%% \Q How can I visualize how well the model is doing?
+%% \A Plot the scatter plots, correlation, and best fitting line. Also, plot the residuals!
+
+%% \Q How can I visualize the effect of the parameters?
+%% \A Plot the function defined by the parameters and histogram where the data falls on that function.
+
+%% \Q How can I make a simple system for graphing results?
+%% \A Flat files loadable by matlabe are probably the easiest. Each data file gets its own folder. Variables get names
+%%    stim_fs.mat     Stimulus file at a particular frequency, channel 1
+%%    resp_fs.mat     Response file at a particular frequency
+%%    envelope.mat    The stimulus envelope at a particular frequnecy.
+    
+%% \Q How should I structure the model-estimation script to save results incrementally, be interruptable, and incrementally visible?
+%% \A Basically, the main script will a file doesn't exist, then a function is called to create it. 
+%%     setdatafile()    -> Sets the path to look at a particular directory.
+%%     querydb()        -> original data files
+%%     run_gammagram()  -> Creates a gramma spectrogram
+%%     run_filter()     -> Created filter'd stimulus trace using the model (or envelope funciton)
+%%     run_em()         -> Do expectation maximization algorithm (ON EVERY PART OF THE DATAFILE, WHICH MAY BE MULTIPLE EXPERIMENTS!)
+%%     run_strf()       -> compute the STRF from convolving the gammagram and response data
+%%     run_residuals()  -> compute the residuals
+%%     run_bestfit()    -> compute best 2nd order linear fits for correlations of this model
+%%     run_plotreport() -> Plots an all-encompassing report of the model
+
+%%     Higher level functions:
+%%     run_plotcorr()   -> Plot correlation scatter plots between various models. (to help you hunt for next nonlinearity). 
+%%                         Plots signal histogram on diagonal, scatter plots on lower trinagle, residuals on upper triangle. 
+%%                         Where to plot residual histograms or residual power spectra?
+
+%% \Q How do I convert a function call with various parameters into a file name, and back again?
+%% \A Define a function that converts that into a simple text string, and another that 
+%%     run_fn(fn, params)     Returns a string
+    
+%% \Q What about higher level?
+%%      Accepts a function to run
+%%      Accepts some arguments
+%%      Checks if arguments exist. If not, errors. 
+%%      Converts 
+%%      Checks if the function results already exist
+%%      If not, checks arguments.
+   
+%% Function to generate new sample points in the unknown space
+%% 1. Sample uniformly in the Nx2 vector between bottom a and top limits b
+%% 2. Samples according to a gaussian with mean mu and covariance matrix Sig
+%% 3.  
+
+%% Checking assumptions are correct:
+%%    1. Try a forward model structure with your initial starting model, getting an avg rate. 
+%%    2. Plot the distribution of Inter-Spike Intervals, scaling time accordingly.
+%%    3. Check the fit of various observational noise distributions against the ISIs
+%%    4. Infer what the true state must have been in the context of that noise distribution.
+%%    5. Fit model using that smoothed data and EM
+%%    6. Do evaluation with the improved model
+
+%% % Interesting algorithm could be: 
+%% % Define limits on the space (center + gaussianity)
+%% % Partition space into two halves
+%% % sample randomly in each, evaluate the best point
+%% % Pick the better of the two spaces as your new limits
+
+%% % The gaussian k-means sampling algorithm (May not converge!)
+%% % 1. Sample randomly at first, evaluate them.
+%% % 2. Sort the samples tested by their scores (Create a matrix, use sortrows() to sort by first column)
+%% % 3. Take the first 30 samples or so,
+%% % 4. Work out the mean, variance on those top samples
+%% % 5. Generate 1000 more samples with that mean and variance, evaluate them.
+%% % 6. Loop to 2. 
+
+%% % SCAAT Boosting algorithm
+%% %  Possible problems: no guaranteed convergence for nonlinear systems. 
+%% %      Randomizing the step size would help avoid loops of death
+%% %      Allowing different step sizes for each vector element would help avoid scaling problems where one parameter is 0.001 and the other is 10000.
+%% %      Having periodic random sampling of the space could also help
+%% %      Having a second loop which samples many many points along the free vector until the optimum value is found, migth also help.
+
+%% \end{qanda}
+
+%%  Extend depression model to include presynaptic calcium concentrations (4 parameter depression/facilitation model)
+%%           Presynaptic calcium concentration (and/or synaptic cleft neurotransmitter concentration), a function of presynaptic potential
+%% 	  Calcium (and/or synaptic cleft neurotransmitter concentration) recovery rate
+%% 	  Vesicle depletion rate as a function of presynaptic calcium concentration
+%% 	  Vesicle recovery rate 
+%%    3. [ ] Mechanotransduction potassium effects (depression model?)
+%%    4. [ ] Nonlinearity of frequency sensitivity over A1 (and presumably middle-ear transfer fn)
+
+%% \begin{itemize}
+%% \item Replace the correlation coefficient with the jackknifed version.
+%% \item mag007d-d1 	Pen 	12-03-13 	0.719+/-0.044* looks pretty good!
+%% \end{itemize}
+
+

@@ -136,7 +136,22 @@ function do_plot_fir_coefs_as_heatmap(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    imagesc(mdl.coefs);
+    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
+    filt_pop = find_module_gui_control(stack, 'selected_filter_popup');
+    
+    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
+    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
+    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
+       
+    dat = x.dat.(sf);
+    
+    tmp = mdl.coefs;
+    [M, N] = size(tmp);
+    for ii = 1:M
+        tmp(ii,:) = tmp(ii,:) *  mean(squeeze(dat.lf_preds(stim_idx, :, ii)));
+    end
+    
+    imagesc(tmp);
     set(gca,'YDir','normal');
     % axis tight;
 end

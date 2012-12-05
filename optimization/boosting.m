@@ -17,12 +17,10 @@ function [x_bst, s_bst] = boosting(x_0, objfn, termfn, stepsize)
 % DETAILS:
 % Given a starting vector x=x_0, this algorithm samples a step in each
 % direction along every dimension in x and moves to that new point 
-% if it improves the score according to objective function objfn(x). 
+% if it improves the score according to objective function objfn(x) more
+% than any alternative direction. 
 %
 % Will terminate whenever @termfn(n,x,s) returns a boolean true value.
-%
-% Start with as larger step size than you think you need, because the
-% algorithm will decrease it as needed to improve fitting.
 %
 % Returns the best point found and the score of that point. 
 %
@@ -47,47 +45,55 @@ n = 1;  % Step number
 
 while ~termfn(n,x,s)
     x_pre = x;   % The state before taking any steps
+    x_next = x;  % The best direction to step in so far
+    s_next = s;
     
     % Try to take a step along every dimension
-    fprintf('log: Stepping along every dimension');
+    fprintf('boosting.m: Stepping');
+    
     for d = 1:l
         stepdir = zeros(1, l);
         stepdir(d) = stepsize;
                 
-        x_fwd = x + stepdir;
-        x_bck = x - stepdir;
+        x_fwd = x_pre + stepdir;
+        x_bck = x_pre - stepdir;
 
         s_fwd = objfn(x_fwd);
         s_bck = objfn(x_bck);
         
         % Take a step forward if that is better
-        if s_fwd > s
-            s = s_fwd;
-            x = x_fwd;
+        if s_fwd > s_next
+            s_next = s_fwd;
+            x_next = x_fwd;
         end
 
         % Take a step backward if that is better
-        if s_bck > s
-            s = s_bck;
-            x = x_bck;
+        if s_bck > s_next
+            s_next = s_bck;
+            x_next = x_bck;
         end
         
-        fprintf('.');
+        % Print a 20 dot progress bar
+        if mod(d, ceil(l/20)) == 1
+            fprintf('.');
+        end
     end
+    
+    % Take a step in the best direction
+    x = x_next; 
+    s = s_next;
     
     % If the search point has not changed, step size is too big.
     % Decrease the step size by 10x
-    if all(x_pre == x)
-        stepsize = stepsize * 0.1;
-        fprintf('log: stepsize = %d\n', stepsize);
-    end
+     if all(x_pre == x)
+         stepsize = stepsize * 0.1;
+         fprintf('Stepsize decreased to %d\n', stepsize);
+     else
+        % Print the improvement after stepping
+        fprintf('Scored: %d\n', s);
+     end
     
-    % Print the improvement after stepping
-    fprintf('log: new score: %d\n', s);
-
-    % Increment n
     n = n + 1;
-    
 end
 
 % Return the best value found so far

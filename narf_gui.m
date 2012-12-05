@@ -396,6 +396,7 @@ global GS;
 
 function optplot1popup_CreateFcn(hObject, eventdata, handles)
 initialize_optplot_menu(hObject);
+
 function optplot1popup_Callback(hObject, eventdata, handles)
 nvals = cellstr(get(handles.optplot1popup, 'String'));
 plottype = nvals{get(handles.optplot1popup, 'Value')};

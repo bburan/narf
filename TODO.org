@@ -1,6 +1,13 @@
 * MILESTONE
+  Some of the optimization is clearly NOT part of the model: sampling method and termination condition (Since you want to plot how the error is decreasing)
+  Some of the optimization COULD be part of the model: Performance metric (since you want to plot the prediction)
+  But I think those are both bad ideas since they contaminate the model itself.
   Remove Load Above Files button and use callback to initialize model structure
   Give the STACK (and XXX?) to the model to help it initialize?
+  In retrospect, XXX should contain the 'plot_gui' part, since it depends on the XXX pretty substantially.
+  It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
+  Another problem: Make a STACK, create a GUI for it, close the GUI, try to recreate...watch the failures occur! I guess GUI should be separate from the STACK somehow?
+  Rename XXX into CHAIN, since it's a chain of data? or ARGS, since it's the arguments to each function in the stack?
   REPAIR: I'm using ALL the stimfiles at present, not just the TRAINING_SET like I should be
   REPAIR: Remember to invalidate data BELOW the present point on a table-edit callback, and to UPdate the gui to reflect this!
   Write a programmatic demo for loading a model which fit using TORC data to produce an STRF
