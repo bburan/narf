@@ -1,42 +1,42 @@
-* MILESTONE
-  Some of the optimization is clearly NOT part of the model: sampling method and termination condition (Since you want to plot how the error is decreasing)
-  Some of the optimization COULD be part of the model: Performance metric (since you want to plot the prediction)
-  But I think those are both bad ideas since they contaminate the model itself.
-  Remove Load Above Files button and use callback to initialize model structure
-  Give the STACK (and XXX?) to the model to help it initialize?
-  In retrospect, XXX should contain the 'plot_gui' part, since it depends on the XXX pretty substantially.
-  It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
-  Another problem: Make a STACK, create a GUI for it, close the GUI, try to recreate...watch the failures occur! I guess GUI should be separate from the STACK somehow?
-  Rename XXX into CHAIN, since it's a chain of data? or ARGS, since it's the arguments to each function in the stack?
-  REPAIR: I'm using ALL the stimfiles at present, not just the TRAINING_SET like I should be
-  REPAIR: Remember to invalidate data BELOW the present point on a table-edit callback, and to UPdate the gui to reflect this!
-  Write a programmatic demo for loading a model which fit using TORC data to produce an STRF
+* TOP TODO LIST
+  Write a crash course guide on using NARF 
+  narf_gui.m Remove Load Above Files button and use callback to initialize model structure
+  Allow for optional passing of the STACK (and XXX?) to each module to help it initialize.  
+  Stop using ALL the stimfiles during optimization, and just use the TRAINING_SET like I should be
+  Remember to invalidate data BELOW the present point on a table-edit callback, and to UPdate the gui to reflect this!
   Write a programmatic demo which steps through values in a particular model class and saves some result
-  Write a crash course guide on using NARF
-  Bonus: Separate FIR filters with inhibitory only and excitory only behaviors
+  Separate FIR filters with inhibitory only and excitory only behaviors
 
-* Optimization
-  Optimization should NOT be treated the way that I did it
-  Rather, it should be an operation you perform repeatedly on the stack
-
-* TODO:
-  ONLINE COURSEWORK
-
-* Cleaning/Refactoring
-  - Replace any '1:length()' bullshit with just iterating through the fieldname elements directly...if you like that style better?
-  - Avoid cla's in user-space functions
-  - Rename the terrible 'generic_model_data_table_update.m' file and other crappy ones
-  - Provide a more concise way of finding user-space guis in the call tree above (Right now there's too much copy & paste!)
+* CLEANING/REFACTORING TODOs:
+  - In retrospect, XXX should contain the 'plot_gui' part, since it depends on the XXX pretty substantially.
+  - It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
+  - Right now, you can only instantiate a single GUI at a time. If you close this GUI, it cannot be recreated from the STACK. This is bad behavior and should be fixed by putting GUI handles in their own separate structure, or by providing a function that will clear all the GH's from the stack.
+  - Rename things to be more clear. Preprocessing inputs should be called 'channels', to make them distinct from later FIR 'filters' 
+  -   Rename XXX into CHAIN, since it's a chain of data? or ARGS, since it's the arguments to each function in the stack?
+  - Avoid cla's in user-space plotting functions
+  - Rename the terrible 'generic_model_data_table_update.m' function
+  - Provide a more concise way of finding user-space guis in the call tree above (Right now there's too much copy & paste in user-side plot functions!)
   - Add a few useful functions to generic_methods
-  - Replace all the 'length' and 'size' things with 'numel' where appropriate
-  - Automatically try to load Bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
-  - Go through the TODO's in my files and do a triage
-  - Rename things to be more clear. Preprocessing inputs should be called 'channels', to make them distinct from the linear model filters. 
+  - Automatically load bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
+  - Go through the TODO's in existing files
   - Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-  - make it so that all 'update' functions are purely for side effects
+  - make anything named 'update_' into a function used purely for its side effects
 
-* Next steps:
-  - Smoothing of the RESPAVG signal with gaussian convolution
+* HIGH LEVEL THINGS TO BE THOUGHT ABOUT:
+  How can optimization routines be...?
+  1. Allowed to work on the STACK and XXX as they desire
+  2. Able to use the narf_modelpane gui 
+  3. Able to do their own plots
+  4. Modular, with pluggable sampling methods, objective functions, termination conditions.
+  5. Still scriptable and batch executable
+
+* OPTIMIZATION TODOs
+  Write a 'scaled boosting' algorithm, which takes a step in the direction proportional to the improvement in performance that it yields? (Good with MSE)
+  Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
+  Write a jack-knifing function which can work with any of the optimization modules
+
+* ADDITIONAL MODULES: 
+  - SMOOTHING of the RESPAVG signal with gaussian convolution
   - An option for taking correlation in a different method than sheer concatenation could be interesting
   - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
   - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
@@ -45,153 +45,7 @@
   - Handle NaN's better...right now they cause problems! (Use nanmean())
   - Add a GUI button to load_stim_from_baphy to play the stimulus as a sound!
 
-* How could functions be passed from one to the next?
-  All functions are assumed to accept TWO arguments and return TWO arguments
-  Those arguments are the STACK data structure and the X data structure
-
-* When called with no arguments, each function returns 2 arguments:
-  1. The 'meta' information about the function
-  2. The 'params' struct, which specificies the default parameters
-
-* What should I do about optimizing parameters for multiple models?
-  Nothing at all, just yet! But I guess it could be done by iterating across the models as well.
-
-* Besides optimization, it would be useful to be able to run the optimization-type thing to get plots which answer certain questions:
-  Example: what is the effect on correlation as you vary the downsampling frequency, for each of these training groups? (Would be a nice graph)
-  Example: Does using a certain preprocessing function improve or reduce the accuracy of most models' predictions?
-
-* What is narf_modelpane used for?
-  It was written:
-  1. To visualize a model's behavior on data
-  2. To edit a model easily and explicitly
-  3. To encapsulate all assumptions about the model in a stack
-  4. To select which parameters are to be optimized with an optimization routine. 
-     (The optimization routine GETS a copy of the stack, plays around with the data, then SETS the stack again after optimization is complete.)
-
-* STACK data structure
-  A cell array, with the present params struct being first, containing the functions and their parameters that were applied to reach this point. 
-  |-------------------------+---------------------------------------------------------------------------------------|
-  | STACK{}.name            | Function file name                                                                    |
-  | STACK{}.fn              | The function handle                                                                   |
-  | STACK{}.pretty_name     | User readable pretty function name                                                    |
-  | STACK{}.plot_fns        | Struct array with fields (pretty_name, fn)                                            |
-  | STACK{}.editable_fields | Fields that may be user edited                                                        |
-  | STACK{}.isready_pred    | A predicate function that is passed (STACK, X) and returns true iff it's ready to run |
-  | STACK{}.gh              | "Gui Handles" structure.                                                              |
-  |-------------------------+---------------------------------------------------------------------------------------|
-
-* X data structure
-  A cell array, with the most recent data being first. The contents of each cell could be anything. For my cases a struct seems to be most convenient.
-  |----------------------------+--------------------------------------------------------------+---------+------------------------------+---|
-  | SYMBOL                     | DESCRIPTION                                                  | TYPE    | SET OR MODIFIABLE BY         |   |
-  |----------------------------+--------------------------------------------------------------+---------+------------------------------+---|
-  | X{}.dat.().cellid          | Name of the cellid                                           | String  | -                            |   |
-  | X{}.dat.().stimfile        | Name of the stimfile                                         | String  | -                            |   |
-  | X{}.dat.().include_prestim | Boolean. 1 prestim was included, 0 otherwise                 | Boolean | load_stim_resps_from_baphy.m |   |
-  | X{}.dat.().raw_stim_fs     | Raw stimulus frequency                                       | Double  | load_stim_resps_from_baphy.m |   |
-  | X{}.dat.().raw_resp_fs     | Raw response frequency                                       | Double  | load_stim_resps_from_baphy.m |   |
-  | X{}.dat.().raw_stim        | Raw stimulus                                                 | [SxN]   | load_stim_resps_from_baphy.m |   |
-  | X{}.dat.().raw_stim_time   | Time vector for stimulus                                     | [1xN]   | load_stim_resps_from_baphy.m |   |
-  | X{}.dat.().raw_resp        | Raw spike timings                                            | [SxMxR] | load_stim_resps_from_baphy.m |   |
-  | X{}.dat.().raw_resp_time   | Time vector for response                                     | [1xM]   | load_stim_resps_from_baphy.m |   |
-  | X{}.dat.().raw_isi         | Raw inter-spike intervals                                    |         |                              |   |
-  | X{}.dat.().pp_stim         | Preprocessed stim                                            |         |                              |   |
-  | X{}.dat.().ds_stim         | Downsampled, preprocessed stim                               |         |                              |   |
-  | X{}.dat.().ds_stim_time    | Time vector for downsampled stimulus                         |         |                              |   |
-  | X{}.dat.().lf_stim         | Linear filtered stimulus (FIR or whatever)                   |         |                              |   |
-  | .lf_preds                  | Needs to be RENAMED                                          |         |                              |   |
-  | X{}.dat.().nl_stim         | Nonlinearly scaled stimulus                                  |         |                              |   |
-  | X{}.dat.().pred            | Sum of the nonlinear stimuli; ie the prediction of the model |         |                              |   |
-  | ...                        |                                                              |         |                              |   |
-  |----------------------------+--------------------------------------------------------------+---------+------------------------------+---|
-
-  In the above, dimensions are indicated with
-        S = sound stimulus index #
-        R = repetition index #
-        N = Time index at the sampling rate of the stimulus. 
-        M = Time index at the sampling rate of the response
-        T = Time index in downsampled frequency
-        F = Preprocessing index #
-
-* How does it work?
-** EVALUATION
-   Essentially, there is a chain of function calls, with the output of one function pushed onto the inputs of the next.
-   Mathematically, it's easy to understand: XXX{i+1} = STACK{i}.fn(XXX{i}) 
-** INVALIDATION
-   If any intermediate parameter struct is modified, then it erases all XXX cells after it and the computation must recommence from that point. 
-** DIFFERENT TREES
-   If you need to do different 'branches' of computation, you can store the current computation STACK and save them.
-** MODULE LOADING
-   The only functions available are isted in the "modules" directory, which is read ONCE, at startup. (or if you click 'refresh modules')
-   They are only available from the popup selection when their ready_pred() function returns a true. 
-** EDITING
-   The "params" struct is GUI editable in much the same way that other things are.  
-** GRAPHING
-   Each module has (multiple) associated graphing functions which cann be seleceted via a dropdown
-** ERROR HANDLING
-   Whenever you load or run a user-loadable function, you put a try-catch block around it. 
-** SAVING AND LOADING
-   When you want to save a model, just save the STACK data structure somewhere along with the GIT hash tag and initial data. Data from that point can always be reconstructed.
-   When you want to load a model, loop through the STACK structure, starting from the first data X, and reconstruct the data as you go along.
-** OPTIMIZATION PACK/UNPACK
-   PACK goes through the STACK sequentially, pulling out any args with a FIT checkbox (and returns a vector)
-   UNPACK goes through the STACK sequentially, pushing in any args with a FIT checkbox (accepts a vector as the input)
-   During optimization, all controls must be disabled to avoid invalidation problems?
-** OPTIMIZATION PERFORMANCE METRIC, TERMINATION, SAMPLING
-   These are not part of the model explicitly. 
-   Instead, they run at the END of the function tree's execution to determine the score
-   They have their own error graphs?
-   I'm not interested in making their data directly viewable.
-
-* MODULE FUNCTIONALITY
-** Preprocessing: Anything that creates the dat.().pp_stim field
-   The big two filters are an elliptical bandpass and gammatone filters
-
-** Downsampling: Anything that creates the dat.().ds_stim and dat.().ds_stim_time fields.
-   I decided that downsampling should only occur on the stimulus side, since the response already just be loaded at the frequency that you wish.
-   If you are just doing simple correlation comparisons, you will want to downsample to the same frequency as your response. 
-   The same if you are doing some sort of interpolated response comparison, but you will leave your response freq high, and apply a convolution over your response to 'smooth' it a bit.
-   However, if you are doing ISI comparisons, you will NOT care about your response sampling frequency, and instead compute the ISI times. 
-   To accomodate all theses cases, downsampling only works on the stimulus side.
-
-** FIR filters
-   Your free paremeters are the number of coefficients in the filter, and how many filters you want.
-   Each filter spans all of the input channels. (I think it makes more sense to have one filter which acts across all channels than many filters which only act on one channel each)
-
-* Allowed Dimensions: How should can we accomodate the later addition of extra dimensions in the future, such as behavioral characteristics?
-  Right now we have:
-  1. StimFile               (Which is not indexed, but uses a keyword)
-  2. Stimulus # 
-  3. Value at time
-  4. Repetition #
-  5. Preprocessor Index #   (Because preprocessing may have multiple dimensions)
-  In the future, we may have more. 
-  The only way I can think about allowing multiple dimensions to vary arbitrarily would be to either:
-  A) Somehow keep track of their numerical indexes as you go along, using a struct
-  B) Avoid numerical indexes and use struct arrays or cell arrays everywhere? 
-  Overall, option A sounds like the more efficient choice
-
-* Tricky things:
-  We may need to do an iteration procedure that treats one part of the model (IE, Linear FIR filters) differently from a nonlinear part (In my opinion, this is just a special case sampler)
-  If you modify a function after starting up narf_gui, what will happen? (Right now, changes to the pretty-name and params will not be altered without restarting narf_gui, however if you fix the function itself then that is fine.)
-
-* Issues for Stephen :
-  1. Where is 'repetitions' visible? The closest thing I see is the 'Ref_Subsets' field returned in the 'parms' struct by 'dbReadData'
-
-* Possible refactoring
-  1. Data ordering is perhaps nonstandard, since we need filter(B,A,X,[],2) instead of filter(B,A,X);
-  2. Should PREFILTEREDSTIM be a 3D matrix, or is it more convenient to use as a mixture of cell array and 2H matrices.? 
-     STIM [30x400000] (30 tones with 400000 samples in time each)
-     RESP [30x400000x3] (3 reps)
-     PREFILTEREDSTIM{numoffilters} and under each cell [30x400000]
-  3.  Rewrite of dbchooserawfile() because it's so damn useful for selecting a file, but let's make it work for multiple stimulus files
-      (Should also display well, site and have selectors for channel, unit, etc
-  4. Use squeeze() to remove unneeded dimensions from a matrix.
-  5. Why is it 'stimpath' and 'stimfile' but 'path' and 'respfile'. it should be 'resppath'?
-  7. Why is loadspikeraster the only thing that cares about the 'options' struct?
-  8. Where should the line be drawn between analysis in the DB, partitionining things for your search within the DB, holding out data, etc?
-
-* CODE TO REVIEW
+* STEPHEN'S CODE TO REVIEW
   - [X] cellxcmaster('por012c-b1',238); % intelligently performs batch analysis 238 on cellid 'por012c-b1'
   - [ ] After the execution of the above, 'params' contains the details of how the analysis was performed.
   - [ ] params.resploadparms{1} is a way of getting
@@ -206,19 +60,14 @@
   - [X] cellDB/dbchooserawfile.m
   - [X] Config/lbhb/BaphyMainGuiItems.m  has some hard-coded defaults for the GUI
 
-* LUXURY TODO
+* LUXURY, UNESSENTIAL TODO ITEMS 
   - [ ] Make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
   - [ ] Add a filter that processess phase information from a stimulus, not just the magnitude
-  - [ ] Write a function which swaps out the GS into the BACKGROUND so you can 'hold' a model as a reference and play around with other settings, and see the results graphically by switching back and forth.
+  - [ ] Write a function which swaps out the STACK into the BACKGROUND so you can 'hold' a model as a reference and play around with other settings, and see the results graphically by switching back and forth.
   - [ ] Write dbchoosecellfiles()
   - [ ] Use inter_curve_v3 to interactively make FIR things
   - [ ] Try adding color to histograms and scatter plots
-  - [ ] try improving contrast of various intensity plots
+  - [ ] Try improving contrast of various intensity plots
   - [ ] Add BIC or AIC to model comparison data
   - [ ] Optimization report card and status information logged
-  - [ ] Take the STRF of a model, not of the data!
-  - [ ] Analyze:  'dai020a-c2', 'mag009b-b1', 'dai008a-c1', 'mag007d-d1'
   - [ ] Rank model fits and plot correlations
-
-* KOANS
-  The fastest way to climb a tall mountain is to descend when you find yourself on the wrong path.

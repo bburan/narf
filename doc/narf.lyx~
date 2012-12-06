@@ -60,7 +60,7 @@
 \begin_body
 
 \begin_layout Title
-NARF Crash Course
+NARF
 \end_layout
 
 \begin_layout Author
@@ -92,20 +92,6 @@ TODO: Describe continuation passing style
 
 \begin_layout Subsection
 Directory structure
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{eqnarray*}
-f_{1}(x_{1}) & \rightarrow & x_{2}\\
-f_{2}(x_{2}) & \rightarrow & x_{3}\\
- & \vdots\\
-f_{n}(x_{n}) & \rightarrow & x_{n+1}
-\end{eqnarray*}
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Subsection

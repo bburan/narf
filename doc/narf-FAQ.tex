@@ -2,14 +2,16 @@
 \newenvironment{qanda}{\setlength{\parindent}{0pt}}{\bigskip}
 \newcommand{\Q}{\bigskip\bfseries Q: }
 \newcommand{\A}{\par\textbf{A:} \normalfont}
-\newcommand{\definition}{\textbf{#1}}
-\newcommand{\matlab}{\textbf{#1}}
+\newcommand{\definition}[1]{\textbf{#1}}
+\newcommand{\matlab}[1]{\texttt{#1}}
 
 \title{Neural Activity Regression Framework (NARF)}
 \author{Ivar Thorson}
-
-\begin{document}
   
+\begin{document}
+
+\maketitle
+
 This document was written to clarify and document design decisions made regarding the Neural Activity Regression Framework (NARF) implemented in the Brain, Hearing and Behavior Laboratory of the Oregon Health and Science University (OHSU), under the supervision of Prof. Stephen David. As such, it is intended for developers rather and is very much a work in progress. 
 
 \section{Problem and Approach}
@@ -70,52 +72,163 @@ The bundling of $f$ and $\phi$ together is tentatively being called a \definitio
 
 \section{Module Technical Details}
 
-MATLAB's data types prohibit us from being completely general in allowing functions $f$ could to do almost anything and data $x$ to represent almost anything. We will chose to use MATLAB's cell arrays because of their generality and default behavior of reference-passing. The structure which holds the list of functions $f_1, f_2, ...$ is called \matlab{STACK}, and the structure which holds all the $x_1, x_2, ..., x_{n+1}$ is called \matlab{XXX}. Each cell of \matlab{STACK} and \matlab{XXX} is a structure containing named fields. You may put any fields you like in each cell, except for the fields defined in the next section, which have special meaning.
+MATLAB's data types prohibit us from being completely general with regard to how we allowing functions $f$ to do almost anything and how we use data $x$ to represent almost anything. The best that we can do is to choose MATLAB's cell arrays in both cases, because of their generality and default behavior of reference-passing.
+
+The structure which holds the list of functions $f_1, f_2, ...$ is therefore called \matlab{STACK} in weak analogy to the traditional computer data structure, and the structure which holds all the $x_1, x_2, ..., x_{n+1}$ is called \matlab{XXX} in weak analogy to the fact that each $x$ is dependent upon the previous. Each cell of \matlab{STACK} and \matlab{XXX} is a structure containing named fields. You may put any fields you like in each cell, except for the fields defined in the next two sections, which have special meaning.
+
+\subsection{STACK data structure}
+
+  A cell array containing the functions and their parameters that were applied to reach this point. 
+
+\begin{tabular}{l|p{4in}}
+\matlab{STACK{}.name} & Function file name \\
+\matlab{STACK{}.fn}             &  The function handle\\
+\matlab{STACK{}.pretty\_name}    &  User-readable pretty function name\\
+\matlab{STACK{}.plot\_fns}       &  Struct array with fields \matlab{pretty\_name} and \matlab{fn}  \\
+\matlab{STACK{}.editable\_fields} & Fields that may be user edited via the GUI.\\
+\matlab{STACK{}.isready\_pred}    &  A predicate function that is passed (STACK, X) and returns true iff it's ready to run.\\
+\matlab{STACK{}.gh}              & The "Gui Handles" structure, to be described in TODO.\\
+\end{tabular}
+
+\subsection{Module Fields}
+
+If \textbf{F()} is a function to be used in the NARF architecture, it must satisfy a few core requirements to be used properly. These features are:
+\begin{enumerate}
+\item \textbf{F()} must be placed in a directory where NARF can find it. 
+\item \textbf{F()} must return a default struct \textbf{m}
+when given zero arguments. The structure \textbf{m} must satisfy
+the following requirements:
+
+\begin{enumerate}
+\item It \emph{must }have these required fields:
+
+\begin{description}
+\item [{m.pretty\_name}] An alphanumeric string describing the function
+\item [{m.fn}] A handle to a function which does the 'core computation'
+of \textbf{F(). }It accepts two arguments (\textbf{p}, \textbf{x}).
+\textbf{p} is a copy of the \textbf{m} structure so that the
+state of\textbf{ F()} may be easily read. \textbf{x} is a data structure
+passed from a previous function.
+\item [{m.input\_validation\_fn}] A function which accepts a two arguments
+(\textbf{p},\textbf{ x}), and returns a true if \textbf{m.fn(p,x)}
+can be run, otherwise it returns an error string.
+\item [{m.editable\_fields}] A cell array of field names. These will
+be displayed to the GUI user for easy editing. 
+\end{description}
+\item It \emph{may} also have these optional fields which enable special
+behavior:
+
+\begin{description}
+\item [{m.plot\_fns}] A cell array of cell arrays with three elements
+each. The first element in each sub-cell-array is a user-readable
+string naming the plot function, the second is a function handle to
+a function which plots on the default plot axes, and the third is
+a struct which contains parameters that will be passed to the plot
+function. 
+\end{description}
+\item Any fields listed in \textbf{m.editable\_fields} must have values
+with one of the following types: integer, floating point, 1D or 2D
+matrix, string, boolean, or cell array of strings. No other data types
+are allowed.
+\item The user is allowed to define any other field in \textbf{m}
+that they wish and store arbitrary data in it. However, if it is not
+listed in \textbf{m.editable\_fields}, it will not ever be directly
+editable.
+\end{enumerate}
+\item When \textbf{F() }is given a single argument args, it must:
+(Footnote: a useful function to accomplish these two things is update\_narf\_struct.m)
+
+\begin{enumerate}
+\item Check in args for the existence of fields listed in .
+\item Any fields that exist in args will be copied into m
+m to overwrite the default values of m.
+\end{enumerate}
+\end{enumerate}
+
+\subsection{XXX data structure}
+
+  A cell array, with the most recent data being first. The contents of each cell could be anything. The following are typical values being used, but these are only by convention. Feel free to define your own fields as necessary.
+ 
+\begin{tabular}{|l|l|l|l|l|}
+SYMBOL  & DESCRIPTION   & TYPE    & SET OR MODIFIABLE BY         &   \\
+\matlab{X{}.dat.().cellid         } & Name of the cellid                                           & String  & -                            &   \\
+\matlab{X{}.dat.().stimfile       } & Name of the stimfile                                         & String  & -                            &   \\
+\matlab{X{}.dat.().include\_prestim} & Boolean. 1 prestim was included, 0 otherwise                 & Boolean & load\_stim\_resps\_from\_baphy.m &   \\
+\matlab{X{}.dat.().raw\_stim\_fs    } & Raw stimulus frequency                                       & Double  & load\_stim\_resps\_from\_baphy.m &   \\
+\matlab{X{}.dat.().raw\_resp\_fs    } & Raw response frequency                                       & Double  & load\_stim\_resps\_from\_baphy.m &   \\
+\matlab{X{}.dat.().raw\_stim       } & Raw stimulus                                                 & [SxN]   & load\_stim\_resps\_from\_baphy.m &   \\
+\matlab{X{}.dat.().raw\_stim\_time  } & Time vector for stimulus                                     & [1xN]   & load\_stim\_resps\_from\_baphy.m &   \\
+\matlab{X{}.dat.().raw\_resp       } & Raw spike timings                                            & [SxMxR] & load\_stim\_resps\_from\_baphy.m &   \\
+\matlab{X{}.dat.().raw\_resp\_time  } & Time vector for response                                     & [1xM]   & load\_stim\_resps\_from\_baphy.m &   \\
+\matlab{X{}.dat.().raw\_isi        } & Raw inter-spike intervals                                    &         &                              &   \\
+\matlab{X{}.dat.().pp\_stim        } & Preprocessed stim                                            &         &                              &   \\
+\matlab{X{}.dat.().ds\_stim        } & Downsampled, preprocessed stim                               &         &                              &   \\
+\matlab{X{}.dat.().ds\_stim\_time   } & Time vector for downsampled stimulus                         &         &                              &   \\
+\matlab{X{}.dat.().lf\_stim        } & Linear filtered stimulus (FIR or whatever)                   &         &                              &   \\
+\matlab{.lf\_preds                 } & Needs to be RENAMED                                          &         &                              &   \\
+\matlab{X{}.dat.().nl\_stim        } & Nonlinearly scaled stimulus                                  &         &                              &   \\
+\matlab{X{}.dat.().pred           } & Prediction of the model &         &                              &   \\
+\end{tabular}
+
+In the above, dimensions are indicated with:
+
+\begin{description}
+  \item {S} = sound stimulus index \#
+  \item {R} = repetition index \#
+  \item {N} = Time index at the sampling rate of the stimulus. 
+  \item {M} = Time index at the sampling rate of the response
+  \item {T} = Time index in downsampled frequency
+  \item {F} = Preprocessing index \#
+\end{description}
 
 
-\subsection{STACK}
+\section{Overview of Typical Operations}
 
-\subsection{XXX}
+The following is a rough overview of how typical operations affect the \matlab{STACK} and \matlab{XXX} structs. 
 
+\begin{description}
+\item {Evaluation: } Essentially, there is a chain of function calls, with the output of one function pushed onto the inputs of the next. Mathematically, it's easy to understand: \matlab{XXX\{i+1\} = STACK\{i\}.fn(XXX\{i\})}
+\item {Invalidation: } If any intermediate parameter struct is modified, then it erases all \matlab{XXX} cells after it and the computation must recommence from that point. 
+\item {Multiple models: } If you need to do different 'branches' of computation or compare model structures, you can store the current computation \matlab{STACK} and save them somewhere, then load them back later.
+\item {Module loading: } The only functions available are isted in the "modules" directory, which is read ONCE, at startup. They are only available from the popup selection when their ready\_pred() function returns a true. 
+\item {Editing: } Fields in the \matlab{editable\_fields} struct are GUI editable, but most other fields should be editable by passing the argument to the user-defined module creation funciton. However this is just a convention and relies on module authors to implement.
+\item {Graphing: } Each module has (multiple) associated graphing functions which can be seleceted via a dropdown.
+\item {Error handling: } Whenever you load or run a user-loadable function, a try-catch block around it to catch errors.
+\item {Saving and loading: } When you want to save a model, just save the \matlab{STACK} data structure somewhere along with the GIT hash tag and initial data. Data from that point can always be reconstructed. When you want to load a model, loop through the \matlab{STACK} structure, starting from the first data X, and reconstruct the data as you go along.
+\item {Optimization pack/unpack: } Packing operations go through \matlab{STACK} sequentially, pulling out any args found in the \matlab{fit\_fields} cell array and putting them into a vector. The unpacking operation goes through \matlab{STACK} sequentially, pushing in any args with a FIT checkbox (accepts a vector as the input). TODO: During optimization, all controls should probably be disabled to avoid invalidation problems?
+\item {OPTIMIZATION} There will need to be three types of modules: a performance metric, termination condition, and a sampling algorithm which picks out the next point to try. These are not part of the model explicitly, and must be reusable amongst different optimization algorithms. 
+\end{description}
+
+\section{Example Modules}
+
+TODO.
 
 \section{Example Script}
 
-\section{}
+See 'analysis/example\_script.m' for more an example of how a linear model can be trained on an arbitrary data set.
 
-A GUI will automatically be created for your module. 
+%% The software architecture of NARF is similar to the Generalized Nonlinear Model (GNNM) framework proposed by McFarland, Cui, Butts). 
 
-TODO: figure
+\section{Example Optimization}
 
-You may define your own
-
-\subsection{Global Variables}
+See TODO.org for more details. Clearly optimization is clearly NOT part of the model, yet we will want to plot various quantities and act in a modular way in a similar fashion to how the model already works. Pluggable sampling, termination conditions and objective functions are needed. 
 
 \section{Further Development}
 
-Some planned changes to NARF include the following:
-
-\begin{enumerate}
-\item Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
-\item A modular jacknifing function which optimization can use to do better regression
-\end{enumerate}
-
-\subsection{Unfixed Bugs}
-\begin{enumerate}
-\item You can only instantiate a single GUI at a time. If you close this GUI, it cannot be recreated from the STACK. This is bad behavior and should be fixed by putting GUI handles in their own separate structure, or by providing a function that will clear all the GH's from the stack.
-\end{enumerate}
-
+See the TODO.org file in NARF's main directory.
 
 \end{document}
 
-%% The software architecture of NARF is similar to the Generalized Nonlinear Model (GNNM) framework proposed by McFarland, Cui, Butts). There are three main parts, which for brevity will be referenced using the following mathematical symbols adopted from standard engineering control theory nomenclature:
+% \subsection{State-space model of cochlear vibration}
+
+% There are three main parts, which for brevity will be referenced using the following mathematical symbols adopted from standard engineering control theory nomenclature:
 
 %% \begin{eqnarray}
 %%  \dot{x} & = A(x) + B(u)\\
 %%  \dot{y} & = C(x) \\
 %% \end{eqnarray}
 
-%% where $x$ is the state of the system, $u$ 
-
+%% where $x$ is the state of the system, $u$ is ....
 
 %% \begin{description}[]
 %%   \item [$A(s)\rightarrow u$] A \definition{filter} $p$ which transforms the time-indexed sound wave $x$ into stimulus intensity vector $u$. It models how the cochlea transforms the stimulus sound wave to the vibration of the basilar membrane. Vector $s$ has several components which may correspond to different filters. 
@@ -328,4 +441,74 @@ Some planned changes to NARF include the following:
 %% \item mag007d-d1 	Pen 	12-03-13 	0.719+/-0.044* looks pretty good!
 %% \end{itemize}
 
+%% * How could functions be passed from one to the next?
+%%   All functions are assumed to accept TWO arguments and return TWO arguments
+%%   Those arguments are the \matlab{STACK} data structure and the X data structure
 
+%% * When called with no arguments, each function returns 2 arguments:
+%%   1. The 'meta' information about the function
+%%   2. The 'params' struct, which specificies the default parameters
+
+%% * What should I do about optimizing parameters for multiple models?
+%%   Nothing at all, just yet! But I guess it could be done by iterating across the models as well.
+
+%% * Besides optimization, it would be useful to be able to run the optimization-type thing to get plots which answer certain questions:
+%%   Example: what is the effect on correlation as you vary the downsampling frequency, for each of these training groups? (Would be a nice graph)
+%%   Example: Does using a certain preprocessing function improve or reduce the accuracy of most models' predictions?
+
+%% * What is narf_modelpane used for?
+%%   It was written:
+%%   1. To visualize a model's behavior on data
+%%   2. To edit a model easily and explicitly
+%%   3. To encapsulate all assumptions about the model in a stack
+%%   4. To select which parameters are to be optimized with an optimization routine. 
+%%      (The optimization routine GETS a copy of the stack, plays around with the data, then SETS the stack again after optimization is complete.)
+
+ 
+%% * MODULE FUNCTIONALITY
+%% ** Preprocessing: Anything that creates the dat.().pp_stim field
+%%    The big two filters are an elliptical bandpass and gammatone filters
+
+%% ** Downsampling: Anything that creates the dat.().ds_stim and dat.().ds_stim_time fields.
+%%    I decided that downsampling should only occur on the stimulus side, since the response already just be loaded at the frequency that you wish.
+%%    If you are just doing simple correlation comparisons, you will want to downsample to the same frequency as your response. 
+%%    The same if you are doing some sort of interpolated response comparison, but you will leave your response freq high, and apply a convolution over your response to 'smooth' it a bit.
+%%    However, if you are doing ISI comparisons, you will NOT care about your response sampling frequency, and instead compute the ISI times. 
+%%    To accomodate all theses cases, downsampling only works on the stimulus side.
+
+%% ** FIR filters
+%%    Your free paremeters are the number of coefficients in the filter, and how many filters you want.
+%%    Each filter spans all of the input channels. (I think it makes more sense to have one filter which acts across all channels than many filters which only act on one channel each)
+
+%% * Allowed Dimensions: How should can we accomodate the later addition of extra dimensions in the future, such as behavioral characteristics?
+%%   Right now we have:
+%%   1. StimFile               (Which is not indexed, but uses a keyword)
+%%   2. Stimulus # 
+%%   3. Value at time
+%%   4. Repetition #
+%%   5. Preprocessor Index #   (Because preprocessing may have multiple dimensions)
+%%   In the future, we may have more. 
+%%   The only way I can think about allowing multiple dimensions to vary arbitrarily would be to either:
+%%   A) Somehow keep track of their numerical indexes as you go along, using a struct
+%%   B) Avoid numerical indexes and use struct arrays or cell arrays everywhere? 
+%%   Overall, option A sounds like the more efficient choice
+
+%% * Tricky things:
+%%   We may need to do an iteration procedure that treats one part of the model (IE, Linear FIR filters) differently from a nonlinear part (In my opinion, this is just a special case sampler)
+%%   If you modify a function after starting up narf_gui, what will happen? (Right now, changes to the pretty-name and params will not be altered without restarting narf_gui, however if you fix the function itself then that is fine.)
+
+%% * Issues for Stephen :
+%%   1. Where is 'repetitions' visible? The closest thing I see is the 'Ref_Subsets' field returned in the 'parms' struct by 'dbReadData'
+
+%% * Possible refactoring
+%%   1. Data ordering is perhaps nonstandard, since we need filter(B,A,X,[],2) instead of filter(B,A,X);
+%%   2. Should PREFILTEREDSTIM be a 3D matrix, or is it more convenient to use as a mixture of cell array and 2H matrices.? 
+%%      STIM [30x400000] (30 tones with 400000 samples in time each)
+%%      RESP [30x400000x3] (3 reps)
+%%      PREFILTEREDSTIM{numoffilters} and under each cell [30x400000]
+%%   3.  Rewrite of dbchooserawfile() because it's so damn useful for selecting a file, but let's make it work for multiple stimulus files
+%%       (Should also display well, site and have selectors for channel, unit, etc
+%%   4. Use squeeze() to remove unneeded dimensions from a matrix.
+%%   5. Why is it 'stimpath' and 'stimfile' but 'path' and 'respfile'. it should be 'resppath'?
+%%   7. Why is loadspikeraster the only thing that cares about the 'options' struct?
+%%   8. Where should the line be drawn between analysis in the DB, partitionining things for your search within the DB, holding out data, etc?
