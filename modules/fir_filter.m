@@ -145,6 +145,8 @@ function do_plot_fir_coefs_as_heatmap(stack, xxx)
        
     dat = x.dat.(sf);
     
+    %TODO: This way of scaling the image intensity is specific to what is
+    %selected and therefore probably wrong in general.
     tmp = mdl.coefs;
     [M, N] = size(tmp);
     for ii = 1:M

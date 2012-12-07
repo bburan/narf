@@ -37,7 +37,7 @@ STACK{4} = mdls.fir_filter.mdl(struct('num_dims', 10, ...
 % of unfortunately stripping away the first layer of cell references.
 
 % Run test optimization routine (stupid boost that stops on iteration #)
-n_iters = 10;
+n_iters = 50;
 x_0 = pack_fittables(STACK);
 if isempty(x_0)
     log_msg('No parameters were selected to be fit.');
@@ -47,7 +47,7 @@ end
                          @(n,x,s)(n > n_iters), 1.0);
 
 unpack_fittables(x_bst);
- 
+
 % coefs = STACK{end}.coefs;
 % save('real_good_coefs.mat', 'coefs');
 

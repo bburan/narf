@@ -78,11 +78,9 @@ function x = do_load_from_baphy(stack, xxx)
         stim = loadstimfrombaphy(stimfile, [], [], 'wav', ...
             mdl.raw_stim_fs, 1, 0, mdl.include_prestim);
         [d1 d2 d3] = size(stim);
-        if d1 ~= 1
-            log_dbg('Stimulus matrix was: [%d %d %d]\n', d1, d2, d3);
-            log_err('Stimulus size was not [1xNxS]!?\n');
-        end
-        x.dat.(f).raw_stim = permute(stim, [3 2 1]);
+   
+        % Flatten input dimensions into two dimensions
+        x.dat.(f).raw_stim = permute(sum(stim, 1), [3 2 1]);
         x.dat.(f).raw_stim_fs = mdl.raw_stim_fs;         % TODO: Remove this SPOT violation
         x.dat.(f).include_prestim = mdl.include_prestim; % TODO: Remove this SPOT violation
         
