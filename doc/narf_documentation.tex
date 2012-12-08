@@ -199,6 +199,36 @@ The following is a rough overview of how typical operations affect the \matlab{S
 \item {OPTIMIZATION} There will need to be three types of modules: a performance metric, termination condition, and a sampling algorithm which picks out the next point to try. These are not part of the model explicitly, and must be reusable amongst different optimization algorithms. 
 \end{description}
 
+\section{Experiment Dimensionality}
+
+There is an intrinsic problem in science that we do not know how many dimensions we will want to test, or which quantities are relevant, until much later in the experiment.
+
+When presenting an audio stimulus during an experiment, there are multiple dimensions to the stimulus which might have an effect:
+
+\begin{enumerate}
+\item Which speaker plays the stimuli, if multiple speakers are playing simultaneously. We might further wish to break this down into an up/down dimension and a left/right dimension with regards to how the test animal hears the sound or the orientation of the animal's head.. 
+\item Confounding multidimensional stimulus, such as the ambient light intensity 
+\item The type of sound that was played (ie, a particular stimuli index number)
+\item The sound's amplitude (time-varying dimension)
+\end{enumerate}
+
+To allow each model to work with every possible experimental dimensionality, we request that all stimuli dimensions be reduced to an $N\timesD$ dimensional matrix, where $N$ is the number of time samples, and $D$ is the product of all experimental dimensions (excluding time). For example, if $D_1$ is the speaker playing the stimulus, $D_2$ is the ambient light at that speaker, and $D_3$ is the index number of the sound that was played, then $D = D_1 * D_2 * D_3$. 
+
+\section{Model Dimensionality}
+
+It is often the case that there will be extra dimensions internal to the model used to help predict neural response to a stimulus. For example, 
+
+\begin{enumerate}
+\item Which Gammatone channel (G dimensions)
+\item Which FIR time delay coefficient vector F. (We assume that each coefficient is an Gx1 vector, so the FIR filter is an GxF matrix)
+\item Which feedback delay channel we are using (H).
+\item Etc ad nauseum.
+\end{enumerate}
+
+\section{Model Automagic}
+
+One lazy design decision made was not to pass the \matlab{STACK} and \matlab{XXX} to each module. Although this could easily be done to allow modules to automatically initialize themselves, most of the time we want to set their values via a script. Perhaps some 
+
 \section{Example Modules}
 
 TODO.

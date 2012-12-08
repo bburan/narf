@@ -30,7 +30,7 @@ function refresh_modelpane = narf_modelpane(parent_handle, modules)
 % everything then has to be shifted around in the positive spaces as the
 % number of module blocks changes.
 
-global STACK XXX;
+global STACK XXX NARF_PATH NARF_SAVED_MODELS_PATH;
 
 pos = get(parent_handle, 'Position');
 w = pos(3); % Width of the parent panel
@@ -369,11 +369,29 @@ function del_mod_block()
     delete(STACK{n_fns}.gh.fn_popup);
     delete(STACK{n_fns}.gh.fn_panel);
     
-    % Update the stack, the remaining module posiitons, and the view
+    % Update the stack, the remaining module positions, and the view
     STACK = STACK(1:n_fns-1);
     update_scrollbar_size();
     update_panel_positions();    
     
+end
+
+function save_model_stack_callback (a, b, c)
+    [filename, pathname] = uiputfile({[NARF_SAVED_MODELS_PATH '/*.mat']}, ...
+                                     'Save Model Stack As');
+	if ~isempty(filename)                                 
+        save_model_stack([pathname filesep filename], STACK);
+    end
+end
+
+function load_model_stack_callback (a, b, c)
+    [filename, pathname] = uigetfile({[NARF_SAVED_MODELS_PATH '/*.mat']}, ...
+                                     'Select Model Stack');
+	if ~isempty(filename)
+        delete_all_module_guis();
+        STACK = load_model_stack([pathname filesep filename]);
+        rebuild_gui_from_stack();
+    end
 end
 
 % Create the add/remove function buttons
@@ -394,55 +412,86 @@ handles.save_model_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Save Module Stack', ...
     'Units', 'pixels', 'Position', [415 5 200 25], ...
-    'Callback', @(h,b,c) disp('save_module_stack()'));
+    'Callback', @save_model_stack_callback);
 
 handles.load_model_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Load Module Stack', ...
     'Units', 'pixels', 'Position', [620 5 200 25], ...
-    'Callback', @(h,b,c) disp('load_module_stack()'));
+    'Callback', @load_model_stack_callback);
 
-% Create GUIs for any modules that already exist in STACK
-for ii = 1:length(STACK)
-    STACK{ii}.gh = create_mod_block_panel(parent_handle, ii);
-    % Set the popup to display the selected model type
-    % TODO: Also make it display 'Select Module' so it's not locked in
-    set(STACK{ii}.gh.fn_popup, 'String', STACK{ii}.pretty_name, 'Value', 1);
-    generic_checkbox_data_table(STACK{ii}.gh.fn_table, STACK{ii}, ...
-                                STACK{ii}.editable_fields); 
-    update_available_plots(ii);                         
-    
-end
-
-% Trigger the first drawing
-update_scrollbar_size();
-update_panel_positions();
-
-% The plotting and plot_gui's need to know about the XXX struct to work
-% So we rebuild the XXX struct as needed, and then call replot. 
-for ii = 1:length(STACK)    
-    % Recompute the data 
-    if length(XXX) <= ii
-        XXX{mod_idx+1} = m.fn(STACK(1:mod_idx), XXX); 
+function rebuild_gui_from_stack()
+    delete_all_module_guis();
+        
+    % Create GUIs for any modules that already exist in STACK
+    for ii = 1:length(STACK)
+        STACK{ii}.gh = create_mod_block_panel(parent_handle, ii);
+        % Set the popup to display the selected model type
+        % TODO: Also make it display 'Select Module' so it's not locked in
+        set(STACK{ii}.gh.fn_popup, 'String', STACK{ii}.pretty_name, 'Value', 1);
+        generic_checkbox_data_table(STACK{ii}.gh.fn_table, STACK{ii}, ...
+                                    STACK{ii}.editable_fields); 
+        update_available_plots(ii);                         
     end
     
-    % Now everything is ready to rebuild the GUI if there is one
-    if ~isfield(STACK{ii}, 'plot_gui') && isfield(STACK{ii}, 'plot_gui_create_fn')
-        STACK{ii}.plot_gui = STACK{ii}.plot_gui_create_fn(STACK{ii}.gh.plot_panel, STACK(1:ii), XXX(1:ii+1));
+    % Trigger the first drawing
+    update_scrollbar_size();
+    update_panel_positions();
+
+    % The plotting and plot_gui's need to know about the XXX struct to work
+    % So we rebuild the XXX struct as needed, and then call replot. 
+    for ii = 1:length(STACK) 
+        m = STACK{ii};
+        
+        % Recompute the data 
+        if length(XXX) <= ii
+            XXX{ii+1} = m.fn(STACK(1:ii), XXX); 
+        end
+    
+        % Delete any existing plot guis 
+        if isfield(STACK{ii}, 'plot_gui')
+             rmfield(STACK{ii}, 'plot_gui');
+        end
+    
+        % Now everything is ready to rebuild the GUI if there is one
+        if isfield(STACK{ii}, 'plot_gui_create_fn')
+            STACK{ii}.plot_gui = STACK{ii}.plot_gui_create_fn(STACK{ii}.gh.plot_panel, STACK(1:ii), XXX(1:ii+1));
+        end
     end
+    
+    % If any modules are defined, we should now be able to update the graphs
+    % I would have done this earlier, but module_plot_callback works down the
+    % whole stack and is recursive, so it can't be run until everything is
+    % ready.
+    if 0 < length(STACK)
+        module_plot_callback(1);
+    end
+
 end
 
-% If any modules are defined, we should now be able to update the graphs
-% I would have done this earlier, but module_plot_callback works down the
-% whole stack and is recursive, so it can't be run until everything is
-% ready.
-if 0 < length(STACK)
-    module_plot_callback(1);
-end
+rebuild_gui_from_stack();
 
 % Make the scroll bar dynamically update whenever it is being dragged
 hJScrollBar = findjobj(handles.container_slider);
 hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions();
+
+function delete_all_module_guis()
+    for ii = 1:length(STACK)
+        if isfield(STACK{ii}, 'gh')
+            delete(STACK{ii}.gh.plot_axes);
+            delete(STACK{ii}.gh.plot_popup);
+            delete(STACK{ii}.gh.plot_panel);
+            delete(STACK{ii}.gh.fn_apply);
+            delete(STACK{ii}.gh.fn_table);
+            delete(STACK{ii}.gh.fn_popup);
+            delete(STACK{ii}.gh.fn_panel);
+            STACK{ii} = rmfield(STACK{ii}, 'gh');
+        end
+        if isfield(STACK{ii}, 'plot_gui')
+            STACK{ii} = rmfield(STACK{ii}, 'plot_gui');
+        end
+    end
+end
 
 % COMMENT:
 % I would love to make mouse wheel scrolling work with the cursor over the
@@ -458,32 +507,27 @@ hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions()
 % Define a close window callback which will remove all GUI hooks from the
 % STACK. Useful if you close the GUI and want to open it up again without
 % recomputing the whole damn STACK.
-function delete_gui_and_close(a,b,c)
-   selection = questdlg('Close the GUI? (STACK and XXX will still be there)',...
-      'Close Request Function', 'Yes', 'No', 'Yes'); 
-   switch selection, 
-      case 'Yes',
-         for ii = 1:length(STACK)
-             if isfield(STACK{ii}, 'gh')
-                delete(STACK{ii}.gh.plot_axes);
-                delete(STACK{ii}.gh.plot_popup);
-                delete(STACK{ii}.gh.plot_panel);
-                delete(STACK{ii}.gh.fn_apply);
-                delete(STACK{ii}.gh.fn_table);
-                delete(STACK{ii}.gh.fn_popup);
-                delete(STACK{ii}.gh.fn_panel);
-                rmfield(STACK{ii}, 'gh');
-             end
-            if isfield(STACK{ii}, 'plot_gui')
-                rmfield(STACK{ii}, 'plot_gui');
-            end
-         end
-         delete(parent_handle);
-      case 'No'
-      return 
-   end
-end
+% function delete_gui_and_close(a,b,c)
+%    selection = questdlg('Close the GUI? (STACK and XXX will still be there)',...
+%       'Close Request Function', 'Yes', 'No', 'Yes'); 
+%    switch selection, 
+%       case 'Yes',
+%          delete_all_module_guis();
+%          delete(parent_handle);
+%       case 'No'
+%       return 
+%    end
+% end
+% 
+% % Unfortunately, I don't know how to check if parent_handle is a panel or a
+% % figure, so I'm using a try/catch instead of a proper solution.
+% % if ~isuipanel(parent_handle)
+% try 
+%     set(parent_handle, 'CloseRequestFcn', @delete_gui_and_close);
+% catch
+    % Do nothing if it failed
+%end
 
-set(parent_handle, 'CloseRequestFcn', @delete_gui_and_close);
+refresh_modelpane = @rebuild_gui_from_stack;
 
 end

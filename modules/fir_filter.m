@@ -56,6 +56,8 @@ function x = do_fir_filtering(stack, xxx)
            error('Dimensions of ds_stim don''t match filter.');
         end
         
+        %fprintf('FIR Filtering %s...\n', sf);
+        
         x.dat.(sf).lf_preds = zeros(S, T, P);        
         for s = 1:S
             for fir_dim = 1:mdl.num_dims,
@@ -142,7 +144,7 @@ function do_plot_fir_coefs_as_heatmap(stack, xxx)
     c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
     sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
     stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
-       
+
     dat = x.dat.(sf);
     
     %TODO: This way of scaling the image intensity is specific to what is
@@ -150,7 +152,7 @@ function do_plot_fir_coefs_as_heatmap(stack, xxx)
     tmp = mdl.coefs;
     [M, N] = size(tmp);
     for ii = 1:M
-        tmp(ii,:) = tmp(ii,:) *  mean(squeeze(dat.lf_preds(stim_idx, :, ii)));
+        tmp(ii,:) = tmp(ii,:) * abs(mean(squeeze(dat.lf_preds(stim_idx, :, ii))));
     end
     
     imagesc(tmp);

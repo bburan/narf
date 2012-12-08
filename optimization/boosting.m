@@ -55,6 +55,7 @@ while ~termfn(n,x,s)
         stepdir = zeros(1, l);
         stepdir(d) = stepsize;
                 
+        % Step in the direction, weighted according to that dimension
         x_fwd = x_pre + stepdir;
         x_bck = x_pre - stepdir;
 

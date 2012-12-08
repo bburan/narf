@@ -87,25 +87,13 @@ global GS;
 GS = [];
 
 % PATHS
-global NARF_PATH PREPROC_DIR DOWNSAMP_DIR MODEL_DIR ...
-    STOCHAST_DIR SAMPLING_DIR PERF_METRIC_DIR TERMINATION_DIR;
-NARF_PATH       = '/home/ivar/matlab/narf/';
-MODULES_DIR     = 'modules/'
-SAMPLING_DIR    = 'optim_0_sampling/';
-PERF_METRIC_DIR = 'optim_1_perf_metric/';
-TERMINATION_DIR = 'optim_2_termination/';
+narf_set_path;
+global NARF_PATH NARF_MODULES_PATH NARF_OPTIMIZATION_PATH;
 
 %%%%%%%%%%%%%% GLOBAL STUFF ABOVE %%%%%%%%%%%%%%%%%%
 
-% Add necessary directories to NARF's path
-addpath([NARF_PATH filesep 'utils'], ...
-        [NARF_PATH filesep MODULES_DIR], ...
-        [NARF_PATH filesep SAMPLING_DIR], ...
-        [NARF_PATH filesep PERF_METRIC_DIR], ...
-        [NARF_PATH filesep TERMINATION_DIR]);
-
 % Build a list of the files in the 'modules/' directory
-mods = scan_directory_for_modules('~/matlab/narf/modules/');
+mods = scan_directory_for_modules(NARF_MODULES_PATH);
 
 % Add the model pane
 global STACK XXX;
@@ -119,6 +107,9 @@ set(handles.sampling_data_table, 'Data', {});
 set(handles.perf_metric_data_table, 'Data', {});
 set(handles.term_cond_data_table, 'Data', {});
 drawnow;
+
+% Set the default cellid to be something relevant
+set(handles.cellid_text, 'String', 'por022b-a1');
 
 % --- Outputs from this function are returned to the command line.
 function varargout = narf_gui_OutputFcn(hObject, eventdata, handles) 
@@ -196,6 +187,9 @@ for i = 1:len;
         training_set{end+1} = cfd(i).stimfile;
     end
 end
+
+% TODO: Remove me later, this is just for testing
+training_set=training_set(1);
 
 % TODO: Consider saving the parm/perf info to a global for later use?
 % TODO: Consider moving parm/perf outside this fn?

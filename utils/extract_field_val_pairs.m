@@ -7,5 +7,11 @@ if (c < fieldname_col | c < value_col | fieldname_col < 1 |  value_col < 1)
 end
 s = {};
 for i = 1:r
-    s.(d{i,fieldname_col}) = eval(d{i,value_col});
+    try 
+        s.(d{i,fieldname_col}) = eval(d{i,value_col});
+    catch
+       % If there is a problem, return an empty
+       s = {};
+       return
+    end
 end

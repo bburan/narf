@@ -1,0 +1,104 @@
+function [cellfiledata,cellids]=dbbatchcells(batchid,cellid);
+
+dbopen;
+
+if isnumeric(batchid),
+   sql=['SELECT * FROM sBatch WHERE id=',num2str(batchid)];
+   params=mysql(sql);
+   if length(params.parmstring)>0,
+      eval(char(params.parmstring));
+   end
+else
+   params=batchid;
+end
+
+cellargs={};
+
+if exist('cellid','var'),
+   cellargs=cat(2,cellargs,{'cellid'},{cellid});
+end
+
+if 1 || params.stimspeedid==0,
+   % disp('disabling speed test');
+elseif params.stimspeedid>=60,
+   cellargs=cat(2,cellargs,{'speedgt'},{params.stimspeedid-1});
+else,
+   cellargs=cat(2,cellargs,{'speed'},{params.stimspeedid});
+end
+
+if isfield(params,'stimsnr') && ~isempty(params.stimsnr),
+   cellargs=cat(2,cellargs,{'stimsnr'},{params.stimsnr});
+end
+
+if isfield(params,'area') && ~isempty(params.area),
+   %fprintf('restricted to cells matching area="%s"\n',params.area);
+   cellargs=cat(2,cellargs,{'area'},{params.area});
+end
+
+if isfield(params,'dataparm'),
+   cellargs=cat(2,cellargs,params.dataparm);
+end
+
+if strcmp(params.resploadcmd,'loadgammaraster'),
+   % lfp data must exist.  also only need one unit per channel!
+   cellargs=cat(2,cellargs,{'lfp'},{1});
+end
+
+if ismember(batchid,[140 143]),
+   cellargs=cat(2,cellargs,{'runclassid'},{32});
+else
+   cellargs=cat(2,cellargs,{'runclassid'},{params.runclassid});
+end
+
+cellargs=cat(2,cellargs,{'respfmtcode'},{params.respfmtcode});
+%cellargs=cat(2,cellargs,{'stimfmtcode'},{params.stimfmtcode});
+
+switch batchid,
+ case {139,140,143,173,174,198,199,215,216,218,219,220,229,230},
+  fprintf('batch %d: special, only cells with active gDataRaw\n',...
+          batchid);
+  cellargs=cat(2,cellargs,{'behavior'},{1});
+  cellargs=cat(2,cellargs,{'speedgt'},{0.5});
+  
+end
+
+[cellfiledata,cellids,cellfileids]=dbgetscellfile(cellargs{:});
+
+switch batchid,
+ case 230,
+  % exclude Bom data
+  keepcells=ones(size(cellids));
+  
+  for ii=1:length(keepcells),
+     if strcmp(cellids{ii}(1:2),'b0'),
+        keepcells(ii)=0;
+     end
+  end
+  keepidx=find(keepcells);
+  cellids={cellids{keepidx}};
+  cellfileids=cellfileids(keepidx);
+  cellfiledata=cellfiledata(keepidx);
+  
+ case {206,207,221,222,223,224,225,226,227,228,231,232},
+  fprintf('batch %d: special, only one cell per site\n',...
+          batchid);
+  masterid=cat(1,cellfiledata.masterid);
+  singleid=cat(1,cellfiledata.singleid);
+  try,
+     [masterlist,uidx]=unique(masterid,'first');
+  catch
+     [masterlist,uidx]=unique(masterid);  % older versions of matlab
+  end
+  singlelist=singleid(uidx);
+  keepidx=find(ismember(singleid,singlelist));
+  
+  cellids=unique({cellfiledata(keepidx).cellid});
+  cellfileids=cellfileids(keepidx);
+  
+  cellfiledata=cellfiledata(keepidx);
+end
+
+
+if isempty(cellfiledata),
+   %keyboard
+end

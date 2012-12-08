@@ -1,0 +1,33 @@
+function calcheck
+
+dbopen;
+
+disp('checking for dooty emails');
+% check for any dooty job emails
+sql=['SELECT gCalendar.*,gUserPrefs.email',...
+     ' FROM gCalendar INNER JOIN gUserPrefs',...
+     ' ON gCalendar.userid=gUserPrefs.userid',...
+     ' WHERE not(complete) AND not(emailed)',...
+     ' AND caldate<date_add(now(), interval 2 day)'];
+caldata=mysql(sql);
+for mm=1:length(caldata),
+   stext=sprintf(['Dear %s-\n\n',...
+                  'REMINDER! You are scheduled for ferret dooty:\n\n' ...
+                  ' %s on %s\n'],caldata(mm).userid,...
+                 caldata(mm).calname,caldata(mm).caldate(1:10));
+   if ~isempty(caldata(mm).note),
+      stext=sprintf('%s\nAdditional information: %s\n',...
+                    stext,caldata(mm).note);
+   end
+   stitle=sprintf('REMINDER: %s on %s',...
+                  caldata(mm).calname,caldata(mm).caldate(1:10));
+   if length(caldata(mm).email)>0,
+      sendmail(caldata(mm).email,stext,stitle);
+   else
+      fprintf('no email for user %s!\n',caldata(mm).userid);
+   end
+   
+   sql=['UPDATE gCalendar set emailed=1 WHERE id=',...
+        num2str(caldata(mm).id)];
+   mysql(sql);
+end

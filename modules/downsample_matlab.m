@@ -31,11 +31,11 @@ function x = do_downsampling(stack, xxx)
     
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
     
-    scale = ceil(baphy_mod.raw_stim_fs / mdl.downsampled_freq);
+    scale = floor(baphy_mod.raw_stim_fs / mdl.downsampled_freq);
 
     for sf = fieldnames(x.dat)', sf=sf{1};
         [S, N, F] = size(x.dat.(sf).pp_stim);
-        x.dat.(sf).ds_stim = zeros(S,N/scale,F);
+        x.dat.(sf).ds_stim = zeros(S,ceil(N/scale),F);
         for s = 1:S
             for f = 1:F
                 x.dat.(sf).ds_stim(s,:,f) = m.post_ds_fn(...

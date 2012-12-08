@@ -1,0 +1,26 @@
+The waveform analysis uses the following files:
+   wavestore.mat  -- a structure with 179 amplitude normalized V4 waveforms
+   waveanalysis.m -- the main matlab routine to make a histogram and do stats
+   HartigansDipSignifTest.m -- routine to do Hartigan's signif test
+   HartigansDipTest.m -- routine for Hartigan's signif test
+   
+   The Hartigan's code is form Melcher & Ringach (2002):
+      30.  Hartigan and Hartigan PM (1985).  The dip test of unimodality.  
+           Annals of Statistics. 13:70-84.
+      31.  Mechler F and Ringach DL (2002). On the classification of 
+           simple and complex cells.  Vision Res.  42: 1017-33.
+
+To use the code in the waveform analysis:
+  In matlab:
+    >  load wavestore;
+    > wave_analysis(wavestore);
+    
+This should produce plots and give results.  Press return after
+it prints each result of the Hartigan's test (which takes a while
+to run because it uses a bootstrap method to estimate significance).
+
+Email Jude at jude@salk.edu if you have trouble using code, and be sure
+to have informative e-mail title since I delete tons of spam each day.
+
+    Jude
+    

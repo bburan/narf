@@ -24,32 +24,36 @@ XXX{1}.test_set = {};
 % Define the model structure, using defaults for unspecified fields.
 STACK = {};
 STACK{1} = mdls.load_stim_resps_from_baphy;
-STACK{2} = mdls.gammatone_filter_bank.mdl(struct('num_channels', 2, ...
+STACK{2} = mdls.gammatone_filter_bank.mdl(struct('num_channels', 10, ...
                                                  'bank_min_freq', 250, ...
                                                  'bank_max_freq', 8000));
 STACK{3} = mdls.downsample_with_fn;
-STACK{4} = mdls.fir_filter.mdl(struct('num_dims', 2, ...
-                                      'fit_fields', {{'coefs'}}));
+STACK{4} = mdls.fir_filter.mdl(struct('num_dims', 10, ...
+                                      'num_coefs', 20));
+                                  
 % NOTE: Must use double braces {{ }} because of struct()'s default behavior
 % of unfortunately stripping away the first layer of cell references.
 
-% Run test optimization routine (stupid boost that stops on iteration #)
-n_iters = 5;
-x_0 = pack_fittables(STACK);
-if isempty(x_0)
-    log_msg('No parameters were selected to be fit.');
-    return;
-end
-[x_bst, s_bst] = boosting(x_0', @correlation_of_downsampled_signals, ...
-                         @(n,x,s)(n > n_iters), 1.0);
+% Recompute the entire stack
+recalc_stack(1);
 
-unpack_fittables(x_bst);
- 
-% coefs = STACK{end}.coefs;
-% save('real_good_coefs.mat', 'coefs');
+m = [];
+m.num_dims = 2;
+m.altcore = 'cdcore';
+m.maxlag = 19;
+m.resampcount = 19;  % Why is the total number of things this + 1?
+m.sfscount = 10;
+m.sfsstep = 3;
+m.rasterfs = 200;  % TODO: REMOVE ME
+m.coefs = zeros(m.num_dims, 10);
 
-% Save the model stack somewhere
-% save_model(STACK, 'example.m')
+% Run Stephen's fitting routine at depth 4
+STACK{4}.coefs = do_stephen_fit(m, XXX{4});
+ss = size(STACK{4}.coefs);
+STACK{4}.num_dims = ss(1);
+STACK{4}.num_coefs = ss(2);
+% Recompute now just the last little bit
+recalc_stack(4);
 
 % Finally, display the GUI for easy tweaking and viewing of the best result
 pf = figure('Menubar','figure', 'Resize','off', ...

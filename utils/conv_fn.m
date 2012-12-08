@@ -1,4 +1,4 @@
-function newsig = conv_fn(signal, dim, fn, nwin, novl)
+function newsig = conv_fn(signal, dim, fn, nwin, novl, allow_last_bin)
 % CONV_FN: A function-application-based convolution along 1 dimension.
 %
 % OPERATION:
@@ -8,7 +8,7 @@ function newsig = conv_fn(signal, dim, fn, nwin, novl)
 % exist (such as at the beginning and end of SIGNAL), they will be zero
 % padded. By this point, the chunk should have NOVL + NWIN + NOVL elements.
 % This chunk is then passed to FN, which should be a function which accepts
-% a vector. Useful picks for FN are @plus, @mean, or @max, corresponding to
+% a vector. Useful picks for FN are @sum, @mean, or @max, corresponding to
 % the L1, L2, and Linfty norms, but any nonlinear transform would work.
 % Finally, the return values of FN are bundled together and the result of
 % the convolution is returned. 
@@ -16,6 +16,11 @@ function newsig = conv_fn(signal, dim, fn, nwin, novl)
 % If you set N to 1, you can create a windowed FIR response that is
 % as nonlinear or arbitrary as you want, which can be useful. If you set it
 % to 10 and use FN=@max, you are finding the maximum over each window. 
+%
+% If the signal / nwin does not an integer, then the last grouped bin may 
+% not have the same number of elements as the rest. To avoid contaiminating 
+% your data with one improperly weight signal, the last bin will be
+% ignored and those values discarded unless allow_last_bin is true
 %
 % INPUTS:
 %      SIGNAL    A 1D, 2D, 3D, or 4D matrix.
@@ -41,13 +46,16 @@ function newsig = conv_fn(signal, dim, fn, nwin, novl)
 %
 % 2012/10/31. Happy Halloween. Ivar Thorson.
 
+if (nargin < 6)
+    allow_last_bin = false;
+end
 if (nargin < 5)
-    error('downsample_fn() needs all five arguments to work properly.');
+    error('downsample_fn() needs 5 or more arguments to work properly.');
 end
 
-dims_old = size(signal);   % Size of the old signal matrix
-n_dims = ndims(signal); % Number of dimensions of the matrix
-n_old = dims_old(dim);     % Num of samples along the convolution dimension 
+dims_old = size(signal);  % Size of the old signal matrix
+n_dims = ndims(signal);   % Number of dimensions of the matrix
+n_old = dims_old(dim);    % Num of samples along the convolution dimension 
 
 if n_dims > 4
     error('downsample_fn() only works for 4D or smaller matrices');
@@ -66,7 +74,13 @@ end
 % Prepare the new signal matrix
 dims_new = dims_old;
 dims_new(dim) = dims_old(dim) / nwin; 
-newsig = zeros(dims_new);  
+newsig = zeros(dims_new);
+
+% If we are allowing the last bin to be incompletely full, 
+if allow_last_bin && ~isequal(dims_old(dim), nwin*dims_new(dim))
+    disp ('hahah');
+    
+end
 
 % When all you have is hammer, everything looks like a nail. 
 % When all you have are for loops, the if conditional and a matrix data type...*sigh*

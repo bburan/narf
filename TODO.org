@@ -1,8 +1,8 @@
-* MILESTONE 0 : Easy variation of model parameter
-  Get scores vs sampling rate for 250Hz, 200Hz 150Hz, 100Hz, 50Hz
-* MILESTONE 1 : More difficult variation of model parameters
+* MILESTONE 1 :  
+  Try iterating across sampling rate for 250Hz, 200Hz 150Hz, 100Hz, 50Hz
+* MILESTONE 2 : More difficult variation of model parameters
   Predictive quality scores, boosting performance as time progresses, total computation time for 1 data set and multiple models:
-  1. Stephen's FIR coefs or default FIR coefs (Different modules)
+  1. Stephen's boosting or my stupid boosting
   2. Gammatone bank or elliptical bank (Different modules) 
   3. Conv = {mean, max, min}           (Same module, different parameters)
   4. post_conv = {sqrt, log(x+10^-3)   (Same module, different parameters)
@@ -10,27 +10,27 @@
   Probably will need to run all night.
 
 * TOP TODO LIST
-  3. Add david's code for model fitting
-  4. Use test and training data sets properly.
-  5. Reduce all experimental dimensions to 2. Time, and channel. Input channels are the enumerated combination of speaker #, band #, light intensity, or whatever. 
+  1. Add a function to compute 'var' for each input channel, across every stimulus. then SCALE FIR coefficients in that row by 1/var right before the filtering. Then FIR coefficients will be relative?
+  2. Undo my changes to the conv_fn stuff
+  3. narf_gui.m Remove Load Above Files button and use callback to initialize model structure
+  4. Rename the terrible 'generic_model_data_table_update.m' function
+  5. Remember to invalidate data BELOW the present point on a table-edit callback... and to Update the gui to reflect this!
+  6. Change default visualizations to be what I actually use.
+  7. Use test and training data sets properly.
+  8. Reduce all experimental dimensions to 2. Time, and channel. Input channels are the enumerated combination of speaker #, band #, light intensity, or whatever. 
      First dimension is always time. 
      Second dimension is some combination of input dimensions. 
-  6. Volterra model
-  7. narf_gui.m Remove Load Above Files button and use callback to initialize model structure
-  8. Write a crash course guide on using NARF
-  9. Stop using ALL the stimfiles during optimization, and just use the TRAINING_SET like I should be using
-  10. Remember to invalidate data BELOW the present point on a table-edit callback... and to Update the gui to reflect this!
-  11. Write a programmatic demo which steps through values in a particular model class and saves some result
-  12. Separate FIR filters with inhibitory only and excitory only behaviors
+  9. Put back in Volterra model
+  10. Put back in inhibition/excitation models
+  11. Write a crash course guide on using NARF
 
 * CLEANING/REFACTORING TODOs:
-  - In retrospect, XXX should contain the 'plot_gui' part, since it depends on the XXX pretty substantially.
+  - Look for obvious repetition and make some more functions in util/
+  - In retrospect, XXX should probably contain the 'plot_gui' part, since it depends on the XXX pretty substantially.
   - It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
-  - Right now, you can only instantiate a single GUI at a time. If you close this GUI, it cannot be recreated from the STACK. This is bad behavior and should be fixed by putting GUI handles in their own separate structure, or by providing a function that will clear all the GH's from the stack.
-  - Rename things to be more clear. Preprocessing inputs should be called 'channels', to make them distinct from later FIR 'filters' 
-  -   Rename XXX into CHAIN, since it's a chain of data? or ARGS, since it's the arguments to each function in the stack?
+  - Right now, you can only instantiate a single GUI at a time. Could this be avoided?
+  - Rename things to be more clear. Any sort of input dimension is a 'channel'? 
   - Avoid cla's in user-space plotting functions
-  - Rename the terrible 'generic_model_data_table_update.m' function
   - Provide a more concise way of finding user-space guis in the call tree above (Right now there's too much copy & paste in user-side plot functions!)
   - Add a few useful functions to generic_methods
   - Automatically load bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)

@@ -43,16 +43,20 @@ if isempty(x_0)
     log_msg('No parameters were selected to be fit.');
     return;
 end
+
+% Compute variance on each channel, and pass them as weights to boosting
+% For every stim file 
+%  For every filter channel,
+%     weights(ii) = var(flattened_ds_stim(:, ii));
+%     end
+% This is a hacky way of specifying weights. 
+%weights = 100 * ones(1, 200);
+%weights(71:80) = ones(1, 10);
+
 [x_bst, s_bst] = boosting(x_0', @correlation_of_downsampled_signals, ...
                          @(n,x,s)(n > n_iters), 1.0);
 
 unpack_fittables(x_bst);
-
-% coefs = STACK{end}.coefs;
-% save('real_good_coefs.mat', 'coefs');
-
-% Save the model stack somewhere
-% save_model(STACK, 'example.m')
 
 % Finally, display the GUI for easy tweaking and viewing of the best result
 pf = figure('Menubar','figure', 'Resize','off', ...

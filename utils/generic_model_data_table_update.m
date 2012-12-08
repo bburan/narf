@@ -3,6 +3,12 @@ function module = generic_model_data_table_update(hDataTable, module)
 
 s = extract_field_val_pairs(hDataTable, 2, 3);
 
+% If there was an error extracting the fields, reset the GUI
+if isempty(s)
+   generic_checkbox_data_table(hDataTable, module, module.editable_fields);
+   return;
+end
+
 for fs = fieldnames(s)', fs=fs{1};
     module.(fs) = s.(fs);
 end

@@ -14,7 +14,8 @@ function m = downsample_with_fn(args)
 % define your own.
 %
 % Good POSTCONV_FN functions are @sqrt, and maybe @log if your data never
-% goes to zero.
+% goes to zero. In such a case @(x) log(x+10^-6) may be nice, substituting
+% the 10^-6 with your noise floor intensity.
 %
 % Returns a function module 'm' which implements the MODULE interface.
 % See documentation for more information. TODO.
@@ -51,12 +52,13 @@ function x = do_downsampling(stack, xxx)
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
     
     ds_dim = 2; % Dimension to downsample on. 
-    scale = ceil(baphy_mod.raw_stim_fs / mdl.downsampled_freq);
+    scale = floor(baphy_mod.raw_stim_fs / mdl.downsampled_freq);
 
     for sf = fieldnames(x.dat)', sf=sf{1};
+        fprintf('Downsampling %s\n', sf);
         x.dat.(sf).ds_stim = ...
             mdl.postconv_fn(conv_fn(mdl.preconv_fn(x.dat.(sf).pp_stim), ...
-                                    ds_dim, mdl.conv_fn, scale, 0));
+                                    ds_dim, mdl.conv_fn, scale, 0, true));
         x.dat.(sf).ds_stim_time = ...
             linspace(1/mdl.downsampled_freq, ...
                      x.dat.(sf).raw_stim_time(end), ...

@@ -1,0 +1,13 @@
+
+
+01 job added
+02 job started
+03 job complete
+04 job died
+05 job deleted
+
+11 computer added
+12 computer removed
+13 computer overloaded
+14 computer reactivated
+
