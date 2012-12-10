@@ -24,10 +24,10 @@ end
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_stim;
-m.plot_fns{1}.pretty_name = 'Stimulus vs Time';
-m.plot_fns{2}.fn = @do_plot_stim_log_spectrogram;
-m.plot_fns{2}.pretty_name = 'Stimulus Log Spectrogram';
+m.plot_fns{1}.fn = @do_plot_stim_log_spectrogram;
+m.plot_fns{1}.pretty_name = 'Stimulus Log Spectrogram';
+m.plot_fns{2}.fn = @do_plot_stim;
+m.plot_fns{2}.pretty_name = 'Stimulus vs Time';
 m.plot_fns{3}.fn = @do_plot_respavg;
 m.plot_fns{3}.pretty_name = 'Response Average vs Time';
 m.plot_fns{4}.fn = @do_plot_response_rastered;

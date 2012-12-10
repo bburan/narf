@@ -237,9 +237,29 @@ end
 
 % When the data table changes, invalidate the data, plot and plot gui
 function module_data_table_callback(mod_idx)
-    % Update the model using the data table
-    STACK{mod_idx} = generic_model_data_table_update(STACK{mod_idx}.gh.fn_table, STACK{mod_idx});
     
+    % Extract the structure of the field
+    s = extract_field_val_pairs(STACK{mod_idx}.gh.fn_table, 2, 3);
+    
+    % If there was an error extracting the fields, reset the GUI
+    if isempty(s)
+        generic_checkbox_data_table(STACK{mod_idx}.gh.fn_table, ...
+                                    STACK{mod_idx}, ...
+                                    STACK{mod_idx}.editable_fields);
+        return;
+    end
+    
+    % Insert the field values into the stack
+    for fs = fieldnames(s)', fs=fs{1};
+        STACK{mod_idx}.(fs) = s.(fs);
+    end
+    
+    % Update the selected fields
+    STACK{mod_idx}.fit_fields = extract_checked_fields(STACK{mod_idx}.gh.fn_table, 1, 2);
+    
+    % Give the module a chance to run its own code
+    STACK{mod_idx} = STACK{mod_idx}.mdl(STACK{mod_idx});  
+            
     % Request a recalculation from this point onwards. 
     recalc_from_depth(mod_idx);
 end
@@ -387,7 +407,7 @@ end
 function load_model_stack_callback (a, b, c)
     [filename, pathname] = uigetfile({[NARF_SAVED_MODELS_PATH '/*.mat']}, ...
                                      'Select Model Stack');
-	if ~isempty(filename)
+	if ~isequal(filename, 0)
         delete_all_module_guis();
         STACK = load_model_stack([pathname filesep filename]);
         rebuild_gui_from_stack();

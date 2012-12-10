@@ -99,7 +99,7 @@ mods = scan_directory_for_modules(NARF_MODULES_PATH);
 global STACK XXX;
 STACK = {};
 XXX = {};
-narf_modelpane(handles.model_structure_panel, mods);
+GS.refresh_gui = narf_modelpane(handles.model_structure_panel, mods);
     
 % % Invalidate all data tables
 set(handles.data_selection_table, 'Data', {});
@@ -165,17 +165,16 @@ len = length(cfd);
 training_set = {};
 test_set = {};
 test_set_reps = 0;
-parms = cell(1, len);
-perfs = cell(1, len);
+% parms = cell(1, len);
+% perfs = cell(1, len);
 
-% Load parms, perfs. Select set with the most repetitions as test set.
-% TODO: Right now this is not really choosing the most repetitions, just
-% the number of Ref_Subsets, which just works by coincidence?
+% Load parms, perfs, if you need them
+% [parms{i}, perfs{i}] = dbReadData(cfd(i).rawid);
+
+% Select set with the most repetitions as test set.
 for i = 1:len;
-    [parms{i}, perfs{i}] = dbReadData(cfd(i).rawid);
-    if (isfield(parms{i}, 'Ref_Subsets') & ...
-            parms{i}.Ref_Subsets > test_set_reps)
-       test_set_reps = parms{i}.Ref_Subsets;
+    if (isfield(cfd{i}, 'repcount') && cfd{i}.repcount > test_set_reps)
+       test_set_reps = dbget('gDataRaw', cfd(i).rawid, 'reps');
        test_set{1} = cfd(i).stimfile;
     end
 end
@@ -188,7 +187,8 @@ for i = 1:len;
     end
 end
 
-% TODO: Remove me later, this is just for testing
+% TODO: Remove me later, this is just for making things happen faster while
+% I test the same functions over and over again
 training_set=training_set(1);
 
 % TODO: Consider saving the parm/perf info to a global for later use?
@@ -196,26 +196,6 @@ training_set=training_set(1);
 log_dbg('Training sets selected: %s', ...
     strtrim(sprintf('%s ', training_set{:})));
 log_dbg('Test set selected: %s', char(test_set{:}));
-
-%------------------------------------------------------------------------
-function generic_model_data_table_update(hObject, GSfield, GSselected_name)
-% Since the data tables look the same for preprocessing, downsampling,
-% model, and stochasticity, let's abstract their similarities here.
-% Does two things:
-% 1. Pull out the present values and update the params struct first
-% 2. Update which parameters are desired to be fit with the optimization
-global GS;
-s = extract_field_val_pairs(hObject, 2, 3);
-fns = fieldnames(s);
-dt = GS.(GSfield).(GS.(GSselected_name));
-for i = 1:length(fns);
-    dt.params.(fns{i}) = s.(fns{i});
-end
-GS.(GSfield).(GS.(GSselected_name)).params = dt.fn(dt.params); 
-
-% 2. Update which parameters are desired to be fit with the optimization
-GS.(GSfield).(GS.(GSselected_name)).fit_fields = ...
-     extract_checked_fields(hObject, 1, 2);
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DATA SELECTION GUI
@@ -254,7 +234,7 @@ set(handles.data_selection_table, 'Data', c); drawnow;
 
 % ------------------------------------------------------------------------
 function data_selection_table_CellEditCallback(hObject, eventdata, handles)
-global GS;
+global GS STACK XXX;
 log_dbg('data_selection_table was modified, updating GB.*_set.');
 
 % Refresh GB.training_set and GB.test_set from the GUI 
@@ -277,18 +257,17 @@ end
 GS.training_set = training_set;
 GS.test_set = test_set;
 
-% ------------------------------------------------------------------------
-function load_above_files_button_Callback(hObject, eventdata, handles)
-global GS STACK XXX;
-
+% Reset the values of the XXX structure
 XXX = {};
 XXX{1} = [];
 XXX{1}.cellid = GS.cellid;
 XXX{1}.training_set = GS.training_set;
 XXX{1}.test_set = GS.test_set;
 
-% TODO: Request that the model recompute values, if autocalc'd
-% TODO: Request that the model recompute plots, if autoplot'd
+% Request that the model recompute values, if they exist
+if isfield(GS, 'refresh_gui')
+    GS.refresh_gui();
+end
 
 %------------------------------------------------------------------------
 function view_strf_button_Callback(hObject, eventdata, handles)

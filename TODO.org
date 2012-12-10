@@ -3,40 +3,43 @@
 * MILESTONE 2 : More difficult variation of model parameters
   Predictive quality scores, boosting performance as time progresses, total computation time for 1 data set and multiple models:
   1. Stephen's boosting or my stupid boosting
-  2. Gammatone bank or elliptical bank (Different modules) 
+  2. Gammatone bank or elliptical bank (Different modules)
   3. Conv = {mean, max, min}           (Same module, different parameters)
   4. post_conv = {sqrt, log(x+10^-3)   (Same module, different parameters)
-* MILESTONE 2 : Model variation across multiple files!
-  Probably will need to run all night.
+* MILESTONE 3 : Model variation across multiple files!
+  Probably will need to run all night, given how slow my code is
 
 * TOP TODO LIST
-  1. Add a function to compute 'var' for each input channel, across every stimulus. then SCALE FIR coefficients in that row by 1/var right before the filtering. Then FIR coefficients will be relative?
-  2. Undo my changes to the conv_fn stuff
-  3. narf_gui.m Remove Load Above Files button and use callback to initialize model structure
-  4. Rename the terrible 'generic_model_data_table_update.m' function
-  5. Remember to invalidate data BELOW the present point on a table-edit callback... and to Update the gui to reflect this!
-  6. Change default visualizations to be what I actually use.
-  7. Use test and training data sets properly.
-  8. Reduce all experimental dimensions to 2. Time, and channel. Input channels are the enumerated combination of speaker #, band #, light intensity, or whatever. 
+  1. Use test and training data sets properly during optimization and performance metrics
+  2. Define a function which flattens a field across every stimfile and stimulus channel, producing a single really big vector
+  3. Add an output thresholding part to the function
+  4. Add a function to compute 'var' for each input channel, across every stimulus. then SCALE FIR coefficients in that row by 1/var right before the filtering. Then FIR coefficients will be relative?
+  5. Do a check to see how close the re-interpolated value of the envelope is, compared with what Stephen used to generate it.
+  6. Reduce all experimental dimensions to 2. Time, and channel. Input channels are the enumerated combination of speaker #, band #, light intensity, or whatever. 
      First dimension is always time. 
      Second dimension is some combination of input dimensions. 
-  9. Put back in Volterra model
-  10. Put back in inhibition/excitation models
-  11. Write a crash course guide on using NARF
+  7. Put back in Volterra model
+  8. Put back in inhibition/excitation models
+  9. Write a crash course guide on using NARF
+  10. Remember to invalidate data BELOW the present point on a table-edit callback... and to Update the gui to reflect this!
+  11. Make a function to replicate the true SPN envelope filter that Stephen does
 
+* Loadstimfrom baphy has the chancount
+  Passing a zero to it should give the true number of envelopes
+  I could also try passing it a 2 and see what happens, since if you give loadstimfrombaphy any value OTHER THAN ONE, it will give you the envelopes used to generate the stimuli
+  
 * CLEANING/REFACTORING TODOs:
   - Look for obvious repetition and make some more functions in util/
   - In retrospect, XXX should probably contain the 'plot_gui' part, since it depends on the XXX pretty substantially.
   - It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
-  - Right now, you can only instantiate a single GUI at a time. Could this be avoided?
-  - Rename things to be more clear. Any sort of input dimension is a 'channel'? 
+  - Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?
+  - Rename things to be more clear. Any sort of input dimension is a 'channel', to abstract the notion of stimulus dimension?
   - Avoid cla's in user-space plotting functions
   - Provide a more concise way of finding user-space guis in the call tree above (Right now there's too much copy & paste in user-side plot functions!)
-  - Add a few useful functions to generic_methods
-  - Automatically load bandpass information from the arg_params struct passed to the bandpass filter fn (Look at exptparams.TrialObject.ReferenceHandle object?)
   - Go through the TODO's in existing files
   - Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
   - make anything named 'update_' into a function used purely for its side effects
+  - Make all vectors into column vectors so I don't have to continually do the transpose
 
 * HIGH LEVEL THINGS TO BE THOUGHT ABOUT:
   How can optimization routines be...?
@@ -47,11 +50,13 @@
   5. Still scriptable and batch executable
 
 * OPTIMIZATION TODOs
-  Write a 'scaled boosting' algorithm, which takes a step in the direction proportional to the improvement in performance that it yields? (Good with MSE)
+  Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
   Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
+  Write several different performance metric functions: MSE and a point-process fit
   Write a jack-knifing function which can work with any of the optimization modules
 
-* ADDITIONAL MODULES: 
+* ADDITIONAL MODULES:
+  - Single channel gammatone filter (for speed)
   - SMOOTHING of the RESPAVG signal with gaussian convolution
   - An option for taking correlation in a different method than sheer concatenation could be interesting
   - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.

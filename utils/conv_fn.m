@@ -1,26 +1,25 @@
-function newsig = conv_fn(signal, dim, fn, nwin, novl, allow_last_bin)
+function newsig = conv_fn(signal, dim, fn, nwin, novl)
 % CONV_FN: A function-application-based convolution along 1 dimension.
+% It should work for up to 4 dimensional SIGNAL matrices.
 %
 % OPERATION:
 %  Input SIGNAL is grouped into NWIN-element long chunks along dimension
-% DIM. Then NOVL elements of the input signal (along this dimension) are
-% padded to the front and back of the input signal. If no such elements
-% exist (such as at the beginning and end of SIGNAL), they will be zero
-% padded. By this point, the chunk should have NOVL + NWIN + NOVL elements.
+% DIM. Then NOVL elements groups are padded to the front and back of each
+% chunk. If no such elements exist (such as at the beginning and end of
+% SIGNAL), they will not be included in the chunk, so chunk length varies.
+% 
+% By this point, the chunk should have at most NOVL + NWIN + NOVL elements.
 % This chunk is then passed to FN, which should be a function which accepts
 % a vector. Useful picks for FN are @sum, @mean, or @max, corresponding to
-% the L1, L2, and Linfty norms, but any nonlinear transform would work.
-% Finally, the return values of FN are bundled together and the result of
-% the convolution is returned. 
+% the L1, L2, and Linfty norms, but almost any function that accepts
+% vectors should work.
+%
+% FN is executed as many times as there are chunks, and the return values 
+% of FN are bundled together the convolution is returned. 
 %
 % If you set N to 1, you can create a windowed FIR response that is
 % as nonlinear or arbitrary as you want, which can be useful. If you set it
 % to 10 and use FN=@max, you are finding the maximum over each window. 
-%
-% If the signal / nwin does not an integer, then the last grouped bin may 
-% not have the same number of elements as the rest. To avoid contaiminating 
-% your data with one improperly weight signal, the last bin will be
-% ignored and those values discarded unless allow_last_bin is true
 %
 % INPUTS:
 %      SIGNAL    A 1D, 2D, 3D, or 4D matrix.
@@ -73,15 +72,14 @@ end
 
 % Prepare the new signal matrix
 dims_new = dims_old;
-dims_new(dim) = dims_old(dim) / nwin; 
+if isequal(floor(dims_old(dim)/nwin), dims_old(dim)/nwin)
+    dims_new(dim) = dims_old(dim) / nwin;
+else
+    dims_new(dim) = (dims_old(dim) / nwin) + 1;
+end
 newsig = zeros(dims_new);
 
-% If we are allowing the last bin to be incompletely full, 
-if allow_last_bin && ~isequal(dims_old(dim), nwin*dims_new(dim))
-    disp ('hahah');
-    
-end
-
+% Depending on which dimension was selected, filter that dimension
 % When all you have is hammer, everything looks like a nail. 
 % When all you have are for loops, the if conditional and a matrix data type...*sigh*
 for a = 1:dims_new(1)
@@ -90,37 +88,38 @@ for a = 1:dims_new(1)
             if n_dims >= 3
                 for c = 1:dims_new(3)
                     if n_dims >= 4
+                        % Compute most bins
                         for d = 1:dims_new(4) 
                             if dim == 1
-                                newsig(a,b,c,d) = fn(signal(max(1,(a-1)*nwin+1-novl):min([a*nwin, n_old]),b,c,d)); 
+                                newsig(a,b,c,d) = fn(signal(max(1,(a-1)*nwin+1-novl):min([a*nwin+novl, n_old]),b,c,d)); 
                             elseif dim == 2
-                                newsig(a,b,c,d) = fn(signal(a,max(1,(b-1)*nwin+1-novl):min([b*nwin, n_old]),c,d)); 
+                                newsig(a,b,c,d) = fn(signal(a,max(1,(b-1)*nwin+1-novl):min([b*nwin+novl, n_old]),c,d)); 
                             elseif dim == 3
-                                newsig(a,b,c,d) = fn(signal(a,b,max(1,(c-1)*nwin+1-novl):min([c*nwin, n_old]),d)); 
+                                newsig(a,b,c,d) = fn(signal(a,b,max(1,(c-1)*nwin+1-novl):min([c*nwin+novl, n_old]),d)); 
                             elseif dim == 4
-                                newsig(a,b,c,d) = fn(signal(a,b,c,max(1,(d-1)*nwin+1-novl):min([h*nwin, n_old])));
+                                newsig(a,b,c,d) = fn(signal(a,b,c,max(1,(d-1)*nwin+1-novl):min([d*nwin+novl, n_old])));
                             end
                         end
                     else
                         if dim == 1
-                            newsig(a,b,c) = fn(signal(max(1,(a-1)*nwin+1-novl):min([a*nwin, n_old]),b,c));
+                            newsig(a,b,c) = fn(signal(max(1,(a-1)*nwin+1-novl):min([a*nwin+novl, n_old]),b,c));
                         elseif dim == 2
-                            newsig(a,b,c) = fn(signal(a,max(1,(b-1)*nwin+1-novl):min([b*nwin, n_old]),c));
+                            newsig(a,b,c) = fn(signal(a,max(1,(b-1)*nwin+1-novl):min([b*nwin+novl, n_old]),c));
                         elseif dim == 3 
-                            newsig(a,b,c) = fn(signal(a,b,max(1,(c-1)*nwin+1-novl):min([c*nwin, n_old])));
+                            newsig(a,b,c) = fn(signal(a,b,max(1,(c-1)*nwin+1-novl):min([c*nwin+novl, n_old])));
                         end
                     end
                 end
             else
                 if dim == 1
-                    newsig(a,b) = fn(signal(max(1,(a-1)*nwin+1-novl):min([a*nwin, n_old]), b));
+                    newsig(a,b) = fn(signal(max(1,(a-1)*nwin+1-novl):min([a*nwin+novl, n_old]), b));
                 elseif dim == 2
-                    newsig(a,b) = fn(signal(a,max(1,(b-1)*nwin+1-novl):min([b*nwin, n_old])));
+                    newsig(a,b) = fn(signal(a,max(1,(b-1)*nwin+1-novl):min([b*nwin+novl, n_old])));
                 end
             end
         end
     else
-        newsig(a) = fn(signal(max(1,(a-1)*nwin+1-novl):min([a*nwin, n_old])));
+        newsig(a) = fn(signal(max(1,(a-1)*nwin+1-novl):min([a*nwin+novl, n_old])));
     end
 end
 
