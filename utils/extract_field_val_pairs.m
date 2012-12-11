@@ -10,7 +10,7 @@ for i = 1:r
     try 
         s.(d{i,fieldname_col}) = eval(d{i,value_col});
     catch
-       % If there is a problem, return an empty
+       % If there was a problem, return an empty struct
        s = {};
        return
     end

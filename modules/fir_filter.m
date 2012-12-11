@@ -4,15 +4,26 @@ function m = fir_filter(args)
 % The total number of filter coefficients = num_coefs * num_dims
 % 
 % num_filts should always equal the number of preprocessed channels
-
+%
+% 
+%
 % Module fields that must ALWAYS be defined
 m = [];
 m.mdl = @fir_filter;
 m.name = 'fir_filter';
 m.fn = @do_fir_filtering;
-m.pretty_name = 'Single FIR Filter';
-m.editable_fields = {'num_coefs', 'num_dims', 'coefs'};
+m.pretty_name = 'FIR Filter';
+m.editable_fields = {'num_coefs', 'num_dims', 'coefs', ...
+                     'input', 'input_time', 'output'};
 m.isready_pred = @fir_filter_isready;
+
+% Module fields that are specific to THIS MODULE
+m.num_coefs = 20;
+m.num_dims = 2;
+m.coefs = zeros(m.num_dims, m.num_coefs);
+m.input = '''ds_stim''';
+m.input_time = '''ds_stim_time''';
+m.output = '''fir_out''';
 
 % Optional fields
 m.plot_fns = {};
@@ -24,11 +35,6 @@ m.plot_fns{3}.fn = @do_plot_fir_coefs_as_heatmap;
 m.plot_fns{3}.pretty_name = 'FIR Coefficients (Heat map)';
 m.plot_fns{4}.fn = @do_plot_summed_prediction;
 m.plot_fns{4}.pretty_name = 'Summed Prediction';
-
-% Module fields that are specific to THIS MODULE
-m.num_coefs = 20;
-m.num_dims = 2;
-m.coefs = zeros(m.num_dims, m.num_coefs);
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
@@ -50,10 +56,10 @@ function x = do_fir_filtering(stack, xxx)
     % Since it is linear, the prediction is just the sum of the filters
     % We assume that there are no second order terms combining elements of both filters
     for sf = fieldnames(x.dat)', sf=sf{1};
-        [S, T, P] = size(x.dat.(sf).ds_stim);
+        [S, T, P] = size(x.dat.(sf).(mdl.input));
         
         if ~isequal(P, mdl.num_dims)
-           error('Dimensions of ds_stim don''t match filter.');
+           error('Dimensions of (mdl.input) don''t match filter.');
         end
         
         %fprintf('FIR Filtering %s...\n', sf);
@@ -63,7 +69,7 @@ function x = do_fir_filtering(stack, xxx)
             for fir_dim = 1:mdl.num_dims,
                 x.dat.(sf).lf_preds(s, :, fir_dim) = ...
                     filter(squeeze(mdl.coefs(fir_dim, :)), [1], ...
-                           squeeze(x.dat.(sf).ds_stim(s, :, fir_dim)))';
+                           squeeze(x.dat.(sf).(mdl.input)(s, :, fir_dim)))';
             end
         end       
         x.dat.(sf).lf_stim = sum(x.dat.(sf).lf_preds, 3);
@@ -86,7 +92,7 @@ function do_plot_filtered_stimulus(stack, xxx)
     [S, T, P] = size(x.dat.(sf).lf_preds);
     hold on;
     for p = 1:P
-        plot(dat.ds_stim_time, squeeze(dat.lf_preds(stim_idx,:,p)), pickcolor(p));
+        plot(dat.(mdl.input_time), squeeze(dat.lf_preds(stim_idx,:,p)), pickcolor(p));
     end
     axis tight;
     hold off;
@@ -115,7 +121,7 @@ function do_plot_summed_prediction(stack, xxx)
     
     hold on;
     plot(dat.raw_resp_time, (1/rs)*dat.raw_respavg(stim_idx, :), 'k-');
-    plot(dat.ds_stim_time, (1/ss)*squeeze(dat.lf_stim(stim_idx, :)), 'r-');
+    plot(dat.(mdl.input_time), (1/ss)*squeeze(dat.lf_stim(stim_idx, :)), 'r-');
     hold off;
    
     axis tight;

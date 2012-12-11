@@ -1,29 +1,24 @@
-* MILESTONE 2 : More difficult variation of model parameters (See analysis/)
-  Predictive quality scores, boosting performance as time progresses, total computation time for 1 data set and multiple models:
-  1. Stephen's boosting or my stupid boosting
-  2. Gammatone bank or elliptical bank (Different modules)
-  3. Conv = {mean, max, min}           (Same module, different parameters)
-  4. post_conv = {sqrt, log(x+10^-3)   (Same module, different parameters)
-* MILESTONE 3 : Model variation across multiple files
+* MILESTONE : Model variations achieved programmatically and saved somewhere
 
 * TOP TODO LIST
-  1. Add a module which thresholds FIR output exponentially
-  2. Add a module which thresholds FIR output sigmoidally
-  3. Add a module which thresholds FIR output 
-  4. Add a module which does thresholding of the FIR output.
-  5. Add a module which sums over all the vector inputs (Last step before optimization)
-  6. Define a function which flattens a field across every stimfile and stimulus channel, producing a single really big vector
-  7. Add an output thresholding part to the function
-  8. Add a function to compute 'var' for each input channel, across every stimulus. then SCALE FIR coefficients in that row by 1/var right before the filtering. Then FIR coefficients will be relative?
-  9. Do a check to see how close the re-interpolated value of the envelope is, compared with what Stephen used to generate it.
-  10. Reduce all experimental dimensions to 2. Time, and channel. Input channels are the enumerated combination of speaker #, band #, light intensity, or whatever. 
+  1. [X] Refactor the FIR FILTER model to have an 'inputs' and 'outputs' field that it works on.
+  2. [ ] Remove the 'load' and 'save' buttons from narf_gui
+  3. [ ] Refactor the FIR FILTER model to use a separate SUMMING module that works across the vector inputs
+  4. [ ] Add a module which thresholds FIR output exponentially
+  5. [ ] Add a module which thresholds FIR output sigmoidally
+  6. [ ] Add a module which thresholds FIR output as a step function
+  7. [ ] Add a module which does thresholding of the FIR output.
+  8. [ ] Define a function which flattens a field across every stimfile and stimulus channel, producing a single really big vector
+  9. [ ] Add a function to compute 'var' for each input channel, across every stimulus. then SCALE FIR coefficients in that row by 1/var right before the filtering. Then FIR coefficients will be relative?
+  10. [ ] Do a check to see how close the re-interpolated value of the envelope is, compared with what Stephen used to generate it.
+  11. [ ] Reduce all experimental dimensions to 2. Time, and channel. Input channels are the enumerated combination of speaker #, band #, light intensity, or whatever. 
       First dimension is always time.
       Second dimension is some combination of input dimensions. 
-  11. Put back in Volterra model
-  12. Put back in inhibition/excitation models
-  13. Write a crash course guide on using NARF
-  14. Remember to invalidate data BELOW the present point on a table-edit callback... and to Update the gui to reflect this!
-  15. Make a function to replicate the true SPN envelope filter that Stephen does
+  12. [ ] Put back in Volterra model
+  13. [ ] Write a crash course guide on using NARF
+  14. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  15. [ ] Make a function to replicate the true SPN envelope filter that Stephen does
+  16. [ ] Make logging work for the GUI by including it in narf_modelpane?
 
 * Loadstimfrom baphy has the chancount
   Passing a zero to it should give the true number of envelopes
