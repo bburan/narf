@@ -173,7 +173,7 @@ test_set_reps = 0;
 
 % Select set with the most repetitions as test set.
 for i = 1:len;
-    if (isfield(cfd{i}, 'repcount') && cfd{i}.repcount > test_set_reps)
+    if (isfield(cfd(i), 'repcount') && cfd(i).repcount > test_set_reps)
        test_set_reps = dbget('gDataRaw', cfd(i).rawid, 'reps');
        test_set{1} = cfd(i).stimfile;
     end

@@ -1,6 +1,6 @@
 function narf_set_path()
     global NARF_PATH NARF_MODULES_PATH NARF_SAVED_MODELS_PATH;
-    NARF_PATH = '/home/ivar/matlab/narf/';
+    NARF_PATH = '/home/ivar/matlab/narf';
     NARF_MODULES_PATH = [NARF_PATH filesep 'modules'];
     NARF_SAVED_MODELS_PATH = [NARF_PATH filesep 'saved_models'];
     addpath(NARF_PATH, ...

@@ -128,7 +128,6 @@ function do_plot_stim(stack, xxx)
 
     % TODO: If there was any problem in the above, report it
     
-    cla;
     plot(dat.raw_stim_time, dat.raw_stim(idx,:), 'k-');
     axis tight;    
 end
@@ -178,7 +177,6 @@ function do_plot_response_rastered(stack, xxx)
     dat = x.dat.(sf);
     
     [S, N, R] = size(dat.raw_resp);
-    cla;
     hold on;
     for j = 1:R
         [xs,ys] = find(dat.raw_resp(idx, :, j) > 0);
@@ -199,7 +197,6 @@ function do_plot_spectro_and_raster(stack, xxx)
     idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
     dat = x.dat.(sf);
     
-    cla;
     hold on;
     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
     logfsgram(dat.raw_stim(idx,:)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 

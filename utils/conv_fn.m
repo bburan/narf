@@ -45,11 +45,8 @@ function newsig = conv_fn(signal, dim, fn, nwin, novl)
 %
 % 2012/10/31. Happy Halloween. Ivar Thorson.
 
-if (nargin < 6)
-    allow_last_bin = false;
-end
 if (nargin < 5)
-    error('downsample_fn() needs 5 or more arguments to work properly.');
+    error('conv_fn() needs 5 or more arguments to work properly.');
 end
 
 dims_old = size(signal);  % Size of the old signal matrix
@@ -57,7 +54,7 @@ n_dims = ndims(signal);   % Number of dimensions of the matrix
 n_old = dims_old(dim);    % Num of samples along the convolution dimension 
 
 if n_dims > 4
-    error('downsample_fn() only works for 4D or smaller matrices');
+    error('conv_fn() only works for 4D or smaller matrices');
 end
 if nwin < 1 | nwin ~= floor(nwin)
     disp(nwin);
@@ -75,7 +72,7 @@ dims_new = dims_old;
 if isequal(floor(dims_old(dim)/nwin), dims_old(dim)/nwin)
     dims_new(dim) = dims_old(dim) / nwin;
 else
-    dims_new(dim) = (dims_old(dim) / nwin) + 1;
+    dims_new(dim) = (dims_old(dim) / nwin); % + 1;  % TODO: Why didn't this work?
 end
 newsig = zeros(dims_new);
 

@@ -12,7 +12,7 @@ narf_set_path;
 global NARF_PATH STACK XXX;
 
 % Build a list of the files in the 'modules/' directory
-mdls = scan_directory_for_modules([NARF_PATH 'modules/']);
+mdls = scan_directory_for_modules([NARF_PATH filesep 'modules/']);
 
 % XXX defines the initial data
 XXX = {};

@@ -13,7 +13,7 @@ recalc_stack(start_depth);
 x = XXX{end};
 V1 = [];
 V2 = [];
-for sf = fieldnames(x.dat)', sf = sf{1};
+for sf = x.training_set', sf = sf{1};
     [S, T] = size(x.dat.(sf).lf_stim);
     V1 = cat(1, V1, reshape(x.dat.(sf).raw_respavg',[],1));
     V2 = cat(1, V2, reshape(x.dat.(sf).lf_stim',[],1));

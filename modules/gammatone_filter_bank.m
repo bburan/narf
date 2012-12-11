@@ -138,7 +138,6 @@ end
 function do_plot_gammatone_filter_as_colormap(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
-    cla;
     % TODO:
     % Find log intensity and smooth slightly
     %     gamma_sqr = [gamma_resp.^2];        
