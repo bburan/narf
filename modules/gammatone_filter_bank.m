@@ -9,7 +9,9 @@ m.mdl = @gammatone_filter_bank;
 m.name = 'gammatone_filter_bank';
 m.fn = @do_gammatone_filter;
 m.pretty_name = 'Gammatone Filter Bank';
-m.editable_fields = {'bank_min_freq', 'bank_max_freq', 'num_channels', 'align_phase'};
+m.editable_fields = {'bank_min_freq', 'bank_max_freq', ...
+                     'num_channels', 'align_phase', ...
+                     'input', 'time', 'output' };
 m.isready_pred = @preproc_filter_isready;
 
 % Module fields that are specific to THIS MODULE
@@ -18,7 +20,10 @@ m.bank_max_freq = 30000;
 m.num_channels = 5;
 m.align_phase = false;
 m.raw_stim_freq = 100000;
-           
+m.input = 'raw_stim';
+m.time = 'raw_stim_time';
+m.output = 'pp_stim';
+
 % Overwrite the default module fields with arguments 
 if nargin == 1
     m = merge_structs(m, args);
@@ -26,7 +31,7 @@ end
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_filtered_stim; % TODO: make this call a generic like plot_time_series('raw_stim_time', 'pp_stim')
+m.plot_fns{1}.fn = @do_plot_filtered_stim; % TODO: make this call a generic like plot_time_series('(mdl.time)', '(mdl.output)')
 m.plot_fns{1}.pretty_name = 'Filtered Stimulus vs Time';
 m.plot_fns{2}.fn = @do_plot_filtered_spectrogram;
 m.plot_fns{2}.pretty_name = 'Filtered Stimulus Spectrogram';
@@ -45,18 +50,18 @@ function x = do_gammatone_filter(stack, xxx)
     
     % Exotic way to loop over field names using ' and {1}...
     for sf = fieldnames(x.dat)', sf = sf{1};
-        [S, N] = size(x.dat.(sf).raw_stim);
+        [S, N] = size(x.dat.(sf).(mdl.input));
         ret = zeros(m.num_channels, N, S);
         for s = 1:S
             fprintf('gammatone filtering: %s (%d/%d)\n', sf, s, S);
             [ret(:,:, s), gamma_envs, gamma_frqs] = ...
-                gammatonebank(x.dat.(sf).raw_stim(s, :), ...
+                gammatonebank(x.dat.(sf).(mdl.input)(s, :), ...
                               m.bank_min_freq, m.bank_max_freq, ...
                               m.num_channels, baphy_mod.raw_stim_fs, ...
                               m.align_phase);         
             % ret = cat(3, ret, gamma_resp);
         end
-        x.dat.(sf).pp_stim = permute(ret, [3,2,1]); 
+        x.dat.(sf).(mdl.output) = permute(ret, [3,2,1]); 
     end
 end
 
@@ -74,8 +79,8 @@ function do_plot_filtered_stim(stack, xxx)
     dat = x.dat.(sf);
     filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
     
-    plot(dat.raw_stim_time, ...
-         squeeze(dat.pp_stim(stim_idx,:,filt_idx)), ...
+    plot(dat.(mdl.time), ...
+         squeeze(dat.(mdl.output)(stim_idx,:,filt_idx)), ...
          pickcolor(filt_idx));
     axis tight;
     drawnow;
@@ -95,7 +100,7 @@ function do_plot_filtered_spectrogram(stack, xxx)
     
     filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
     
-    logfsgram(dat.pp_stim(stim_idx,:, filt_idx)', 4048, baphy_mod.raw_stim_fs, [], [], 500, 12); 
+    logfsgram(dat.(mdl.output)(stim_idx,:, filt_idx)', 4048, baphy_mod.raw_stim_fs, [], [], 500, 12); 
     caxis([-20,40]);
     drawnow;
 end

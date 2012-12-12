@@ -77,7 +77,6 @@ for sr = sampling_rates, sr = sr{1};
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
     % Save the model struct
     filename = [NARF_SAVED_MODELS_PATH filesep 'svd_sr_' num2str(sr) '.mat']
     

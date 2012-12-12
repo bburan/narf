@@ -9,12 +9,21 @@ m.mdl = @load_stim_resps_from_baphy;
 m.name = 'load_stim_resps_from_baphy';
 m.fn = @do_load_from_baphy;
 m.pretty_name = 'Load stim+resp from BAPHY';
-m.editable_fields = {'raw_stim_fs', 'raw_resp_fs', 'include_prestim'};
+m.editable_fields = {'raw_stim_fs', 'raw_resp_fs', 'include_prestim', ...
+                     'stimulus_format', ...
+                     'output_stim', 'output_stim_time', ...
+                     'output_resp', 'output_resp_time'};
 m.isready_pred = @module_isready;
 
 % Module fields that are specific to THIS MODULE
 m.raw_stim_fs = 100000;
 m.raw_resp_fs = 200;
+m.include_prestim = 1;
+m.stimulus_format = 'wav'; % Can be 'wav' or 'envelope'
+m.output_stim = 'raw_stim';
+m.output_stim_time = 'raw_stim_time';
+m.output_resp = 'raw_resp';
+m.output_resp_time = 'raw_resp_time';
 m.include_prestim = 1;
 
 % Overwrite the default module fields with arguments 
@@ -75,12 +84,12 @@ function x = do_load_from_baphy(stack, xxx)
         % Load the raw_stim part of the data structure
         stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
         fprintf('Loading stimulus: %s\n', stimfile);
-        stim = loadstimfrombaphy(stimfile, [], [], 'wav', ...
+        stim = loadstimfrombaphy(stimfile, [], [], mdl.stimulus_format, ...
             mdl.raw_stim_fs, 1, 0, mdl.include_prestim);
         [d1 d2 d3] = size(stim);
    
         % Flatten input dimensions into two dimensions
-        x.dat.(f).raw_stim = permute(sum(stim, 1), [3 2 1]);
+        x.dat.(f).(mdl.output_stim) = permute(sum(stim, 1), [3 2 1]);
         x.dat.(f).raw_stim_fs = mdl.raw_stim_fs;         % TODO: Remove this SPOT violation
         x.dat.(f).include_prestim = mdl.include_prestim; % TODO: Remove this SPOT violation
         
@@ -93,8 +102,8 @@ function x = do_load_from_baphy(stack, xxx)
         respfile = [cfd(idx).path, cfd(idx).respfile];
         fprintf('Loading response: %s\n', respfile);
         [resp, tags] = loadspikeraster(respfile, options);
-        x.dat.(f).raw_resp = permute(resp, [3 1 2]);
-        x.dat.(f).raw_respavg = squeeze(sum(x.dat.(f).raw_resp, 3));
+        x.dat.(f).(mdl.output_resp) = permute(resp, [3 1 2]);
+        x.dat.(f).raw_respavg = squeeze(sum(x.dat.(f).(mdl.output_resp), 3));
         x.dat.(f).raw_resp_fs = mdl.raw_resp_fs;
         
         % Check raw_stim, raw_resp, and raw_time signal sizes match.
@@ -107,11 +116,11 @@ function x = do_load_from_baphy(stack, xxx)
 %         end
         
         % Create time signals for convenience
-        [s1 s2]    = size(x.dat.(f).raw_stim);
-        [r1 r2 r3] = size(x.dat.(f).raw_resp);
+        [s1 s2]    = size(x.dat.(f).(mdl.output_stim));
+        [r1 r2 r3] = size(x.dat.(f).(mdl.output_resp));
         [a1 a2]    = size(x.dat.(f).raw_respavg);
-        x.dat.(f).raw_stim_time = (1/mdl.raw_stim_fs).*[1:s2]';
-        x.dat.(f).raw_resp_time = (1/mdl.raw_resp_fs).*[1:r2]';
+        x.dat.(f).(mdl.output_stim_time) = (1/mdl.raw_stim_fs).*[1:s2]';
+        x.dat.(f).(mdl.output_resp_time) = (1/mdl.raw_resp_fs).*[1:r2]';
         
     end
 end
@@ -128,7 +137,7 @@ function do_plot_stim(stack, xxx)
 
     % TODO: If there was any problem in the above, report it
     
-    plot(dat.raw_stim_time, dat.raw_stim(idx,:), 'k-');
+    plot(dat.(mdl.output_stim_time), dat.(mdl.output_stim)(idx,:), 'k-');
     axis tight;    
 end
 
@@ -143,7 +152,7 @@ function do_plot_stim_log_spectrogram(stack, xxx)
     dat = x.dat.(sf);
     
     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-    logfsgram(dat.raw_stim(idx,:)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
+    logfsgram(dat.(mdl.output_stim)(idx,:)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
     axis tight;
     
@@ -159,11 +168,11 @@ function do_plot_respavg(stack, xxx)
     idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
     dat = x.dat.(sf);
 	
-    plot(dat.raw_resp_time(:), dat.raw_respavg(idx,:), 'k-');
+    plot(dat.(mdl.output_resp_time)(:), dat.raw_respavg(idx,:), 'k-');
     %[xs,ys] = find(dat.raw_respavg(idx, :) > 0);
     % bar(dat.raw_resp_time(ys), dat.raw_respavg(idx,ys), 0.01, 'k-');
     % axis([0 dat.raw_resp_time(end) 0 2]);
-    axis([0 dat.raw_resp_time(end) 0 max(dat.raw_respavg(idx,:))]);
+    axis([0 dat.(mdl.output_resp_time)(end) 0 max(dat.raw_respavg(idx,:))]);
 end
 
 function do_plot_response_rastered(stack, xxx)
@@ -176,13 +185,13 @@ function do_plot_response_rastered(stack, xxx)
     idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
     dat = x.dat.(sf);
     
-    [S, N, R] = size(dat.raw_resp);
+    [S, N, R] = size(dat.(mdl.output_resp));
     hold on;
     for j = 1:R
-        [xs,ys] = find(dat.raw_resp(idx, :, j) > 0);
-        plot(dat.raw_resp_time(ys), j*dat.raw_resp(idx,ys,j), 'k.');
+        [xs,ys] = find(dat.(mdl.output_resp)(idx, :, j) > 0);
+        plot(dat.(mdl.output_resp_time)(ys), j*dat.(mdl.output_resp)(idx,ys,j), 'k.');
 	end
-    axis([0 dat.raw_resp_time(end) 0 R+1]);
+    axis([0 dat.(mdl.output_resp_time)(end) 0 R+1]);
     %setAxisLabelCallback(gca, @(y)(y), 'Y');
     hold off;
 end
@@ -199,16 +208,16 @@ function do_plot_spectro_and_raster(stack, xxx)
     
     hold on;
     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-    logfsgram(dat.raw_stim(idx,:)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
+    logfsgram(dat.(mdl.output_stim)(idx,:)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
     h = get(gca, 'YLim');
     d = h(2) - h(1);
     axis tight;
-    [S, N, R] = size(dat.raw_resp);
+    [S, N, R] = size(dat.(mdl.output_resp));
     for j = 1:R
-        [xs,ys] = find(dat.raw_resp(idx, :, j) > 0);
-        plot(dat.raw_resp_time(ys), ...
-             h(1) + (j/R)*d*(d/(d+d/R))*dat.raw_resp(idx,ys,j), 'k.');
+        [xs,ys] = find(dat.(mdl.output_resp)(idx, :, j) > 0);
+        plot(dat.(mdl.output_resp_time)(ys), ...
+             h(1) + (j/R)*d*(d/(d+d/R))*dat.(mdl.output_resp)(idx,ys,j), 'k.');
     end
     hold off;
 end

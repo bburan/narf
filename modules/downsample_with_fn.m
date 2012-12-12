@@ -26,24 +26,31 @@ m.mdl = @downsample_with_fn;
 m.name = 'downsample_with_fn';
 m.fn = @do_downsampling;
 m.pretty_name = 'Downsample with Arbitrary Function';
-m.editable_fields = {'downsampled_freq', 'preconv_fn', 'conv_fn', 'postconv_fn'};
+m.editable_fields = {'downsampled_freq', ...
+                     'preconv_fn', 'conv_fn', 'postconv_fn', ...
+                     'input', 'input_time', 'output', 'output_time'};
 m.isready_pred = @downsampler_isready;
-
-% Optional fields
-m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_downsampled_stimulus;
-m.plot_fns{1}.pretty_name = 'Downsampled Stimulus vs Time';
 
 % Module fields that are specific to THIS MODULE
 m.downsampled_freq = 200;
 m.preconv_fn = @abs;
 m.conv_fn = @mean;
 m.postconv_fn = @sqrt;
+m.input = 'pp_stim';
+m.input_time = 'raw_stim_time';
+m.output = 'ds_stim';
+m.output_time = 'ds_stim_time';
+m.output_fs = 'ds_stim_fs';
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
     m = merge_structs(m, args);
 end
+
+% Optional fields
+m.plot_fns = {};
+m.plot_fns{1}.fn = @do_plot_downsampled_stimulus;
+m.plot_fns{1}.pretty_name = 'Downsampled Stimulus vs Time';
 
 function x = do_downsampling(stack, xxx)
     mdl = stack{end};
@@ -51,19 +58,19 @@ function x = do_downsampling(stack, xxx)
     
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
     
-    ds_dim = 2; % Dimension to downsample on. 
+    ds_dim = 2; % Dimension to downsample on. TODO: Generalize and avoid this
     scale = floor(baphy_mod.raw_stim_fs / mdl.downsampled_freq);
 
     for sf = fieldnames(x.dat)', sf=sf{1};
         fprintf('Downsampling %s\n', sf);
-        x.dat.(sf).ds_stim = ...
-            mdl.postconv_fn(conv_fn(mdl.preconv_fn(x.dat.(sf).pp_stim), ...
+        x.dat.(sf).(mdl.output) = ...
+            mdl.postconv_fn(conv_fn(mdl.preconv_fn(x.dat.(sf).(mdl.input)), ...
                                     ds_dim, mdl.conv_fn, scale, 0));
-        x.dat.(sf).ds_stim_time = ...
+        x.dat.(sf).(mdl.output_time) = ...
             linspace(1/mdl.downsampled_freq, ...
-                     x.dat.(sf).raw_stim_time(end), ...
-                     length(x.dat.(sf).ds_stim));
-        x.dat.(sf).ds_stim_fs = mdl.downsampled_freq;
+                     x.dat.(sf).(mdl.input_time)(end), ...
+                     length(x.dat.(sf).(mdl.output)));
+        x.dat.(sf).(mdl.output_fs) = mdl.downsampled_freq; %% TODO: Remove SPOT violation
     end
 end
 

@@ -14,16 +14,16 @@ m.name = 'fir_filter';
 m.fn = @do_fir_filtering;
 m.pretty_name = 'FIR Filter';
 m.editable_fields = {'num_coefs', 'num_dims', 'coefs', ...
-                     'input', 'input_time', 'output'};
-m.isready_pred = @fir_filter_isready;
+                     'input', 'time', 'output'};
+m.isready_pred = @isready_general_purpose;
 
 % Module fields that are specific to THIS MODULE
 m.num_coefs = 20;
 m.num_dims = 2;
 m.coefs = zeros(m.num_dims, m.num_coefs);
-m.input = '''ds_stim''';
-m.input_time = '''ds_stim_time''';
-m.output = '''fir_out''';
+m.input =  'ds_stim';
+m.time =   'ds_stim_time';
+m.output = 'stim';
 
 % Optional fields
 m.plot_fns = {};
@@ -33,8 +33,8 @@ m.plot_fns{2}.fn = @do_plot_fir_coefs;
 m.plot_fns{2}.pretty_name = 'FIR Coefficients (Stem)';
 m.plot_fns{3}.fn = @do_plot_fir_coefs_as_heatmap;
 m.plot_fns{3}.pretty_name = 'FIR Coefficients (Heat map)';
-m.plot_fns{4}.fn = @do_plot_summed_prediction;
-m.plot_fns{4}.pretty_name = 'Summed Prediction';
+% m.plot_fns{4}.fn = @do_plot_summed_prediction;
+% m.plot_fns{4}.pretty_name = 'Summed Prediction';
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
@@ -64,15 +64,14 @@ function x = do_fir_filtering(stack, xxx)
         
         %fprintf('FIR Filtering %s...\n', sf);
         
-        x.dat.(sf).lf_preds = zeros(S, T, P);        
+        x.dat.(sf).(mdl.output) = zeros(S, T, P);        
         for s = 1:S
             for fir_dim = 1:mdl.num_dims,
-                x.dat.(sf).lf_preds(s, :, fir_dim) = ...
+                x.dat.(sf).(mdl.output)(s, :, fir_dim) = ...
                     filter(squeeze(mdl.coefs(fir_dim, :)), [1], ...
                            squeeze(x.dat.(sf).(mdl.input)(s, :, fir_dim)))';
             end
         end       
-        x.dat.(sf).lf_stim = sum(x.dat.(sf).lf_preds, 3);
     end
 end
 
@@ -89,49 +88,49 @@ function do_plot_filtered_stimulus(stack, xxx)
     stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
     dat = x.dat.(sf);
     
-    [S, T, P] = size(x.dat.(sf).lf_preds);
+    [S, T, P] = size(x.dat.(sf).(mdl.output));
     hold on;
     for p = 1:P
-        plot(dat.(mdl.input_time), squeeze(dat.lf_preds(stim_idx,:,p)), pickcolor(p));
+        plot(dat.(mdl.time), squeeze(dat.(mdl.output)(stim_idx,:,p)), pickcolor(p));
     end
     axis tight;
     hold off;
     drawnow;
 end
-
-function do_plot_summed_prediction(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-    % Find the GUI controls
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    filt_pop = find_module_gui_control(stack, 'selected_filter_popup');
-    
-    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
-    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
-       
-    dat = x.dat.(sf);
-    
-    % Scale the response and prediction in case they have wildly
-    % different scales (a common problem when using a correlation
-    % coefficient-type performance metric is used to fit the model
-    rs = mean(squeeze(dat.raw_respavg(stim_idx, :)));
-    ss = mean(squeeze(dat.lf_stim(stim_idx, :)));
-    
-    hold on;
-    plot(dat.raw_resp_time, (1/rs)*dat.raw_respavg(stim_idx, :), 'k-');
-    plot(dat.(mdl.input_time), (1/ss)*squeeze(dat.lf_stim(stim_idx, :)), 'r-');
-    hold off;
-   
-    axis tight;
-    drawnow;
-end
+% 
+% function do_plot_summed_prediction(stack, xxx)
+%     mdl = stack{end};
+%     x = xxx{end};
+%     
+%     % Find the GUI controls
+%     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
+%     filt_pop = find_module_gui_control(stack, 'selected_filter_popup');
+%     
+%     c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
+%     sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
+%     stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
+%        
+%     dat = x.dat.(sf);
+%     
+%     % Scale the response and prediction in case they have wildly
+%     % different scales (a common problem when using a correlation
+%     % coefficient-type performance metric is used to fit the model
+%     rs = mean(squeeze(dat.raw_respavg(stim_idx, :)));
+%     ss = mean(squeeze(dat.(stim_idx, :)));
+%     
+%     hold on;
+%     % plot(dat.raw_resp_time, (1/rs)*dat.raw_respavg(stim_idx, :), 'k-');
+%     plot(dat.(mdl.time), (1/ss)*squeeze(dat.(mdl.output)(stim_idx, :)), 'r-');
+%     hold off;
+%    
+%     axis tight;
+%     drawnow;
+% end
 
 function do_plot_fir_coefs(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
-        
+    
     hold on;
     for dim_idx = 1:(mdl.num_dims)
         stem([1:mdl.num_coefs], mdl.coefs(dim_idx,:), pickcolor(dim_idx));
@@ -155,13 +154,13 @@ function do_plot_fir_coefs_as_heatmap(stack, xxx)
     
     %TODO: This way of scaling the image intensity is specific to what is
     %selected and therefore probably wrong in general.
-    tmp = mdl.coefs;
-    [M, N] = size(tmp);
-    for ii = 1:M
-        tmp(ii,:) = tmp(ii,:) * abs(mean(squeeze(dat.lf_preds(stim_idx, :, ii))));
-    end
+%     tmp = mdl.coefs;
+%     [M, N] = size(tmp);
+%     for ii = 1:M
+%         tmp(ii,:) = tmp(ii,:) * abs(mean(squeeze(dat.(mdl.output)(stim_idx, :, ii))));
+%     end
     
-    imagesc(tmp);
+    imagesc(mdl.coefs);
     set(gca,'YDir','normal');
     % axis tight;
 end

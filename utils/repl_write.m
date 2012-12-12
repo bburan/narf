@@ -7,8 +7,8 @@ if ismatrix(obj) & isnumeric(obj) & any(size(obj) ~= 1)  % Matrices
         s = strcat(s, num2str(obj(ii,:)), '; ');
     end
     s = strcat(s, num2str(obj(M,:)), ']');
-elseif isstr(obj)       % Single strings
-    s = obj; 
+elseif isstr(obj)       % Single strings must be quoted
+    s = ['''' obj '''']; 
 elseif isnumeric(obj)   % Single numbers
     s = num2str(obj);
 elseif islogical(obj) % Booleans

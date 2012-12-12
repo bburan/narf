@@ -1,26 +1,19 @@
 function test_likely_candidates(cellid, training_set, test_set)
 % Exhaustively test the most likely model structures candidates for fitting
 % Kind of throws the entire kitchen, including the sink, at the problem
-% Very slow. Probably will take an entire day.
-
-% NOT VERY USEFUL ANYMORE:
-% Return a list of modules with a specified field varying
-function [mlist, mstrings] =  vary_module(mdl, field, values)
-    mlist = cell(1, length(values));
-    mstrings = cell(1, length(values));
-    for ii = 1:length(values)
-        mlist{ii} = mdl.mdl(struct(field, values{ii}));
-        mstrings{ii} = [field '=' repl_write(values{ii}) '_'];
-    end
-end
-
+% Very slow. Probably will take an entire day to run.
+%
 % Although it is tempting to make this less verbose and refactor, if you
 % want to allow multiple different modules to be tried in the same
 % iteration, it's hard to get much more abstract than this. 
 %
-% A problem that has not been solved yet is how to generate models with
+% TODO: At some point we may wish to generate models with
 % a different number of modules; some models may have 3 components and
-% others may have 6. I don't see how those can be enumerated in this way.
+% others may have 6. I think that in such cases we will need to allow
+% nested lists, so that POSS has a second layer of structure indicating
+% which MULTIPLE model structures need to be inserted at once to make the
+% stack. This means that there is not a direct mapping of POSS index number
+% to the actual depth in the stack.
 % 
 % Basically, you make a nested list of possible modules to test:
 poss{1} = ...

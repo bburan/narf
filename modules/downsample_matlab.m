@@ -7,7 +7,8 @@ m.mdl = @downsample_matlab;
 m.name = 'downsample_matlab';
 m.fn = @do_downsampling;
 m.pretty_name = 'Use MATLAB''s downsample()';
-m.editable_fields = {'downsampled_freq', 'pre_ds_fn', 'post_ds_fn'};
+m.editable_fields = {'downsampled_freq', 'pre_ds_fn', 'post_ds_fn', ...
+                     'input', 'input_time', 'output', 'output_time'};
 m.isready_pred = @downsampler_isready;
 
 % Optional fields
@@ -19,6 +20,11 @@ m.plot_fns{1}.pretty_name = 'Downsampled Stimulus vs Time';
 m.downsampled_freq = 200;
 m.pre_ds_fn = @abs;
 m.post_ds_fn = @sqrt;
+m.input = 'pp_stim';
+m.input_time = 'raw_stim_time';
+m.output = 'ds_stim';
+m.output_time = 'ds_stim_time';
+m.output_fs = 'ds_stim_fs';
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
@@ -34,22 +40,21 @@ function x = do_downsampling(stack, xxx)
     scale = floor(baphy_mod.raw_stim_fs / mdl.downsampled_freq);
 
     for sf = fieldnames(x.dat)', sf=sf{1};
-        [S, N, F] = size(x.dat.(sf).pp_stim);
-        x.dat.(sf).ds_stim = zeros(S,ceil(N/scale),F);
+        [S, N, F] = size(x.dat.(sf).(mdl.input));
+        x.dat.(sf).(mdl.output) = zeros(S,ceil(N/scale),F);
         for s = 1:S
             for f = 1:F
-                x.dat.(sf).ds_stim(s,:,f) = m.post_ds_fn(...
-                    downsample(m.pre_ds_fn(x.dat.(sf).pp_stim(s,:,f)), scale));      
-            end    
+                x.dat.(sf).(mdl.output)(s,:,f) = m.post_ds_fn(...
+                    downsample(m.pre_ds_fn(x.dat.(sf).(mdl.input)(s,:,f)), scale));      
+            end
+            
+            x.dat.(sf).(mdl.output_time) = ...
+            linspace(1/mdl.downsampled_freq, ...
+                     x.dat.(sf).(mdl.input_time)(end), ...
+                     length(x.dat.(sf).(mdl.output)));
+             x.dat.(sf).(mdl.output_fs) = mdl.downsampled_freq; %% TODO: Remove SPOT violation
         end
-        x.dat.(sf).ds_stim_time = ...
-                    linspace(1/mdl.downsampled_freq, ...
-                             x.dat.(sf).raw_stim_time(end), ...
-                             length(x.dat.(sf).ds_stim));
-                         
-        x.dat.(sf).ds_stim_fs = mdl.downsampled_freq;
     end
-
 end
 
 end
