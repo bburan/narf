@@ -10,7 +10,7 @@ m.name = 'load_stim_resps_from_baphy';
 m.fn = @do_load_from_baphy;
 m.pretty_name = 'Load stim+resp from BAPHY';
 m.editable_fields = {'raw_stim_fs', 'raw_resp_fs', 'include_prestim', ...
-                     'stimulus_format', ...
+                     'stimulus_format','stimulus_channel_count', ...
                      'output_stim', 'output_stim_time', ...
                      'output_resp', 'output_resp_time'};
 m.isready_pred = @module_isready;
@@ -19,6 +19,7 @@ m.isready_pred = @module_isready;
 m.raw_stim_fs = 100000;
 m.raw_resp_fs = 200;
 m.include_prestim = 1;
+m.stimulus_channel_count=0;
 m.stimulus_format = 'wav'; % Can be 'wav' or 'envelope'
 m.output_stim = 'raw_stim';
 m.output_stim_time = 'raw_stim_time';
@@ -85,7 +86,7 @@ function x = do_load_from_baphy(stack, xxx)
         stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
         fprintf('Loading stimulus: %s\n', stimfile);
         stim = loadstimfrombaphy(stimfile, [], [], mdl.stimulus_format, ...
-            mdl.raw_stim_fs, 1, 0, mdl.include_prestim);
+            mdl.raw_stim_fs, mdl.stimulus_channel_count, 0, mdl.include_prestim);
         [d1 d2 d3] = size(stim);
    
         % Flatten input dimensions into two dimensions
