@@ -11,7 +11,7 @@ m.name = 'sum_fields';
 m.fn = @do_sum_fields;
 m.pretty_name = 'Sum Fields';
 m.editable_fields = {'input', 'time', 'output'};
-m.isready_pred = @isready_general_purpose;
+m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.inputs = {'stim1', 'stim2'}; 

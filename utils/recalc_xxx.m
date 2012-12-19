@@ -1,4 +1,5 @@
-function recalc_stack(start_depth)
+function recalc_xxx(start_depth)
+% Recalculates the XXX data structure from start_depth onwards
 global XXX STACK;
 
 % If data already exists, invalidate it just in case

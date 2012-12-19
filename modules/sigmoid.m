@@ -10,14 +10,14 @@ m.fn = @do_sigmoid;
 m.pretty_name = 'Gaussian Sigmoid';
 m.editable_fields = {'mu', 'sigma', 'amp', ...
                      'input', 'input_time', 'output'};
-m.isready_pred = @isready_general_purpose;
+m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.input = 'stim'; 
 m.time = 'ds_stim_time';
 m.output = 'stim';
-m.center = 0.5;
-m.sigma = 2*pi;
+m.mu = 0.5;
+m.sigma = 1/2*pi;
 m.amp = 1.0;
 
 % Optional fields

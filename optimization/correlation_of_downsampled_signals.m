@@ -7,7 +7,7 @@ unpack_fittables(w);
 
 % Recalculate the stack, starting at the needed point
 start_depth = find_fit_start_depth(STACK);
-recalc_stack(start_depth);
+recalc_xxx(start_depth);
 
 % Compute correlation after concatenating everything together
 x = XXX{end};

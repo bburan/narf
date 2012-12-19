@@ -1,36 +1,30 @@
 function coefs = do_stephen_fit(mdl, x)
-% Uses Stephen's model fitting code.
-%     mod_idx    the depth in the stack of stephen's FIR filter 
-% Assumes all data has been prepared.
+% Uses Stephen's model fitting code to find filter coefficients
 
-%global STACK XXX;
-% mdl = STACK{mod_idx};
-% x = xxx{mod_idx};
-
-% Flatten each stimulus and response into a vector
-mystim = {};
-myresp = {};
 fns = fieldnames(x.dat);
-for ii = 1:length(fns)
-    sf = fns{ii};
-    
-    mystim{ii} = permute(x.dat.(sf).ds_stim, [2 1 3]);
-    dims = size(mystim{ii});
-    mystim{ii} = reshape(mystim{ii}, dims(1)*dims(2), dims(3)); 
-    
-    myresp{ii} = x.dat.(sf).raw_respavg;
-    myresp{ii} = myresp{ii}';
-    myresp{ii} = myresp{ii}(:);    
-end
 
-% Concatenate all those together. The number of experimental dimensions
+% Concatenate all input files together. The number of experimental dimensions
 % must be equal for a concatenation to work; you can't mix a single-channel
-% TORC and a multi-channel SPN. 
+% TORC and a multi-channel SPN. Sorry. 
 stim = [];
 resp = [];
-for ii = length(mystim)
-    stim = cat(2, stim, mystim{ii}); % TODO: use a better algorithm and preallocate
-    resp = cat(2, resp, myresp{ii});
+
+% Concatenate the stimulus of every stim file
+% TODO: Complain to stephen that overlapping could be a problem
+for sf = fieldnames(x.dat)', sf = sf{1};
+%     ARBITRARY DIMENSION STUB ----------------------------
+%     % Get the stimulus matrix and column selector/accessor
+%     M = x.dat.(sf).(mdl.stimfield);
+%     M_selcols = x.dat.(sf).([mdl.stimfield '_selcols']);
+%         
+%     % Each channel must become a very long single stimulus. 
+%     for chan_idx = 1:mdl.num_dims
+%         tmp = M(:, M_selcols('chan', chan_idx));
+%         tmpstim(:, chan_idx) = tmp(:);
+%     end
+%     ARBITARY_DIMENSION_STUB------------------------------
+    stim = cat(1, stim, x.dat.(sf).(mdl.stimfield));
+    resp = cat(1, resp, x.dat.(sf).(mdl.respfield));
 end
 
 % choose fit algorithm and set various parameters
@@ -41,8 +35,14 @@ params.resampcount = mdl.resampcount;
 params.sfscount    = mdl.sfscount;
 params.sfsstep     = mdl.sfsstep;
 
+% Adjust the data's format to match Stephen's interface
+resp=nanmean(resp,3);
+resp=resp(:);
+[T,S] = size(resp);
+stim=reshape(permute(stim, [1 3 2]), T, numel(stim) / T);
+
 % Make an STRF
-strf = cellxcdataloaded(stim,resp,params);
+strf = cellxcdataloaded(stim, resp, params);
 
 % Return the coefficients
 coefs = strf(1).h;

@@ -37,7 +37,7 @@ for sr = sampling_rates, sr = sr{1};
     STACK{4} = mdls.fir_filter.mdl(struct('num_dims', 10, ...
                                           'fit_fields', {{'coefs'}}));
                                       
-    recalc_stack(1);
+    recalc_xxx(1);
 
     %%%%%%%%%%%%%%%%%%%%%%%%5
     % UNCOMMENT TO USE IVAR'S FIT
@@ -73,7 +73,7 @@ for sr = sampling_rates, sr = sr{1};
     STACK{4}.num_dims = ss(1);
     STACK{4}.num_coefs = ss(2);
     % Recompute now just the last little bit
-    recalc_stack(4);
+    recalc_xxx(4);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

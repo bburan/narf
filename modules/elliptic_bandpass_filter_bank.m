@@ -12,7 +12,7 @@ m.pretty_name = 'Elliptic Bandpass Filter Bank';
 m.editable_fields = {'low_freqs', 'high_freqs', 'order', ...
                      'sampfs', 'stop_dB', ...
                      'input', 'time', 'output'};
-m.isready_pred = @preproc_filter_isready;
+m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.low_freqs = [1000 4000];   % Bottom frequencies of bandpass filters
@@ -20,9 +20,9 @@ m.high_freqs = [4000 8000];  % Top frequencies of bandpass filters
 m.order = 4;                 % What order should the filter be?
 m.sampfs = 100000;           % TODO: REMOVE THIS AND AUTODETECT IT
 m.stop_dB = 50;              % Ratio of passband/stopband attenuation
-m.input = 'raw_stim';
-m.time = 'raw_stim_time';
-m.output = 'pp_stim';
+m.input = 'stim';
+m.time = 'stim_time';
+m.output = 'stim';
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
@@ -54,18 +54,19 @@ function x = do_elliptic_filter(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    % For each data file...
-    sfs = fieldnames(x.dat);
-    for s_idx = 1:length(sfs)
-        % make a matrix to store all the filter responses...
+    % For each stimulus file 
+    for sf = fieldnames(x.dat)', sf = sf{1};
+        % Accumulate a matrix to store all the filter responses...
         filtered_x = [];
         for idx = 1:length(mdl.low_freqs)
-            tmp = filter(mdl.coefs{idx}{1}, mdl.coefs{idx}{2}, x.dat.(sfs{s_idx}).(mdl.input),[],2);
-            filtered_x = cat(3, filtered_x, tmp); 
+            tmp = filter(mdl.coefs{idx}{1}, mdl.coefs{idx}{2}, x.dat.(sf).(mdl.input));
+            filtered_x = cat(4, filtered_x, tmp); 
         end
         % Store that matrix in our data structure
-        x.dat.(sfs{s_idx}).(mdl.output) = filtered_x;
+        x.dat.(sf).(mdl.output) = filtered_x;
     end
+   
+    
 end
 
 % Plot the filter responses
@@ -73,39 +74,26 @@ function do_plot_filtered_stim(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    % Find the GUI controls
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    
-    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
-    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
-    dat = x.dat.(sf);
+    [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack);
     filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
+    dat = x.dat.(sf);
     
     plot(dat.(mdl.time), ...
-         squeeze(dat.(mdl.output)(stim_idx,:,filt_idx)), ...
+         dat.(mdl.output)(:, stim_idx, chan_idx, filt_idx), ...
          pickcolor(filt_idx));
     axis tight;
-    drawnow;
 end
 
 function do_plot_filtered_spectrogram(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    % Find the GUI controls
+    [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack);
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    
-    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
-    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
     dat = x.dat.(sf);
     
-    filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
-    
-    logfsgram(dat.(mdl.output)(stim_idx,:, filt_idx)', 4048, baphy_mod.raw_stim_fs, [], [], 500, 12); 
+    logfsgram(dat.(mdl.output)(:, stim_idx, chan_idx)', 4048, baphy_mod.raw_stim_fs, [], [], 500, 12); 
     caxis([-20,40]);
-    drawnow;
 end
 
 

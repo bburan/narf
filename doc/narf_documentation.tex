@@ -182,6 +182,8 @@ In the above, dimensions are indicated with:
 \end{description}
 
 
+Coefficients are the only things that AREN'T with the time index in first place. Why? Well, it's easier to edit them in the gui if they are not?
+
 \section{Overview of Typical Operations}
 
 The following is a rough overview of how typical operations affect the \matlab{STACK} and \matlab{XXX} structs. 
@@ -199,37 +201,50 @@ The following is a rough overview of how typical operations affect the \matlab{S
 \item {OPTIMIZATION} There will need to be three types of modules: a performance metric, termination condition, and a sampling algorithm which picks out the next point to try. These are not part of the model explicitly, and must be reusable amongst different optimization algorithms. 
 \end{description}
 
-\section{Experiment Dimensionality}
+\section{Allowing Varying Signal Dimensionality}
 
-There is an intrinsic problem in science that we do not know how many dimensions we will want to test, or which quantities are relevant, until much later in the experiment.
-
-When presenting an audio stimulus during an experiment, there are multiple dimensions to the stimulus which might have an effect:
+There is an intrinsic problem in science in that we often do not know how many dimensions we will need to test before starting an experiment. For example, when presenting an auditory stimulus during an experiment, there may be multiple dimensions to the stimulus which need to be indexed:
 
 \begin{enumerate}
-\item Which speaker plays the stimuli, if multiple speakers are playing simultaneously. We might further wish to break this down into an up/down dimension and a left/right dimension with regards to how the test animal hears the sound or the orientation of the animal's head.. 
-\item Confounding multidimensional stimulus, such as the ambient light intensity 
-\item The type of sound that was played (ie, a particular stimuli index number)
-\item The sound's amplitude (time-varying dimension)
+\item The amplitude of the sound as a function of time
+\item Which experiment the data came from (ie, stimfile)
+\item Which particular sound that was played (ie, a particular stimuli fragment, usually given an index number)
+\item Whether the sound is of one type or another type, such as during discrimination tasks. 
+\item The index number of the speaker playing the stimuli
+\item The L/R index of which ear the animal is listening with
+\item The repetition index number, if a stimulus somehow varies in a minor way across each major stimulus pattern.
 \end{enumerate}
 
-To allow each model to work with every possible experimental dimensionality, we request that all stimuli dimensions be reduced to an $N\timesD$ dimensional matrix, where $N$ is the number of time samples, and $D$ is the product of all experimental dimensions (excluding time). For example, if $D_1$ is the speaker playing the stimulus, $D_2$ is the ambient light at that speaker, and $D_3$ is the index number of the sound that was played, then $D = D_1 * D_2 * D_3$. 
+For visual presentations of images, the problem can become even worse due to the higher dimensionality of image stimuli, although this depends on how the video stimuli is represented as data, and whether or not each pixel has an X component, a Y component, and RGB color dimensions. 
 
-\section{Model Dimensionality}
-
-It is often the case that there will be extra dimensions internal to the model used to help predict neural response to a stimulus. For example, 
+There are similar problems with dimensionality in regards to model complexity. It is often the case that there will be extra dimensions internal to the model used to help predict neural response to a stimulus. For example, a model may have:
 
 \begin{enumerate}
-\item Which Gammatone channel (G dimensions)
-\item Which FIR time delay coefficient vector F. (We assume that each coefficient is an Gx1 vector, so the FIR filter is an GxF matrix)
-\item Which feedback delay channel we are using (H).
-\item Etc ad nauseum.
+\item Linear or nonlinear combinations of input data channels intended to model higher order terms. 
+\item A filter bank applied to a single stimuli, converting a single stimulus into many.
+\item Multiple macro channels of FIR filters, acting on different portions of the signal 
 \end{enumerate}
 
-All of these dimensions are contained in the LAST dimension. That is, if the FIRST dimension was time, and the SECOND di 
+Whether changing dimensionality results from changes to model structure or from the experiment itself, the problem is the same: it is hard to perfectly predict when extra dimensions will need to be added or removed, especially when many models must be tried.
 
-\section{Model Automagic}
+Allowing arbitrary NARF modules to work with every possible experimental dimensionality is a very difficult problem to solve. Several possibilities for enabling varying dimensionality include the following.
 
-One lazy design decision made was not to pass the \matlab{STACK} and \matlab{XXX} to each module. Although this could easily be done to allow modules to automatically initialize themselves, most of the time we want to set their values via a script. It seems better to avoid accidentally contaminating
+\begin{enumerate}
+  \item One possibility is to flatten all dimensions into a 2D matrix, with the first dimension being time and the second being the combination of all other dimensions, flattened or indexed in an appropriate way. The benefits of this approach are simplicity and easy combination of several dimensions, as well as a uniform interface. Drawbacks of this approach include a difficulty in finding index numbers, and difficulty when concatenating or trimming indexes along a particular dimension.
+  \item Another possibility is to just keep nesting indexed data structures until a 2D matrix is reached. The benefit of the approach is a logical, easy-to-understand data structure, however it is difficult to arbitrarily index such a data structure without complex loops. 
+  \item Another possibility is to not store all stimulus data in the same matrix, and instead give field names to every quantity. The benefit of this approach is simplicity, but the drawback is that there will be an explosion in the number of field names and it will be difficult to provide a standardized interface . 
+  \item Another possibility is to avoid the problem entirely and allow modules which are incompatible; some work on 2D matrices, others on 3D matrices, etc. The main drawback would be a large amount of duplicated functionality across different interfaces. 
+  \item Another possibility is to provide ``interfacing'' functions which act as adapters and chunk out data from an N diemnsional matrix as needed by the module at work. 
+\end{enumerate}
+
+The solution taken in NARF was a combination of the first and last possibilities. In other words, to flatten stimulus data into to a 2D matrix in which time index is the first dimension, and the second dimension is the enumerated combination of other dimensions. A simple indexing functionality to help you select which columns are of interest for a particular operation. If data is concatenated or new dimensions are adding, these indexing functions must be rebuilt. 
+
+UPDATE: This doesn't actually work out nicely because any graphing function needs to know about the dimensionality in order to select a single trace. If you make an FIR filtering function work across every dimensionality (which is possible with the above nifty interface), you still can't graph the traces produced by those since you end up plotting multiple values. You just can't index through them all. This really calls into question the possibility of ever really abstracting the dimensonality...although you could compute stuff, you couldn't graph stuff! Or, unselected dimensions would still be plotted, meaning you could have a large number of traces appearing. 
+
+
+\section{Model Auto-Initalization Not Encouraged}
+
+One lazy design decision made was not to pass the \matlab{STACK} and \matlab{XXX} as arguments to each module creation function. Although this could easily be done to allow modules to automatically initialize themselves, most of the time we want to set their values via a script anyway. Initializing a module from more than one place could lead to confusion about who sets the last, final value of the module, so this approach was avoided.
 
 \section{Example Modules}
 
@@ -514,11 +529,6 @@ See the TODO.org file in NARF's main directory.
 
 %% * Allowed Dimensions: How should can we accomodate the later addition of extra dimensions in the future, such as behavioral characteristics?
 %%   Right now we have:
-%%   1. StimFile               (Which is not indexed, but uses a keyword)
-%%   2. Stimulus # 
-%%   3. Value at time
-%%   4. Repetition #
-%%   5. Preprocessor Index #   (Because preprocessing may have multiple dimensions)
 %%   In the future, we may have more. 
 %%   The only way I can think about allowing multiple dimensions to vary arbitrarily would be to either:
 %%   A) Somehow keep track of their numerical indexes as you go along, using a struct
@@ -528,9 +538,6 @@ See the TODO.org file in NARF's main directory.
 %% * Tricky things:
 %%   We may need to do an iteration procedure that treats one part of the model (IE, Linear FIR filters) differently from a nonlinear part (In my opinion, this is just a special case sampler)
 %%   If you modify a function after starting up narf_gui, what will happen? (Right now, changes to the pretty-name and params will not be altered without restarting narf_gui, however if you fix the function itself then that is fine.)
-
-%% * Issues for Stephen :
-%%   1. Where is 'repetitions' visible? The closest thing I see is the 'Ref_Subsets' field returned in the 'parms' struct by 'dbReadData'
 
 %% * Possible refactoring
 %%   1. Data ordering is perhaps nonstandard, since we need filter(B,A,X,[],2) instead of filter(B,A,X);

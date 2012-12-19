@@ -1,88 +1,77 @@
-* NOTES FOR STEPHEN
-  You'll that load_stim_from_baphy flattens the inputs...this is bad and I am going to correct it soon. 
-  Let's just call the default stimulus and responses "stim" and "resp" and not overthink this with 'current_stim' or 'current_resp'. If there is a particularly important variation that needs to be made distinct, you can call it 'raw_resp' or 'ds_resp' for raw or downsampled responses, respectively.  
-  If you wish, you can also define an alias for a signal, so that 'resp' actually points to the 'raw_resp' signal...?
-  EMAIL: It's cheating to train the neuron using the envelope that used to generate the speech modulated noise, because the actual data after random noise was added will not have the same envelope! You must reconstruct the envelope from the wave file that you actually presented to the animal in order to be honest, or at the very least prove that the original envelope can be reconstructed essentially perfectly.
+* IN PROGRESS
+  FLATTEN EVERYTHING TO 3 DIMENSIONS
+  Stim should be TxSxC
+  Put 'score' at a higher level than x.dat
 
-* TOP TODO LIST
-  1. [X] Refactor the FIR FILTER model to have an 'inputs' and 'outputs' field that it works on.
-  2. [X] Remove the 'load' and 'save' buttons from narf_gui
-  3. [X] Refactor the FIR FILTER model to use a separate SUMMING module that works across the vector inputs
-  4. [X] Add a module which thresholds FIR output exponentially
-  5. [X] Make all modules have 'input', 'output', and 'time' fields, which default to 'Current_stim', 'current_time', etc
-  6. [X] Make a module which sums across a vector to produce a scalar
-  7. [ ] Make a module which can pick out a particular dimension from a vector and give it a name as a signal?
-  8. [X] Add a module which thresholds FIR output sigmoidally
-  9. [ ] Add a module which thresholds FIR output linearly
-  10. [ ] Add a module which does thresholding of the FIR output so that it never goes negative
-  11. [ ] Add a function to compute 'var' for each input channel, across every stimulus. then SCALE FIR coefficients in that row by 1/var right before the filtering. Then FIR coefficients will be relative?
-  12. [ ] Rearrange all vectors so that the 1st dimension is always time, the 2nd dimension is always stimulus channel, and the 3rd dimension is always a model internal channel. 
-	  Reduce all experimental dimensions to 2. Time, and channel. Input channels are the enumerated combination of speaker #, band #, light intensity, or whatever. 
-	  First dimension is always time.
-	  Second dimension is some combination of input dimensions. 
-	  Reduce all model dimensions to be in the 3rd position. 
-  13. [ ] Put back in Volterra model
-  14. [ ] Write a crash course guide on using NARF
-  15. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  16. [ ] Make a function to replicate the true SPN envelope filter that Stephen does
-  17. [ ] Make logging work for the GUI by including it in narf_modelpane?
-  18. [ ] Do a check to see how close the re-interpolated value of the envelope is, compared with what Stephen used to generate it.
+* PROBLEMS ENCOUNTERED
+  1. BAPHY doesn't rasterize wave files with channels? It collapses things into a single channel. 
+     This needs to be fixed if channels really represent L/R spatial stimuli. 
+     If the word "channel" doesn't represent a spatial dimension, then 'envelope' is actually returning two 'filter' outputs, not two 'channel' outputs, and the dimensionality of BAPHY's return should be updated to be 4.       
+     I am going to need to destroy and recreate the plot_gui each time because the dimensionality of the signal returned from BAPHY is changing. Maybe this needs to happen anyway?
+  2. Dimensionality is still a painful problem: (T = time, S = stim#, C = chan#, F = Filter#, R=Repetition#)
 
-* Loadstimfrom baphy has the chancount
-  Passing a zero to it should give the true number of envelopes
-  I could also try passing it a 2 and see what happens, since if you give loadstimfrombaphy any value OTHER THAN ONE, it will give you the envelopes used to generate the stimuli
-  
-* CLEANING/REFACTORING TODOs:
+     STIM has size TxSxC
+     RESP has size TxSxR
+     Four dimensions at present, and probably we will need more unless C is always experimental DOFs and F is always model DOFs.
+     I wrote a test thing called define_dims() to see if it could be abstracted, but it's somewhat cumbersome so I didn't use it extensively. 
+     Define_dims() would need more methods defined for it to be a useful encapsulation of a multidimensional data structure. Right now matricies have far more functions that work on them.
+
+* THE TODO LIST
+  1. [X] Change module defaults to always work on 'stim' and 'resp'
+  2. [X] Provide a fn to extract the right indexes for various channels (See definedims.m)
+  3. [X] Loadstimfrom baphy has the chancount, passing a zero to it should give the true number of envelopes
+  4. [X] Try flattening Stephen's stimuli so it is always 2 dimensional
+  5. [X] Abandon the previous idea of storing data in a 2D matrix and using accessors
+  6. [X] Scripted direct linear fit to the output of load_stim_resp
+  7. [X] Display, quantify prediction on the test step in the last step of the model with correlation
+  8. [ ] Add legend info to all plots
+  9. [ ] FLATTEN EVERY FILTER INTO THE CHANNEL DIMENSION, and provide a 'channel' selector for every module.
+  10. [ ] Make a lsqcurve_fit function that acts on the stack.
+  11. [ ] 
+  12. [ ] Make gammatone filter bank work like elliptic bandpass filter 
+  13. [ ] Provide functions to cover the input space logarithmically with filters
+  14. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
+  15. [ ] Put back in Volterra model by adding a 3rd channel to the stimulus that is the multiplicitive combination of channels 1 and 2. 
+  16. [ ] Find a way to save predictions (for easy comparison across multiple models)
+  17. [ ] Suggest an improvement: Use BAPHY to cache intermediate values
+  18. [ ] Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  19. [ ] Add a module which thresholds FIR output linearly
+  20. [ ] Add a module which does hard thresholding of output to prevent it from going negative
+  21. [ ] Add a function to compute 'var' for each input channel, across every stimulus. then SCALE FIR coefficients in that row by 1/var right before the filtering. Then FIR coefficients will be relative?
+  22. [ ] Make all vectors into column vectors so I don't have to continually do the transpose, and use dimension 1.
+  23. [ ] Write a crash course guide on using NARF
+  24. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  25. [ ] Add module to replicate the true SPN envelope filter that Stephen does. 
+  26. [ ] Make logging work for the GUI by including the log space in narf_modelpane?
+  27. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
+  28. [ ] Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
+  29. [ ] Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
+  30. [ ] Write several different performance metric functions: MSE and a point-process fit
+  31. [ ] Write a jack-knifing function which can work with any of the optimization modules
+  32. [ ] Single channel gammatone filter (for speed, once sensitivity has been identified)
+  33. [ ] SMOOTHING of the RESPAVG signal with gaussian convolution
+  34. [ ] An option for taking correlation in a different method than sheer concatenation could be interesting
+  35. [ ] Add a method to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
+  36. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
+  37. [ ] Handle NaN's better...right now they can cause problems! (Use nanmean())
+  38. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
+  39. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
+   
+* CLEANING/REFACTORING TODOS:
+  - Scoping in matlab appears broken. You can modify a global value accidentally because function returns are not protected!
+  - Use this idiom more often to search through struct or cell arrays:
+    hits = arrayfun(@(x)strcmp(x.stimfile, sf), XXX{2}.cfd);   % Use cellfun instead of arrayfun if needed.
   - Look for obvious repetition and make some more functions in util/
-  - In retrospect, XXX should probably contain the 'plot_gui' part, since it depends on the XXX pretty substantially.
+  - Remove/rename useless functions in util that have accumulated.
+  - Rename things to be more clear. Any sort of input dimension is a 'channel', to abstract the notion of stimulus dimension?
+  - In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it?
   - It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
   - Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?
-  - Rename things to be more clear. Any sort of input dimension is a 'channel', to abstract the notion of stimulus dimension?
-  - Avoid cla's in user-space plotting functions
   - Provide a more concise way of finding user-space guis in the call tree above (Right now there's too much copy & paste in user-side plot functions!)
   - Go through the TODO's in existing files
   - Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
   - make anything named 'update_' into a function used purely for its side effects
-  - Make all vectors into column vectors so I don't have to continually do the transpose
-
-* HIGH LEVEL THINGS TO BE THOUGHT ABOUT:
-  How can optimization routines be...?
-  1. Allowed to work on the STACK and XXX as they desire
-  2. Able to use the narf_modelpane gui 
-  3. Able to do their own plots
-  4. Modular, with pluggable sampling methods, objective functions, termination conditions.
-  5. Still scriptable and batch executable
-
-* OPTIMIZATION TODOs
-  Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
-  Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
-  Write several different performance metric functions: MSE and a point-process fit
-  Write a jack-knifing function which can work with any of the optimization modules
-
-* ADDITIONAL MODULES:
-  - Single channel gammatone filter (for speed)
-  - SMOOTHING of the RESPAVG signal with gaussian convolution
-  - An option for taking correlation in a different method than sheer concatenation could be interesting
-  - Add a button to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
-  - Add a button or textbox to "load analysis" settings that have already been found, so that saved data from a batch can be quickly browsed.
-  - Add error handling (catch/throw) around EVERY CALL to a user defined function
-  - Handle NaN's better...right now they can cause problems! (Use nanmean())
-  - Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
-
-* STEPHEN'S CODE TO REVIEW
-  - [X] cellxcmaster('por012c-b1',238); % intelligently performs batch analysis 238 on cellid 'por012c-b1'
-  - [ ] After the execution of the above, 'params' contains the details of how the analysis was performed.
-  - [ ] params.resploadparms{1} is a way of getting
-  - [ ] params.respfiles gives a list of the files being used during the analysis
-  - [ ] dbget('sBatch', 238); % Returns details about which experiment is actually being performed
-  - [ ] [cellfiledata, times, ...] = cellfiletimes()      % Note that times contains important info about the training set/test set split, such as the fitting method used?
-  - [ ] xcloadfiles      % Performs analysis on multiple files, queries from the database
-  - [X] xcloadstimresp   % A cleaner, gentler version of the previous file that is probably what I should base my analysis off of. 
-  - [X] meska_pca()                              Used for doing the spike sorting, the front end. 
-  - [ ] RemoteAnalysis/boost_online.m
-  - [ ] Utilities/cacheevpspikes.m
-  - [X] cellDB/dbchooserawfile.m
-  - [X] Config/lbhb/BaphyMainGuiItems.m  has some hard-coded defaults for the GUI
+  - make anything named 'do_' into a method for use with modules?
 
 * LUXURY, UNESSENTIAL TODO ITEMS 
   - [ ] Make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization

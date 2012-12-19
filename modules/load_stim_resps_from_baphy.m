@@ -13,18 +13,18 @@ m.editable_fields = {'raw_stim_fs', 'raw_resp_fs', 'include_prestim', ...
                      'stimulus_format','stimulus_channel_count', ...
                      'output_stim', 'output_stim_time', ...
                      'output_resp', 'output_resp_time'};
-m.isready_pred = @module_isready;
+m.isready_pred = @isready_baphy;
 
 % Module fields that are specific to THIS MODULE
 m.raw_stim_fs = 100000;
 m.raw_resp_fs = 200;
 m.include_prestim = 1;
-m.stimulus_channel_count=0;
-m.stimulus_format = 'wav'; % Can be 'wav' or 'envelope'
-m.output_stim = 'raw_stim';
-m.output_stim_time = 'raw_stim_time';
-m.output_resp = 'raw_resp';
-m.output_resp_time = 'raw_resp_time';
+m.stimulus_channel_count=0; % 0 should be 'autodetect'
+m.stimulus_format = 'wav';  % Can be 'wav' or 'envelope'
+m.output_stim = 'stim';
+m.output_stim_time = 'stim_time';
+m.output_resp = 'resp';
+m.output_resp_time = 'resp_time';
 m.include_prestim = 1;
 
 % Overwrite the default module fields with arguments 
@@ -34,10 +34,10 @@ end
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_stim_log_spectrogram;
-m.plot_fns{1}.pretty_name = 'Stimulus Log Spectrogram';
-m.plot_fns{2}.fn = @do_plot_stim;
-m.plot_fns{2}.pretty_name = 'Stimulus vs Time';
+m.plot_fns{1}.fn = @do_plot_stim;
+m.plot_fns{1}.pretty_name = 'Stimulus vs Time';
+m.plot_fns{2}.fn = @do_plot_stim_log_spectrogram;
+m.plot_fns{2}.pretty_name = 'Stimulus Log Spectrogram';
 m.plot_fns{3}.fn = @do_plot_respavg;
 m.plot_fns{3}.pretty_name = 'Response Average vs Time';
 m.plot_fns{4}.fn = @do_plot_response_rastered;
@@ -86,14 +86,18 @@ function x = do_load_from_baphy(stack, xxx)
         stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
         fprintf('Loading stimulus: %s\n', stimfile);
         stim = loadstimfrombaphy(stimfile, [], [], mdl.stimulus_format, ...
-            mdl.raw_stim_fs, mdl.stimulus_channel_count, 0, mdl.include_prestim);
-        [d1 d2 d3] = size(stim);
-   
-        % Flatten input dimensions into two dimensions
-        x.dat.(f).(mdl.output_stim) = permute(sum(stim, 1), [3 2 1]);
-        x.dat.(f).raw_stim_fs = mdl.raw_stim_fs;         % TODO: Remove this SPOT violation
-        x.dat.(f).include_prestim = mdl.include_prestim; % TODO: Remove this SPOT violation
+                              mdl.raw_stim_fs, mdl.stimulus_channel_count, ...
+                              0, mdl.include_prestim);
+        stim = permute(stim, [2 3 1]);
         
+        % TODO: If you ever need arbitrary dimensions, I started planning
+        % out how that could be accomplished...but it doesn't help plotting
+        % See documentation in narf/doc/
+        % stim = define_dims(stim, {'stim', 'chan'});
+        
+        x.dat.(f).(mdl.output_stim) = stim;
+    
+        % x.dat.(f).([mdl.output_stim '_across']) = stim_acc;
         % Load the raw_resp part of the data structure
         options = [];
         options.includeprestim = mdl.include_prestim;
@@ -103,25 +107,18 @@ function x = do_load_from_baphy(stack, xxx)
         respfile = [cfd(idx).path, cfd(idx).respfile];
         fprintf('Loading response: %s\n', respfile);
         [resp, tags] = loadspikeraster(respfile, options);
-        x.dat.(f).(mdl.output_resp) = permute(resp, [3 1 2]);
-        x.dat.(f).raw_respavg = squeeze(sum(x.dat.(f).(mdl.output_resp), 3));
-        x.dat.(f).raw_resp_fs = mdl.raw_resp_fs;
-        
-        % Check raw_stim, raw_resp, and raw_time signal sizes match.
-        % TODO: This is no longer relevant if stim and resp are sampled at
-        % different frequencies!
-%         if ~(isequal(s1, r1, a1) & isequal(s2, r2, a2))
-%             fprintf('Stim [%d %d], Resp: [%d %d %d] Respavg=[%d %d]\n',...
-%                 s1,s2,r1,r2,r3, a1,a2);
-%             error('Stimulus, Response, and Average matrices size mismatch.\n');
-%         end
-        
-        % Create time signals for convenience
-        [s1 s2]    = size(x.dat.(f).(mdl.output_stim));
+        x.dat.(f).(mdl.output_resp) = permute(resp, [1, 3, 2]);
+        x.dat.(f).respavg = squeeze(sum(x.dat.(f).(mdl.output_resp), 3));
+               
+        % Create time signals for later convenience
+        [s1 s2 s3] = size(x.dat.(f).(mdl.output_stim));
         [r1 r2 r3] = size(x.dat.(f).(mdl.output_resp));
-        [a1 a2]    = size(x.dat.(f).raw_respavg);
-        x.dat.(f).(mdl.output_stim_time) = (1/mdl.raw_stim_fs).*[1:s2]';
-        x.dat.(f).(mdl.output_resp_time) = (1/mdl.raw_resp_fs).*[1:r2]';
+        [a1 a2]    = size(x.dat.(f).respavg);
+                
+        % TODO: Check stim, resp, raw_time signal sizes match.
+        
+        x.dat.(f).(mdl.output_stim_time) = (1/mdl.raw_stim_fs).*[1:s1]';
+        x.dat.(f).(mdl.output_resp_time) = (1/mdl.raw_resp_fs).*[1:r1]';
         
     end
 end
@@ -131,14 +128,14 @@ function do_plot_stim(stack, xxx)
     x = xxx{end};
     
     % Read the GUI to find out the selected stim files
-    c = cellstr(get(mdl.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
-    idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
-    dat = x.dat.(sf);
-
-    % TODO: If there was any problem in the above, report it
+    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
+    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
+    chan = popup2num(mdl.plot_gui.selected_stim_chan_popup);
     
-    plot(dat.(mdl.output_stim_time), dat.(mdl.output_stim)(idx,:), 'k-');
+    dat = x.dat.(sf);   
+    
+    plot(dat.(mdl.output_stim_time), ...
+         dat.(mdl.output_stim)(:, stim, chan), 'k-');
     axis tight;    
 end
 
@@ -146,14 +143,21 @@ function do_plot_stim_log_spectrogram(stack, xxx)
     mdl = stack{end};    
     x = xxx{end};
     
+    if strcmp(mdl.stimulus_format, 'envelope')
+        text(0.35, 0.5, 'Cannot visualize envelope as spectrogram');
+        axis([0, 1, 0 1]);
+        return;
+    end
     % Read the GUI to find out the selected stim files
-    c = cellstr(get(mdl.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
-    idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
-    dat = x.dat.(sf);
+    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
+    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
+    chan = popup2num(mdl.plot_gui.selected_stim_chan_popup);
     
+    dat = x.dat.(sf);
+   
     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-    logfsgram(dat.(mdl.output_stim)(idx,:)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
+    logfsgram(dat.(mdl.output_stim)(:, stim, chan), ...
+              4048, mdl.raw_stim_fs, [], [], 500, 12); 
     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
     axis tight;
     
@@ -164,16 +168,27 @@ function do_plot_respavg(stack, xxx)
     x = xxx{end};
     
     % Read the GUI to find out the selected stim files
-    c = cellstr(get(mdl.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
-    idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
+    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
+    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
+    
     dat = x.dat.(sf);
-	
-    plot(dat.(mdl.output_resp_time)(:), dat.raw_respavg(idx,:), 'k-');
-    %[xs,ys] = find(dat.raw_respavg(idx, :) > 0);
-    % bar(dat.raw_resp_time(ys), dat.raw_respavg(idx,ys), 0.01, 'k-');
-    % axis([0 dat.raw_resp_time(end) 0 2]);
-    axis([0 dat.(mdl.output_resp_time)(end) 0 max(dat.raw_respavg(idx,:))]);
+    
+    plot(dat.(mdl.output_resp_time), dat.respavg(:, stim), 'k-');
+    axis tight;
+end
+
+function do_plot_respavg_as_spikes(stack, xxx)
+    mdl = stack{end};    
+    x = xxx{end};
+    
+    % Read the GUI to find out the selected stim files
+    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
+    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
+    dat = x.dat.(sf);
+    
+    [xs,ys] = find(dat.respavg(idx, :) > 0);
+    bar(dat.(mdl.output_resp_time)(ys), dat.respavg(idx,ys), 0.01, 'k-');
+    axis([0 dat.(mdl.output_resp_time)(end) 0 max(dat.respavg(:, stim))]);
 end
 
 function do_plot_response_rastered(stack, xxx)
@@ -181,19 +196,18 @@ function do_plot_response_rastered(stack, xxx)
     x = xxx{end};
     
     % Read the GUI to find out the selected stim files
-    c = cellstr(get(mdl.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
-    idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
+    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
+    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
     dat = x.dat.(sf);
     
-    [S, N, R] = size(dat.(mdl.output_resp));
+    [T, S, R] = size(dat.(mdl.output_resp));
     hold on;
-    for j = 1:R
-        [xs,ys] = find(dat.(mdl.output_resp)(idx, :, j) > 0);
-        plot(dat.(mdl.output_resp_time)(ys), j*dat.(mdl.output_resp)(idx,ys,j), 'k.');
+    for r = 1:R
+        [xs,ys] = find(dat.(mdl.output_resp)(:, stim, r) > 0);
+        plot(dat.(mdl.output_resp_time)(xs), r*dat.(mdl.output_resp)(xs,stim,r), 'k.');
 	end
     axis([0 dat.(mdl.output_resp_time)(end) 0 R+1]);
-    %setAxisLabelCallback(gca, @(y)(y), 'Y');
+    % setAxisLabelCallback(gca, @(y)(y), 'Y');
     hold off;
 end
 
@@ -201,26 +215,35 @@ function do_plot_spectro_and_raster(stack, xxx)
     mdl = stack{end};    
     x = xxx{end};
     
-    % Read the GUI to find out the selected stim files
-    c = cellstr(get(mdl.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(mdl.plot_gui.selected_stimfile_popup, 'Value')};
-    idx = get(mdl.plot_gui.selected_stim_idx_popup, 'Value');
-    dat = x.dat.(sf);
-    
-    hold on;
-    % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-    logfsgram(dat.(mdl.output_stim)(idx,:)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
-    caxis([-20,40]);  % TODO: use a 'smarter' caxis here
-    h = get(gca, 'YLim');
-    d = h(2) - h(1);
-    axis tight;
-    [S, N, R] = size(dat.(mdl.output_resp));
-    for j = 1:R
-        [xs,ys] = find(dat.(mdl.output_resp)(idx, :, j) > 0);
-        plot(dat.(mdl.output_resp_time)(ys), ...
-             h(1) + (j/R)*d*(d/(d+d/R))*dat.(mdl.output_resp)(idx,ys,j), 'k.');
+    if strcmp(mdl.stimulus_format, 'envelope')
+        text(0.35, 0.5, 'Cannot visualize envelope as spectrogram');
+        axis([0, 1, 0 1]);
+        return;
     end
-    hold off;
+    
+%     
+%     % Read the GUI to find out the selected stim files
+%     sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
+%     stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
+%     dat = x.dat.(sf);
+%     
+%     hold on;
+%     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
+%     logfsgram(dat.(mdl.output_stim)(:,stim)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
+%     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
+%     h = get(gca, 'YLim');
+%     d = h(2) - h(1);
+%     axis tight;    
+%     [T, S, R] = size(dat.(mdl.output_resp));
+%     hold on;
+%     for r = 1:R
+%         [xs,ys] = find(dat.(mdl.output_resp)(:, stim, r) > 0);
+%         plot(dat.(mdl.output_resp_time)(xs), ...
+%              h(1) + (r/R)*d*(d/(d+d/R))*dat.(mdl.output_resp)(xs,stim,r), 'k.');
+%        
+%     end    
+% %    axis tight;
+%     hold off;
 end
 
 
@@ -229,32 +252,39 @@ function hs = create_gui(parent_handle, stack, xxx)
     w = pos(3) - 10;
     h = pos(4) - 10;
     hs = [];
-
-    %mod_idx = length(stack);
-    m = stack{end};
+    
+    m = stack{end}; % TODO: These three looks like an accidental closure! Remove it
     mod_idx = length(stack);
     x = xxx{end};
-    stimfiles = fieldnames(x.dat);
     
     % Create a popup which selects
     uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
-        'HorizontalAlignment', 'left',  'String', 'StimFile:', ...
-        'Units', 'pixels', 'Position', [5 (h-25) w 25]);
+        'HorizontalAlignment', 'left',  'String', 'Stim:', ...
+        'Units', 'pixels', 'Position', [5 (h-25) 50 25]);
     hs.selected_stimfile_popup = uicontrol('Parent', parent_handle, ...
         'Style', 'popupmenu', 'Enable', 'on', 'String', 'NONE', ...
-        'Units', 'pixels', 'Position', [5 (h-50) w 25], ...
+        'Units', 'pixels', 'Position', [45 (h-25) w-50 25], ...
         'Callback', @(a,b,c) selected_stimfile_popup_callback());
     
     % Create a stimfile selector
     uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
-        'HorizontalAlignment', 'left', 'String', 'Stim Num:', ...
-        'Units', 'pixels', 'Position', [5 (h-75) w 25]);
+        'HorizontalAlignment', 'left', 'String', 'Idx:', ...
+        'Units', 'pixels', 'Position', [5 (h-50) 50 25]);
     hs.selected_stim_idx_popup = uicontrol('Parent', parent_handle, ...
         'Style', 'popupmenu', 'Enable', 'on', ...
         'String', 'NONE', ...
-        'Units', 'pixels', 'Position', [5 (h-100) w 25], ...
+        'Units', 'pixels', 'Position', [45 (h-50) w-50 25], ...
         'Callback', @(a,b,c) selected_stim_idx_popup_callback());
 
+    % Create a channel selector
+    uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
+        'HorizontalAlignment', 'left',  'String', 'Chan:', ...
+        'Units', 'pixels', 'Position', [5 (h-75) 50 25]);
+    hs.selected_stim_chan_popup = uicontrol('Parent', parent_handle, ...
+        'Style', 'popupmenu', 'Enable', 'on', 'String', 'NONE', ...
+        'Units', 'pixels', 'Position', [45 (h-75) w-50 25], ...
+        'Callback', @(a,b,c) selected_stim_chan_popup_callback());
+    
     % Two functions to populate the two popup menus
     function update_selected_stimfile_popup()
         fns = fieldnames(x.dat);
@@ -262,14 +292,12 @@ function hs = create_gui(parent_handle, stack, xxx)
     end
     
     function update_selected_stim_idx_popup()
-        % Get the selected stim files
-        c = cellstr(get(hs.selected_stimfile_popup, 'String'));
-        sf = c{get(hs.selected_stimfile_popup, 'Value')};
+        sf = popup2str(hs.selected_stimfile_popup);
         
         if isfield(x.dat, sf)
-            [d1, d2] = size(x.dat.(sf).raw_respavg);
+            [d1, d2, d3] = size(x.dat.(sf).(m.output_stim));
             d = {};
-            for i = 1:d1
+            for i = 1:d2
                 d{i} = sprintf('%d',i);
             end
             set(hs.selected_stim_idx_popup, 'String', char(d));
@@ -279,15 +307,32 @@ function hs = create_gui(parent_handle, stack, xxx)
         end
     end
     
+    function update_selected_stim_chan_popup()
+        sf = popup2str(hs.selected_stimfile_popup);
+        
+        if isfield(x.dat, sf)
+            [d1, d2, d3] = size(x.dat.(sf).(m.output_stim));
+            d = {};
+            for i = 1:d3
+                d{i} = sprintf('%d',i);
+            end
+            set(hs.selected_stim_chan_popup, 'String', char(d));
+            set(hs.selected_stim_chan_popup, 'Value', 1);
+        else
+            error('Selected stimulus file not found: %s', sf);
+        end
+    end
+    
     % Call the two update functions once to build the lists
     update_selected_stimfile_popup();
     update_selected_stim_idx_popup();
+    update_selected_stim_chan_popup();
     
-    % Define two callbacks, one for each popup.
+    % Define three callbacks, one for each popup.
     function selected_stimfile_popup_callback()
         % Update the selected_stim_idx_popup string to reflect new choices
         update_selected_stim_idx_popup();
-        
+        update_selected_stim_chan_popup();
         % Call the next popup callback to trigger a redraw
         selected_stim_idx_popup_callback();
     end
@@ -297,11 +342,17 @@ function hs = create_gui(parent_handle, stack, xxx)
         hgfeval(get(m.gh.plot_popup,'Callback'), mod_idx, []);
         drawnow;
     end
+    
+    function selected_stim_chan_popup_callback()
+        % Call the plot function again via the plot_popup 
+        hgfeval(get(m.gh.plot_popup,'Callback'), mod_idx, []);
+        drawnow;
+    end
 end
 
 % This module can be run if all necessary fields have been defined in the
 % topmost part of the stack
-function isready = module_isready(stack, xxx)
+function isready = isready_baphy(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     isready = (length(stack) == 1) && ...

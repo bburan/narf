@@ -11,12 +11,12 @@ m.name = 'sum_vector_elements';
 m.fn = @do_sum_vector_elements;
 m.pretty_name = 'Sum Vector Elements';
 m.editable_fields = {'input', 'time', 'output'};
-m.isready_pred = @isready_general_purpose;
+m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.input  = 'default_stim'; 
-m.time   = 'default_stim_time';
-m.output = 'default_stim';
+m.input  = 'stim'; 
+m.time   = 'stim_time';
+m.output = 'stim';
 
 % Optional fields
 m.plot_fns = {};

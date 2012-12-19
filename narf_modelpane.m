@@ -498,13 +498,17 @@ hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions()
 function delete_all_module_guis()
     for ii = 1:length(STACK)
         if isfield(STACK{ii}, 'gh')
-            delete(STACK{ii}.gh.plot_axes);
-            delete(STACK{ii}.gh.plot_popup);
-            delete(STACK{ii}.gh.plot_panel);
-            delete(STACK{ii}.gh.fn_apply);
-            delete(STACK{ii}.gh.fn_table);
-            delete(STACK{ii}.gh.fn_popup);
-            delete(STACK{ii}.gh.fn_panel);
+            try
+                delete(STACK{ii}.gh.plot_axes);
+                delete(STACK{ii}.gh.plot_popup);
+                delete(STACK{ii}.gh.plot_panel);
+                delete(STACK{ii}.gh.fn_apply);
+                delete(STACK{ii}.gh.fn_table);
+                delete(STACK{ii}.gh.fn_popup);
+                delete(STACK{ii}.gh.fn_panel);
+            catch
+                % Do nothing if a delete failed
+            end
             STACK{ii} = rmfield(STACK{ii}, 'gh');
         end
         if isfield(STACK{ii}, 'plot_gui')
@@ -520,24 +524,25 @@ end
 % because...MATLAB doesn't use Java swing panels! 
 % Therefore, the closest we could do would be to make mouse wheel scrolling
 % work just for the scrollbar, although that isn't nearly as much fun.
-%
-% hJ = findjobj(handles.container_slider);
-% hJ.MouseWheelMovedCallback = @(ch, evt, z) disp(get(evt, 'wheelRotation'));
+hJ = findjobj(handles.container_slider);
+hJ.MouseWheelMovedCallback = @(ch, evt, z) disp(get(evt, 'wheelRotation'));
+% TODO: 
 
 % Define a close window callback which will remove all GUI hooks from the
 % STACK. Useful if you close the GUI and want to open it up again without
 % recomputing the whole damn STACK.
-% function delete_gui_and_close(a,b,c)
-%    selection = questdlg('Close the GUI? (STACK and XXX will still be there)',...
-%       'Close Request Function', 'Yes', 'No', 'Yes'); 
-%    switch selection, 
-%       case 'Yes',
-%          delete_all_module_guis();
-%          delete(parent_handle);
-%       case 'No'
-%       return 
-%    end
-% end
+function delete_gui_and_close(a,b,c)
+%     selection = questdlg('Close the GUI? (STACK and XXX will still be there)',...
+%        'Close Request Function', 'Yes', 'No', 'Yes'); 
+    selection = 'Yes';
+    switch selection, 
+       case 'Yes',
+          delete_all_module_guis();
+          delete(parent_handle);
+       case 'No'
+       return 
+    end
+end
 % 
 % % Unfortunately, I don't know how to check if parent_handle is a panel or a
 % % figure, so I'm using a try/catch instead of a proper solution.

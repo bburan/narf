@@ -12,7 +12,7 @@ m.pretty_name = 'Gammatone Filter Bank';
 m.editable_fields = {'bank_min_freq', 'bank_max_freq', ...
                      'num_channels', 'align_phase', ...
                      'input', 'time', 'output' };
-m.isready_pred = @preproc_filter_isready;
+m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.bank_min_freq = 500;
@@ -20,9 +20,9 @@ m.bank_max_freq = 30000;
 m.num_channels = 5;
 m.align_phase = false;
 m.raw_stim_freq = 100000;
-m.input = 'raw_stim';
-m.time = 'raw_stim_time';
-m.output = 'pp_stim';
+m.input = 'stim';
+m.time = 'stim_time';
+m.output = 'stim';
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
@@ -83,7 +83,6 @@ function do_plot_filtered_stim(stack, xxx)
          squeeze(dat.(mdl.output)(stim_idx,:,filt_idx)), ...
          pickcolor(filt_idx));
     axis tight;
-    drawnow;
 end
 
 function do_plot_filtered_spectrogram(stack, xxx)
@@ -102,7 +101,6 @@ function do_plot_filtered_spectrogram(stack, xxx)
     
     logfsgram(dat.(mdl.output)(stim_idx,:, filt_idx)', 4048, baphy_mod.raw_stim_fs, [], [], 500, 12); 
     caxis([-20,40]);
-    drawnow;
 end
 
 function do_plot_frequency_response(stack, xxx)   

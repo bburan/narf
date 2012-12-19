@@ -9,11 +9,11 @@ m.fn = @do_exponential;
 m.pretty_name = 'Exponential';
 m.editable_fields = {'input', 'time', 'output', ...
                      'offset', 'gain'};
-m.isready_pred = @isready_general_purpose;
+m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.input = 'stim'; 
-m.input_time = 'stim_time'; % TODO: Let's just name these time
+m.time = 'stim_time';
 m.output = 'stim';
 m.offset = 0;
 m.gain = 1;
@@ -40,16 +40,16 @@ function x = do_exponential(stack, xxx)
 
     for sf = fieldnames(x.dat)', sf=sf{1};
         [S, N, F] = size(x.dat.(sf).(mdl.input));
-        x.dat.(sf).(mdl.output) = zeros(S, N, F);
-        fn = @(z) mdl.offset + exp(mdl.gain * z); % TODO: Refactor to remove the duplication here and below
-        
+        y = zeros(S, N, F);
+        fn = @(z) exp((mdl.gain * z) - mdl.offset);  % TODO: Remove spot violation here and below
         for s = 1:S
             for f = 1:F
-                x.dat.(sf).(mdl.output)(s,:,f) = ...
-                   fn(x.dat.(sf).(mdl.input)(s,:,f));
+                y(s,:,f) = fn(x.dat.(sf).(mdl.input)(s,:,f));
             end    
         end
     end
+    
+    x.dat.(sf).(mdl.output) = y;
 end
 
 
@@ -75,7 +75,7 @@ function plot_output_vs_time(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
 
-    do_plot_time_series(stack, xxx, mdl.input_time, mdl.output);
+    do_plot_time_series(stack, xxx, mdl.time, mdl.output);
     
 end
 
@@ -85,18 +85,16 @@ function plot_nonlinearity(stack, xxx)
     
     % Find the GUI controls
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    filt_pop = find_module_gui_control(stack, 'selected_filter_popup');
+    sf = popup2str(baphy_mod.plot_gui.selected_stimfile_popup);
+    stim_idx = popup2num(baphy_mod.plot_gui.selected_stim_idx_popup);
+    dat = x.dat.(sf);   
     
-    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
-    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
-    dat = x.dat.(sf);
-    
-    [bins, centers] = hist(dat.(mdl.input)(stim_idx,:), 50);
+    [bins, centers] = hist(dat.(mdl.input)(:, stim_idx), 50);
     
     xs = linspace(centers(1), centers(end), 200);
     
-    fn = @(z) mdl.offset + exp(mdl.gain * z);
+    fn = @(z) exp((mdl.gain * z) - mdl.offset); 
+    
     plot(xs, fn(xs), 'k-');
     axis tight;
 end
@@ -107,17 +105,17 @@ function plot_nonlinearity_and_histogram(stack, xxx)
     
     % Find the GUI controls
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    filt_pop = find_module_gui_control(stack, 'selected_filter_popup');
-    
-    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
-    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
+    sf = popup2str(baphy_mod.plot_gui.selected_stimfile_popup);
+    stim_idx = popup2num(baphy_mod.plot_gui.selected_stim_idx_popup);
     dat = x.dat.(sf);
     
-    [bins, centers] = hist(dat.(mdl.input)(stim_idx,:), 50);
+    
+    
+    [bins, centers] = hist(dat.(mdl.input)(:, stim_idx), 50);
     xs = linspace(centers(1), centers(end), 200);
         
-    fn = @(z) mdl.offset + exp(mdl.gain * z);
+    fn = @(z) exp((mdl.gain * z) - mdl.offset); 
+    
     [AX, H1, H2] = plotyy(centers, bins, xs, fn(xs), 'bar', 'plot');
     axis tight;
     

@@ -8,18 +8,18 @@ m.name = 'downsample_decimate';
 m.fn = @do_downsampling;
 m.pretty_name = 'Use MATLAB''s decimate()';
 m.editable_fields = {'downsampled_freq', 'pre_ds_fn', 'post_ds_fn', ...
-                     'input', 'input_time', 'output', 'output_time'};
-m.isready_pred = @downsampler_isready;
+                     'input', 'input_time', 'output', 'output_time', 'output_fs'};
+m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.downsampled_freq = 200;
 m.pre_ds_fn = @abs;
 m.post_ds_fn = @sqrt;
-m.input = 'pp_stim';
-m.input_time = 'raw_stim_time';
-m.output = 'ds_stim';
-m.output_time = 'ds_stim_time';
-m.output_fs = 'ds_stim_fs';
+m.input = 'stim';
+m.input_time = 'stim_time';
+m.output = 'stim';
+m.output_time = 'stim_time';
+m.output_fs = 'stim_fs';
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
@@ -52,7 +52,7 @@ function x = do_downsampling(stack, xxx)
             linspace(1/mdl.downsampled_freq, ...
                      x.dat.(sf).(mdl.input_time)(end), ...
                      length(x.dat.(sf).(mdl.output)));
-        x.dat.(sf).(mdl.output_fs) = mdl.downsampled_freq; %% TODO: Remove SPOT violation
+        x.dat.(sf).(mdl.output_fs) = mdl.downsampled_freq;
   
     end
                      
