@@ -22,7 +22,7 @@ m.output = 'stim';
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_local_channel;
+m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
 m.plot_fns{1}.pretty_name = 'Channel vs Time';
 m.plot_gui_create_fn = @create_chan_selector_gui;
 

@@ -22,7 +22,7 @@ m.amp = 1.0;
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @plot_output_vs_time;
+m.plot_fns{1}.fn = @(stack, xxx) do_plot_output_vs_time(stack, xxx, m.time, m.output);
 m.plot_fns{1}.pretty_name = 'Output vs Time';
 
 m.plot_fns{2}.fn = @plot_nonlinearity;

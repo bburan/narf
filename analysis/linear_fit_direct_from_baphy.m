@@ -59,5 +59,5 @@ recalc_xxx(2);
 
 % Finally, display the GUI for easy tweaking and viewing of the best result
 pf = figure('Menubar','figure', 'Resize','off', ...
-            'Units','pixels', 'Position', [20 50 1300 600]);
+            'Units','pixels', 'Position', [20 50 1300 900]);
 narf_modelpane(pf, mdls); 

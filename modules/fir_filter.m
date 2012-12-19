@@ -25,7 +25,7 @@ m.output = 'stim';
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_;
+m.plot_fns{1}.fn = @(stack, xxx) do_plot_output_vs_time(stack, xxx, m.time, m.output);
 m.plot_fns{1}.pretty_name = 'FIR Response vs Time';
 m.plot_fns{2}.fn = @do_plot_filtered_channels;
 m.plot_fns{2}.pretty_name = 'Filtered Channels vs Time';
@@ -95,34 +95,21 @@ function x = do_fir_filtering(stack, xxx)
     end
 end
 
-function do_plot_filter_output(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-    % Find the GUI controls
-    [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack);
-    dat = x.dat.(sf);
-    
-    [T, S, C] = size(x.dat.(sf).(mdl.output));
-    
-    plot(dat.(mdl.time), squeeze(dat.(mdl.output)(:, stim_idx)), 'k-');
-    axis tight;
-end
-
 function do_plot_filtered_channels(stack, xxx)
     mdl = stack{end};
+    xold = xxx{end-1}; % To print the inputs, you need to go up one
     x = xxx{end};
     
     % Find the GUI controls
     [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack);
-    dat = x.dat.(sf);
     
-    [T, S, C] = size(x.dat.(sf).(mdl.input));
+    [T, S, C] = size(xold.dat.(sf).(mdl.input));
     
     hold on;
     for c = 1:C
-        plot(dat.(mdl.time), ...
-             filter(mdl.coefs(:,c) , [1], dat.(mdl.input)(:, stim_idx, c)), ...
+        plot(xold.dat.(sf).(mdl.time), ...
+             filter(mdl.coefs(:,c) , [1], ...
+                    xold.dat.(sf).(mdl.input)(:, stim_idx, c)), ...
              pickcolor(c));
     end
     axis tight;

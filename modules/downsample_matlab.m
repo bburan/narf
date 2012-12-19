@@ -13,8 +13,8 @@ m.isready_pred = @isready_always;
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_downsampled_stimulus;
-m.plot_fns{1}.pretty_name = 'Downsampled Stimulus vs Time';
+m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.output_time, m.output);
+m.plot_fns{1}.pretty_name = 'Downsampled Channel vs Time';
 
 % Module fields that are specific to THIS MODULE
 m.downsampled_freq = 200;
