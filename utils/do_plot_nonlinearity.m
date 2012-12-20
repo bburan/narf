@@ -1,11 +1,11 @@
 function do_plot_nonlinearity(stack, xxx, thesig, thefn, showhist)
     mdl = stack{end};
-    x = xxx{end};
+    x_pre = xxx{end-1};
+    x_post = xxx{end};
     
-    [sf, stim_idx, unused] = get_baphy_plot_controls(stack);
-    dat = x.dat.(sf);  
+    [sf, stim_idx, unused] = get_baphy_plot_controls(stack);  
     
-    [bins, centers] = hist(dat.(thesig)(:, stim_idx), 50);
+    [bins, centers] = hist(x_pre.dat.(sf).(thesig)(:, stim_idx), 50);
     xs = linspace(centers(1), centers(end), 200);
     
     if ~showhist
