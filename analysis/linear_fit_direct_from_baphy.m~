@@ -28,9 +28,7 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
 STACK{2} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
                                       'num_coefs', filter_length));
 
-STACK{3} = mdls.exponential;
-STACK{4} = mdls.correlation;
-STACK{5} = mdls.mean_squared_error;
+STACK{3} = mdls.correlation.mdl(struct(('resp_avg',);
 
 % Compute the whole XXX structure once
 recalc_xxx(1);
@@ -53,10 +51,10 @@ ss = size(STACK{2}.coefs);
 STACK{2}.num_coefs = ss(1);
 STACK{2}.num_dims = ss(2);
 
-% Recompute now from the FIR filter onward
+% Recompute now just the last little bit of data
 recalc_xxx(2); 
 
 % Finally, display the GUI for easy tweaking and viewing of the best result
 pf = figure('Menubar','figure', 'Resize','off', ...
-            'Units','pixels', 'Position', [20 50 1300 900]);
+            'Units','pixels', 'Position', [20 50 1300 600]);
 narf_modelpane(pf, mdls); 

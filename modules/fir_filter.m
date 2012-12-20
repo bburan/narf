@@ -27,12 +27,15 @@ m.output = 'stim';
 m.plot_fns = {};
 m.plot_fns{1}.fn = @(stack, xxx) do_plot_output_vs_time(stack, xxx, m.time, m.output);
 m.plot_fns{1}.pretty_name = 'FIR Response vs Time';
-m.plot_fns{2}.fn = @do_plot_filtered_channels;
-m.plot_fns{2}.pretty_name = 'Filtered Channels vs Time';
-m.plot_fns{3}.fn = @do_plot_fir_coefs;
-m.plot_fns{3}.pretty_name = 'FIR Coefficients (Stem)';
-m.plot_fns{4}.fn = @do_plot_fir_coefs_as_heatmap;
-m.plot_fns{4}.pretty_name = 'FIR Coefficients (Heat map)';
+m.plot_fns{2}.fn = @do_plot_all_filtered_channels;
+m.plot_fns{2}.pretty_name = 'All Filtered Channels';
+m.plot_fns{3}.fn = @do_plot_single_channel;
+m.plot_fns{3}.pretty_name = 'Single Filtered Channel';
+m.plot_fns{4}.fn = @do_plot_fir_coefs;
+m.plot_fns{4}.pretty_name = 'FIR Coefficients (Stem)';
+m.plot_fns{5}.fn = @do_plot_fir_coefs_as_heatmap;
+m.plot_fns{5}.pretty_name = 'FIR Coefficients (Heat map)';
+m.plot_gui_create_fn = @(hh, stack, xxx) create_chan_selector_gui(hh, stack, xxx(1:end-1));
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
@@ -95,7 +98,7 @@ function x = do_fir_filtering(stack, xxx)
     end
 end
 
-function do_plot_filtered_channels(stack, xxx)
+function do_plot_all_filtered_channels(stack, xxx)
     mdl = stack{end};
     xold = xxx{end-1}; % To print the inputs, you need to go up one
     x = xxx{end};
@@ -108,12 +111,28 @@ function do_plot_filtered_channels(stack, xxx)
     hold on;
     for c = 1:C
         plot(xold.dat.(sf).(mdl.time), ...
-             filter(mdl.coefs(:,c) , [1], ...
+             filter(mdl.coefs(c, :) , [1], ...
                     xold.dat.(sf).(mdl.input)(:, stim_idx, c)), ...
              pickcolor(c));
     end
     axis tight;
     hold off;
+end
+
+function do_plot_single_channel(stack, xxx)
+    mdl = stack{end};
+    xold = xxx{end-1}; % To print the inputs, you need to go up one
+    x = xxx{end};
+    
+    % Find the GUI controls
+    [sf, stim_idx, baphy_chan_idx] = get_baphy_plot_controls(stack);
+    chan_idx = popup2num(mdl.plot_gui.selected_chan_popup);
+    dat = x.dat.(sf);
+   
+    plot(xold.dat.(sf).(mdl.time), ...
+         filter(mdl.coefs(chan_idx, :) , [1], ...
+                    xold.dat.(sf).(mdl.input)(:, stim_idx, chan_idx)));
+    axis tight;
 end
 
 function do_plot_fir_coefs(stack, xxx)
@@ -122,7 +141,7 @@ function do_plot_fir_coefs(stack, xxx)
     
     hold on;
     for c = 1:(mdl.num_dims)
-        stem([1:mdl.num_coefs], mdl.coefs(:, c), pickcolor(c));
+        stem([1:mdl.num_coefs], mdl.coefs(c, :), pickcolor(c));
     end
     hold off;
     axis tight;

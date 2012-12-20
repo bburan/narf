@@ -15,9 +15,9 @@ XXX{1}.training_set = {'por024a19_p_SPN'};
 XXX{1}.test_set = {};
 
 % Define the model structure, using defaults for unspecified fields.
-n_channels = 2;
-filter_length = 20;
 raster_fs = 200;
+filter_length = 20;
+n_channels = 2;
 
 STACK = {};
 STACK{1} = mdls.load_stim_resps_from_baphy;
@@ -37,11 +37,8 @@ STACK{3} = mdls.downsample_with_fn;
 STACK{4} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
                                       'num_coefs', filter_length));
 
-STACK{5} = mdls.correlation.mdl(struct('input1', 'stim', ...
-                                       'input2', 'respavg'));
-
-% NOTE: Must use double braces {{ }} because of struct()'s default behavior
-% of unfortunately stripping away the first layer of cell references.
+STACK{5} = mdls.correlation;
+STACK{6} = mdls.mean_squared_error;
 
 % Compute the entire stack once
 recalc_xxx(1);
@@ -59,12 +56,12 @@ m.stimfield = 'stim'; % Names of the fields to use as stimulus and response
 m.respfield = 'resp';
 
 % Run Stephen's fitting routine 
-STACK{4}.coefs = do_stephen_fit(m, XXX{2});
+%STACK{4}.coefs = do_stephen_fit(m, XXX{2});
 ss = size(STACK{4}.coefs);
 STACK{4}.num_coefs = ss(1);
 STACK{4}.num_dims = ss(2);
 
-% Recompute now just the FIR filte
+% Recompute now just from the FIR filter onward
 recalc_xxx(4); 
 
 % Finally, display the GUI for easy tweaking and viewing of the best result

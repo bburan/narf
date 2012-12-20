@@ -524,8 +524,8 @@ end
 % because...MATLAB doesn't use Java swing panels! 
 % Therefore, the closest we could do would be to make mouse wheel scrolling
 % work just for the scrollbar, although that isn't nearly as much fun.
-hJ = findjobj(handles.container_slider);
-hJ.MouseWheelMovedCallback = @(ch, evt, z) disp(get(evt, 'wheelRotation'));
+%hJ = findjobj(handles.container_slider);
+%hJ.MouseWheelMovedCallback = @(ch, evt, z) disp(get(evt, 'wheelRotation'));
 % TODO: 
 
 % Define a close window callback which will remove all GUI hooks from the
