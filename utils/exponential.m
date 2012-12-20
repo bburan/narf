@@ -1,3 +1,3 @@
-function ret = exponential(theta, z)
-    ret = exp((theta(1) * z) + theta(2)); 
+function ret = exponential(phi, z)
+    ret = exp((phi(1) .* z) + phi(2)); 
 end

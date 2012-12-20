@@ -57,7 +57,12 @@ function x = do_nonlinearity(stack, xxx)
         [T, S, C] = size(x.dat.(sf).(mdl.input));
         y = zeros(T, S, C);
        
-        y = arrayfun(@(in) mdl.nlfn(mdl.phi, in), x.dat.(sf).(mdl.input));
+        % TODO: If a scalar-valued function, use this
+        %y = arrayfun(@(in) mdl.nlfn(mdl.phi, in), x.dat.(sf).(mdl.input));
+        
+        % Otherwise use the much faster vector valued functions
+        y = mdl.nlfn(mdl.phi, x.dat.(sf).(mdl.input));
+        
         x.dat.(sf).(mdl.output) = y;
     end
 end

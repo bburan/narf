@@ -27,15 +27,24 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
                        'stimulus_channel_count', n_channels));
 STACK{2} = mdls.concat_second_order_terms;                   
 
-% TODO: Do a linear fit here if you like
+% TODO: Do a linear fit here if you like...for now I just load the already
+% fit routine
 tmp = load('volterra_coefs.mat');
 STACK{3} = mdls.fir_filter.mdl(...
                 struct('num_dims', n_channels + nchoosek(n_channels, 2), ...
                        'num_coefs', filter_length, ...
                        'coefs', tmp.volterra_coefs));
-STACK{4} = mdls.nonlinearity.mdl(struct('phi', [0 0 0], ...
-                                        'nlfn', @polyval)); 
+% Polynomial
+% STACK{4} = mdls.nonlinearity.mdl(struct('phi', [0 0 0], ...
+%                                         'nlfn', @polyval)); 
 
+% Sigmoidal
+%STACK{4} = mdls.nonlinearity.mdl(struct('phi', [1 pi/2 0.1], ...
+%                                        'nlfn', @sigmoidal)); 
+                                    
+% Exponential
+%STACK{4} = mdls.nonlinearity.mdl(struct('phi', [0 0], ...
+%                                        'nlfn', @exponential)); 
 
 % Compute the whole XXX structure once
 recalc_xxx(1);
@@ -45,7 +54,8 @@ STACK{4}.fit_fields = {'phi'};
 phi_init = pack_fittables(STACK);
 % options = optimset('Display','final','LargeScale','off');
 %options = optimset('DiffMinChange',1e1);
-phi_best = lsqcurvefit(@my_mse, phi_init, 4, XXX{4}.dat.por024a19_p_SPN.respavg(:), [], []);
+options = optimset('MaxFunEvals', 1000);
+phi_best = lsqcurvefit(@my_mse, phi_init, 4, XXX{4}.dat.por024a19_p_SPN.respavg(:), [], [], options);
 unpack_fittables(phi_best);
 
 % Now compute the MSE and Correlations

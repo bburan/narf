@@ -30,7 +30,8 @@ STACK{3} = mdls.fir_filter.mdl(...
                 struct('num_dims', n_channels + nchoosek(n_channels, 2), ...
                        'num_coefs', filter_length));
                   
-STACK{4} = mdls.exponential;
+STACK{4} = mdls.nonlinearity.mdl(struct('nlfn', @exponential, ...
+                                        'phi', [1 1]));
 STACK{5} = mdls.correlation;
 STACK{6} = mdls.mean_squared_error;
 

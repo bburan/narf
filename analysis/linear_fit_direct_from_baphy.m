@@ -28,7 +28,8 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
 STACK{2} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
                                       'num_coefs', filter_length));
 
-STACK{3} = mdls.exponential;
+STACK{3} = mdls.nonlinearity.mdl(struct('nlfn', @exponential, ...
+                                        'phi', [1 1]));
 STACK{4} = mdls.correlation;
 STACK{5} = mdls.mean_squared_error;
 
@@ -50,8 +51,8 @@ m.respfield = 'resp';
 % Run Stephen's fitting routine 
 STACK{2}.coefs = do_stephen_fit(m, XXX{2});
 ss = size(STACK{2}.coefs);
-STACK{2}.num_coefs = ss(1);
-STACK{2}.num_dims = ss(2);
+STACK{2}.num_dims = ss(1);
+STACK{2}.num_coefs = ss(2);
 
 % Recompute now from the FIR filter onward
 recalc_xxx(2); 

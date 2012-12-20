@@ -1,9 +1,11 @@
-% Perform the nonlinear fitting
-function prediction = my_mse(phi, stack_depth),
+% Perform the nonlinear fitting routine, starting at start_depth and
+% recalculating until the end of the XXX datastructure. 
+% 
+function prediction = my_mse(phi, start_depth)
     global XXX;
     unpack_fittables(phi);
-    fprintf('my_mse() is recalcing XXX{%d}...\nPhi = ', stack_depth);
+    fprintf('my_mse() is recalcing XXX{%d}...\nPhi = ', start_depth);
     disp(phi');
-    recalc_xxx(stack_depth);
-    prediction = XXX{stack_depth+1}.dat.por024a19_p_SPN.stim(:);
+    recalc_xxx(start_depth);
+    prediction = XXX{end}.dat.por024a19_p_SPN.stim(:);
 end
