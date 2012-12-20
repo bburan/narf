@@ -1,34 +1,62 @@
-* THE TODO LIST
-  1. [ ] Add a lsqcurve fitting button to the narf_modelpane?
-  2. [ ] Consolidate the fitting code to avoid problems with FIR filter 
-  3. [ ] Add legend info to all plots
-  4. [ ] Make gammatone filter bank work like elliptic bandpass filter 
+* Happy New Year! Ivar's reminders on what comes next
+  1. The immediate next few steps relate to graphing, visualization, code cleanup. 
+     - [ ] Nonlinearity.m module needs to have a scatter plot visualization. 
+	   That visualization should use sortrows and grouping into blocks of 100 elements
+	   sortrows([stimasvector, respasvector]) -> SORTED
+	   Then take mean of respasvector, grouping by 100 rows at a time
+	   This is just for visualization, but should smooth it out a bit.
+     - [ ] Correlation coefficients should be added to graphs. 
+     - [ ] Add a heat map visualization of the input intensity
+     - [ ] Scale visualized coefficients according to their, or scale FIR input channel power inputs before filtering?
+	   (I think 90% of the time, we just want to scale the FIR inputs automatically so coefficients are 'relative')
+     - [ ] Add a lsqcurve fitting button to the narf_modelpane
+     - [ ] Correct the bug on fitting checkboxes not instantiating properly
+     - [ ] Separate more properly the test data and training data, saving their correlations separately
+     - [ ] Add legend info to all plots
+     - [ ] Add a 
+  2. After that works a little better, the next step is to write a few analysis functions which build, train, and test a model.
+     It would be nice if I don't have to worry about all that stack indexing crap so much....is there a quick abstraction?
+     Models should accept
+     - A filename to save fitted data
+     - A cellfileid
+     - test and training sets
+     Models to try:
+     - Simple linear model, Stephen's fit
+     - Simple linear model, lsqcurve fit
+     - 2nd order volterra model, stephen's fit
+     - 2nd order volterra model, lsqcurvefit
+     - Etc. for linear output scaling, thresholded scaling, etc
+  3. Then write a batching script which tests 10 models for 10 cell files.
+     Write another batching script which loads models, reads off the TEST SET correlation coefficient, and plots the results.
+     
+
+* LATER TODO LIST
+  1. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  2. [ ] Add a better module for error stochasticity likelihood measurements
+  3. [ ] Get linear_fit_with_preprocessing working again (working from a WAV file, that is)
+  4. [ ] Make gammatone filter bank work like elliptic bandpass filter so interface is standard
   5. [ ] Provide functions to cover the input space logarithmically with filters
-  6. [ ] Get linear_fit_with_preprocessing working again
-  7. [ ] Find a way to save predictions (for easy comparison across multiple models)
-  8. [ ] Suggest an improvement: Use BAPHY to cache intermediate values
-  9. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  10. [ ] Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  11. [ ] Add a module which thresholds FIR output
-  12. [ ] Add a module which does hard thresholding of output to prevent it from going negative
-  13. [ ] Add a function to compute 'var' for each input channel, across every stimulus. then SCALE FIR coefficients in that row by 1/var right before the filtering. Then FIR coefficients will be relative?
-  14. [ ] Write a crash course guide on using NARF
-  15. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  16. [ ] Make logging work for the GUI by including the log space in narf_modelpane? 
-  17. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
-  18. [ ] Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
-  19. [ ] Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
-  20. [ ] Write several different performance metric functions: MSE and a point-process fit
-  21. [ ] Write a jack-knifing function which can work with any of the optimization modules
-  22. [ ] Single channel gammatone filter (for speed, once sensitivity has been identified)
-  23. [ ] SMOOTHING of the RESPAVG signal with gaussian convolution
-  24. [ ] An option for taking correlation in a different method than sheer concatenation could be interesting
-  25. [ ] Add a method to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
-  26. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
-  27. [ ] Handle NaN's better...right now they can cause problems! (Use nanmean())
-  28. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
-  29. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
-  30. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
+  6. [ ] Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  7. [ ] Suggest an improvement: Use BAPHY to cache intermediate values
+  8. [ ] SMOOTHING of the RESPAVG signal with gaussian convolution (optionally. But this corrupts data)
+  9. [ ] Add a function to compute 'var' for each input channel, across every stimulus. then SCALE FIR coefficients in that row by 1/var right before the filtering. Then FIR coefficients will be relative?
+  10. [ ] Write a crash course guide on using NARF
+  11. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  12. [ ] Make logging work for the GUI by including the log space in narf_modelpane? 
+  13. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
+  14. [ ] Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
+  15. [ ] Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
+  16. [ ] Write several different performance metric functions: MSE and a point-process fit
+  17. [ ] Write a jack-knifing optimization which can work with any of the optimization modules 
+	  Basically, it should go through and ONLY take certain stimuli # for testing or training
+  18. [ ] Single channel gammatone filter (for speed, once sensitivity has been identified)
+  19. [ ] An option for taking correlation in a different method than sheer concatenation could be interesting
+  20. [ ] Add a method to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
+  21. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
+  22. [ ] Handle NaN's better...right now they can cause problems! (Use nanmean())
+  23. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
+  24. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
+  25. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
 	 
 * CLEANING/REFACTORING TODOS:
   - Scoping in matlab appears broken. You can modify a global value accidentally because function returns are not protected!
