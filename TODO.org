@@ -1,11 +1,11 @@
 * THE TODO LIST
-  1. [X] Add single-channel viewing to the FIR filtering plots
-  2. [ ] Make a lsqcurve_fit function that acts on the checked items in the stack
+  1. [X] Merge sigmoid, exponential, and polynomial code into a single module, since they are all VERY similar.
+  2. [X] Make a lsqcurve_fit function that acts on the checked items in the stack
   3. [ ] Add a lsqcurve fitting button to the narf_modelpane?
   4. [ ] Add legend info to all plots
   5. [ ] Make gammatone filter bank work like elliptic bandpass filter 
   6. [ ] Provide functions to cover the input space logarithmically with filters
-  7. [ ] Get linear_fit_with_preprocessing working again. 
+  7. [ ] Get linear_fit_with_preprocessing working again
   8. [ ] Find a way to save predictions (for easy comparison across multiple models)
   9. [ ] Suggest an improvement: Use BAPHY to cache intermediate values
   10. [ ] Add a module which can pick out a particular dimension from a vector and give it a name as a signal
