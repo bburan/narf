@@ -14,8 +14,8 @@ for ii = length(fns),
 end
 
 % Create and fill the row vector
-v = zeros(1, sum(lens));
+v = zeros(sum(lens), 1);
 jj = 1;
 for ii = length(fns),
-    v(jj:jj+lens{ii}) = reshape(dat.(fns{ii}).(field), [], 1);
+    v(jj:jj+lens(ii)-1) = reshape(dat.(fns{ii}).(field), [], 1);
 end

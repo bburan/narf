@@ -22,7 +22,7 @@ m.input1 = 'stim';
 m.input2 = 'respavg';
 m.time   = 'stim_time';
 m.error  = 'error';
-m.score  = 'mse_score';
+m.score  = 'score_mse';
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
@@ -63,10 +63,11 @@ function do_plot_inputs_and_mse(stack, xxx)
     dat = x.dat.(sf);  
     
     plot(dat.(mdl.time), dat.(mdl.input1)(:, stim_idx), 'b-', ...
-         dat.(mdl.time), dat.(mdl.input2)(:, stim_idx), 'b-', ...
+         dat.(mdl.time), dat.(mdl.input2)(:, stim_idx), 'g-', ...
          dat.(mdl.time), dat.(mdl.error)(:, stim_idx), 'r-');
     axis tight;
-    
+    legend(mdl.input1, mdl.input2, mdl.error);
+        
     % Plot the score in the upper left
     themax = max([max(dat.(mdl.input1)(:, stim_idx)), ...
                   max(dat.(mdl.input2)(:, stim_idx)), ...

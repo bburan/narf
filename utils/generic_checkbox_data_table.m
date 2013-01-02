@@ -8,7 +8,7 @@ for i = 1:l
         error('Could not find field: %s', myfields{i});
     end
     if isfield(mystruct, 'fit_fields')
-        c{i,1} = isfield(mystruct.fit_fields, myfields{i});
+        c{i,1} = any(strcmp(myfields{i}, mystruct.fit_fields));
     else
         c{i,1} = false;
     end

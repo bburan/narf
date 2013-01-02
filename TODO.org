@@ -1,19 +1,29 @@
 * Happy New Year! Ivar's reminders on what comes next
   1. The immediate next few steps relate to graphing, visualization, code cleanup. 
-     - [ ] Nonlinearity.m module needs to have a scatter plot visualization. 
+     - [X] Nonlinearity.m module needs to have a scatter plot visualization. 
 	   That visualization should use sortrows and grouping into blocks of 100 elements
 	   sortrows([stimasvector, respasvector]) -> SORTED
 	   Then take mean of respasvector, grouping by 100 rows at a time
 	   This is just for visualization, but should smooth it out a bit.
-     - [ ] Correlation coefficients should be added to graphs. 
-     - [ ] Add a heat map visualization of the input intensity
-     - [ ] Scale visualized coefficients according to their, or scale FIR input channel power inputs before filtering?
+     - [X] Test using lsqcurvefit with constraints on the fit params
+     - [X] Correlation coefficients should be added to graphs. 
+     - [X] Add a heat map visualization of the input intensity
+     - [X] Scale visualized coefficients according to their, or scale FIR input channel power inputs before filtering?
 	   (I think 90% of the time, we just want to scale the FIR inputs automatically so coefficients are 'relative')
-     - [ ] Add a lsqcurve fitting button to the narf_modelpane
-     - [ ] Correct the bug on fitting checkboxes not instantiating properly
+     - [X] Correct the bug on fitting checkboxes not instantiating properly
+     - [X] Add a lsqcurve fitting button to the narf_modelpane
      - [ ] Separate more properly the test data and training data, saving their correlations separately
-     - [ ] Add legend info to all plots
-     - [ ] Add a 
+     - [X] Add legend info to all plots
+     - [ ] Generalize constraints to work for any module
+	   % Constrain phi to be >=0 , but allow coefs to be anywhere
+	   % TODO: This type of crap needs to be generalized to allow multiple fit
+	   % fields for the same module. Right now it assumes fit_fields is a
+	   % length-one cell array
+	   % LBcoefs = -inf * ones(1, numel(STACK{4}.(char(STACK{4}.fit_fields))));
+	   % LBphi   = zeros(1,  numel(STACK{5}.(char(STACK{5}.fit_fields)))); 
+	   % LB = [LBcoefs LBphi]';
+	   % UB = inf*ones(numel(LB),1);
+
   2. After that works a little better, the next step is to write a few analysis functions which build, train, and test a model.
      It would be nice if I don't have to worry about all that stack indexing crap so much....is there a quick abstraction?
      Models should accept
@@ -23,6 +33,8 @@
      Models to try:
      - Simple linear model, Stephen's fit
      - Simple linear model, lsqcurve fit
+     - Separated inhibition/exhibition, Stephen's fit
+     - Separated inhibition/exhibition, lsqcurve fit
      - 2nd order volterra model, stephen's fit
      - 2nd order volterra model, lsqcurvefit
      - Etc. for linear output scaling, thresholded scaling, etc

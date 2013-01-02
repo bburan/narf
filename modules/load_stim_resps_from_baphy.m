@@ -38,12 +38,14 @@ m.plot_fns{1}.fn = @do_plot_stim;
 m.plot_fns{1}.pretty_name = 'Stimulus vs Time';
 m.plot_fns{2}.fn = @do_plot_stim_log_spectrogram;
 m.plot_fns{2}.pretty_name = 'Stimulus Log Spectrogram';
-m.plot_fns{3}.fn = @do_plot_respavg;
-m.plot_fns{3}.pretty_name = 'Response Average vs Time';
-m.plot_fns{4}.fn = @do_plot_response_rastered;
-m.plot_fns{4}.pretty_name = 'Response Raster Plot';
-m.plot_fns{5}.fn = @do_plot_spectro_and_raster;
-m.plot_fns{5}.pretty_name = 'Spectrogram + Raster';
+m.plot_fns{3}.fn = @(xx, stck) do_plot_channels_as_heatmap(xx, stck, m.output_stim);
+m.plot_fns{3}.pretty_name = 'Channels as Heatmap';
+m.plot_fns{4}.fn = @do_plot_respavg;
+m.plot_fns{4}.pretty_name = 'Response Average vs Time';
+m.plot_fns{5}.fn = @do_plot_response_rastered;
+m.plot_fns{5}.pretty_name = 'Response Raster Plot';
+m.plot_fns{6}.fn = @do_plot_spectro_and_raster;
+m.plot_fns{6}.pretty_name = 'Spectrogram + Raster';
 m.plot_gui_create_fn = @create_gui;
 
 % ------------------------------------------------------------------------
@@ -221,7 +223,6 @@ function do_plot_spectro_and_raster(stack, xxx)
         return;
     end
     
-%     
 %     % Read the GUI to find out the selected stim files
 %     sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
 %     stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);

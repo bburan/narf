@@ -24,6 +24,8 @@ m.output = 'stim';
 m.plot_fns = {};
 m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
 m.plot_fns{1}.pretty_name = 'Channel vs Time';
+m.plot_fns{2}.fn = @(stack, xxx) do_plot_channels_as_heatmap(stack, xxx, m.output);
+m.plot_fns{2}.pretty_name = 'Channel vs Time (Heatmap)';
 m.plot_gui_create_fn = @create_chan_selector_gui;
 
 % Overwrite the default module fields with arguments 

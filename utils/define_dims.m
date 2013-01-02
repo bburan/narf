@@ -99,7 +99,7 @@ function column_indexes = foreach(dname)
     jj = 1;
     for ii = 1:dimension_sizes(idx)
         column_indexes{jj} = select_cols_fn(dname, ii);
-        jj =+ 1;
+        jj = jj + 1;
     end
     
     sels = reshape(sels, dimension_sizes);   

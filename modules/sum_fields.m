@@ -36,7 +36,7 @@ function x = do_sum_fields(stack, xxx)
     for sf = fieldnames(x.dat)', sf=sf{1};
         x.dat.(sf).(mdl.output) = x.dat.(sf).(mdl.inputs{1});
         for idx = 2:length(mdl.inputs)
-            x.dat.(sf).(mdl.output) =+ x.dat.(sf).mdl_inputs{idx};
+            x.dat.(sf).(mdl.output) = x.dat.(sf).(mdl.output) + x.dat.(sf).mdl_inputs{idx};
         end
     end
 end

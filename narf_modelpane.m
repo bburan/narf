@@ -122,7 +122,7 @@ function module_selected_callback(mod_idx)
     c = cellstr(get(m.gh.fn_popup,'String'));
     pretty_name = c{get(m.gh.fn_popup,'Value')};
     
-    % When my revolution comes, I will destroy languages with for loops and
+    % TODO: When my revolution comes, I will destroy languages with for loops and
     % repopulate the earth with higher level functional idioms
     f = [];
     fns = fieldnames(modules);
@@ -192,7 +192,7 @@ function module_apply_callback(mod_idx)
 end
 
 % When the user changes the popup selection update the plot
-% TODO: Right now this is used as the general-purpose interface to the
+% TODO: Right now this is used as the general-use interface to the
 % plotting subsystem and it's a little hacky. 
 function module_plot_callback(mod_idx)
     m = STACK{mod_idx};
@@ -212,8 +212,9 @@ function module_plot_callback(mod_idx)
 end
 
 function recalc_from_depth(mod_idx)
+    % Like recalc_xxx() but for use as a gui callback
     % Try to rebuild XXX, starting at stack depth mod_idx
-    % Stop trying to rebuild as soon as you hit an unchecked checkbox
+    % Unlike recalc_xxx(), it stops when a module's autoapply isn't checked
     for ii = mod_idx:length(STACK);
         if isfield(STACK{ii}, 'gh') && get(STACK{ii}.gh.fn_recalc, 'Value')
             module_apply_callback(ii);
@@ -225,13 +226,12 @@ end
 
 function replot_from_depth(mod_idx)
     % Try to replot everything from mod_idx onward
-    % Stop trying to plot as soon as you hit an unchecked checkbox
-    for ii = mod_idx:length(STACK);
-        if isfield(STACK{ii}, 'gh') && get(STACK{ii}.gh.fn_replot, 'Value')
-            module_plot_callback(ii);
-        else
-            return
-        end
+    % Stop trying to plot if you reach an unchecked 'autoplot' checkbox
+    if mod_idx > length(STACK)
+        return
+    end
+    if isfield(STACK{mod_idx}, 'gh') && get(STACK{mod_idx}.gh.fn_replot, 'Value')
+        module_plot_callback(mod_idx); % Recurses
     end
 end
 
@@ -418,27 +418,52 @@ end
 handles.add_fn_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Add Module', ...
-    'Units', 'pixels', 'Position', [5 5 200 25], ...
+    'Units', 'pixels', 'Position', [5 5 140 25], ...
     'Callback', @(h,b,c) add_mod_block());
 
 handles.del_fn_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Delete Module', ...
-    'Units', 'pixels', 'Position', [210 5 200 25], ...
+    'Units', 'pixels', 'Position', [150 5 140 25], ...
     'Callback', @(h,b,c) del_mod_block());
 
-% TODO: Create save/load model buttons
+% Create save/load model buttons
 handles.save_model_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Save Module Stack', ...
-    'Units', 'pixels', 'Position', [415 5 200 25], ...
+    'Units', 'pixels', 'Position', [350 5 140 25], ...
     'Callback', @save_model_stack_callback);
 
 handles.load_model_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Load Module Stack', ...
-    'Units', 'pixels', 'Position', [620 5 200 25], ...
+    'Units', 'pixels', 'Position', [500 5 140 25], ...
     'Callback', @load_model_stack_callback);
+
+% Create a wrapper fn and button which fits params using least squares
+function wrapper_for_lsqcurvefit()
+    fit_with_lsqcurvefit();
+    first_fit_depth = 1;
+    % Loop through and update any data tables which changed
+    for ii = 1:length(STACK)
+        if isfield(STACK{ii}, 'fit_fields')
+            first_fit_depth = min(first_fit_depth, ii);
+            generic_checkbox_data_table(STACK{ii}.gh.fn_table, ...
+                STACK{ii}, ...
+                STACK{ii}.editable_fields);
+        end
+    end
+    % Recalc from the first fittable point all the way to the end
+    recalc_xxx(first_fit_depth);
+    module_plot_callback(first_fit_depth);
+
+end
+
+handles.lsqcurvefit_button = uicontrol('Parent', handles.container_panel, ...
+    'Style', 'pushbutton', 'Enable', 'on', ...
+    'String', 'Run lsqcurvefit()', ...
+    'Units', 'pixels', 'Position', [700 5 150 25], ...
+    'Callback', @(a, b, c) wrapper_for_lsqcurvefit());
 
 function rebuild_gui_from_stack()
     delete_all_module_guis();
@@ -534,7 +559,7 @@ end
 function delete_gui_and_close(a,b,c)
 %     selection = questdlg('Close the GUI? (STACK and XXX will still be there)',...
 %        'Close Request Function', 'Yes', 'No', 'Yes'); 
-    selection = 'Yes';
+    selection = 'Yes'; 
     switch selection, 
        case 'Yes',
           delete_all_module_guis();
@@ -543,7 +568,7 @@ function delete_gui_and_close(a,b,c)
        return 
     end
 end
-% 
+
 % % Unfortunately, I don't know how to check if parent_handle is a panel or a
 % % figure, so I'm using a try/catch instead of a proper solution.
 % % if ~isuipanel(parent_handle)
