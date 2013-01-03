@@ -26,19 +26,20 @@
 	 Outputs:
 	  - Correlation
 	  - Saved file (using prefix of model testing function somehow)
-  3. [ ] Analysis: Stephen's boosting code
-  4. [ ] Analysis: simple linear model
-  5. [ ] Analysis: simple linear model + exponential
-  6. [ ] Analysis: inhibition/exhibition
-  7. [ ] Analysis: 2nd order model
-  8. [ ] Brainstorm alternatives for indexing things in stack for quickly setting up models
+  3. [ ] A
+  4. [ ] Analysis: Stephen's boosting code
+  5. [ ] Analysis: simple linear model
+  6. [ ] Analysis: simple linear model + exponential
+  7. [ ] Analysis: inhibition/exhibition
+  8. [ ] Analysis: 2nd order model
+  9. [ ] Brainstorm alternatives for indexing things in stack for quickly setting up models
 	 Search for coefficients from a spanning filter bank
 	 Find the signal contributing most (using the FIR coefficients)
 	 Do a second filter bank that is only an octave wide, with the signal in the center, to get more substructure
-  9. [ ] Separate more properly the test data and training data, saving their correlations separately
-  10. [ ] Make inter_spike_intervals work
-  11. [ ] Make bayesian_likelihood() work
-  12. [ ] Generalize fitting constraints to work for any module
+  10. [ ] Separate more properly the test data and training data, saving their correlations separately
+  11. [ ] Make inter_spike_intervals work
+  12. [ ] Make bayesian_likelihood() 
+  13. [ ] Generalize fitting constraints to work for any module
 	 % Constrain phi to be >=0 , but allow coefs to be anywhere
 	 % TODO: This type of crap needs to be generalized to allow multiple fit
 	 % fields for the same module. Right now it assumes fit_fields is a
@@ -47,8 +48,12 @@
 	 % LBphi   = zeros(1,  numel(STACK{5}.(char(STACK{5}.fit_fields)))); 
 	 % LB = [LBcoefs LBphi]';
 	 % UB = inf*ones(numel(LB),1);
-  13. Then write a batching script which tests 10 models for 10 cell files.
+  14. Then write a batching script which tests 10 models for 10 cell files.
       Write another batching script which loads models, reads off the TEST SET correlation coefficient, and plots the results.     
+
+* SCIENTIFIC QUESTIONS
+  1. By how much does training on more than one data set improve test performance?
+  2. Should training set data be weighted by manually-set stimfile weights? 
 
 * LATER TODO LIST
   1. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff

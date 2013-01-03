@@ -1,4 +1,5 @@
 % A batch file which tries to fit a linear model to multiple cellids
+% Works only with SPN stim files
 
 narf_set_path;
 global NARF_PATH STACK XXX;
@@ -23,45 +24,46 @@ cellids = {'por026b-b2', ...
     'por016d-a1', ...
     'por016e-a1'};
 
-for cid = cellids(:)', cid = cid{1};
-    % Pick out the best training and test sets
-    [cfd, cellids, cellfileids] = dbgetscellfile('cellid', cid);
+for ii = 1:length(cellids),
+    cid = cellids(ii);
     
+    % Pick out the best training and test sets
+    [cfd, cellids, cellfileids] = dbgetscellfile('cellid', cid, ...
+                                                 'runclass','SPN');
     len = length(cfd);
     training_set = {};
+    training_set_spikes = 0;
     test_set = {};
     test_set_reps = 0;
-    % parms = cell(1, len);
-    % perfs = cell(1, len);
     
     % Load parms, perfs, if you need them
-    % [parms{i}, perfs{i}] = dbReadData(cfd(i).rawid);
-
-    % Select set with the most repetitions as test set.
+    % parms = cell(1, len);
+    % perfs = cell(1, len);
+    % [parms{ii}, perfs{ii}] = dbReadData(cfd(ii).rawid);
+    
+    % Select the SPN sample with the most repetitions as test set.
     for i = 1:len;
         if (isfield(cfd(i), 'repcount') && cfd(i).repcount > test_set_reps)
-           test_set_reps = dbget('gDataRaw', cfd(i).rawid, 'reps');
+           test_set_reps = cfd(i).repcount; 
            test_set{1} = cfd(i).stimfile;
         end
     end
 
-    % Train on every other passive trial by default
+    % Select the SPN with the most spikes as as the training set
+    % (It also cannot be in the test set)
     for i = 1:len;
         if (~isequal(cfd(i).stimfile, test_set{1}) & ...
-             isequal(cfd(i).behavior, 'passive'))
-            training_set{end+1} = cfd(i).stimfile;
+             cfd(i).spikes > training_set_spikes)
+            training_set_spikes = cfd(i).spikes;
+            training_set{1} = cfd(i).stimfile;
         end
     end
-
-    train = {};
-    test = {};
     
     % Fit using Stephen's boosting
     linear_fit_spn_stephen(cid, train);
-    
-    % TODO: Test the model on a different data set
-    filename = sprintf('linear_fit_spn_stephen__%s__%f', cid, XXX{end}.score_corr);
-    save_model_stack(filename, STACK)
+    filename = sprintf('linear_fit_spn_stephen__%s__%f.mat', ...
+                       cid, XXX{end}.score_corr);
+    save_model_stack(filename, STACK);
     
 %     % Fit using Matlab's lsqcurvefit
 %     linear_fit_spn(cid);
