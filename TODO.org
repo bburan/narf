@@ -1,45 +1,24 @@
 * Next few steps
-  1. [X] Make a list of several neurons which have good TOR files:
-         1) por026b-b2 (Been working on it)
-         2) por026b-a1
-         3) por025a-b1 
-         4) por024b-c2
-         5) por024a-a1 (Used to try it)
-         6) por024a-b1  
-         7) por023b-a1
-         8) por022a-a1
-         9) por022b-a1
-         10) por021a-b1
-         11) por021b-b1
-         12) por020b-c1
-         13) por019b-a1
-         14) por019c-a1
-         15) por018b-c1
-         16) por017a-a1
-         17) por017c-1
-         18) por016d-a1
-         19) por016e-a1
-  2. [X] Define interface to model testing function
-	 Inputs:          
-          - A cellfileid
-          - test and training sets (or pick ones by default)
-	 Outputs:
-	  - Correlation
-	  - Saved file (using prefix of model testing function somehow)
-  3. [ ] A
-  4. [ ] Analysis: Stephen's boosting code
-  5. [ ] Analysis: simple linear model
-  6. [ ] Analysis: simple linear model + exponential
-  7. [ ] Analysis: inhibition/exhibition
-  8. [ ] Analysis: 2nd order model
-  9. [ ] Brainstorm alternatives for indexing things in stack for quickly setting up models
-	 Search for coefficients from a spanning filter bank
-	 Find the signal contributing most (using the FIR coefficients)
-	 Do a second filter bank that is only an octave wide, with the signal in the center, to get more substructure
-  10. [ ] Separate more properly the test data and training data, saving their correlations separately
-  11. [ ] Make inter_spike_intervals work
-  12. [ ] Make bayesian_likelihood() 
-  13. [ ] Generalize fitting constraints to work for any module
+  1. [X] Analysis: Stephen's boosting code
+  2. [X] Analysis: simple linear model
+  3. [X] Analysis: simple linear model + exponential
+  4. [X] Analysis: simple linear model + polynomial
+  5. [X] Analysis: simple linear model + sigmoidal
+  6. [X] Analysis: simple linear model + heaviside
+  7. [X] Analysis: 2nd order model
+  8. [ ] Analysis: inhibition/exhibition
+  9. [ ] Analysis: TEST SETS
+  10. [ ] Refactor the model training structure so that I can just provide a list of cellids + models, and filename saving occurs automagically. 
+  11. [ ] Build another analysis which works directly from the WAV files, and does a prefilter
+  12. 
+  13. [ ] Brainstorm alternatives for indexing things in stack for quickly setting up models
+	  Search for coefficients from a spanning filter bank
+	  Find the signal contributing most (using the FIR coefficients)
+	  Do a second filter bank that is only an octave wide, with the signal in the center, to get more substructure
+  14. [ ] Separate more properly the test data and training data, saving their correlations separately
+  15. [ ] Make inter_spike_intervals work
+  16. [ ] Make bayesian_likelihood() 
+  17. [ ] Generalize fitting constraints to work for any module
 	 % Constrain phi to be >=0 , but allow coefs to be anywhere
 	 % TODO: This type of crap needs to be generalized to allow multiple fit
 	 % fields for the same module. Right now it assumes fit_fields is a
@@ -48,12 +27,15 @@
 	 % LBphi   = zeros(1,  numel(STACK{5}.(char(STACK{5}.fit_fields)))); 
 	 % LB = [LBcoefs LBphi]';
 	 % UB = inf*ones(numel(LB),1);
-  14. Then write a batching script which tests 10 models for 10 cell files.
+  18. Then write a batching script which tests 10 models for 10 cell files.
       Write another batching script which loads models, reads off the TEST SET correlation coefficient, and plots the results.     
 
 * SCIENTIFIC QUESTIONS
   1. By how much does training on more than one data set improve test performance?
-  2. Should training set data be weighted by manually-set stimfile weights? 
+  2. Should training set data be weighted by manually-set stimfile weights to account for biasing effect of sheer large numbers of samples?
+  3. Should training occur all at once or in multiple passes?
+     - Datapoint: Training the linear filter, then the exponential, then both at same time. Yields the same result as just training both in a single pass.
+     - Datapoint: Training the linear filter, then the exponential. Yields an inferior result.   
 
 * LATER TODO LIST
   1. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff

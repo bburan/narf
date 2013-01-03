@@ -1,5 +1,5 @@
-function linear_fit_direct_from_baphy(cellid, training_set)
-% Fits a linear model directly on the output of envelopes provided by BAPHY
+function linear_fit_spn_poly(cellid, training_set)
+% Fits a linear model with a polynomial output nonlinearity
 
 global NARF_PATH STACK XXX;
 mdls = scan_directory_for_modules([NARF_PATH filesep 'modules/']);
@@ -23,19 +23,18 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
 STACK{2} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
                                       'num_coefs', filter_length));
 
+STACK{3} = mdls.nonlinearity.mdl(struct('phi', [1 1 1 1], ...
+                                        'nlfn', @polyval)); 
+recalc_xxx(1); 
 
-                                  
-                                  
-
-
-recalc_xxx(1);
-
+% Finally, fit all parameters
 STACK{2}.fit_fields = {'coefs'};
-
+STACK{3}.fit_fields = {'phi'};
 fit_with_lsqcurvefit();
 
-STACK{3} = mdls.correlation;
-STACK{4} = mdls.mean_squared_error;
+% Now the reporting
+STACK{4} = mdls.correlation;
+STACK{5} = mdls.mean_squared_error;
 
-recalc_xxx(2);  % Recompute now from the FIR filter onward
+recalc_xxx(2); 
 

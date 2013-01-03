@@ -1,4 +1,4 @@
-function linear_fit_direct_from_baphy(cellid, training_set)
+function linear_fit_spn(cellid, training_set)
 % Fits a linear model directly on the output of envelopes provided by BAPHY
 
 global NARF_PATH STACK XXX;
@@ -22,11 +22,6 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
                        'stimulus_channel_count', n_channels));
 STACK{2} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
                                       'num_coefs', filter_length));
-
-
-                                  
-                                  
-
 
 recalc_xxx(1);
 

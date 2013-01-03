@@ -14,14 +14,15 @@ m.mdl = @correlation;
 m.name = 'correlation';
 m.fn = @do_correlation;
 m.pretty_name = 'Correlation';
-m.editable_fields = {'input1', 'input2', 'time', 'output'};
+m.editable_fields = {'input1', 'input2', 'time', 'train_score', 'test_score'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.input1 = 'stim';
 m.input2 = 'respavg';
 m.time   = 'stim_time';
-m.output = 'score_corr';
+m.train_score = 'score_train_corr';
+m.test_score = 'score_test_corr';
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
@@ -47,7 +48,8 @@ function x = do_correlation(stack, xxx)
     
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
 
-    % Build two very long vectors
+    % -------------
+    % Compute the training set correlation
     V1 = [];
     V2 = [];
     for sf = x.training_set', sf = sf{1};
@@ -58,11 +60,26 @@ function x = do_correlation(stack, xxx)
     % Compute the correlation
     R = corrcoef(V1,V2);
     if isnan(R(2,1))
-        x.(mdl.output) = R(2,1);
+        x.(mdl.train_score) = R(2,1);
     else
-        x.(mdl.output) = R(2,1)^2;
+        x.(mdl.train_score) = R(2,1)^2;
     end
     
+    %---------------
+    % Compute the test set correlation
+    V1 = [];
+    V2 = [];
+    for sf = x.test_set', sf = sf{1};
+        V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));
+        V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));
+    end
+    
+    R = corrcoef(V1,V2);
+    if isnan(R(2,1))
+        x.(mdl.test_score) = R(2,1);
+    else
+        x.(mdl.test_score) = R(2,1)^2;
+    end
 end
 
 function do_plot_inputs(stack, xxx)
@@ -80,7 +97,7 @@ function do_plot_inputs(stack, xxx)
     % Plot the score in the upper left
     themax = max([max(dat.(mdl.input1)(:, stim_idx)), ...
                   max(dat.(mdl.input2)(:, stim_idx))]);
-    text(0, themax , sprintf(' R^2: %f', x.(mdl.output)), ...
+    text(0, themax , sprintf(' Train r^2: %f\n Test r^2 : %f', x.(mdl.train_score), x.(mdl.test_score)), ...
         'VerticalAlignment','top',...
         'HorizontalAlignment','left');
      

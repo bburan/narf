@@ -410,6 +410,7 @@ function load_model_stack_callback (a, b, c)
 	if ~isequal(filename, 0)
         delete_all_module_guis();
         STACK = load_model_stack([pathname filesep filename]);
+        recalc_xxx(1);
         rebuild_gui_from_stack();
     end
 end
@@ -517,8 +518,8 @@ end
 rebuild_gui_from_stack();
 
 % Make the scroll bar dynamically update whenever it is being dragged
-hJScrollBar = findjobj(handles.container_slider);
-hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions();
+%hJScrollBar = findjobj(handles.container_slider);
+%hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions();
 
 function delete_all_module_guis()
     for ii = 1:length(STACK)
