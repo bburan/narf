@@ -1,24 +1,19 @@
-* Next few steps
-  1. [X] Analysis: Stephen's boosting code
-  2. [X] Analysis: simple linear model
-  3. [X] Analysis: simple linear model + exponential
-  4. [X] Analysis: simple linear model + polynomial
-  5. [X] Analysis: simple linear model + sigmoidal
-  6. [X] Analysis: simple linear model + heaviside
-  7. [X] Analysis: 2nd order model
-  8. [ ] Analysis: inhibition/exhibition
-  9. [ ] Analysis: TEST SETS
-  10. [ ] Refactor the model training structure so that I can just provide a list of cellids + models, and filename saving occurs automagically. 
-  11. [ ] Build another analysis which works directly from the WAV files, and does a prefilter
-  12. 
-  13. [ ] Brainstorm alternatives for indexing things in stack for quickly setting up models
-	  Search for coefficients from a spanning filter bank
-	  Find the signal contributing most (using the FIR coefficients)
-	  Do a second filter bank that is only an octave wide, with the signal in the center, to get more substructure
-  14. [ ] Separate more properly the test data and training data, saving their correlations separately
-  15. [ ] Make inter_spike_intervals work
-  16. [ ] Make bayesian_likelihood() 
-  17. [ ] Generalize fitting constraints to work for any module
+* CHECK WITH STEPHEN:
+  1. Is the sigmoid equation correct?
+  2. Is the exponential one?
+  3. 
+
+* NEXT STEPS:
+  1. [ ] Analysis: inhibition/exhibition
+  2. [ ] Make a function which rebuilds the heat map based on ALL SAVED MODEL FILES
+  3. [ ] fminval investigation
+  4. [ ] Analysis: TEST SETS
+  5. [ ] Refactor the model training structure so that I can just provide a list of cellids + models, and filename saving occurs automagically. 
+  6. [ ] Build another analysis which works directly from the WAV files, and does a prefilter
+  7. [ ] Brainstorm alternatives for indexing things in stack for quickly setting up models
+  9. [ ] Make inter_spike_intervals work
+  10. [ ] Make bayesian_likelihood() work
+  11. [ ] Generalize fitting constraints to work for any module
 	 % Constrain phi to be >=0 , but allow coefs to be anywhere
 	 % TODO: This type of crap needs to be generalized to allow multiple fit
 	 % fields for the same module. Right now it assumes fit_fields is a
@@ -27,13 +22,11 @@
 	 % LBphi   = zeros(1,  numel(STACK{5}.(char(STACK{5}.fit_fields)))); 
 	 % LB = [LBcoefs LBphi]';
 	 % UB = inf*ones(numel(LB),1);
-  18. Then write a batching script which tests 10 models for 10 cell files.
-      Write another batching script which loads models, reads off the TEST SET correlation coefficient, and plots the results.     
 
 * SCIENTIFIC QUESTIONS
   1. By how much does training on more than one data set improve test performance?
-  2. Should training set data be weighted by manually-set stimfile weights to account for biasing effect of sheer large numbers of samples?
-  3. Should training occur all at once or in multiple passes?
+  3. Should training set data be weighted by manually-set stimfile weights to account for biasing effect of sheer large numbers of samples?
+  4. Should training occur all at once or in multiple passes?
      - Datapoint: Training the linear filter, then the exponential, then both at same time. Yields the same result as just training both in a single pass.
      - Datapoint: Training the linear filter, then the exponential. Yields an inferior result.   
 
@@ -44,29 +37,27 @@
   4. [ ] Make gammatone filter bank work like elliptic bandpass filter so interface is standard
   5. [ ] Provide functions to cover the input space logarithmically with filters
   6. [ ] Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  7. [ ] Suggest an improvement: Use BAPHY to cache intermediate values
-  8. [ ] SMOOTHING of the RESPAVG signal with gaussian convolution (optionally. But this corrupts data)
-  9. [ ] Add a function to compute 'var' for each input channel, across every stimulus. then SCALE FIR coefficients in that row by 1/var right before the filtering. Then FIR coefficients will be relative?
-  10. [ ] Write a crash course guide on using NARF
-  11. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  12. [ ] Make logging work for the GUI by including the log space in narf_modelpane? 
-  13. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
-  14. [ ] Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
-  15. [ ] Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
-  16. [ ] Write several different performance metric functions: MSE and a point-process fit
-  17. [ ] Write a jack-knifing optimization which can work with any of the optimization modules 
+  7. [ ] SMOOTHING of the RESPAVG signal with gaussian convolution (optionally. But this corrupts data)
+  8. [ ] Write a crash course guide on using NARF
+  9. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  10. [ ] Make logging work for the GUI by including the log space in narf_modelpane? 
+  11. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
+  12. [ ] Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
+  13. [ ] Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
+  14. [ ] Write several different performance metric functions: MSE and a point-process fit
+  15. [ ] Write a jack-knifing optimization which can work with any of the optimization modules 
 	  Basically, it should go through and ONLY take certain stimuli # for testing or training
-  18. [ ] Single channel gammatone filter (for speed, once sensitivity has been identified)
-  19. [ ] An option for taking correlation in a different method than sheer concatenation could be interesting
-  20. [ ] Add a method to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
-  21. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
-  22. [ ] Handle NaN's better...right now they can cause problems! (Use nanmean())
-  23. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
-  24. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
-  25. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
-	 
+  16. [ ] Single channel gammatone filter (for speed, once sensitivity has been identified)
+  17. [ ] An option for taking correlation in a different method than sheer concatenation could be interesting
+  18. [ ] Add a method to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
+  19. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
+  20. [ ] Handle NaN's better...right now they can cause problems! (Use nanmean())
+  21. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
+  22. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
+  23. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
+  24. [ ] Suggest an improvement: Use BAPHY to cache intermediate values
+	  
 * CLEANING/REFACTORING TODOS:
-  - Scoping in matlab appears broken. You can modify a global value accidentally because function returns are not protected!
   - Use this idiom more often to search through struct or cell arrays:
     hits = arrayfun(@(x)strcmp(x.stimfile, sf), XXX{2}.cfd);   % Use cellfun instead of arrayfun if needed.
   - Look for obvious repetition and make some more functions in util/
@@ -91,3 +82,7 @@
   - [ ] Add BIC or AIC to model comparison data
   - [ ] Optimization report card and status information logged
   - [ ] Rank model fits and plot correlations
+  - [ ] New training method:
+	1. Search for coefficients from a spanning filter bank
+        2. Find the signal contributing most (using the FIR coefficients)
+	3. Do a second filter bank that is only an octave wide, with the signal in the center, to get more substructure

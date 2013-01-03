@@ -8,14 +8,14 @@ function v = flatten_field(dat, field)
 
 % Count number of elements for each 'field' entry
 fns = fieldnames(dat);
-lens = zeros(length(fns));
-for ii = length(fns),
+lens = zeros(length(fns), 1);
+for ii = 1:length(fns),
     lens(ii) = numel(dat.(fns{ii}).(field));
 end
 
 % Create and fill the row vector
 v = zeros(sum(lens), 1);
 jj = 1;
-for ii = length(fns),
+for ii = 1:length(fns),
     v(jj:jj+lens(ii)-1) = reshape(dat.(fns{ii}).(field), [], 1);
 end

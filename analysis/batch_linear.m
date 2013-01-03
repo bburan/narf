@@ -48,7 +48,7 @@ for ci = 1:length(cellids),
     
     % Pick out the best training and test sets
     [cfd, cids, cellfileids] = dbgetscellfile('cellid', cid, ...
-                                                 'runclass','SPN');
+                                              'runclass','SPN');
     len = length(cfd);
     train_set = {};
     train_set_spikes = 0;
@@ -88,10 +88,11 @@ for ci = 1:length(cellids),
         recalc_xxx(1); 
         
         % Save the file name 
-        filename = sprintf('%s/%s__%f__%f__linear_fit_spn.mat', ...
+        filename = sprintf('%s/%s__%f__%f__%s.mat', ...
             savepath, cid, ...
             XXX{end}.score_train_corr, ...
-            XXX{end}.score_test_corr);
+            XXX{end}.score_test_corr, ...
+            m);
         
         save_model_stack(filename, STACK);
         
