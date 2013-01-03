@@ -46,7 +46,7 @@ m.plot_fns{3}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.inp
 m.plot_fns{3}.pretty_name = 'Nonlinearity + Histogram';
 
 m.plot_fns{4}.fn = @do_plot_scatter_and_nonlinearity; 
-m.plot_fns{4}.pretty_name = 'In/Out Smoothed Scatter';
+m.plot_fns{4}.pretty_name = 'Stim/Resp Smooth Scatter';
 
 % Overwrite the default module fields with arguments 
 if nargin == 1

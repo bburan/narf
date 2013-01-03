@@ -147,8 +147,8 @@ error(feval(@sprintf, varargin{:}));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % ------------------------------------------------------------------------
-function cfd = query_db(cellid)
-log_dbg('query_db(''%s'');', cellid);
+function cfd = query_cellid(cellid)
+log_dbg('query_cellid(''%s'');', cellid);
 
 % Returns a list of raw files with this cell ID
 [cfd, cellids, cellfileids] = dbgetscellfile('cellid', cellid);
@@ -200,8 +200,8 @@ log_dbg('Test set selected: %s', char(test_set{:}));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DATA SELECTION GUI
 
-function query_db_button_Callback(hObject, eventdata, handles)
-log_dbg('query_db_button pressed.');
+function query_cellid_button_Callback(hObject, eventdata, handles)
+log_dbg('query_cellid_button pressed.');
 
 % GS: Clear various parts of the global struct
 global GS;
@@ -220,7 +220,7 @@ set(handles.data_selection_table, 'Data', {}); drawnow;
 
 % Query the DB and select the train/test sets
 GS.cellid = get(handles.cellid_text, 'String');
-GS.cfd = query_db(GS.cellid);
+GS.cfd = query_cellid(GS.cellid);
 [GS.training_set, GS.test_set] = select_train_test_sets(GS.cfd);
 
 % Convert the above into a GUI viewable cell array, then update GUI

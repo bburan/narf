@@ -1,13 +1,15 @@
-function linear_fit_direct_from_baphy(cellid)
+function linear_fit_spn_stephen(cellid, training_set)
 % Fits a linear model directly on the output of envelopes provided by BAPHY
+
+fprintf('Fitting linear model to SPN: %s\n', cellid);
 
 global NARF_PATH STACK XXX;
 mdls = scan_directory_for_modules([NARF_PATH filesep 'modules/']);
 
 XXX = {};
 XXX{1} = [];
-XXX{1}.cellid = 'por024a-a1';
-XXX{1}.training_set = {'por024a19_p_SPN'};
+XXX{1}.cellid = cellid;
+XXX{1}.training_set = training_set;
 XXX{1}.test_set = {};
 
 raster_fs = 200;
@@ -22,11 +24,6 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
                        'stimulus_channel_count', n_channels));
 STACK{2} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
                                       'num_coefs', filter_length));
-
-STACK{3} = mdls.nonlinearity.mdl(struct('nlfn', @exponential, ...
-                                        'phi', [1 1]));
-STACK{4} = mdls.correlation;
-STACK{5} = mdls.mean_squared_error;
 
 recalc_xxx(1);
 
@@ -46,6 +43,8 @@ STACK{2}.coefs = do_stephen_fit(m, XXX{2});
 ss = size(STACK{2}.coefs);
 STACK{2}.num_dims = ss(1);
 STACK{2}.num_coefs = ss(2);
+
+STACK{3} = mdls.correlation;
 
 recalc_xxx(2);  % Recompute now from the FIR filter onward
 

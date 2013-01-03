@@ -1,46 +1,54 @@
-* Happy New Year! Ivar's reminders on what comes next
-  1. The immediate next few steps relate to graphing, visualization, code cleanup. 
-     - [X] Nonlinearity.m module needs to have a scatter plot visualization. 
-	   That visualization should use sortrows and grouping into blocks of 100 elements
-	   sortrows([stimasvector, respasvector]) -> SORTED
-	   Then take mean of respasvector, grouping by 100 rows at a time
-	   This is just for visualization, but should smooth it out a bit.
-     - [X] Test using lsqcurvefit with constraints on the fit params
-     - [X] Correlation coefficients should be added to graphs. 
-     - [X] Add a heat map visualization of the input intensity
-     - [X] Scale visualized coefficients according to their, or scale FIR input channel power inputs before filtering?
-	   (I think 90% of the time, we just want to scale the FIR inputs automatically so coefficients are 'relative')
-     - [X] Correct the bug on fitting checkboxes not instantiating properly
-     - [X] Add a lsqcurve fitting button to the narf_modelpane
-     - [ ] Separate more properly the test data and training data, saving their correlations separately
-     - [X] Add legend info to all plots
-     - [ ] Generalize constraints to work for any module
-	   % Constrain phi to be >=0 , but allow coefs to be anywhere
-	   % TODO: This type of crap needs to be generalized to allow multiple fit
-	   % fields for the same module. Right now it assumes fit_fields is a
-	   % length-one cell array
-	   % LBcoefs = -inf * ones(1, numel(STACK{4}.(char(STACK{4}.fit_fields))));
-	   % LBphi   = zeros(1,  numel(STACK{5}.(char(STACK{5}.fit_fields)))); 
-	   % LB = [LBcoefs LBphi]';
-	   % UB = inf*ones(numel(LB),1);
-
-  2. After that works a little better, the next step is to write a few analysis functions which build, train, and test a model.
-     It would be nice if I don't have to worry about all that stack indexing crap so much....is there a quick abstraction?
-     Models should accept
-     - A filename to save fitted data
-     - A cellfileid
-     - test and training sets
-     Models to try:
-     - Simple linear model, Stephen's fit
-     - Simple linear model, lsqcurve fit
-     - Separated inhibition/exhibition, Stephen's fit
-     - Separated inhibition/exhibition, lsqcurve fit
-     - 2nd order volterra model, stephen's fit
-     - 2nd order volterra model, lsqcurvefit
-     - Etc. for linear output scaling, thresholded scaling, etc
-  3. Then write a batching script which tests 10 models for 10 cell files.
-     Write another batching script which loads models, reads off the TEST SET correlation coefficient, and plots the results.
-     
+* Next few steps
+  1. [X] Make a list of several neurons which have good TOR files:
+         1) por026b-b2 (Been working on it)
+         2) por026b-a1
+         3) por025a-b1 
+         4) por024b-c2
+         5) por024a-a1 (Used to try it)
+         6) por024a-b1  
+         7) por023b-a1
+         8) por022a-a1
+         9) por022b-a1
+         10) por021a-b1
+         11) por021b-b1
+         12) por020b-c1
+         13) por019b-a1
+         14) por019c-a1
+         15) por018b-c1
+         16) por017a-a1
+         17) por017c-1
+         18) por016d-a1
+         19) por016e-a1
+  2. [X] Define interface to model testing function
+	 Inputs:          
+          - A cellfileid
+          - test and training sets (or pick ones by default)
+	 Outputs:
+	  - Correlation
+	  - Saved file (using prefix of model testing function somehow)
+  3. [ ] Analysis: Stephen's boosting code
+  4. [ ] Analysis: simple linear model
+  5. [ ] Analysis: simple linear model + exponential
+  6. [ ] Analysis: inhibition/exhibition
+  7. [ ] Analysis: 2nd order model
+  8. [ ] Brainstorm alternatives for indexing things in stack for quickly setting up models
+	 Search for coefficients from a spanning filter bank
+	 Find the signal contributing most (using the FIR coefficients)
+	 Do a second filter bank that is only an octave wide, with the signal in the center, to get more substructure
+  9. [ ] Separate more properly the test data and training data, saving their correlations separately
+  10. [ ] Make inter_spike_intervals work
+  11. [ ] Make bayesian_likelihood() work
+  12. [ ] Generalize fitting constraints to work for any module
+	 % Constrain phi to be >=0 , but allow coefs to be anywhere
+	 % TODO: This type of crap needs to be generalized to allow multiple fit
+	 % fields for the same module. Right now it assumes fit_fields is a
+	 % length-one cell array
+	 % LBcoefs = -inf * ones(1, numel(STACK{4}.(char(STACK{4}.fit_fields))));
+	 % LBphi   = zeros(1,  numel(STACK{5}.(char(STACK{5}.fit_fields)))); 
+	 % LB = [LBcoefs LBphi]';
+	 % UB = inf*ones(numel(LB),1);
+  13. Then write a batching script which tests 10 models for 10 cell files.
+      Write another batching script which loads models, reads off the TEST SET correlation coefficient, and plots the results.     
 
 * LATER TODO LIST
   1. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
@@ -77,10 +85,9 @@
   - Look for obvious repetition and make some more functions in util/
   - Remove/rename useless functions in util that have accumulated.
   - Rename things to be more clear. Any sort of input dimension is a 'channel', to abstract the notion of stimulus dimension?
-  - In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it?
+  - In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it be in a 3rd structure?
   - It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
   - Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?
-  - Provide a more concise way of finding user-space guis in the call tree above (Right now there's too much copy & paste in user-side plot functions!)
   - Go through the TODO's in existing files
   - Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
   - make anything named 'update_' into a function used purely for its side effects
