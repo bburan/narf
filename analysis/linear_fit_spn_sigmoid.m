@@ -22,8 +22,8 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
                        'stimulus_channel_count', n_channels));
 STACK{2} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
                                       'num_coefs', filter_length));
-      
-STACK{3} = mdls.nonlinearity.mdl(struct('phi', [1 pi/2 0.1], ...
+
+STACK{3} = mdls.nonlinearity.mdl(struct('phi', [0.05 0.05 0.1 0], ...
                                         'nlfn', @sigmoidal));                    
                                     
 recalc_xxx(1); 
@@ -35,7 +35,6 @@ fit_with_lsqcurvefit();
 
 % Now the reporting
 STACK{4} = mdls.correlation;
-STACK{5} = mdls.mean_squared_error;
 
 recalc_xxx(2); 
 

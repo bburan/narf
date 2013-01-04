@@ -35,8 +35,8 @@ models = {'linear_fit_spn', ...
           };
 
 % UNCOMMENT FOR QUICK TESTING OF SCRIPT
-%models = {'linear_fit_spn',   'linear_fit_spn_poly'          };
-%cellids = {'por026b-b2', 'por026b-a1'};
+models = {'linear_fit_spn_stephen'};
+cellids = {'por025a-b1'};
       
 scores = zeros(length(cellids), length(models) * 2);  
 
@@ -108,6 +108,7 @@ end
 % Plot the results
 figure;
 imagesc(scores');
+%set(gca,'YDir','normal');
 set(gca,'XTick', 1:length(score_x_labels));
 set(gca,'YTick', 1:length(score_y_labels));
 set(gca,'XTickLabel', score_x_labels);

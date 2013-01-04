@@ -89,14 +89,17 @@ function do_plot_inputs(stack, xxx)
     [sf, stim_idx, unused] = get_baphy_plot_controls(stack);
     dat = x.dat.(sf);  
     
-    plot(dat.(mdl.time), dat.(mdl.input1)(:, stim_idx), 'b-', ...
-         dat.(mdl.time), dat.(mdl.input2)(:, stim_idx), 'g-');
+    s1 = 1/mean(dat.(mdl.input1)(:, stim_idx));
+    s2 = 1/mean(dat.(mdl.input2)(:, stim_idx));
+    
+    plot(dat.(mdl.time), s1.*dat.(mdl.input1)(:, stim_idx), 'b-', ...
+         dat.(mdl.time), s2.*dat.(mdl.input2)(:, stim_idx), 'g-');
     axis tight;
     legend(mdl.input1, mdl.input2);
     
     % Plot the score in the upper left
-    themax = max([max(dat.(mdl.input1)(:, stim_idx)), ...
-                  max(dat.(mdl.input2)(:, stim_idx))]);
+    themax = max([max(s1.*dat.(mdl.input1)(:, stim_idx)), ...
+                  max(s2.*dat.(mdl.input2)(:, stim_idx))]);
     text(0, themax , sprintf(' Train r^2: %f\n Test r^2 : %f', x.(mdl.train_score), x.(mdl.test_score)), ...
         'VerticalAlignment','top',...
         'HorizontalAlignment','left');
