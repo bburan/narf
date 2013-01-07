@@ -22,7 +22,8 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
                        'raw_stim_fs', raster_fs,...
                        'stimulus_format','envelope', ...
                        'stimulus_channel_count', n_channels));
-STACK{2} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
+STACK{2} = mdls.normalize_channels;
+STACK{3} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
                                       'num_coefs', filter_length));
 
 recalc_xxx(1);
@@ -39,12 +40,12 @@ m.coefs = zeros(n_channels, filter_length);
 m.stimfield = 'stim'; % Names of the fields to use as stimulus and response
 m.respfield = 'resp';
 
-STACK{2}.coefs = do_stephen_fit(m, XXX{2});
-ss = size(STACK{2}.coefs);
-STACK{2}.num_dims = ss(1);
-STACK{2}.num_coefs = ss(2);
+STACK{3}.coefs = do_stephen_fit(m, XXX{3});
+ss = size(STACK{3}.coefs);
+STACK{3}.num_dims = ss(1);
+STACK{3}.num_coefs = ss(2);
 
-STACK{3} = mdls.correlation;
+STACK{4} = mdls.correlation;
 
-recalc_xxx(2);  % Recompute now from the FIR filter onward
+recalc_xxx(3);  % Recompute now from the FIR filter onward
 

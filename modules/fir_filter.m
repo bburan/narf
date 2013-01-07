@@ -29,7 +29,7 @@ m.plot_fns{1}.fn = @(stack, xxx) do_plot_output_vs_time(stack, xxx, m.time, m.ou
 m.plot_fns{1}.pretty_name = 'FIR Response vs Time';
 m.plot_fns{2}.fn = @do_plot_all_filtered_channels;
 m.plot_fns{2}.pretty_name = 'All Filtered Channels';
-m.plot_fns{3}.fn = @do_plot_single_channel;
+m.plot_fns{3}.fn = @do_plot_single_filtered_channel;
 m.plot_fns{3}.pretty_name = 'Single Filtered Channel';
 m.plot_fns{4}.fn = @do_plot_fir_coefs;
 m.plot_fns{4}.pretty_name = 'FIR Coefficients (Stem)';
@@ -119,7 +119,7 @@ function do_plot_all_filtered_channels(stack, xxx)
     hold off;
 end
 
-function do_plot_single_channel(stack, xxx)
+function do_plot_single_filtered_channel(stack, xxx)
     mdl = stack{end};
     xold = xxx{end-1}; % To print the inputs, you need to go up one
     x = xxx{end};
@@ -162,6 +162,9 @@ function do_plot_fir_coefs_as_heatmap(stack, xxx)
     
     imagesc(mdl.coefs);
     set(gca,'YDir','normal');
+    ca = caxis;
+    lim = max(abs(ca));
+    caxis([-lim, +lim]);
     axis tight;
 end
 

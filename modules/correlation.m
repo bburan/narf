@@ -34,10 +34,10 @@ m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_inputs;
 m.plot_fns{1}.pretty_name = 'Inputs vs Time';
 
-m.plot_fns{2}.fn = @do_plot_scatter;
+m.plot_fns{2}.fn = @(stack, xxx) do_plot_scatter(stack, xxx, stack{end}.input1, stack{end}.input2);
 m.plot_fns{2}.pretty_name = 'Correlation Scatter Plot';
 
-m.plot_fns{3}.fn = @(stack, xxx) do_plot_avg_scatter(xxx, xxx, stack{end}.input1, stack{end}.input2);
+m.plot_fns{3}.fn = @(stack, xxx) do_plot_avg_scatter(stack, xxx, stack{end}.input1, stack{end}.input2);
 m.plot_fns{3}.pretty_name = 'Smoothed Scatter';
 
 % m.plot_gui_create_fn = @create_chan_selector_gui;
@@ -106,16 +106,5 @@ function do_plot_inputs(stack, xxx)
      
 end
 
-function do_plot_scatter(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-    [sf, stim_idx, unused] = get_baphy_plot_controls(stack);
-    dat = x.dat.(sf);  
-    
-    plot(dat.(mdl.input1)(:, stim_idx), ...
-         dat.(mdl.input2)(:, stim_idx), 'k.');
-    axis tight;
-end
 
 end

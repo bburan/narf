@@ -1,4 +1,4 @@
-function do_plot_all_channels(stack, xxx)
+function do_plot_all_channels(stack, xxx, xfield, yfield)
     mdl = stack{end};
     x = xxx{end};
     
@@ -6,11 +6,11 @@ function do_plot_all_channels(stack, xxx)
     [sf, stim_idx, unused] = get_baphy_plot_controls(stack);
     dat = x.dat.(sf);
     
-    [T, S, C] = size(x.dat.(sf).(mdl.output));
+    [T, S, C] = size(x.dat.(sf).(yfield));
     
     hold on;
     for c = 1:C
-        plot(dat.(mdl.time), dat.(mdl.output)(:, stim_idx, c)), ...
+        plot(dat.(xfield), dat.(yfield)(:, stim_idx, c), ...
              pickcolor(c));
     end
     axis tight;

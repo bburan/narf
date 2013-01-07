@@ -7,6 +7,12 @@ if ismatrix(obj) & isnumeric(obj) & any(size(obj) ~= 1)  % Matrices
         s = strcat(s, num2str(obj(ii,:)), '; ');
     end
     s = strcat(s, num2str(obj(M,:)), ']');
+elseif iscell(obj)       
+    s = '{';
+    for ii = 1:length(obj)
+        s = strcat(s, repl_write(obj{ii}), ', ');
+    end
+    s = strcat(s, '}');   
 elseif isstr(obj)       % Single strings must be quoted
     s = ['''' obj '''']; 
 elseif isnumeric(obj)   % Single numbers

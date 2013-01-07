@@ -34,18 +34,20 @@ end
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_stim;
-m.plot_fns{1}.pretty_name = 'Stimulus vs Time';
-m.plot_fns{2}.fn = @do_plot_stim_log_spectrogram;
-m.plot_fns{2}.pretty_name = 'Stimulus Log Spectrogram';
-m.plot_fns{3}.fn = @(xx, stck) do_plot_channels_as_heatmap(xx, stck, m.output_stim);
-m.plot_fns{3}.pretty_name = 'Channels as Heatmap';
-m.plot_fns{4}.fn = @do_plot_respavg;
-m.plot_fns{4}.pretty_name = 'Response Average vs Time';
-m.plot_fns{5}.fn = @do_plot_response_rastered;
-m.plot_fns{5}.pretty_name = 'Response Raster Plot';
-m.plot_fns{6}.fn = @do_plot_spectro_and_raster;
-m.plot_fns{6}.pretty_name = 'Spectrogram + Raster';
+m.plot_fns{1}.fn = @(xxx, stack) do_plot_all_channels(xxx, stack, m.output_stim_time, m.output_stim); 
+m.plot_fns{1}.pretty_name = 'All Stim Channels';
+m.plot_fns{2}.fn = @do_plot_stim;
+m.plot_fns{2}.pretty_name = 'Single Stim Channel';
+m.plot_fns{3}.fn = @do_plot_stim_log_spectrogram;
+m.plot_fns{3}.pretty_name = 'Stimulus Log Spectrogram';
+m.plot_fns{4}.fn = @(xx, stck) do_plot_channels_as_heatmap(xx, stck, m.output_stim);
+m.plot_fns{4}.pretty_name = 'Channels as Heatmap';
+m.plot_fns{5}.fn = @do_plot_respavg;
+m.plot_fns{5}.pretty_name = 'Response Average';
+m.plot_fns{6}.fn = @do_plot_response_rastered;
+m.plot_fns{6}.pretty_name = 'Response Raster Plot';
+m.plot_fns{7}.fn = @do_plot_spectro_and_raster;
+m.plot_fns{7}.pretty_name = 'Spectrogram + Raster';
 m.plot_gui_create_fn = @create_gui;
 
 % ------------------------------------------------------------------------
@@ -139,6 +141,8 @@ function do_plot_stim(stack, xxx)
     plot(dat.(mdl.output_stim_time), ...
          dat.(mdl.output_stim)(:, stim, chan), 'k-');
     axis tight;    
+    
+    print_stimfile_type(x, sf)
 end
 
 function do_plot_stim_log_spectrogram(stack, xxx)
@@ -162,7 +166,6 @@ function do_plot_stim_log_spectrogram(stack, xxx)
               4048, mdl.raw_stim_fs, [], [], 500, 12); 
     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
     axis tight;
-    
 end
 
 function do_plot_respavg(stack, xxx)
@@ -191,6 +194,7 @@ function do_plot_respavg_as_spikes(stack, xxx)
     [xs,ys] = find(dat.respavg(idx, :) > 0);
     bar(dat.(mdl.output_resp_time)(ys), dat.respavg(idx,ys), 0.01, 'k-');
     axis([0 dat.(mdl.output_resp_time)(end) 0 max(dat.respavg(:, stim))]);
+
 end
 
 function do_plot_response_rastered(stack, xxx)
@@ -286,10 +290,34 @@ function hs = create_gui(parent_handle, stack, xxx)
         'Units', 'pixels', 'Position', [45 (h-75) w-50 25], ...
         'Callback', @(a,b,c) selected_stim_chan_popup_callback());
     
+    hs.textbox = uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
+        'HorizontalAlignment', 'left',  'String', '', ...
+        'Units', 'pixels', 'Position', [5 (h-100) w h-100]);
+    
     % Two functions to populate the two popup menus
     function update_selected_stimfile_popup()
         fns = fieldnames(x.dat);
         set(hs.selected_stimfile_popup, 'String', char(fns));
+        
+    end
+    
+    function update_set_textbox()
+        % Print "TEST SET" or "TRAINING SET" in plot GUI as appropriate
+        sf = popup2str(hs.selected_stimfile_popup);
+        is_test = any(strcmp(sf, x.test_set));
+        is_training = any(strcmp(sf, x.training_set));
+        
+        if is_training & is_test
+            str = 'Training&Test Sets';
+        elseif is_training
+            str = 'Training Set';
+        elseif is_test
+            str = 'Test Set';
+        else
+            str = 'Not in a set!?'
+        end
+        
+        set(hs.textbox, 'String', str); 
     end
     
     function update_selected_stim_idx_popup()
@@ -328,12 +356,14 @@ function hs = create_gui(parent_handle, stack, xxx)
     update_selected_stimfile_popup();
     update_selected_stim_idx_popup();
     update_selected_stim_chan_popup();
+    update_set_textbox();
     
     % Define three callbacks, one for each popup.
     function selected_stimfile_popup_callback()
         % Update the selected_stim_idx_popup string to reflect new choices
         update_selected_stim_idx_popup();
         update_selected_stim_chan_popup();
+        update_set_textbox();
         % Call the next popup callback to trigger a redraw
         selected_stim_idx_popup_callback();
     end

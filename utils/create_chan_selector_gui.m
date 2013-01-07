@@ -1,4 +1,5 @@
 function hs = create_chan_selector_gui(parent_handle, stack, xxx)
+    % Please run AFTER execution so that output signal exists
     pos = get(parent_handle, 'Position');
     w = pos(3) - 10;
     h = pos(4) - 10;

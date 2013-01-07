@@ -14,7 +14,8 @@ m.mdl = @mean_squared_error;
 m.name = 'mean_squared_error';
 m.fn = @do_mean_squared_error;
 m.pretty_name = 'Mean Squared Error';
-m.editable_fields = {'input1', 'input2', 'time', 'error', 'score'};
+m.editable_fields = {'input1', 'input2', 'time', 'error', ...
+                     'train_score', 'test_score'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
@@ -22,7 +23,8 @@ m.input1 = 'stim';
 m.input2 = 'respavg';
 m.time   = 'stim_time';
 m.error  = 'error';
-m.score  = 'score_mse';
+m.train_score  = 'score_train_mse';
+m.test_score  = 'score_test_mse';
 
 % Overwrite the default module fields with arguments 
 if nargin == 1
@@ -38,7 +40,8 @@ function x = do_mean_squared_error(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    score = 0;
+    train_score = 0;
+    test_score = 0;
     
     % Compute the mean squared error
     for sf = x.training_set', sf = sf{1};
@@ -47,11 +50,23 @@ function x = do_mean_squared_error(stack, xxx)
             error = x.dat.(sf).(mdl.input1)(:,s) - ...
                     x.dat.(sf).(mdl.input2)(:,s);
             x.dat.(sf).(mdl.error)(:, s) = error;
-            score = score + mean(error.^2);
+            train_score = train_score + mean(error.^2);
         end
     end
     
-    x.(mdl.score) = score;
+    % Compute the mean squared error
+    for sf = x.test_set', sf = sf{1};
+        [T S C] = size(x.dat.(sf).(mdl.input1));
+        for s = 1:S,
+            error = x.dat.(sf).(mdl.input1)(:,s) - ...
+                    x.dat.(sf).(mdl.input2)(:,s);
+            x.dat.(sf).(mdl.error)(:, s) = error;
+            test_score = test_score + mean(error.^2);
+        end
+    end
+    
+    x.(mdl.train_score) = train_score;
+    x.(mdl.test_score) = test_score;
     
 end
 
@@ -72,7 +87,8 @@ function do_plot_inputs_and_mse(stack, xxx)
     themax = max([max(dat.(mdl.input1)(:, stim_idx)), ...
                   max(dat.(mdl.input2)(:, stim_idx)), ...
                   max(dat.(mdl.error)(:, stim_idx))]);
-    text(0, themax , sprintf(' MSE: %f', x.(mdl.score)), ...
+    text(0, themax , sprintf(' Train MSE: %f\n Test MSE: %f',...
+                             x.(mdl.train_score), x.(mdl.test_score)), ...
         'VerticalAlignment','top',...
         'HorizontalAlignment','left');
 end

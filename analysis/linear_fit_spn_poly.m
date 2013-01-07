@@ -20,21 +20,21 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
                        'raw_stim_fs', raster_fs,...
                        'stimulus_format','envelope', ...
                        'stimulus_channel_count', n_channels));
-STACK{2} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
+STACK{2} = mdls.normalize_channels;                   
+STACK{3} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
                                       'num_coefs', filter_length));
 
-STACK{3} = mdls.nonlinearity.mdl(struct('phi', [1 1 1 1], ...
+STACK{4} = mdls.nonlinearity.mdl(struct('phi', [1 1 1 1], ...
                                         'nlfn', @polyval)); 
 recalc_xxx(1); 
 
 % Finally, fit all parameters
-STACK{2}.fit_fields = {'coefs'};
-STACK{3}.fit_fields = {'phi'};
+STACK{3}.fit_fields = {'coefs'};
+STACK{4}.fit_fields = {'phi'};
 fit_with_lsqcurvefit();
 
 % Now the reporting
-STACK{4} = mdls.correlation;
-STACK{5} = mdls.mean_squared_error;
+STACK{5} = mdls.correlation;
 
-recalc_xxx(2); 
+recalc_xxx(3); 
 

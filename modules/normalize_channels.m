@@ -1,5 +1,6 @@
 function m = normalize_channels(args)
-% Normalize RMS power of each channel to be 1.
+% Normalize mean value of each channel to be 1.
+% Also, remove DC offset of the channel so that it has zero mean.
 
 % Module fields that must ALWAYS be defined
 m = [];
@@ -17,10 +18,12 @@ m.output = 'stim';
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
-m.plot_fns{1}.pretty_name = 'Channel vs Time';
-m.plot_fns{2}.fn = @(stack, xxx) do_plot_channels_as_heatmap(stack, xxx, m.output);
-m.plot_fns{2}.pretty_name = 'Channel vs Time (Heatmap)';
+m.plot_fns{1}.fn = @(stack, xxx) do_plot_all_channels(stack, xxx, m.time, m.output);
+m.plot_fns{1}.pretty_name = 'All Normalized Channels';
+m.plot_fns{2}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx,  m.time, m.output);
+m.plot_fns{2}.pretty_name = 'Single Normalized Channel';
+m.plot_fns{3}.fn = @(stack, xxx) do_plot_channels_as_heatmap(stack, xxx, m.output);
+m.plot_fns{3}.pretty_name = 'Normalized Channel Heatmap';
 m.plot_gui_create_fn = @create_chan_selector_gui;
 
 % Overwrite the default module fields with arguments 
@@ -32,36 +35,17 @@ function x = do_normalize_channels(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
 
-    chan_sum = [];
-    chan_numels = [];
-    
-    % First work out the power level of every channel
-    for sf = fieldnames(x.dat)', sf=sf{1};           
+    % For every channel, remove DC offset and scale by RMS^-1
+    for sf = fieldnames(x.dat)', sf=sf{1};        
         [T, S, C] = size(x.dat.(sf).(mdl.input));
-        
-        if isempty(chan_sum)
-            chan_sum = zeros(C,1);
-            chan_numels = zeros(C,1);
-        end
-        
+        out = zeros(size(x.dat.(sf).(mdl.input)));
         for c = 1:C,
             tmp = x.dat.(sf).(mdl.input)(:,:,c);
-            chan_sum(c) = chan_sum(c) + sum(tmp(:));
-            chan_numels(c) = chan_sum(c) + numel(tmp);
+            mm = mean(tmp(:));
+            rms = sqrt(mean(tmp(:).^2));
+            out(:,:,c) = (1/rms) .* (-mm + x.dat.(sf).(mdl.input)(:,:,c));
         end
-        
-    end
-    
-    % Compute the RMS levels
-    chan_rms = chan_sum ./ chan_numels;
-    
-    % Now scale every channel by the RMS value
-    for sf = fieldnames(x.dat)', sf=sf{1};           
-        [T, S, C] = size(x.dat.(sf).(mdl.input));
-        
-        for c = 1:C,
-            x.dat.(sf).(mdl.output)(:,:,c) = 1/chan_rms(c) .* x.dat.(sf).(mdl.input)(:,:,c);
-        end
+        x.dat.(sf).(mdl.output) = out;
     end
 end
 

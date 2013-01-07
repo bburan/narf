@@ -1,20 +1,25 @@
 * NEXT STEPS:
-  1. [ ] Make smoothed scatter plot of nonlinearity work on the stimfile that is selected
-  2. [ ] Add a module which does mean subtraction (or add a dc offset term to FIR filter or normalization module)
-  3. [ ] Ensure that no training occurs on the test set when you click the 'lsqcurvefit' button
-  4. [ ] Add nonlinearity curve to raw scatter plot in generic nonlinearity module.
-  5. [ ] Visual indication of which is test set and which is training set
-  6. [ ] BUGHUNT: Check loading/saving is updating the GUI properly
-  7. [ ] Add 'plot all channels' to load_stims_resp from baphy and rename 'stimulus vs time' 
-  8. [ ] Normalize the heat maps so that green is always zero
-  9. [ ] Make a function which rebuilds the heat map based on ALL SAVED MODEL FILES
-  10. [ ] Think about how to guess initial conditions for fitter in a extendable way
+  1. [X] Visual indication of which is test set and which is training set
+  2. [X] BUGFIX: MSE module is not working right with training and test set scores
+  3. [X] Make smoothed scatter plot of nonlinearity work on the stimfile that is selected
+  4. [X] Normalize the heat maps so that green is always zero
+  5. [X] Add a module which does mean subtraction (or add a dc offset term to FIR filter or normalization module)
+  6. [X] Add 'plot all channels' to normalize channels module
+  7. [X] Add 'plot all channels' to load_stims_resp from baphy and rename 'stimulus vs time' 
+  8. [X] Ensure that no training occurs on the test set when you click the 'lsqcurvefit' button
+  9. [X] Add nonlinearity curve to raw scatter plot in generic nonlinearity module.
+  10. [X] Analysis: inhibition/exhibition model
+  11. [ ] Rename do_plot_output_vs_time into do_plot_signal
+  12. [ ] BUGHUNT: Check loading/saving is updating the GUI properly
+  13. [ ] Make a function which extracts desired information from SAVED FILES
+	  EX: Extract coefs
+	  EX: extract scores	  
+  14. [ ] Think about how to guess initial conditions for fitter in a extendable way
 	  (I think the answer is simply to do it manually in each model-specific fitting function)
-  11. [ ] Brainstorm how to 'autogenerate' models
-  12. [ ] Analysis: inhibition/exhibition model
-  13. [ ] fminval investigation to use an arbitrary evaluation function
-  14. [ ] Build another analysis which works directly from the WAV files, and does a prefilter
-  15. [ ] Generalize fitting constraints to work for any module
+  15. [ ] Brainstorm how to 'autogenerate' models
+  16. [ ] fminval investigation to use an arbitrary evaluation function
+  17. [ ] Build another analysis which works directly from the WAV files, and does a prefilter
+  18. [ ] Generalize fitting constraints to work for any module
 	 % Constrain phi to be >=0 , but allow coefs to be anywhere
 	 % TODO: This type of crap needs to be generalized to allow multiple fit
 	 % fields for the same module. Right now it assumes fit_fields is a
