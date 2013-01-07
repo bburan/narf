@@ -1,3 +1,5 @@
+Work with Daniela! 
+
 * NEXT STEPS:
   1. [ ] Make smoothed scatter plot of nonlinearity work on the stimfile that is selected
   2. [ ] Add a module which does mean subtraction (or add a dc offset term to FIR filter or normalization module)
