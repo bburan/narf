@@ -89,8 +89,11 @@ function do_plot_inputs(stack, xxx)
     [sf, stim_idx, unused] = get_baphy_plot_controls(stack);
     dat = x.dat.(sf);  
     
+    % removed normalization -- SVD 1/9/13
     s1 = 1/mean(dat.(mdl.input1)(:, stim_idx));
     s2 = 1/mean(dat.(mdl.input2)(:, stim_idx));
+    s1=1;
+    s2=1;
     
     plot(dat.(mdl.time), s1.*dat.(mdl.input1)(:, stim_idx), 'b-', ...
          dat.(mdl.time), s2.*dat.(mdl.input2)(:, stim_idx), 'g-');

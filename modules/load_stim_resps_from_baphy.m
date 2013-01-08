@@ -19,6 +19,7 @@ m.isready_pred = @isready_baphy;
 m.raw_stim_fs = 100000;
 m.raw_resp_fs = 200;
 m.include_prestim = 1;
+m.exclude_target_phase = 1;
 m.stimulus_channel_count=0; % 0 should be 'autodetect'
 m.stimulus_format = 'wav';  % Can be 'wav' or 'envelope'
 m.output_stim = 'stim';
@@ -108,17 +109,26 @@ function x = do_load_from_baphy(stack, xxx)
         options.unit = cfd(idx).unit;
         options.channel  = cfd(idx).channum;
         options.rasterfs = mdl.raw_resp_fs;
+        options.tag_masks={'Reference'};
         respfile = [cfd(idx).path, cfd(idx).respfile];
         fprintf('Loading response: %s\n', respfile);
         [resp, tags] = loadspikeraster(respfile, options);
+        
+        % SVD pad response with nan's in case reference responses
+        % were truncated because of target overlap during behavior.
+        % this is a kludge that may be fixed some day in loadspikeraster
+        if size(resp,1)<size(stim,1),
+            resp((end+1):size(stim,1),:,:)=nan;
+        end
+        
         x.dat.(f).(mdl.output_resp) = permute(resp, [1, 3, 2]);
         x.dat.(f).respavg = squeeze(sum(x.dat.(f).(mdl.output_resp), 3));
-               
+
         % Create time signals for later convenience
         [s1 s2 s3] = size(x.dat.(f).(mdl.output_stim));
         [r1 r2 r3] = size(x.dat.(f).(mdl.output_resp));
         [a1 a2]    = size(x.dat.(f).respavg);
-                
+        
         % TODO: Check stim, resp, raw_time signal sizes match.
         
         x.dat.(f).(mdl.output_stim_time) = (1/mdl.raw_stim_fs).*[1:s1]';
