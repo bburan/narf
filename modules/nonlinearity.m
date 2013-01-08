@@ -36,7 +36,7 @@ m.phi = [1 0];   % Default is to pass the signal through untouched
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @(stack, xxx) do_plot_output_vs_time(stack, xxx, stack{end}.time, stack{end}.output);
+m.plot_fns{1}.fn = @(stack, xxx) do_plot_signal(stack, xxx, stack{end}.time, stack{end}.output);
 m.plot_fns{1}.pretty_name = 'Output vs Time';
 
 m.plot_fns{2}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), false);

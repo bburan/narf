@@ -1,5 +1,4 @@
-function hs = create_chan_selector_gui(parent_handle, stack, xxx)
-    % Please run AFTER execution so that output signal exists
+function hs = create_chan_selector_gui(parent_handle, stack, xxx, field)
     pos = get(parent_handle, 'Position');
     w = pos(3) - 10;
     h = pos(4) - 10;
@@ -8,6 +7,11 @@ function hs = create_chan_selector_gui(parent_handle, stack, xxx)
     m = stack{end};
     mod_idx = length(stack);
     x = xxx{end};
+
+    % If field wasn't defined, use 'output' as the default
+    if nargin < 4
+        field = m.output;
+    end
     
     % Create a channel selector
     uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
@@ -23,7 +27,7 @@ function hs = create_chan_selector_gui(parent_handle, stack, xxx)
         sf = popup2str(find_module_gui_control(stack, 'selected_stimfile_popup'));
         
         if isfield(x.dat, sf)
-            [T, S, C] = size(x.dat.(sf).(m.output));
+            [T, S, C] = size(x.dat.(sf).(field));
             d = {};
             for ii = 1:C
                 d{ii} = sprintf('%d',ii);

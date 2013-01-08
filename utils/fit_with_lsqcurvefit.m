@@ -6,6 +6,8 @@ function fit_with_lsqcurvefit()
 global XXX STACK;
 cnt = 0;  % For printing progress dots
 
+recalc_xxx(1); 
+
 function prediction = my_fitter(phi, start_depth)
     % Perform the nonlinear fitting routine, starting at start_depth and
     % recalculating until the end of the XXX datastructure. 

@@ -20,7 +20,7 @@ m.output = 'stim';
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_output_vs_time;
+m.plot_fns{1}.fn = @(stack, xxx) do_plot_signal(stack, xxx, m.output);
 m.plot_fns{1}.pretty_name = 'Output vs Time';
 
 % Overwrite the default module fields with arguments 

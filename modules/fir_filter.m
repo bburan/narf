@@ -25,7 +25,7 @@ m.output = 'stim';
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @(stack, xxx) do_plot_output_vs_time(stack, xxx, m.time, m.output);
+m.plot_fns{1}.fn = @(stack, xxx) do_plot_signal(stack, xxx, m.time, m.output);
 m.plot_fns{1}.pretty_name = 'FIR Response vs Time';
 m.plot_fns{2}.fn = @do_plot_all_filtered_channels;
 m.plot_fns{2}.pretty_name = 'All Filtered Channels';
@@ -35,7 +35,7 @@ m.plot_fns{4}.fn = @do_plot_fir_coefs;
 m.plot_fns{4}.pretty_name = 'FIR Coefficients (Stem)';
 m.plot_fns{5}.fn = @do_plot_fir_coefs_as_heatmap;
 m.plot_fns{5}.pretty_name = 'FIR Coefficients (Heat map)';
-m.plot_gui_create_fn = @(hh, stack, xxx) create_chan_selector_gui(hh, stack, xxx(1:end-1));
+m.plot_gui_create_fn = @(hh, stack, xxx) create_chan_selector_gui(hh, stack, xxx(1:end-1), m.input);
 
 % Overwrite the default module fields with arguments 
 if nargin == 1

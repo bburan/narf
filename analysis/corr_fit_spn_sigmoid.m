@@ -1,4 +1,4 @@
-function linear_fit_spn_sigmoid(cellid, training_set)
+function corr_fit_spn_sigmoid(cellid, training_set)
 % Fits a linear model with a sigmoid output nonlinearity
 
 global NARF_PATH STACK XXX;
@@ -26,6 +26,8 @@ STACK{3} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
 
 STACK{4} = mdls.nonlinearity.mdl(struct('phi', [0.05 0.05 0.1 0], ...
                                         'nlfn', @sigmoidal));                    
+
+STACK{5} = mdls.correlation;
                                     
 recalc_xxx(1); 
 
@@ -33,10 +35,7 @@ recalc_xxx(1);
 STACK{3}.fit_fields = {'coefs'};
 STACK{4}.fit_fields = {'phi'};
 
-fit_with_lsqcurvefit();
-
-% Now the reporting
-STACK{5} = mdls.correlation;
+fit_with_corr();
 
 recalc_xxx(3); 
 
