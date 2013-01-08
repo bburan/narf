@@ -160,7 +160,8 @@ function do_plot_fir_coefs_as_heatmap(stack, xxx)
     %         tmp(ii,:) = tmp(ii,:) * abs(mean(squeeze(dat.(mdl.output)(stim_idx, :, ii))));
     %     end
     
-    imagesc(mdl.coefs);
+    mm=max(abs(mdl.coefs(:)));
+    imagesc(mdl.coefs,[-mm mm]);
     set(gca,'YDir','normal');
     axis tight;
 end

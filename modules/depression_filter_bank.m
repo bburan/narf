@@ -3,20 +3,18 @@ function m = depression_filter_bank(args)
 
 % Module fields that must ALWAYS be defined
 m = [];
-m.mdl = @gammatone_filter_bank;
-m.name = 'gammatone_filter_bank';
-m.fn = @do_gammatone_filter;
-m.pretty_name = 'Gammatone Filter Bank';
-m.editable_fields = {'bank_min_freq', 'bank_max_freq', ...
-                     'num_channels', 'align_phase', ...
+m.mdl = @depression_filter_bank;
+m.name = 'depression_filter_bank';
+m.fn = @do_depression_filter;
+m.pretty_name = 'Depression Filter Bank';
+m.editable_fields = {'num_channels', 'strength', 'tau', ...
                      'input', 'time', 'output' };
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.bank_min_freq = 500;
-m.bank_max_freq = 30000;
-m.num_channels = 5;
-m.align_phase = false;
+m.num_channels = 2;
+m.strength = [0 0.2];  % as fraction of stimulus max magnitude
+m.tau = [0 100];  % in ms
 m.raw_stim_freq = 100000;
 m.input = 'stim';
 m.time = 'stim_time';
@@ -29,18 +27,13 @@ end
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_filtered_stim; % TODO: make this call a generic like plot_time_series('(mdl.time)', '(mdl.output)')
+m.plot_fns{1}.fn = @do_plot_filtered_stim;
 m.plot_fns{1}.pretty_name = 'Filtered Stimulus vs Time';
-m.plot_fns{2}.fn = @do_plot_filtered_spectrogram;
-m.plot_fns{2}.pretty_name = 'Filtered Stimulus Spectrogram';
-m.plot_fns{3}.fn = @do_plot_frequency_response;
-m.plot_fns{3}.pretty_name = 'Filter Frequency Responses';
-m.plot_fns{4}.fn = @do_plot_gammatone_filter_as_colormap;
-m.plot_fns{4}.pretty_name = 'Gammatonegram';
-m.plot_gui_create_fn = @(h, stk, xx) create_filter_selector_gui(h, stk, xx, m.num_channels);
+m.plot_fns{2}.fn = @do_plot_filtered_stim_heatmap;
+m.plot_fns{2}.pretty_name = 'Filtered Stimulus Heatmap';
 
 % Finally, define the 'methods' of this module, as if it were a class
-function x = do_gammatone_filter(stack, xxx)
+function x = do_depression_filter(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
@@ -48,18 +41,17 @@ function x = do_gammatone_filter(stack, xxx)
     
     % Exotic way to loop over field names using ' and {1}...
     for sf = fieldnames(x.dat)', sf = sf{1};
-        [S, N] = size(x.dat.(sf).(mdl.input));
-        ret = zeros(m.num_channels, N, S);
+        [T, S, N] = size(x.dat.(sf).(mdl.input));
+        ret = zeros(T, S, N*m.num_channels);
         for s = 1:S
-            fprintf('gammatone filtering: %s (%d/%d)\n', sf, s, S);
-            [ret(:,:, s), gamma_envs, gamma_frqs] = ...
-                gammatonebank(x.dat.(sf).(mdl.input)(s, :), ...
-                              m.bank_min_freq, m.bank_max_freq, ...
-                              m.num_channels, baphy_mod.raw_stim_fs, ...
-                              m.align_phase);         
-            % ret = cat(3, ret, gamma_resp);
+            stim_in=squeeze(x.dat.(sf).(mdl.input)(:,s,:))';
+            depresp=depression_bank(stim_in,mdl.strength,...
+                                    mdl.tau.*baphy_mod.raw_stim_fs./1000)';
+            depresp=permute(depresp,[1 3 2]);
+            ret(:,s,:) = depresp;
         end
-        x.dat.(sf).(mdl.output) = permute(ret, [3,2,1]); 
+        
+        x.dat.(sf).(mdl.output) = ret; 
     end
 end
 
@@ -67,87 +59,38 @@ end
 function do_plot_filtered_stim(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
-    
+
     % Find the GUI controls
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    
     c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
     sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
     stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
+    chan_idx = get(baphy_mod.plot_gui.selected_stim_chan_popup, 'Value');
     dat = x.dat.(sf);
-    filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
-    
+    stepsize=baphy_mod.stimulus_channel_count;
     plot(dat.(mdl.time), ...
-         squeeze(dat.(mdl.output)(stim_idx,:,filt_idx)), ...
-         pickcolor(filt_idx));
+         squeeze(dat.(mdl.output)(:,stim_idx,chan_idx:stepsize:end)));
+    
     axis tight;
 end
 
-function do_plot_filtered_spectrogram(stack, xxx)
+% Plot heatmap of the filter responses
+function do_plot_filtered_stim_heatmap(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    % Find the GUI controls
+   % Find the GUI controls
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    
     c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
     sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
     stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
     dat = x.dat.(sf);
+    chancount=size(dat.(mdl.output),4);
+    imagesc(dat.(mdl.time),1:chancount, ...
+         squeeze(dat.(mdl.output)(:,stim_idx,:))');
     
-    filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
-    
-    logfsgram(dat.(mdl.output)(stim_idx,:, filt_idx)', 4048, baphy_mod.raw_stim_fs, [], [], 500, 12); 
-    caxis([-20,40]);
-end
-
-function do_plot_frequency_response(stack, xxx)   
-    mdl = stack{end};
-    
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    
-    % Stupid approximation using white noise
-    sr=baphy_mod.raw_stim_fs;   % Sample rate
-    noise = wgn(5*sr, 1,0);  % 5 secs of noisy samples
-
-    filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
-    frqs = MakeErbCFs(mdl.bank_min_freq, mdl.bank_max_freq, mdl.num_channels);   
-    fc = frqs(filt_idx);  % Center frequency of gamma filter
-        
-    y1 = gammatone(noise, sr, fc, mdl.align_phase);
-    L=length(y1);
-    NFFT = 2^nextpow2(L);
-    Y0 = fft(y1,NFFT);
-    Y1 = sqrt((Y0(1:NFFT/2+1)/L).^2);
-    faxis = sr/2*linspace(0,1,NFFT/2+1);
-    
-    % We could plot faxis and Y1 now, but we'll "smooth" first...
-    % Just for visualization!
-    n_smooth = 50; % How many samples to bring together to smooth. EVEN
-    n = length(Y1);
-    n_bins = fix(n/n_smooth);
-    Y_smoothed = mean(reshape(Y1(1:n_bins*n_smooth), n_smooth, n_bins));
-    F_smoothed = mean(reshape(faxis(1:n_bins*n_smooth), n_smooth, n_bins));
-    
-    % Plot single-sided amplitude spectrum
-    loglog(F_smoothed, 20*Y_smoothed, 'k-');
-    axis([mdl.bank_min_freq, mdl.bank_max_freq, 10^-6, 1]);
-    %loglog(faxis, Y1, 'k-');
-    
-end
-
-function do_plot_gammatone_filter_as_colormap(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    % TODO:
-    % Find log intensity and smooth slightly
-    %     gamma_sqr = [gamma_resp.^2];        
-    %     gamma_pow = zeros(N_gfs, N_cols);
-    %     for i = 1:N_cols
-    %         gamma_pow(:,i) = 20*log10(sqrt(mean(gamma_sqr(:,(i-1)*N_hop + [1:N_win]),2)));
-    %         %gamma_pow(:,i) = sqrt(mean(gamma_sqr(:,(i-1)*N_hop + [1:N_win]),2));
-    %     end
-    % imagesc(gamma_pow);
+    axis tight;
+    axis xy
 end
 
 end
