@@ -4,7 +4,7 @@
 narf_set_path;
 global NARF_PATH STACK XXX;
 
-savepath = '/home/ivar/matlab/narf/saved_models';
+savepath = [NARF_PATH filesep 'saved_models'];
 
 cellids = {'por026b-b2', ...
     'por026b-a1', ...

@@ -1,3 +1,5 @@
+Work with Daniela! 
+
 * NEXT STEPS:
   1. [ ] fminval investigation to use an arbitrary evaluation function
 	 Train stuff using correlation (should give different fits than MSE)

@@ -37,11 +37,13 @@ if strcmp(computer,'PCWIN'),
     global LOCAL_DATA_ROOT
     LOCAL_DATA_ROOT = 'N:\';
 else
-    addpath([dbcodepath filesep 'db_linux']);
+    if exist([dbcodepath filesep 'db_linux'],'dir'),
+        addpath([dbcodepath filesep 'db_linux']);
+    end
 end
 
 % set defaults on first call
-if isempty(DB_SERVER), DB_SERVER='metal.isr.umd.edu'; end
+if isempty(DB_SERVER), DB_SERVER='hyrax.ohsu.edu'; end
 if isempty(DB_USER), DB_USER='david'; end
 if isempty(DB_PASSWORD), DB_PASSWORD='nine1997'; end
 if isempty(DB_NAME), DB_NAME='cell'; end

@@ -85,11 +85,11 @@ function x = do_fir_filtering(stack, xxx)
          if ~isequal(C, mdl.num_dims)
             error('Dimensions of (mdl.input) don''t match channel count.');
          end
-                
+
          tmp = zeros(T, S, C);        
          for s = 1:S
              for c = 1:C,
-                 tmp(:, s, c) = filter(mdl.coefs(:, c), [1], ...
+                 tmp(:, s, c) = filter(mdl.coefs(c,:)', [1], ...
                                        x.dat.(sf).(mdl.input)(:, s, c));
              end
          end
@@ -160,7 +160,8 @@ function do_plot_fir_coefs_as_heatmap(stack, xxx)
     %         tmp(ii,:) = tmp(ii,:) * abs(mean(squeeze(dat.(mdl.output)(stim_idx, :, ii))));
     %     end
     
-    imagesc(mdl.coefs);
+    mm=max(abs(mdl.coefs(:)));
+    imagesc(mdl.coefs,[-mm mm]);
     set(gca,'YDir','normal');
     ca = caxis;
     lim = max(abs(ca));
