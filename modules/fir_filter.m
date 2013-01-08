@@ -85,11 +85,11 @@ function x = do_fir_filtering(stack, xxx)
          if ~isequal(C, mdl.num_dims)
             error('Dimensions of (mdl.input) don''t match channel count.');
          end
-                
+
          tmp = zeros(T, S, C);        
          for s = 1:S
              for c = 1:C,
-                 tmp(:, s, c) = filter(mdl.coefs(:, c), [1], ...
+                 tmp(:, s, c) = filter(mdl.coefs(c,:)', [1], ...
                                        x.dat.(sf).(mdl.input)(:, s, c));
              end
          end
