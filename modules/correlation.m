@@ -87,8 +87,8 @@ function do_plot_inputs(stack, xxx)
     dat = x.dat.(sf);  
     
     % removed normalization -- SVD 1/9/13
-    s1 = 1/mean(dat.(mdl.input1)(:, stim_idx));
-    s2 = 1/mean(dat.(mdl.input2)(:, stim_idx));
+    %s1 = 1/mean(dat.(mdl.input1)(:, stim_idx));
+    %s2 = 1/mean(dat.(mdl.input2)(:, stim_idx));
     s1=1;
     s2=1;
     
@@ -103,7 +103,7 @@ function do_plot_inputs(stack, xxx)
     text(0, themax , sprintf(' Train r^2: %f\n Test r^2 : %f', x.(mdl.train_score), x.(mdl.test_score)), ...
         'VerticalAlignment','top',...
         'HorizontalAlignment','left');
-     
+
 end
 
 

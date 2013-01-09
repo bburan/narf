@@ -50,7 +50,7 @@ function x = do_mean_squared_error(stack, xxx)
             error = x.dat.(sf).(mdl.input1)(:,s) - ...
                     x.dat.(sf).(mdl.input2)(:,s);
             x.dat.(sf).(mdl.error)(:, s) = error;
-            train_score = train_score + mean(error.^2);
+            train_score = train_score + nanmean(error.^2);
         end
     end
     
@@ -61,7 +61,7 @@ function x = do_mean_squared_error(stack, xxx)
             error = x.dat.(sf).(mdl.input1)(:,s) - ...
                     x.dat.(sf).(mdl.input2)(:,s);
             x.dat.(sf).(mdl.error)(:, s) = error;
-            test_score = test_score + mean(error.^2);
+            test_score = test_score + nanmean(error.^2);
         end
     end
     

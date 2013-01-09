@@ -41,8 +41,8 @@ function x = do_normalize_channels(stack, xxx)
         out = zeros(size(x.dat.(sf).(mdl.input)));
         for c = 1:C,
             tmp = x.dat.(sf).(mdl.input)(:,:,c);
-            mm = mean(tmp(:));
-            rms = sqrt(mean(tmp(:).^2));
+            mm = nanmean(tmp(:));
+            rms = sqrt(nanmean(tmp(:).^2));
             out(:,:,c) = (1/rms) .* (-mm + x.dat.(sf).(mdl.input)(:,:,c));
         end
         x.dat.(sf).(mdl.output) = out;

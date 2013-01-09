@@ -1,9 +1,22 @@
 function newsig = conv_fn(signal, dim, fn, nwin, novl)
 % CONV_FN: A function-application-based convolution along 1 dimension.
-% It should work for up to 4 dimensional SIGNAL matrices.
 %
+%  NEWSIG = conv_fn(SIGNAL, DIM, FN, NWIN, NOV);
+%
+% INPUTS:
+%      SIGNAL    A 1D, 2D, 3D, or 4D matrix.
+%      DIM       The dimension along which to apply the convolution.
+%      FN        The function to apply during the downsampling. 
+%                It should accept a vector and return a scalar.
+%      NWIN      The number of elements of SIGNAL to bundle together.
+%                Choose 10 to 'resample' 50Hz signal and make it 5Hz.
+%      NOVP      The number of elements before and after the current point
+%                to to overlap. Set to 0 if you don't want overlapping. 
+%                Setting it to NWIN/2 will double the size of vectors
+%                passed to FN. (The length would be NWIN/2 + NWIN + NWIN/2)
+% 
 % OPERATION:
-%  Input SIGNAL is grouped into NWIN-element long chunks along dimension
+% Input SIGNAL is grouped into NWIN-element long chunks along dimension
 % DIM. Then NOVL elements groups are padded to the front and back of each
 % chunk. If no such elements exist (such as at the beginning and end of
 % SIGNAL), they will not be included in the chunk, so chunk length varies.
@@ -21,18 +34,6 @@ function newsig = conv_fn(signal, dim, fn, nwin, novl)
 % as nonlinear or arbitrary as you want, which can be useful. If you set it
 % to 10 and use FN=@max, you are finding the maximum over each window. 
 %
-% INPUTS:
-%      SIGNAL    A 1D, 2D, 3D, or 4D matrix.
-%      DIM       The dimension along which to apply the convolution.
-%      FN        The function to apply during the downsampling. 
-%                It should accept a vector and return a scalar.
-%      NWIN      The number of elements of SIGNAL to bundle together.
-%                Choose 10 to 'resample' 50Hz signal and make it 5Hz.
-%      NOVP      The number of elements before and after the current point
-%                to to overlap. Set to 0 if you don't want overlapping. 
-%                Setting it to NWIN/2 will double the size of vectors
-%                passed to FN. (The length would be NWIN/2 + NWIN + NWIN/2)
-% 
 % OUTPUTS:
 %      NEWSIG    The transformed SIGNAL matrix. 
 %
