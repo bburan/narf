@@ -1,76 +1,76 @@
 * NEXT STEPS:
-  1. [ ] Go through utils/ and check documentation is up-to-date...
-  2. [ ] Move 'define_dims' to an 'incomplete' directory of code that isn't used yet.
-  3. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
-  4. [ ] Try nlinfit 
-  5. [ ] fminval investigation to use an arbitrary evaluation function
-	 Train stuff using correlation (should give different fits than MSE)
-  6. [ ] Make a function which extracts desired information from SAVED FILES
-	 EX: Extract coefs
-	 EX: extract scores	  
-  7. [ ] Think about how to guess initial conditions for fitter in a extendable way
-	 (I think the answer is simply to do it manually in each model-specific fitting function)
-  8. [ ] Brainstorm how to 'autogenerate' models
-  9. [ ] Build another analysis which works directly from the WAV files, and does a prefilter
-  10. [ ] Generalize fitting constraints to work for any module
-	 % Constrain phi to be >=0 , but allow coefs to be anywhere
-	 % TODO: This type of crap needs to be generalized to allow multiple fit
-	 % fields for the same module. Right now it assumes fit_fields is a
-	 % length-one cell array
-	 % LBcoefs = -inf * ones(1, numel(STACK{4}.(char(STACK{4}.fit_fields))));
-	 % LBphi   = zeros(1,  numel(STACK{5}.(char(STACK{5}.fit_fields)))); 
-	 % LB = [LBcoefs LBphi]';
-	 % UB = inf*ones(numel(LB),1);
+  1. [X] Move 'define_dims' to an 'incomplete' directory of code that isn't used yet.
+  2. [X] Go through utils/ and optimization, move unused things to graveyard
+  3. [X] Make a function which extracts desired information from SAVED FILES: 
+  4. [ ] Find that weird bug that still exists when saving/loading files
+	 
+  5. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
+  6. [ ] Try nlinfit 
+  7. [ ] Try fminval
+  8. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
+         1) Make the list of models a global, so I don't have it scattered around everywhere in my code.
+         2) Many repeated blocks of code have evolved and need to be destroyed.
+         3) Paths have become a bit messy: grep for NARF_PATH and correct (also: replace with filesep when possible)
+         4) Names probably could use some rethinking as well, especially defaults (like using 'stim' default even in the fitting algorithms, for example)
+         5) Move the 'gui' stuff to a separate global structure?
+         6) Cleaner way of building models in a script than accessing by index number?
+         7) Use this idiom more often to search through struct or cell arrays:
+	    hits = arrayfun(@(x)strcmp(x.stimfile, sf), XXX{2}.cfd);   % Use cellfun instead of arrayfun if needed.
+         8) Look for obvious repetition and make some more functions in util/
+         9) Remove/rename useless functions in util that have accumulated.
+         10) In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it be in a 3rd structure?
+         11) It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
+         12) Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?
+         13) Go through the TODO's in existing files
+         14) Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+         15) make anything named 'do_' into a method for use with modules?
+         16) make anything named 'update_' into a function used purely for its side effects
+  9. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
+
+* DESIGN QUESTIONS
+  1. How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
+  2. How can jack-knifing be integrated in to the optimization routine to prevent over-fitting?
+     for each stim file:
+     n_j = min(length(number_of_stim_indexes), 10);
+     training_set = first n_j / number_of_stim_indexes
+     test_set = remainder of stim_indexes
+     Train
+     test
+     Scale by variance when taking the mean off all of those?
+  3. Is punting on initial conditions an ok thing to do?
+  4. How should models be automatically generated in a quick and scriptable way?
+  5. How can fitting constraints be added to each module? 
+  6. How can design internal degrees of freedom be detected and corrected during optimization?
 
 * SCIENTIFIC QUESTIONS
   1. Should training set data be weighted by manually-set stimfile weights to account for biasing effect of sheer large numbers of samples?
   2. By how much does training on more than one data set improve test performance?
-  3. Should training occur all at once or in multiple passes?
-     - Datapoint: Training the linear filter, then the exponential, then both at same time. Yields the same result as just training both in a single pass.
-     - Datapoint: Training the linear filter, then the exponential. Yields an inferior result.   
 
 * LATER TODO LIST
-  1. [ ] Make inter_spike_intervals work
-  2. [ ] Make bayesian_likelihood() work
-  3. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  5. [ ] Get linear_fit_with_preprocessing working again (working from a WAV file, that is)
-  6. [ ] Make gammatone filter bank work like elliptic bandpass filter so interface is standard
-  7. [ ] Provide functions to cover the input space logarithmically with filters
-  8. [ ] Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  9. [ ] SMOOTHING of the RESPAVG signal with gaussian convolution (optionally. But this corrupts data)
-  10. [ ] Write a crash course guide on using NARF
-  11. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  12. [ ] Make logging work for the GUI by including the log space in narf_modelpane? 
-  13. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
-  14. [ ] Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
-  15. [ ] Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
-  16. [ ] Write several different performance metric functions: MSE and a point-process fit
-  17. [ ] Write a jack-knifing optimization which can work with any of the optimization modules 
-	  Basically, it should go through and ONLY take certain stimuli # for testing or training
-  18. [ ] Single channel gammatone filter (for speed, once sensitivity has been identified)
-  19. [ ] An option for taking correlation in a different method than sheer concatenation could be interesting
-  20. [ ] Add a method to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
-  21. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
-  22. [ ] Handle NaN's better...right now they can cause problems! (Use nanmean())
-  23. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
-  24. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
-  25. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
-  26. [ ] Suggest an improvement: Use BAPHY to cache intermediate values
+  1. [ ] Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  2. [ ] Make inter_spike_intervals work
+  3. [ ] Make bayesian_likelihood() work
+  4. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  5. [ ] Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
+  6. [ ] Get linear_fit_with_preprocessing working again (working from a WAV file, that is)
+  7. [ ] Make gammatone filter bank work like elliptic bandpass filter so interface is standard
+  8. [ ] Provide functions to cover the input space logarithmically with filters
+  9. [ ] Write a crash course guide on using NARF
+  10. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  11. [ ] Make logging work for the GUI by including the log space in narf_modelpane?
+  12. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
+  13. [ ] Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
+  14. [ ] Write several different performance metric functions: MSE and a point-process fit
+  15. [ ] Write a jack-knifing optimization which can work with any of the optimization modules 
+  16. [ ] Single channel gammatone filter (for speed, once sensitivity has been identified)
+  17. [ ] Add a method to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
+  18. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
+  19. [X] Handle NaN's better...right now they can cause problems! (Use nanmean())
+  20. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
+  21. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
+  22. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
+  23. [ ] Suggest an improvement: Use BAPHY to cache intermediate values
 	  
-* CLEANING/REFACTORING TODOS:
-  - Use this idiom more often to search through struct or cell arrays:
-    hits = arrayfun(@(x)strcmp(x.stimfile, sf), XXX{2}.cfd);   % Use cellfun instead of arrayfun if needed.
-  - Look for obvious repetition and make some more functions in util/
-  - Remove/rename useless functions in util that have accumulated.
-  - Rename things to be more clear. Any sort of input dimension is a 'channel', to abstract the notion of stimulus dimension?
-  - In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it be in a 3rd structure?
-  - It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
-  - Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?
-  - Go through the TODO's in existing files
-  - Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-  - make anything named 'update_' into a function used purely for its side effects
-  - make anything named 'do_' into a method for use with modules?
-
 * LUXURY, UNESSENTIAL TODO ITEMS 
   - [ ] Make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
   - [ ] Add a filter that processess phase information from a stimulus, not just the magnitude

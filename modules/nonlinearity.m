@@ -70,7 +70,14 @@ function x = do_nonlinearity(stack, xxx)
         % Otherwise use the much faster vector valued functions
         y = mdl.nlfn(mdl.phi, x.dat.(sf).(mdl.input_stim));
         
+        
+        % TODO: Find a better solution than this hacky way of zeroing nans
+        % so that optimization continue in the presence of singularities
+        y(isnan(y)) = 0;
+        
+        
         x.dat.(sf).(mdl.output) = y;
+        
     end
 end
 

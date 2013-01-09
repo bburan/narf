@@ -28,8 +28,8 @@ function error = my_fitter(phi, start_depth)
     recalc_xxx(start_depth);
     
     % Concatenate all the training set data into a large vector
-    pred    = flatten_field(XXX{end}.dat, XXX{1}.training_set, 'prediction');
-    respavg = flatten_field(XXX{end}.dat, XXX{1}.training_set, 'respavg');
+    pred    = flatten_field(XXX{end}.dat, XXX{1}.training_set, 'stim');
+    respavg = flatten_field(XXX{end}.dat, XXX{1}.training_set, 'respavg');       
     
     % Eliminate any MSE where there is a NaN in respavg 
     % I would have preferred to just excise the NaNs, but lsqcurvefit
@@ -52,7 +52,7 @@ options = optimset('MaxIter', 1000, ...
                    'TolFun', 1e-12, 'TolX', 1e-9);
 
 len = length(flatten_field(XXX{end}.dat, XXX{1}.training_set, 'respavg'));
-start_depth = 2; % TODO: Maybe not all fits should start here by default?
+start_depth = find_fit_start_depth(STACK);
 phi_best = lsqcurvefit(@my_fitter, phi_init, start_depth,  ...
                zeros(len, 1), LB, UB, options);
 unpack_fittables(phi_best);

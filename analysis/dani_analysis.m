@@ -9,9 +9,9 @@ mdls = scan_directory_for_modules([NARF_PATH filesep 'modules']);
 savepath = [NARF_PATH filesep 'saved_models'];
 
 files_to_analyze = [...
-    {'por022a-a1', 'por022a07_p_SPN', 	'por022a09_a_TSP', 	'por022a12_p_SPN', 	'por022a13_a_TSP',	'por022a14_p_SPN'};
-    %{'por022a-c1', 'por022a07_p_SPN'	'por022a09_a_TSP', 	'por022a12_p_SPN',	'por022a13_a_TSP',	'por022a14_p_SPN'};
-    %{'por022b-a1', 'por022b08_p_SPN', 	'por022b10_a_TSP', 	'por022b11_p_SPN', 	'por022b12_a_TSP', 	'por022b13_p_SPN'}; % por022b12_a_TSP has weird resp size!
+    {'por022a-a1', 'por022a08_p_SPN', 	'por022a09_a_TSP', 	'por022a12_p_SPN', 	'por022a13_a_TSP',	'por022a14_p_SPN'}; % PROBLEM: 
+    %{'por022a-c1', 'por022a08_p_SPN'	'por022a09_a_TSP', 	'por022a12_p_SPN',	'por022a13_a_TSP',	'por022a14_p_SPN'};
+    %{'por022b-a1', 'por022b08_p_SPN', 	'por022b10_a_TSP', 	'por022b11_p_SPN', 	'por022b12_a_TSP', 	'por022b13_p_SPN'}; % por022b12_a_TSP has weird resp size! 
     %{'por022b-a2', 'por022b08_p_SPN',	'por022b10_a_TSP', 	'por022b11_p_SPN', 	'por022b12_a_TSP', 	'por022b13_p_SPN'}; 
     %{'por023a-a1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a08_p_SPN', 	'por023a09_a_TSP',	'por023a10_p_SPN'}; % por023a08_p_SPN is not yet sorted!
     %{'por023a-b1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a08_p_SPN', 	'por023a09_a_TSP',	'por023a10_p_SPN'};
@@ -30,11 +30,12 @@ files_to_analyze = [...
     %{'por025c-c1', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'};
     %{'por025c-c2', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'};
     %{'por026a-b1', 'por026a08_p_SPN', 	'por026a09_a_TSP', 	'por026a10_p_SPN', 	'por026a11_a_TSP',	'por026a12_p_SPN'};
-    {'por026a-d1', 'por026a08_p_SPN', 	'por026a09_a_TSP', 	'por026a10_p_SPN', 	'por026a11_a_TSP',	'por026a12_p_SPN'}];
+    %{'por026a-d1', 'por026a08_p_SPN', 	'por026a09_a_TSP', 	'por026a10_p_SPN', 	'por026a11_a_TSP',	'por026a12_p_SPN'};
+    ];
 
 % -------------------------------------------------------------------------
 % Define the model
-raster_fs = 200;
+raster_fs = 100;
 filter_length = 10;
 n_channels = 2;
 
@@ -47,33 +48,60 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
                        'raw_stim_fs', raster_fs,...
                        'stimulus_format','envelope', ...
                        'stimulus_channel_count', n_channels));
-%STACK{2} = mdls.depression_filter_bank                   
-STACK{2} = mdls.normalize_channels;
+STACK{2} = mdls.depression_filter_bank              
 STACK{3} = mdls.normalize_channels;
-STACK{4} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
-                                      'num_coefs', filter_length, ...
-                                      'output', 'prediction'));
-STACK{5} = mdls.correlation.mdl(struct('input1', 'prediction'));
+STACK{4} = mdls.fir_filter.mdl(struct('num_dims', n_channels * 2, ...
+                                      'num_coefs', filter_length));
+STACK{5} = mdls.nonlinearity.mdl(struct('phi', [0.05 0.05 0.05 0], ...
+                                        'nlfn', @sigmoidal));
+STACK{6} = mdls.correlation;
 % -------------------------------------------------------------------------
 
-[M, N] = size(files_to_analyze);  
+[M, N] = size(files_to_analyze);
 
 % For each cell file
 for ci = 1:M,  
     cellid = files_to_analyze{ci, 1};
     respfiles = {files_to_analyze{ci, 2:6}};
-    % Build the model, train it on everything, and save 
+    
+    % Re-initialize the data to evaluate
     XXX{1}.cellid = cellid;  
     XXX{1}.training_set = respfiles;
     XXX{1}.test_set = {};
+    
+    STACK{2}.fit_fields = {'tau'};
     STACK{4}.fit_fields = {'coefs'};
+    
+    fit_with_lsqcurvefit(); % Initial fit
+    
+    STACK{5}.fit_fields = {'phi'};
+    
+    % Try to guess some better initial conditions for the optimization
+    %     % FIR DEFAULT: Cols 2,3 start as ones, everything else zero
+    %     STACK{4}.coefs = zeros(size(STACK{4}.coefs));
+    %     STACK{4}.coefs(:, 2:3) = ones(size(STACK{4}.coefs(:, 2:3)));
+    %     
+    %     % For SIGMA, 
+    %     recalc_xxx(1);
+    %     rr = flatten_field(XXX{5}.dat, XXX{1}.training_set, 'respavg');
+    %     ss = flatten_field(XXX{5}.dat, XXX{1}.training_set, 'stim');
+    %     mu = mean(ss);
+    %     sigma = std(ss);
+    %     R = corrcoef(ss, rr);
+    %     amp = 2 * mean(rr) * sign(R(2,1));
+    %     offset = 0;
+    %     STACK{5}.phi = [mu sigma amp offset];
+         
+    % Fit!
     fit_with_lsqcurvefit();
     filename = sprintf('%s/%s_all.mat', savepath, cellid);
     save_model_stack(filename, STACK, XXX);
     
-    % Now train the model again on each respfile individually, with
-    % possibly different free model parameters
-    %STACK{3}.fit_fields = {};
+    % Now train the model again on each respfile individually, holding the
+    % depression and FIR coefficients free and letting the nonlinearity slide
+    STACK{2}.fit_fields = {};
+    STACK{4}.fit_fields = {};
+    STACK{5}.fit_fields = {'phi'};
     for rfi = 2:6
         rf = files_to_analyze{ci, rfi};
         XXX = {};
@@ -87,31 +115,6 @@ for ci = 1:M,
     end
 end
 
-% Open up a display so you can view the results
- pf = figure('Menubar','figure', 'Resize','off', ...
-             'Units','pixels', 'Position', [20 50 1300 min(170*length(STACK)+40, 1100)]);
- narf_modelpane(pf, mdls); 
-
-% Now load each module again, rebuild and extract their correlation scores
-D = dir([savepath filesep '*.mat']);
-sss = sprintf('\n\nCELLID\tTRAIN CORR\tTRAINED ON\n');
-for ii = 1:length(D),
-    f = [savepath filesep D(ii).name];
-    
-    load_model_stack(f);
-    recalc_xxx(1);
-    
-    if length(XXX{1}.training_set) > 1
-        ts = 'all';
-    else
-        ts = XXX{1}.training_set{1};
-    end
-    
-    sss = [sss sprintf('%s\t%f\t%s\n', XXX{1}.cellid, XXX{end}.score_train_corr, ts)];
-end
-
-fprintf('%s', sss);
-
-
+open_narf_gui();
 
 

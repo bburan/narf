@@ -409,7 +409,7 @@ function load_model_stack_callback (a, b, c)
                                      'Select Model Stack');
 	if ~isequal(filename, 0)
         delete_all_module_guis();
-        STACK = load_model_stack([pathname filesep filename]);
+        load_model_stack([pathname filesep filename]);
         recalc_xxx(1);
         rebuild_gui_from_stack();
     end

@@ -35,7 +35,7 @@ models = {'linear_fit_spn', ...
           };
 
 % UNCOMMENT FOR QUICK TESTING OF SCRIPT
-models = {'linear_fit_spn_sigmoid'};
+models = {'linear_fit_spn_stephen'};
 cellids = {'por025a-b1'};
       
 scores = zeros(length(cellids), length(models) * 2);  
