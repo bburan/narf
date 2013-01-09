@@ -49,34 +49,31 @@ function x = do_correlation(stack, xxx)
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
 
     % -------------
-    % Compute the training set correlation
+    % Compute the training set correlation, ignoring nans
     V1 = [];
     V2 = [];
     for sf = x.training_set', sf = sf{1};
         V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));
         V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));
     end
-    
-    % Compute the correlation
-    R = corrcoef(V1,V2);
-    if isnan(R(2,1))
-        x.(mdl.train_score) = R(2,1);
+    R = corrcoef(excise([V1 V2]));
+    if isnan(R)
+        x.(mdl.train_score) = R;
     else
         x.(mdl.train_score) = R(2,1)^2;
     end
     
     %---------------
-    % Compute the test set correlation
+    % Compute the test set correlation, ignoring nans
     V1 = [];
     V2 = [];
     for sf = x.test_set', sf = sf{1};
         V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));
         V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));
     end
-    
-    R = corrcoef(V1,V2);
-    if isnan(R(2,1))
-        x.(mdl.test_score) = R(2,1);
+    R = corrcoef(excise([V1 V2]));
+    if isnan(R)
+        x.(mdl.test_score) = R;
     else
         x.(mdl.test_score) = R(2,1)^2;
     end

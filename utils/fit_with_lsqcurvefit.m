@@ -8,7 +8,7 @@ cnt = 0;  % For printing progress dots
 
 recalc_xxx(1); 
 
-function prediction = my_fitter(phi, start_depth)
+function error = my_fitter(phi, start_depth)
     % Perform the nonlinear fitting routine, starting at start_depth and
     % recalculating until the end of the XXX datastructure. 
     
@@ -24,6 +24,15 @@ function prediction = my_fitter(phi, start_depth)
     unpack_fittables(phi);
     recalc_xxx(start_depth);
     prediction = XXX{end}.dat.(XXX{1}.training_set{1}).stim(:);
+    respavg = XXX{end}.dat.(XXX{1}.training_set{1}).respavg(:);
+       
+    % Eliminate any MSE where there is a NaN in respavg 
+    % I would have preferred to just shorten the length of it, but
+    % lsqcurvefit needs a constant-length vector passed to it. 
+    % TODO: Consider nlinfit instead. 
+    respavg(isnan(respavg)) = prediction(isnan(respavg));
+    
+    error = prediction - respavg;
 end
 
 % The optimization
@@ -36,7 +45,7 @@ options = optimset('MaxIter', 1000, ...
                    'MaxFunEvals', 5000, ... % 100*numel(phi_init), ...
                    'TolFun', 1e-12, 'TolX', 1e-9);
 phi_best = lsqcurvefit(@my_fitter, phi_init, 2,  ...
-               XXX{end}.dat.(XXX{1}.training_set{1}).respavg(:), ...
+               zeros(size(XXX{end}.dat.(XXX{1}.training_set{1}).respavg(:))), ...
                LB, UB, options);
 unpack_fittables(phi_best);
 end

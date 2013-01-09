@@ -152,7 +152,6 @@ function do_plot_stim(stack, xxx)
          dat.(mdl.output_stim)(:, stim, chan), 'k-');
     axis tight;    
     
-    print_stimfile_type(x, sf)
 end
 
 function do_plot_stim_log_spectrogram(stack, xxx)

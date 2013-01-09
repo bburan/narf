@@ -151,15 +151,6 @@ function do_plot_fir_coefs_as_heatmap(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    % TODO: This way of scaling the image intensity is specific to what is
-    % selected and therefore probably wrong in general. Replace with proper
-    % filtering
-    %     tmp = mdl.coefs;
-    %     [M, N] = size(tmp);
-    %     for ii = 1:M
-    %         tmp(ii,:) = tmp(ii,:) * abs(mean(squeeze(dat.(mdl.output)(stim_idx, :, ii))));
-    %     end
-    
     mm=max(abs(mdl.coefs(:)));
     imagesc(mdl.coefs,[-mm mm]);
     set(gca,'YDir','normal');

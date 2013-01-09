@@ -400,7 +400,7 @@ function save_model_stack_callback (a, b, c)
     [filename, pathname] = uiputfile({[NARF_SAVED_MODELS_PATH '/*.mat']}, ...
                                      'Save Model Stack As');
 	if ~isempty(filename)                                 
-        save_model_stack([pathname filesep filename], STACK);
+        save_model_stack([pathname filesep filename], STACK, XXX);
     end
 end
 

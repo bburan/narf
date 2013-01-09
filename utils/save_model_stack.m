@@ -1,4 +1,5 @@
-function save_model_stack(filename, stack)
+function save_model_stack(filename, stack, xxx)
+    % Saves the model stack and XXX{1} initialization info
    
     for ii = 1:length(stack)
         % Strip off any GUI handles
@@ -11,7 +12,8 @@ function save_model_stack(filename, stack)
         end
     end
     
-    % Save the stack
-    save(filename, 'stack');
+    % Save the stack and initialization
+    xxx = xxx{1};
+    save(filename, 'stack', 'xxx');
     
 end

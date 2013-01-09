@@ -35,7 +35,7 @@ models = {'linear_fit_spn', ...
           };
 
 % UNCOMMENT FOR QUICK TESTING OF SCRIPT
-models = {'linear_fit_spn_exp_sigmoid'};
+models = {'linear_fit_spn_sigmoid'};
 cellids = {'por025a-b1'};
       
 scores = zeros(length(cellids), length(models) * 2);  
@@ -94,7 +94,7 @@ for ci = 1:length(cellids),
             XXX{end}.score_test_corr, ...
             m);
         
-        save_model_stack(filename, STACK);
+        save_model_stack(filename, STACK, XXX);
         
         % Save the test/train scores
         scores(ci, 2*mi-1) = XXX{end}.score_train_corr;

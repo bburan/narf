@@ -40,8 +40,6 @@ STACK{5} = mdls.nonlinearity.mdl(struct('phi', [1 0], ...
 STACK{5}.fit_fields = {'phi'};
 fit_with_lsqcurvefit();
 
-
-
 % Now the reporting
 STACK{6} = mdls.correlation;
 

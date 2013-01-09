@@ -1,4 +1,4 @@
-function do_plot_output_vs_time(stack, xxx, xseries, yseries)
+function do_plot_signal(stack, xxx, xseries, yseries)
     mdl = stack{end};
     x = xxx{end};
     
