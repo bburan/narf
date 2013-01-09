@@ -37,7 +37,8 @@ function x = do_mean_squared_error(stack, xxx)
     score = 0;
     
     % Compute the mean squared error
-    for sf = x.training_set', sf = sf{1};
+    for ii = 1:length(x.training_set) 
+        sf = x.training_set{ii};
         [T S C] = size(x.dat.(sf).(mdl.input1));
         for s = 1:S,
             error = x.dat.(sf).(mdl.input1)(:,s) - ...

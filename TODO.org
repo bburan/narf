@@ -1,15 +1,7 @@
 * NEXT STEPS:
-  1. [X] Train a model on five data sets, then let a parameter be free for each data set and train again. 
-	 Record and display the changes for each model trained on each data set.
-  2. [X] FIX THIS PROBLEM:
-	 Right now XXX{1} holds the initialization data which selects the training, test sets.
-	 This is model-independent; XXX is clearly separate from the model STACK
-	 However, saving the model STACK doesn't save XXX! So you lose track of which sets it was trained on when you save. 
-	 Loading the stack later doesn't necessarily help. 
-	 The solution I am going to use is to save the XXX{1} struct at the same time, and load it at the same time. 
-	 If you want, you can put extra experimental meta-data in the XXX{1} struct and it will be saved as well. 
-	 This maintains the partition between model and data.
-  3. [X] Correct correlation module so that it works with NaN's.
+  1. [ ] Go through utils/ and check documentation is up-to-date...
+  2. [ ] Move 'define_dims' to an 'incomplete' directory of code that isn't used yet.
+  3. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
   4. [ ] Try nlinfit 
   5. [ ] fminval investigation to use an arbitrary evaluation function
 	 Train stuff using correlation (should give different fits than MSE)
@@ -94,3 +86,4 @@
 	1. Search for coefficients from a spanning filter bank
         2. Find the signal contributing most (using the FIR coefficients)
 	3. Do a second filter bank that is only an octave wide, with the signal in the center, to get more substructure
+	   

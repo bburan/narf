@@ -1,10 +1,12 @@
 function M2D = define_dims(M, dimension_names)
-% Flatten an N dimensional matrix into a 2D matrix and provide a function
-% which makes it easy to select only columns that match the criteria you
-% provide. 
+% DEFINE_DIMS: Create a wrapper pseudo-object around matrix M which
+% provides a few simple methods for accessing named dimensions.
 %
-% Assumes that the 'time' dimension is the first dimension, so you don't
-% need to explicitly list 'time' in your DIMENSION_NAMES cell array. 
+% Flattens an N dimensional matrix into a 2D matrix and provides a function
+% which makes it easy to select only columns that match the criteria you
+% provide. In essence, it lets you name each dimension instead of using
+% index numbers, which can be useful if working with several matrices of
+% different dimensionality that need to be extracted in a particular way.
 % 
 % The returned 2D matrix is basically a pseudoobject with these fields:
 %   M2D.m          Original matrix
@@ -14,7 +16,6 @@ function M2D = define_dims(M, dimension_names)
 %   M2D.foreach    Fn to get a cell array of columns idxes for every element
 %
 % TODO: An example of how to use this.
-% 
 
 dimension_sizes = size(M);
 

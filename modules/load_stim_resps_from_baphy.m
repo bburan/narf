@@ -1,7 +1,8 @@
 function m = load_stim_resps_from_baphy(args)
+% LOAD_STIM_RESPS_FROM_BAPHY
 % A module to load stimulus and response files from BAPHY. 
-% Returns a function module 'm' which implements the MODULE interface.
-% See documentation for more information. TODO.
+% Returns a function module which implements the MODULE interface.
+% See documentation for more information about what a MODULE is.
 
 % Module fields that must ALWAYS be defined
 m = [];
@@ -95,14 +96,13 @@ function x = do_load_from_baphy(stack, xxx)
                               0, mdl.include_prestim);
         stim = permute(stim, [2 3 1]);
         
-        % TODO: If you ever need arbitrary dimensions, I started planning
+        % If you ever need arbitrary dimensions, I started planning
         % out how that could be accomplished...but it doesn't help plotting
         % See documentation in narf/doc/
-        % stim = define_dims(stim, {'stim', 'chan'});
+        % stim = define_dims(stim, {'time', 'stim', 'chan'});
         
         x.dat.(f).(mdl.output_stim) = stim;
-    
-        % x.dat.(f).([mdl.output_stim '_across']) = stim_acc;
+        
         % Load the raw_resp part of the data structure
         options = [];
         options.includeprestim = mdl.include_prestim;
@@ -236,28 +236,27 @@ function do_plot_spectro_and_raster(stack, xxx)
         return;
     end
     
-%     % Read the GUI to find out the selected stim files
-%     sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
-%     stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
-%     dat = x.dat.(sf);
-%     
-%     hold on;
-%     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-%     logfsgram(dat.(mdl.output_stim)(:,stim)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
-%     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
-%     h = get(gca, 'YLim');
-%     d = h(2) - h(1);
-%     axis tight;    
-%     [T, S, R] = size(dat.(mdl.output_resp));
-%     hold on;
-%     for r = 1:R
-%         [xs,ys] = find(dat.(mdl.output_resp)(:, stim, r) > 0);
-%         plot(dat.(mdl.output_resp_time)(xs), ...
-%              h(1) + (r/R)*d*(d/(d+d/R))*dat.(mdl.output_resp)(xs,stim,r), 'k.');
-%        
-%     end    
-% %    axis tight;
-%     hold off;
+    % Read the GUI to find out the selected stim files
+    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
+    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
+    dat = x.dat.(sf);
+    
+    hold on;
+    % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
+    logfsgram(dat.(mdl.output_stim)(:,stim)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
+    caxis([-20,40]);  % TODO: use a 'smarter' caxis here
+    h = get(gca, 'YLim');
+    d = h(2) - h(1);
+    axis tight;    
+    [T, S, R] = size(dat.(mdl.output_resp));
+    hold on;
+    for r = 1:R
+        [xs,ys] = find(dat.(mdl.output_resp)(:, stim, r) > 0);
+        plot(dat.(mdl.output_resp_time)(xs), ...
+             h(1) + (r/R)*d*(d/(d+d/R))*dat.(mdl.output_resp)(xs,stim,r), 'k.');
+       
+    end    
+    hold off;
 end
 
 

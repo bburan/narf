@@ -14,7 +14,7 @@ dat = x.dat.(sf);
 % Sort and average them by groups of 100
 D = [dat.(field1)(:) dat.(field2)(:)]; 
 D = sortrows(D);
-D = conv_fn(D, 1, @mean, 100, 0);
+D = conv_fn(D, 1, @nanmean, 100, 0);
 
 plot(D(:,1), D(:,2), 'k.');
 axis tight;

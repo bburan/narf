@@ -1,5 +1,5 @@
 function v = flatten_field(dat, sfs, field)
-% Flattens matrices under 'dat.(sf).(field)' into a single long row vector. 
+% Flattens matrices under 'dat.(sf).(field)' into a single long vector. 
 %
 % Uses the default order of fields according to matlab (first indexes by
 % the row, then by the column, then on to the higher dimensions).
