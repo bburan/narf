@@ -1,25 +1,26 @@
 * NEXT STEPS:
   1. [ ] Go through utils/ and check documentation is up-to-date...
-  1. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
-  2. [ ] Try nlinfit 
-  3. [ ] fminval investigation to use an arbitrary evaluation function
+  2. [ ] Move 'define_dims' to an 'incomplete' directory of code that isn't used yet.
+  3. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
+  4. [ ] Try nlinfit 
+  5. [ ] fminval investigation to use an arbitrary evaluation function
 	 Train stuff using correlation (should give different fits than MSE)
-  4. [ ] Make a function which extracts desired information from SAVED FILES
+  6. [ ] Make a function which extracts desired information from SAVED FILES
 	 EX: Extract coefs
 	 EX: extract scores	  
-  5. [ ] Think about how to guess initial conditions for fitter in a extendable way
+  7. [ ] Think about how to guess initial conditions for fitter in a extendable way
 	 (I think the answer is simply to do it manually in each model-specific fitting function)
-  6. [ ] Brainstorm how to 'autogenerate' models
-  7. [ ] Build another analysis which works directly from the WAV files, and does a prefilter
-  8. [ ] Generalize fitting constraints to work for any module
-	% Constrain phi to be >=0 , but allow coefs to be anywhere
-	% TODO: This type of crap needs to be generalized to allow multiple fit
-	% fields for the same module. Right now it assumes fit_fields is a
-	% length-one cell array
-	% LBcoefs = -inf * ones(1, numel(STACK{4}.(char(STACK{4}.fit_fields))));
-	% LBphi   = zeros(1,  numel(STACK{5}.(char(STACK{5}.fit_fields)))); 
-	% LB = [LBcoefs LBphi]';
-	% UB = inf*ones(numel(LB),1);
+  8. [ ] Brainstorm how to 'autogenerate' models
+  9. [ ] Build another analysis which works directly from the WAV files, and does a prefilter
+  10. [ ] Generalize fitting constraints to work for any module
+	 % Constrain phi to be >=0 , but allow coefs to be anywhere
+	 % TODO: This type of crap needs to be generalized to allow multiple fit
+	 % fields for the same module. Right now it assumes fit_fields is a
+	 % length-one cell array
+	 % LBcoefs = -inf * ones(1, numel(STACK{4}.(char(STACK{4}.fit_fields))));
+	 % LBphi   = zeros(1,  numel(STACK{5}.(char(STACK{5}.fit_fields)))); 
+	 % LB = [LBcoefs LBphi]';
+	 % UB = inf*ones(numel(LB),1);
 
 * SCIENTIFIC QUESTIONS
   1. Should training set data be weighted by manually-set stimfile weights to account for biasing effect of sheer large numbers of samples?

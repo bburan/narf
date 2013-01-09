@@ -9,14 +9,14 @@ mdls = scan_directory_for_modules([NARF_PATH filesep 'modules']);
 savepath = [NARF_PATH filesep 'saved_models'];
 
 files_to_analyze = [...
-    %{'por022a-a1', 'por022a07_p_SPN', 	'por022a09_a_TSP', 	'por022a12_p_SPN', 	'por022a13_a_TSP',	'por022a14_p_SPN'};
+    {'por022a-a1', 'por022a07_p_SPN', 	'por022a09_a_TSP', 	'por022a12_p_SPN', 	'por022a13_a_TSP',	'por022a14_p_SPN'};
     %{'por022a-c1', 'por022a07_p_SPN'	'por022a09_a_TSP', 	'por022a12_p_SPN',	'por022a13_a_TSP',	'por022a14_p_SPN'};
     %{'por022b-a1', 'por022b08_p_SPN', 	'por022b10_a_TSP', 	'por022b11_p_SPN', 	'por022b12_a_TSP', 	'por022b13_p_SPN'}; % por022b12_a_TSP has weird resp size!
     %{'por022b-a2', 'por022b08_p_SPN',	'por022b10_a_TSP', 	'por022b11_p_SPN', 	'por022b12_a_TSP', 	'por022b13_p_SPN'}; 
     %{'por023a-a1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a08_p_SPN', 	'por023a09_a_TSP',	'por023a10_p_SPN'}; % por023a08_p_SPN is not yet sorted!
     %{'por023a-b1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a08_p_SPN', 	'por023a09_a_TSP',	'por023a10_p_SPN'};
     %{'por023a-c1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a08_p_SPN', 	'por023a09_a_TSP',	'por023a10_p_SPN'};
-    {'por023b-a1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};
+    %{'por023b-a1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};
     %{'por023b-b1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};
     %{'por023b-d1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};
     %{'por023b-d2', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};
@@ -47,7 +47,8 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
                        'raw_stim_fs', raster_fs,...
                        'stimulus_format','envelope', ...
                        'stimulus_channel_count', n_channels));
-STACK{2} = mdls.depression_filter_bank                   
+%STACK{2} = mdls.depression_filter_bank                   
+STACK{2} = mdls.normalize_channels;
 STACK{3} = mdls.normalize_channels;
 STACK{4} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
                                       'num_coefs', filter_length, ...

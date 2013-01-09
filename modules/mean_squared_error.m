@@ -43,8 +43,9 @@ function x = do_mean_squared_error(stack, xxx)
     train_score = 0;
     test_score = 0;
     
-    % Compute the mean squared error
-    for sf = x.training_set', sf = sf{1};
+    % Compute the mean squared error of the training set
+    for ii = 1:length(x.training_set),
+        sf = x.training_set{ii};
         [T S C] = size(x.dat.(sf).(mdl.input1));
         for s = 1:S,
             error = x.dat.(sf).(mdl.input1)(:,s) - ...
@@ -54,8 +55,9 @@ function x = do_mean_squared_error(stack, xxx)
         end
     end
     
-    % Compute the mean squared error
-    for sf = x.test_set', sf = sf{1};
+    % Compute the mean squared error of the test set
+    for ii = 1:length(x.test_set),
+        sf = x.test_set{ii};
         [T S C] = size(x.dat.(sf).(mdl.input1));
         for s = 1:S,
             error = x.dat.(sf).(mdl.input1)(:,s) - ...

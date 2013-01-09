@@ -52,7 +52,8 @@ function x = do_correlation(stack, xxx)
     % Compute the training set correlation, ignoring nans
     V1 = [];
     V2 = [];
-    for sf = x.training_set', sf = sf{1};
+    for ii = 1:length(x.training_set),
+        sf = x.training_set{ii};
         V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));
         V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));
     end
@@ -67,7 +68,8 @@ function x = do_correlation(stack, xxx)
     % Compute the test set correlation, ignoring nans
     V1 = [];
     V2 = [];
-    for sf = x.test_set', sf = sf{1};
+    for ii = 1:length(x.test_set),
+        sf = x.test_set{ii};
         V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));
         V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));
     end
