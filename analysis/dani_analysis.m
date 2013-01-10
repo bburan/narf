@@ -48,11 +48,12 @@ STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
                        'raw_stim_fs', raster_fs,...
                        'stimulus_format','envelope', ...
                        'stimulus_channel_count', n_channels));
-STACK{2} = mdls.depression_filter_bank              
+STACK{2} = mdls.depression_filter_bank             
+STACK{2} = mdls.normalize_channels; % Uncomment to not consider depression
 STACK{3} = mdls.normalize_channels;
-STACK{4} = mdls.fir_filter.mdl(struct('num_dims', n_channels * 2, ...
+STACK{4} = mdls.fir_filter.mdl(struct('num_dims', n_channels, ...
                                       'num_coefs', filter_length));
-STACK{5} = mdls.nonlinearity.mdl(struct('phi', [0.05 0.05 0.05 0], ...
+STACK{5} = mdls.nonlinearity.mdl(struct('phi', [0.05 0.5 0.05 0], ...
                                         'nlfn', @sigmoidal));
 STACK{6} = mdls.correlation;
 % -------------------------------------------------------------------------
@@ -69,13 +70,38 @@ for ci = 1:M,
     XXX{1}.training_set = respfiles;
     XXX{1}.test_set = {};
     
-    STACK{2}.fit_fields = {'tau'};
+    %STACK{2}.fit_fields = {'tau'};
     STACK{4}.fit_fields = {'coefs'};
     
-    fit_with_lsqcurvefit(); % Initial fit
+    % Initial fit with stephen's second method
+    recalc_xxx(1);
+    stim = [];
+    resp = [];
+    for ii = 1:length(XXX{1}.training_set),
+        sf = XXX{1}.training_set{ii};
+        stim = cat(1, stim, XXX{4}.dat.(sf).stim);
+        % Make them wider than they need to be
+        [M N P] = size(XXX{4}.dat.(sf).resp);
+        temp = nan * zeros(M,N,4); % 4 is a magic number. It must be larger than any expected resp files dimension 3
+        temp(~isnan(XXX{4}.dat.(sf).resp)) = XXX{4}.dat.(sf).resp(~isnan(XXX{4}.dat.(sf).resp));
+        resp = cat(1, resp, temp);
+    end
+    resp=nanmean(resp,3);
+    resp=resp(:);
+    [T,S] = size(resp);
+    stim=reshape(permute(stim, [1 3 2]), T, numel(stim) / T);
+    params = [];
+    params.altcore     = 'xccorefet';  % Either 'cdcore' or 'xccorefet'
+    params.maxlag      = filter_length - 1;
+    params.resampcount = filter_length - 1;
+    params.sfscount    = 10;
+    params.sfsstep     = 3;
+    strf = cellxcdataloaded(stim, resp, params);
+    STACK{4}.coefs = strf(1).h;
     
     STACK{5}.fit_fields = {'phi'};
     
+    % Ironically, this seems to work worse than nothing at all:
     % Try to guess some better initial conditions for the optimization
     %     % FIR DEFAULT: Cols 2,3 start as ones, everything else zero
     %     STACK{4}.coefs = zeros(size(STACK{4}.coefs));
@@ -92,7 +118,6 @@ for ci = 1:M,
     %     offset = 0;
     %     STACK{5}.phi = [mu sigma amp offset];
          
-    % Fit!
     fit_with_lsqcurvefit();
     filename = sprintf('%s/%s_all.mat', savepath, cellid);
     save_model_stack(filename, STACK, XXX);
@@ -109,6 +134,7 @@ for ci = 1:M,
         XXX{1}.training_set = {rf};
         XXX{1}.cellid = cellid;  
         XXX{1}.test_set = {};
+        STACK{5}.phi = [0.05 0.5 0.05 0];  % Reset phi each time to avoid minima
         fit_with_lsqcurvefit();
         filename = sprintf('%s/%s_%s.mat', savepath, cellid, rf);
         save_model_stack(filename, STACK, XXX);
