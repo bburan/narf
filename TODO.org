@@ -27,6 +27,9 @@
          16) make anything named 'update_' into a function used purely for its side effects
   9. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
 
+* DISCUSSIONS
+  Observation: Be very careful using sigmoid nonlinearity: it tends to squash data into two groups. It almost always helps to widen the sigma parameter before fitting again.
+
 * DESIGN QUESTIONS
   1. How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
   2. How can jack-knifing be integrated in to the optimization routine to prevent over-fitting?

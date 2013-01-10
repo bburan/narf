@@ -101,6 +101,9 @@ for ci = 1:M,
     
     STACK{5}.fit_fields = {'phi'};
     
+    filename = sprintf('%s/%s_all_xccorefet.mat', savepath, cellid);
+    save_model_stack(filename, STACK, XXX);
+    
     % Ironically, this seems to work worse than nothing at all:
     % Try to guess some better initial conditions for the optimization
     %     % FIR DEFAULT: Cols 2,3 start as ones, everything else zero
