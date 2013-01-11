@@ -6,29 +6,47 @@ narf_set_path;
 global NARF_PATH STACK XXX;
 mdls = scan_directory_for_modules([NARF_PATH filesep 'modules']);
 
-savepath = [NARF_PATH filesep 'saved_models'];
 
 files_to_analyze = [...
-% {'por022a-a1', 'por022a08_p_SPN', 	'por022a09_a_TSP', 	'por022a12_p_SPN', 	'por022a13_a_TSP',	'por022a14_p_SPN'}; % PROBLEM: 
-% {'por022a-c1', 'por022a08_p_SPN'	'por022a09_a_TSP', 	'por022a12_p_SPN',	'por022a13_a_TSP',	'por022a14_p_SPN'};
-    %{'por022b-a1', 'por022b08_p_SPN', 	'por022b10_a_TSP', 	'por022b11_p_SPN', 	'por022b12_a_TSP', 	'por022b13_p_SPN'}; % por022b12_a_TSP has weird resp size! 
-    %{'por022b-a2', 'por022b08_p_SPN',	'por022b10_a_TSP', 	'por022b11_p_SPN', 	'por022b12_a_TSP', 	'por022b13_p_SPN'}; 
-    {'por023a-a1', 'por023a06_p_SPN', 	'por023a07_a_TSP',      'por023a09_p_TSP',	'por023a10_p_SPN'}; % por023a08_p_SPN is bad, skip
-    %{'por023a-b1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a09_p_TSP',	'por023a10_p_SPN'};
-    %{'por023a-c1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a09_p_TSP',	'por023a10_p_SPN'};
+    % OLD SINGLE-SPEAKER RECORDINGS
+    %       {'por020a-a1',	 'por020a04_p_SPN',	'por020a08_a_TSP',	'por020a09_p_SPN',	'por020a10_a_TSP', 	'por020a11_p_SPN'};
+    %     {'por020a-c1',  	 'por020a04_p_SPN',	'por020a08_a_TSP',  'por020a09_p_SPN',	'por020a10_a_TSP', 	'por020a11_p_SPN'};
+    %     {'por020a-d1', 	 'por020a04_p_SPN',	'por020a08_a_TSP',  'por020a09_p_SPN',	'por020a10_a_TSP', 	'por020a11_p_SPN'};
+    %     {'por019b-a1', 	 'por019b02_p_SPN',	'por019b05_a_TSP',  'por019b07_p_SPN', 	'por019b08_a_TSP', 	'por019b09_p_SPN'};
+    %     {'por019b-a3', 	 'por019b02_p_SPN',	'por019b05_a_TSP',  'por019b07_p_SPN', 	'por019b08_a_TSP', 	'por019b09_p_SPN'};
+    %     {'por019b-b1', 	 'por019b02_p_SPN',	'por019b05_a_TSP',  'por019b07_p_SPN',	'por019b08_a_TSP', 	'por019b09_p_SPN'};
+    %     {'por019c-a1', 	 'por019c04_p_SPN', 'por019c06_a_TSP',  'por019c07_p_SPN', 	'por019c08_a_TSP', 	'por019c09_p_SPN'};
+    %     {'por018b-a1',     'por018b04_p_SPN',	'por018b06_a_TSP',  'por018b07_p_SPN',	'por018b08_a_TSP',	'por018b09_p_SPN'};
+    %     {'por018b-a2',     'por018b04_p_SPN',	'por018b06_a_TSP',  'por018b07_p_SPN',	'por018b08_a_TSP',	'por018b09_p_SPN'};
+    %     {'por018b-c1',     'por018b04_p_SPN',	'por018b06_a_TSP',  'por018b07_p_SPN',	'por018b08_a_TSP',	'por018b09_p_SPN'};
+    %     {'por018b-d1',     'por018b04_p_SPN',	'por018b06_a_TSP',  'por018b07_p_SPN',	'por018b08_a_TSP',	'por018b09_p_SPN'};
+    %     {'por018c-a1',     'por018c05_p_SPN',	'por018c06_a_TSP',  'por018c08_p_SPN',	'por018c09_p_TSP',	'por018c10_p_SPN'};
+    %     {'por018c-a2',     'por018c05_p_SPN',	'por018c06_a_TSP',  'por018c08_p_SPN',	'por018c09_p_TSP',	'por018c10_p_SPN'};
+    %     {'por018c-c1',     'por018c05_p_SPN',	'por018c06_a_TSP',  'por018c08_p_SPN',	'por018c09_p_TSP',	'por018c10_p_SPN'};
+    %     {'por018c-d1',  	 'por018c05_p_SPN',	'por018c06_a_TSP',  'por018c08_p_SPN',	'por018c09_p_TSP',	'por018c10_p_SPN'};
+    
+    % TWO-SPEAKER RECORDINGS
+    
+    %{'por022a-a1', 'por022a08_p_SPN', 	'por022a09_a_TSP', 	'por022a12_p_SPN', 	'por022a13_a_TSP',	'por022a14_p_SPN'};  
+    %{'por022a-c1', 'por022a08_p_SPN'	'por022a09_a_TSP', 	'por022a12_p_SPN',	'por022a13_a_TSP',	'por022a14_p_SPN'};
+    %{'por022b-a1', 'por022b08_p_SPN', 	'por022b10_a_TSP', 	'por022b11_p_SPN', 	'por022b12_a_TSP', 	'por022b13_p_SPN'}; % crash; por022b12_a_TSP has weird resp size! 
+    %{'por022b-a2', 'por022b08_p_SPN',	'por022b10_a_TSP', 	'por022b11_p_SPN', 	'por022b12_a_TSP', 	'por022b13_p_SPN'}; % crash
+    %{'por023a-a1', 'por023a06_p_SPN', 	'por023a07_a_TSP',  'por023a09_p_TSP',	'por023a10_p_SPN'};                     % por023a08_p_SPN is bad, skip; crummy STRF for this channel
+    {'por023a-b1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a09_p_TSP',	'por023a10_p_SPN'};                     
+    %{'por023a-c1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a09_p_TSP',	'por023a10_p_SPN'};                     % really BAD fitting!
     %{'por023b-a1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};
     %{'por023b-b1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};
-    %{'por023b-d1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};
-    %{'por023b-d2', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};
-    %{'por024b-b1', 'por024b03_p_SPN', 	'por024b04_a_TSP', 	'por024b05_p_SPN', 	'por024b07_p_TSP', 	'por024b08_p_SPN'}; % por024b07_p_TSP has weird size
-    %{'por024b-c1', 'por024b03_p_SPN', 	'por024b04_a_TSP', 	'por024b05_p_SPN', 	'por024b07_p_TSP', 	'por024b08_p_SPN'};
+    %{'por023b-d1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'}; 
+    %{'por023b-d2', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'}; 
+    %{'por024b-b1', 'por024b03_p_SPN', 	'por024b04_a_TSP', 	'por024b05_p_SPN', 	'por024b07_p_TSP', 	'por024b08_p_SPN'}; % crash; por024b07_p_TSP has weird size!
+    %{'por024b-c1', 'por024b03_p_SPN', 	'por024b04_a_TSP', 	'por024b05_p_SPN', 	'por024b07_p_TSP', 	'por024b08_p_SPN'}; % crash;
     %{'por025a-b1', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'};
-    %{'por025a-c1', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'};
-    %{'por025a-c2', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'};
+    %{'por025a-c1', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'}; % Pretty bad fitting!
+    %{'por025a-c2', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'}; % Pretty bad fitting!
     %{'por025a-d1', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'};
-    %{'por025c-b1', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'}; % por025c07_a_TSP has weird size
-    %{'por025c-c1', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'};
-    %{'por025c-c2', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'};
+    %{'por025c-b1', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'}; % crash; por025c07_a_TSP has weird size
+    %{'por025c-c1', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'}; % crash;
+    %{'por025c-c2', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'}; % crash;
     %{'por026a-b1', 'por026a08_p_SPN', 	'por026a09_a_TSP', 	'por026a10_p_SPN', 	'por026a11_a_TSP',	'por026a12_p_SPN'};
     %{'por026a-d1', 'por026a08_p_SPN', 	'por026a09_a_TSP', 	'por026a10_p_SPN', 	'por026a11_a_TSP',	'por026a12_p_SPN'};
     ];
@@ -46,6 +64,7 @@ STACK = {};
 STACK{1} = mdls.load_stim_resps_from_baphy.mdl(...
                 struct('raw_resp_fs', raster_fs, ...
                        'raw_stim_fs', raster_fs,...
+                       'include_prestim',0,...
                        'stimulus_format','envelope', ...
                        'stimulus_channel_count', n_channels));
 %STACK{2} = mdls.depression_filter_bank             
@@ -63,6 +82,10 @@ STACK{4} = mdls.correlation;
 % For each cell file
 for ci = 1:M,  
     cellid = files_to_analyze{ci, 1};
+    savepath = [NARF_PATH filesep 'saved_models' filesep cellid];
+    if ~exist(savepath,'dir'),
+        mkdir(fileparts(savepath),cellid);
+    end
     filecount=length({files_to_analyze{ci,:}});
     respfiles = {files_to_analyze{ci, 2:filecount}};
     
@@ -101,29 +124,31 @@ for ci = 1:M,
     
     filename = sprintf('%s/%s_all_xccorefet.mat', savepath, cellid);
     save_model_stack(filename, STACK, XXX);
-    keyboard
-    %STACK{2}.fit_fields = {'tau'};
-    %STACK{3}.fit_fields = {'coefs'};
-    %fit_with_lsqcurvefit();
-    %filename = sprintf('%s/%s_all.mat', savepath, cellid);
-    %save_model_stack(filename, STACK, XXX);
+    
+    % re-fit fir filter using least-square
+    STACK{3}.fit_fields = {'coefs'};
+    fit_with_lsqcurvefit();
     
     % add output NL to stack
-    linpredmin=min(min(XXX{4}.dat.(sf).stim));
-    linpredmax=max(max(XXX{4}.dat.(sf).stim));
-    phi1=linpredmin+(linpredmax-linpredmin)./10;
+    phi1=mean(std(XXX{4}.dat.(sf).stim(:)))-std(XXX{4}.dat.(sf).stim(:))*2;
     phi2=0.001;
-    STACK{4} = mdls.nonlinearity.mdl(struct('phi', [phi1 phi2 max(resp)./6 0], ...
+    phi3=max(resp(:))/6;
+    STACK{4} = mdls.nonlinearity.mdl(struct('phi', [phi1 phi2 phi3 0], ...
                                             'nlfn', @sigmoidal));
     STACK{5} = mdls.correlation;
     
-    % Now train the model again on each respfile individually, holding the
-    % depression and FIR coefficients free and letting the nonlinearity slide
     STACK{3}.fit_fields = {};
     STACK{4}.fit_fields = {'phi'};
     fit_with_lsqcurvefit();
     phi_init=STACK{4}.phi;
     
+    filename = sprintf('%s/%s_all.mat', savepath, cellid);
+    save_model_stack(filename, STACK, XXX);
+    
+    %open_narf_gui();
+    
+    % Now train the model again on each respfile individually, holding the
+    % depression and FIR coefficients free and letting the nonlinearity slide
     nlbins=1000;
     nlmatrix=zeros(nlbins,5);
     filecount=length({files_to_analyze{ci,:}});
@@ -146,11 +171,15 @@ for ci = 1:M,
     end
 end
 
+filename = sprintf('%s/%s_all.mat', savepath, cellid);
+load_model_stack(filename);
 open_narf_gui();
+set(gcf,'name',[cellid ' : ' basename(filename)]);
 
 figure;
 plot(x,nlmatrix);
 filecount=length({files_to_analyze{ci,:}});
-hl=legend({files_to_analyze{ci, 2:filecount}})
+hl=legend({files_to_analyze{ci, 2:filecount}},'Location','Northwest');
 set(hl,'interpreter','none');
+set(gcf,'name',[cellid ' : gain per file']);
 
