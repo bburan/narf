@@ -96,7 +96,6 @@ end
 function do_plot_smooth_scatter_and_nonlinearity(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
-    
     hold on;
     do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
     xlims = xlim();

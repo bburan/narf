@@ -73,7 +73,8 @@ function x = do_load_from_baphy(stack, xxx)
     
     % Create the 'dat' cell array and its entries
     len = length(files_to_load);
-    x.dat = cell(1, len);
+    %x.dat = cell(1, len);
+    x.dat=struct();
     for f_idx = 1:len;
         f = files_to_load{f_idx};
         
@@ -122,7 +123,7 @@ function x = do_load_from_baphy(stack, xxx)
         end
         
         x.dat.(f).(mdl.output_resp) = permute(resp, [1, 3, 2]);
-        x.dat.(f).respavg = squeeze(sum(x.dat.(f).(mdl.output_resp), 3));
+        x.dat.(f).respavg = squeeze(nanmean(x.dat.(f).(mdl.output_resp), 3));
 
         % Create time signals for later convenience
         [s1 s2 s3] = size(x.dat.(f).(mdl.output_stim));
