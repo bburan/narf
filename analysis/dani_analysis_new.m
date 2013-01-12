@@ -1,3 +1,6 @@
+clear all 
+close all
+
 % Fit a model to five stimulus files to initialize model params.
 % Fit a specific model parameter again using each file individually.
 % Save the fitted params and plot the results.
@@ -9,8 +12,8 @@ mdls = scan_directory_for_modules([NARF_PATH filesep 'modules']);
 
 files_to_analyze = [...
     % OLD SINGLE-SPEAKER RECORDINGS
-    %       {'por020a-a1',	 'por020a04_p_SPN',	'por020a08_a_TSP',	'por020a09_p_SPN',	'por020a10_a_TSP', 	'por020a11_p_SPN'};
-    %     {'por020a-c1',  	 'por020a04_p_SPN',	'por020a08_a_TSP',  'por020a09_p_SPN',	'por020a10_a_TSP', 	'por020a11_p_SPN'};
+    %     {'por020a-a1',	 'por020a04_p_SPN',	'por020a08_a_TSP',	'por020a09_p_SPN',	'por020a10_a_TSP', 	'por020a11_p_SPN'};
+    %    {'por020a-c1',  	 'por020a04_p_SPN',	'por020a08_a_TSP',  'por020a09_p_SPN',	'por020a10_a_TSP', 	'por020a11_p_SPN'};
     %     {'por020a-d1', 	 'por020a04_p_SPN',	'por020a08_a_TSP',  'por020a09_p_SPN',	'por020a10_a_TSP', 	'por020a11_p_SPN'};
     %     {'por019b-a1', 	 'por019b02_p_SPN',	'por019b05_a_TSP',  'por019b07_p_SPN', 	'por019b08_a_TSP', 	'por019b09_p_SPN'};
     %     {'por019b-a3', 	 'por019b02_p_SPN',	'por019b05_a_TSP',  'por019b07_p_SPN', 	'por019b08_a_TSP', 	'por019b09_p_SPN'};
@@ -32,23 +35,35 @@ files_to_analyze = [...
     %{'por022b-a1', 'por022b08_p_SPN', 	'por022b10_a_TSP', 	'por022b11_p_SPN', 	'por022b12_a_TSP', 	'por022b13_p_SPN'}; % crash; por022b12_a_TSP has weird resp size! 
     %{'por022b-a2', 'por022b08_p_SPN',	'por022b10_a_TSP', 	'por022b11_p_SPN', 	'por022b12_a_TSP', 	'por022b13_p_SPN'}; % crash
     %{'por023a-a1', 'por023a06_p_SPN', 	'por023a07_a_TSP',  'por023a09_p_TSP',	'por023a10_p_SPN'};                     % por023a08_p_SPN is bad, skip; crummy STRF for this channel
-    {'por023a-b1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a09_p_TSP',	'por023a10_p_SPN'};                     
+    %{'por023a-b1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a09_p_TSP',	'por023a10_p_SPN'};                     
     %{'por023a-c1', 'por023a06_p_SPN', 	'por023a07_a_TSP', 	'por023a09_p_TSP',	'por023a10_p_SPN'};                     % really BAD fitting!
     %{'por023b-a1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};
     %{'por023b-b1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};
     %{'por023b-d1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'}; 
     %{'por023b-d2', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'}; 
     %{'por024b-b1', 'por024b03_p_SPN', 	'por024b04_a_TSP', 	'por024b05_p_SPN', 	'por024b07_p_TSP', 	'por024b08_p_SPN'}; % crash; por024b07_p_TSP has weird size!
-    %{'por024b-c1', 'por024b03_p_SPN', 	'por024b04_a_TSP', 	'por024b05_p_SPN', 	'por024b07_p_TSP', 	'por024b08_p_SPN'}; % crash;
+    %{'por024b-c1', 'por024b03_p_SPN', 	'por024b04_a_TSP', 	'por024b05_p_SPN', 	'por024b07_p_TSP', 	'por024b08_p_SPN'}; % crash
     %{'por025a-b1', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'};
-    %{'por025a-c1', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'}; % Pretty bad fitting!
-    %{'por025a-c2', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'}; % Pretty bad fitting!
+    %{'por025a-c1', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'}; % 
+    %{'por025a-c2', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'}; % really BAD fitting!
     %{'por025a-d1', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'};
     %{'por025c-b1', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'}; % crash; por025c07_a_TSP has weird size
-    %{'por025c-c1', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'}; % crash;
-    %{'por025c-c2', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'}; % crash;
+    %{'por025c-c1', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'}; % crash
+    %{'por025c-c2', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'}; % crash
     %{'por026a-b1', 'por026a08_p_SPN', 	'por026a09_a_TSP', 	'por026a10_p_SPN', 	'por026a11_a_TSP',	'por026a12_p_SPN'};
     %{'por026a-d1', 'por026a08_p_SPN', 	'por026a09_a_TSP', 	'por026a10_p_SPN', 	'por026a11_a_TSP',	'por026a12_p_SPN'};
+    %{'por027a-a1', 'por027a06_p_SPN',	'por027a07_a_TSP',	'por027a08_p_SPN',	'por027a09_a_TSP',	'por027a13_p_SPN'}; % crash; Unit a1 lost in B2
+    %{'por027a-b1', 'por027a06_p_SPN',	'por027a07_a_TSP',	'por027a08_p_SPN',	'por027a09_a_TSP',	'por027a13_p_SPN'}; % crash; Unit b1 lost in B2
+    %{'por027a-b2', 'por027a06_p_SPN',	'por027a07_a_TSP',	'por027a08_p_SPN',	'por027a09_a_TSP',	'por027a13_p_SPN'}; % crash; Unit b2 lost in B2
+    %{'por027a-c1', 'por027a06_p_SPN',	'por027a07_a_TSP',	'por027a08_p_SPN',	'por027a09_a_TSP',	'por027a13_p_SPN'};
+    {'por027b-b1', 'por027b06_p_SPN', 	'por027b08_a_TSP',	'por027b11_p_SPN',	'por027b14_a_TSP',	'por027b16_p_SPN'}; % crash
+    %{'por027b-b2', 'por027b06_p_SPN', 	'por027b08_a_TSP',	'por027b11_p_SPN',	'por027b14_a_TSP',	'por027b16_p_SPN'}; % crash
+    %{'por027b-c1', 'por027b06_p_SPN', 	'por027b08_a_TSP',	'por027b11_p_SPN',	'por027b14_a_TSP',	'por027b16_p_SPN'}; % crash
+    %{'por028b-a1', 'por028b02_p_SPN',	'por028b05_a_TSP',	'por028b06_p_SPN',	'por028b10_a_TSP',	'por028b12_p_SPN'}; % crash
+    %{'por028b-b1', 'por028b02_p_SPN',	'por028b05_a_TSP',	'por028b06_p_SPN',	'por028b10_a_TSP',	'por028b12_p_SPN'}; % crash
+    %{'por028b-b2', 'por028b02_p_SPN',	'por028b05_a_TSP',	'por028b06_p_SPN',	'por028b10_a_TSP',	'por028b12_p_SPN'}; % crash
+    %{'por028b-c1', 'por028b02_p_SPN',	'por028b05_a_TSP',	'por028b06_p_SPN',	'por028b10_a_TSP',	'por028b12_p_SPN'}; % crash
+    %{'por028b-d1', 'por028b02_p_SPN',	'por028b05_a_TSP',	'por028b06_p_SPN',	'por028b10_a_TSP',	'por028b12_p_SPN'}; % crash
     ];
 
 % -------------------------------------------------------------------------
@@ -130,6 +145,8 @@ for ci = 1:M,
     fit_with_lsqcurvefit();
     
     % add output NL to stack
+    linpredmin=min(XXX{4}.dat.(sf).stim(:));
+    linpredmax=max(XXX{4}.dat.(sf).stim(:));
     phi1=mean(std(XXX{4}.dat.(sf).stim(:)))-std(XXX{4}.dat.(sf).stim(:))*2;
     phi2=0.001;
     phi3=max(resp(:))/6;
