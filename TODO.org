@@ -1,31 +1,49 @@
 * NEXT STEPS:
-  1. [X] Move 'define_dims' to an 'incomplete' directory of code that isn't used yet.
-  2. [X] Go through utils/ and optimization, move unused things to graveyard
-  3. [X] Make a function which extracts desired information from SAVED FILES: 
-  4. [ ] Find that weird bug that still exists when saving/loading files
-	 
-  5. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
-  6. [ ] Try nlinfit 
-  7. [ ] Try fminval
-  8. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
-         1) Make the list of models a global, so I don't have it scattered around everywhere in my code.
-         2) Many repeated blocks of code have evolved and need to be destroyed.
-         3) Paths have become a bit messy: grep for NARF_PATH and correct (also: replace with filesep when possible)
-         4) Names probably could use some rethinking as well, especially defaults (like using 'stim' default even in the fitting algorithms, for example)
-         5) Move the 'gui' stuff to a separate global structure?
-         6) Cleaner way of building models in a script than accessing by index number?
-         7) Use this idiom more often to search through struct or cell arrays:
-	    hits = arrayfun(@(x)strcmp(x.stimfile, sf), XXX{2}.cfd);   % Use cellfun instead of arrayfun if needed.
-         8) Look for obvious repetition and make some more functions in util/
-         9) Remove/rename useless functions in util that have accumulated.
-         10) In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it be in a 3rd structure?
-         11) It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
-         12) Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?
-         13) Go through the TODO's in existing files
-         14) Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-         15) make anything named 'do_' into a method for use with modules?
-         16) make anything named 'update_' into a function used purely for its side effects
-  9. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
+  1. [X] Brainstorm a better way of building up models to try (see test_likely_candidates)
+  2. [X] Refine fit_with_lsqcurvefit() so that it accepts arguments
+  3. [X] Make a passthru module
+  4. [ ] Refactor a function which extracts info from all saved files in a directory
+  5. [ ] Instead of giving models index numbers, let's make an 'append_module' (auto-guesses parameters + picks index), and a 'set_module_field' function (finds index, sets field)
+  6. [ ] Instead of building multiple models in multiple files, let's instead use a single generic script to try many combinations
+	 Modules to try are listed as a nested cell array of structs (field names name module block), which is flattened/iterated through via recursive algorithm
+	 Uses 'append module' to build the STACK
+	 Numbers and saves the fitted model with a string identifying structure
+	 Builds a big vector of the models
+	 Extracts some parameters before saving (To avoid having to rebuild them later)
+	 Returns those parameters
+  7. [ ] Find that weird bug that still exists when saving/loading files
+  8. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
+  9. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
+  10. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
+  11. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
+  12. [ ] IRRITATION: Why isn't there an 'undo' function?
+  13. [ ] IRRITATION: Why can't I resize windows?
+  14. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
+  15. [ ] IRRITATION: Why are the editable text boxes so damn small?
+  16. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
+  17. [ ] Try nlinfit 
+  18. [ ] Try fminval
+  19. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
+  20. [ ] Module: Nonlinearity
+  21. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
+          1) Make the list of models a global, so I don't have it scattered around everywhere in my code.
+          2) Many repeated blocks of code have evolved and need to be destroyed.
+          3) Paths have become a bit messy: grep for NARF_PATH and correct (also: replace with filesep when possible)
+          4) Names probably could use some rethinking as well, especially defaults (like using 'stim' default even in the fitting algorithms, for example)
+          5) Move the 'gui' stuff to a separate global structure?
+          6) Cleaner way of building models in a script than accessing by index number?
+          7) Use this idiom more often to search through struct or cell arrays:
+	     hits = arrayfun(@(x)strcmp(x.stimfile, sf), XXX{2}.cfd);   % Use cellfun instead of arrayfun if needed.
+          8) Look for obvious repetition and make some more functions in util/
+          9) Remove/rename useless functions in util that have accumulated.
+          10) In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it be in a 3rd structure?
+          11) It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
+          12) Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?
+          13) Go through the TODO's in existing files
+          14) Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+          15) make anything named 'do_' into a method for use with modules?
+          16) make anything named 'update_' into a function used purely for its side effects
+  22. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
 
 * DISCUSSIONS
   Observation: Be very careful using sigmoid nonlinearity: it tends to squash data into two groups. It almost always helps to widen the sigma parameter before fitting again.

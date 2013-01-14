@@ -1,19 +1,42 @@
-function fit_with_lsqcurvefit()
-% Fits any fittable fields using the training set data only. 
-% REQUIRES that there be a field 'prediction' defined at the end of the XXX
-% data structure, which will be compared with the 'respavg' signal to
-% compute the least squares error used to do the fitting.
-% 
-% TODO: Pass this function options for lsqcurvefit, and UB and LB
+function termcond = fit_with_lsqcurvefit(field1, field2, options)
+% termcond = fit_with_lsqcurvefit(field1, field2, options)
+%
+% Fits all parameters in STACK marked with 'fit_fields' such that signals
+% FIELD1 and FIELD2 have a least-squared error that is minimized. Uses only
+% data in XXX.training_set.
+%
+% ARGUMENTS:
+%    field1   The name of the first signal
+%             Defaults to 'stim' if no argument is passed
+%    field2   The name of the second signal
+%             Defaults to 'respavg' if no argument is passed
+%    options  Options  passed to lsqcurvefit() to help fit. Defaults are:
+%                MaxIter 1000
+%                MaxFunEvals 5000
+%                TolFun 1e-12
+%                TolX 1e-9
+%
+% RETURNS:
+%    termcond    Termination condition of optimization.
+%
+% TODO: There should be a way to add upper and lower bounds on search.
 
 global XXX STACK;
 cnt = 1;  % For printing progress dots
 
-recalc_xxx(1); 
+if nargin < 2
+    field1 = 'stim';
+    field2 = 'respavg';
+end
+if nargin < 3
+    options = optimset('MaxIter', 1000, ...
+                       'MaxFunEvals', 5000, ...
+                       'TolFun', 1e-12, 'TolX', 1e-9);  
+end
 
-function error = my_fitter(phi, start_depth)
-    % Perform the nonlinear fitting routine, starting at start_depth and
-    % recalculating until the end of the XXX datastructure. 
+function error = my_obj_fn(phi, start_depth)
+    % Compute the stack values from start_depth to the end of the XXX data 
+    % structure and computing the L1 error between FIELD1 and FIELD2
         
     % Print 1 progress dot for every 20 iterations, and newline every 1000
     if isequal(mod(cnt, 1000), 1)
@@ -27,33 +50,37 @@ function error = my_fitter(phi, start_depth)
     unpack_fittables(phi);
     recalc_xxx(start_depth);
     
-    % Concatenate all the training set data into a large vector
-    pred    = flatten_field(XXX{end}.dat, XXX{1}.training_set, 'stim');
-    respavg = flatten_field(XXX{end}.dat, XXX{1}.training_set, 'respavg');       
+    % Concatenate training set prediction and reality into a long vector
+    pred    = flatten_field(XXX{end}.dat, XXX{1}.training_set, field1);
+    respavg = flatten_field(XXX{end}.dat, XXX{1}.training_set, field2);       
     
-    % Eliminate any MSE where there is a NaN in respavg 
+    % Set error to zero where there is a NaN in respavg 
     % I would have preferred to just excise the NaNs, but lsqcurvefit
     % works on a constant length vector for X and Y, so that's not
     % possible.
-    % TODO: Consider nlinfit instead. 
     respavg(isnan(respavg)) = pred(isnan(respavg));
     
-    error = pred - respavg;
+    % This will be compared with zero and squared to calc MSE
+    error = pred - respavg; 
 end
 
-% The optimization
+recalc_xxx(1); 
 phi_init = pack_fittables(STACK);
+
+if isempty(phi_init)
+    fprintf('Skipping because there are no parameters to fit.\n');
+    termcond = -12345;
+    return 
+end
+
 LB = [];
 UB = [];
 fprintf('Fitting %d variables with lsqcurvefit()\n', length(phi_init));
 
-options = optimset('MaxIter', 1000, ...
-                   'MaxFunEvals', 5000, ... % 100*numel(phi_init), ...
-                   'TolFun', 1e-12, 'TolX', 1e-9);
-
 len = length(flatten_field(XXX{end}.dat, XXX{1}.training_set, 'respavg'));
 start_depth = find_fit_start_depth(STACK);
-phi_best = lsqcurvefit(@my_fitter, phi_init, start_depth,  ...
-               zeros(len, 1), LB, UB, options);
+[phi_best, resnorm, residual, termcond] = lsqcurvefit(...
+                                    @my_obj_fn, phi_init, start_depth,  ...
+                                    zeros(len, 1), LB, UB, options);
 unpack_fittables(phi_best);
 end

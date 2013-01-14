@@ -15,6 +15,8 @@ function M2D = define_dims(M, dimension_names)
 %   M2D.length     Fn to get length of a particular field
 %   M2D.foreach    Fn to get a cell array of columns idxes for every element
 %
+%  IF YOU EVER WANT TO RESSURECT THIS, CONSIDER USING IND2SUB FOR SPEED!
+%
 % TODO: An example of how to use this.
 
 dimension_sizes = size(M);
