@@ -11,13 +11,14 @@ m.mdl = @fir_filter;
 m.name = 'fir_filter';
 m.fn = @do_fir_filtering;
 m.pretty_name = 'FIR Filter';
-m.editable_fields = {'num_coefs', 'num_dims', 'coefs', ...
+m.editable_fields = {'num_coefs', 'num_dims', 'coefs', 'baseline', ...
                      'input', 'time', 'output'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.num_coefs = 20;
 m.num_dims = 2;
+m.baseline=0;
 m.coefs = zeros(m.num_coefs, m.num_dims);
 m.input =  'stim';
 m.time =   'stim_time';
@@ -94,7 +95,7 @@ function x = do_fir_filtering(stack, xxx)
              end
          end
          % The output is the sum of the filtered channels
-         x.dat.(sf).(mdl.output) = squeeze(sum(tmp, 3)); 
+         x.dat.(sf).(mdl.output) = squeeze(sum(tmp, 3)) + mdl.baseline; 
     end
 end
 
