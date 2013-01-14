@@ -1,0 +1,4 @@
+saved_analysis
+saved_models
+*.m~
+#.gitignore
