@@ -1,3 +1,7 @@
+% function tsp_psth(cellid)
+%
+% example:  tsp_psth('por023a-b1');
+%
 function tsp_psth(cellid)
 
 dbopen;
