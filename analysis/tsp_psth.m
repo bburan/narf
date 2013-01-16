@@ -32,6 +32,7 @@ prestimsilence=zeros(filecount,1);
 duration=zeros(filecount,1);
 poststimsilence=zeros(filecount,1);
 tarband=zeros(filecount,1);
+ForcePreStimSilence=0.25;
 for ii=1:length(cellfiledata),
    [parms,perf]=dbReadData(cellfiledata(ii).rawid);
    
@@ -47,7 +48,9 @@ for ii=1:length(cellfiledata),
    % between passive and active
    thisprint=[parms.Ref_Subsets parms.Ref_LowFreq parms.Ref_HighFreq];
    stimprint(ii,1:length(thisprint))=thisprint;
-   prestimsilence(ii)=parms.Ref_PreStimSilence;
+   %prestimsilence(ii)=parms.Ref_PreStimSilence;
+   prestimsilence(ii)=ForcePreStimSilence;
+   
    duration(ii)=parms.Ref_Duration;
    poststimsilence(ii)=parms.Ref_PostStimSilence;
    poststimsilence(ii)=0; % force to zero below
@@ -84,7 +87,7 @@ for ii=1:length(useidx),
     options.unit=cellfiledata(useidx(ii)).unit;
     options.rasterfs=rasterfs;
     options.psthfs=25;
-    options.includeprestim=[0.5 0];
+    options.includeprestim=[prestimsilence(ii) 0];
     options.includeincorrect=INCLUDEINCORRECT;
     options.tag_masks={'SPECIAL-COLLAPSE-REFERENCE'};
     
@@ -117,6 +120,7 @@ for ii=1:length(useidx),
     ha=subplot(3,3,ii+2);
     options.psth=1;
     options.psthmax=mresp.*0.95;
+    options.PreStimSilence=prestimsilence(ii);
     parmfile=[cellfiledata(useidx(ii)).stimpath cellfiledata(useidx(ii)).stimfile];
     raster_plot(parmfile,r{ii},tags,ha,options);
     
