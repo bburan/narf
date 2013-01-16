@@ -129,7 +129,7 @@ end
 
 colormap default
 
-fprintf('print command:  print -f1 -djpeg -r150 %s.jpg\n',cellid);
+fprintf('print command:  print -f1 -djpeg -r150 /auto/users/daniela/plots/%s.jpg\n',cellid);
 
 
 
