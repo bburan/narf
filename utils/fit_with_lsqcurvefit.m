@@ -64,17 +64,17 @@ function error = my_obj_fn(phi, start_depth)
     error = pred - respavg; 
 end
 
-recalc_xxx(1); 
 phi_init = pack_fittables(STACK);
 
 if isempty(phi_init)
     fprintf('Skipping because there are no parameters to fit.\n');
-    termcond = -12345;
+    termcond = NaN;
     return 
 end
 
 LB = [];
 UB = [];
+recalc_xxx(1); 
 fprintf('Fitting %d variables with lsqcurvefit()\n', length(phi_init));
 
 len = length(flatten_field(XXX{end}.dat, XXX{1}.training_set, 'respavg'));

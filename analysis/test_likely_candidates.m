@@ -9,7 +9,7 @@ function results = test_likely_candidates(cellid, training_set, test_set)
 % Returns a long cell array of structs.
 %
 % EXAMPLE USE:
-%  test_likely_candidates('por022a-a1', {'por022a08_p_SPN'}, {'por022a12_p_SPN'});
+%  test_likely_candidates('por028d-b1', {'por029d03_p_SPN'}, {'por028d04_p_SPN'});
 
 global STACK XXX MODULES NARF_PATH NARF_SAVED_MODELS_PATH ...
     NARF_MODULES_PATH NARF_SAVED_ANALYSIS_PATH;
@@ -50,25 +50,26 @@ mm{1}.env100hz = {MODULES.load_stim_resps_from_baphy.mdl(...
 mm{2} = [];
 mm{2}.none = {MODULES.passthru};
 mm{2}.root2 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                              'nlfn', @(phi, z) sqrt(z)))};
+                                               'nlfn', @(phi, z) sqrt(z)))};
 mm{2}.root3 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                              'nlfn', @(phi, z) z.^(1/3)))};
+                                               'nlfn', @(phi, z) z.^(1/3)))};
 mm{2}.log3  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                              'nlfn', @(phi, z) log(z + 10^-3)))};
+                                               'nlfn', @(phi, z) log(z + 10^-3)))};
 mm{2}.log4  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                              'nlfn', @(phi, z) log(z + 10^-4)))};
+                                               'nlfn', @(phi, z) log(z + 10^-4)))};
 mm{2}.volterra = {MODULES.concat_second_order_terms}; 
 mm{2}.depress  = {MODULES.depression_filter_bank}; 
 
 % GROUP 3: THE FIR FILTER 
 mm{3} = [];
-mm{3}.fir =      {MODULES.fir_filter.mdl(struct('num_coefs', 12, ...
-                                                'fit_fields', {{'coefs'}}))};
-
-mm{3}.norm_fir = {MODULES.normalize_channels, ...
+mm{3}.fir =      {MODULES.normalize_channels, ...
                   MODULES.fir_filter.mdl(struct('num_coefs', 12, ...
                                                 'fit_fields', {{'coefs'}}))};
-              
+                                            
+mm{3}.firbase =  {MODULES.normalize_channels, ...
+                  MODULES.fir_filter.mdl(struct('num_coefs', 12, ...
+                                                'fit_fields', {{'coefs', 'baseline'}}))};
+
 mm{3}.inhibexcit = {MODULES.normalize_channels, ...
                     MODULES.fir_filter.mdl(struct('fit_fields', {{'coefs'}}, ...
                                                   'num_coefs', 12, ...
@@ -107,12 +108,14 @@ mm{4}.poly = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
 
 % GROUP 5: PERFORMANCE METRICS TO OPTIMIZE ON
 % Note that you should include all performance metrics here but mark only
-% one as 'score' which is used as the objective performance metric.
+% one as 'score' which is used as the objective performance metric. Please
+% put the performance metric module last, at least for right now, since I
+% am using that for reporting which number this was 'optimized_on'
 mm{5} = [];
 mm{5}.mse  = {MODULES.correlation, ...
               MODULES.mean_squared_error.mdl(struct('output', 'score'))};
-mm{5}.corr = {MODULES.correlation.mdl(struct('output', 'score')), ...
-              MODULES.mean_squared_error};
+mm{5}.corr = {MODULES.mean_squared_error, ...
+              MODULES.correlation.mdl(struct('output', 'score'))};
 
 % ------------------------------------------------------------------------
 % BUILD THE MODELS
@@ -123,6 +126,8 @@ N_models = prod(N_opts);
 fprintf('Number of models to be tested: %d\n', N_models); 
 
 results = cell(N_models, 1);
+results_lsq = cell(N_models, 1);
+mkdir([NARF_SAVED_MODELS_PATH filesep cellid]);
 
 for ii = 1:N_models,
     STACK = {};
@@ -144,7 +149,7 @@ for ii = 1:N_models,
     blocks = cellfun(@getfield, mm, opt_names, 'UniformOutput', false);
    
     tmp = cellfun(@(n) sprintf('%s_', n), opt_names, 'UniformOutput', false);
-	modelname = strcat(tmp{:}, cellid);
+	modelname = strcat(cellid, '_', tmp{:}, training_set{:});
     fprintf('\n\nMODEL [%d/%d]: %s\n', ii, N_models, modelname);
     
     % Append each block one at a time
@@ -155,8 +160,8 @@ for ii = 1:N_models,
          end
      end
      
-     % Fit with lsqcurvefit just once
-     exit_code = fit_with_lsqcurvefit();
+     exit_code = fit_objective('score');
+     %exit_code = fit_with_lsqcurvefit(); % SEE BELOW
 
      results{ii}.score_train_corr = XXX{end}.score_train_corr;
      results{ii}.score_test_corr = XXX{end}.score_test_corr;
@@ -176,10 +181,35 @@ for ii = 1:N_models,
      results{ii}.cellid = XXX{1}.cellid;
      results{ii}.training_set = XXX{1}.training_set;
      results{ii}.test_set = XXX{1}.test_set;
-     results{ii}.optimized_with = 'lsqcurvefit';
+     results{ii}.optimized_on = STACK{end}.name;
+     results{ii}.filename     = modelname;
      
-     save_model_stack([NARF_SAVED_MODELS_PATH filesep modelname '.mat'], STACK, XXX);
+     save_model_stack([NARF_SAVED_MODELS_PATH filesep cellid filesep modelname '.mat'], STACK, XXX);
+    
+     % Save results incrementally to file
+     save([NARF_SAVED_ANALYSIS_PATH filesep cellid '_results.mat'], 'results');
+     
+     % --------------- DELETE LATER, THIS IS JUST A TEST ----------------    
+     % See if running lsqcurvefit after the fminsearch can clean it 
+     % up and zoom in on the best thing found so far. 
+     exit_code = fit_with_lsqcurvefit();
+     results_lsq{ii}.score_train_corr = XXX{end}.score_train_corr;
+     results_lsq{ii}.score_test_corr = XXX{end}.score_test_corr;
+     results_lsq{ii}.score_train_mse = XXX{end}.score_train_mse;
+     results_lsq{ii}.score_test_mse = XXX{end}.score_test_mse;
+     firmod = find_module(STACK, 'fir_filter');
+     results_lsq{ii}.fir_coefs = firmod.coefs;
+     results_lsq{ii}.fit_time = toc;
+     results_lsq{ii}.n_free_params = length(pack_fittables(STACK));
+     results_lsq{ii}.exit_code = exit_code;
+     
+     results_lsq{ii}.cellid = XXX{1}.cellid;
+     results_lsq{ii}.training_set = XXX{1}.training_set;
+     results_lsq{ii}.test_set = XXX{1}.test_set;
+     results_lsq{ii}.optimized_on = STACK{end}.name;
+     results_lsq{ii}.filename     = modelname;
+     
+     save_model_stack([NARF_SAVED_MODELS_PATH filesep cellid filesep modelname '+lsq.mat'], STACK, XXX);
+     save([NARF_SAVED_ANALYSIS_PATH filesep cellid '_results_lsq.mat'], 'results_lsq');
+     
 end
-
-% Save the results matrix to file
-save([NARF_SAVED_ANALYSIS_PATH filesep cellid '_results.mat'], 'results');

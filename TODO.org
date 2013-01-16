@@ -1,28 +1,22 @@
 * NEXT STEPS:
-  1. [X] BRAINSTORM: (SEE DESIGN QUESTIONS BELOW) 
-  2. [X] Instead of giving models index numbers, let's make an 'append_module' function.
-	 Append function will give the current stack data so that modules may auto-guess their parameters. 
-  3. LEFT OFF HERE: try to make test_likely_candidates work automatically, picking FIR coefs and estimating things before finally fitting everything
-     I may need to make a LOCAL fit function, rather than possibly losing the fit-fields of previous things. 
-     Should things be fit locally as things progress, or globally?
-  4. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
-  5. [ ] Define a method called 'auto-initialization' using a .guess_params() 
+  1. [X] Use fminsearch() as an unconstrained optimization routine in fit_objective()
+  2. [X] Add a new directory for each cell that is being processed, and prefix the filename with the cellid
+  3. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
+  4. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
+  5. [ ] Try nlinfit() as an alternative to lsqcurvefit()
   6. [ ] Refactor a function which extracts info from all saved files in a directory
-  7. [ ] Find that weird bug that still exists when saving/loading files
-  8. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
-  9. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
-  10. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
-  11. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
-  12. [ ] IRRITATION: Why isn't there an 'undo' function?
-  13. [ ] IRRITATION: Why can't I resize windows?
-  14. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
-  15. [ ] IRRITATION: Why are the editable text boxes so damn small?
-  16. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
-  17. [ ] Try nlinfit 
-  18. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
-  19. [ ] Try fminval
-  20. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
-  21. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
+  7. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
+  8. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
+  9. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
+  10. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
+  11. [ ] IRRITATION: Why isn't there an 'undo' function?
+  12. [ ] IRRITATION: Why can't I resize windows?
+  13. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
+  14. [ ] IRRITATION: Why are the editable text boxes so damn small?
+  15. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
+  16. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
+  17. [ ] Find that weird bug that still exists when saving/loading files
+  18. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
           1) Make the list of models a global, so I don't have it scattered around everywhere in my code.
           2) Many repeated blocks of code have evolved and need to be destroyed.
           3) Paths have become a bit messy: grep for NARF_PATH and correct (also: replace with filesep when possible)
@@ -40,8 +34,8 @@
           14) Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
           15) make anything named 'do_' into a method for use with modules?
           16) make anything named 'update_' into a function used purely for its side effects
-  22. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
-  23. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
+  19. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
+  20. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
   
 * DESIGN QUESTIONS TO BRAINSTORM:
   1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
@@ -64,10 +58,6 @@
 * DISCUSSIONS
   Observation: Be very careful using sigmoid nonlinearity: it tends to squash data into two groups. It almost always helps to widen the sigma parameter before fitting again.
 
-* SCIENTIFIC QUESTIONS
-  1. Should training set data be weighted by manually-set stimfile weights to account for biasing effect of sheer large numbers of samples?
-  2. By how much does training on more than one data set improve test performance?
-
 * LATER TODO LIST
   1. [ ] Add a module which can pick out a particular dimension from a vector and give it a name as a signal
   2. [ ] Make inter_spike_intervals work
@@ -88,11 +78,10 @@
   17. [ ] Single channel gammatone filter (for speed, once sensitivity has been identified)
   18. [ ] Add a method to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
   19. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
-  20. [X] Handle NaN's better...right now they can cause problems! (Use nanmean())
-  21. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
-  22. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
-  23. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
-  24. [ ] Suggest an improvement: Use BAPHY to cache intermediate values
+  20. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
+  21. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
+  22. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
+  23. [ ] Suggest an improvement: Use BAPHY to cache intermediate values, and store results
 	  
 * LUXURY, UNESSENTIAL TODO ITEMS 
   - [ ] Make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
