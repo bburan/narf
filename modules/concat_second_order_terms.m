@@ -29,7 +29,7 @@ m.plot_fns{2}.pretty_name = 'Channel vs Time (Heatmap)';
 m.plot_gui_create_fn = @create_chan_selector_gui;
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0
     m = merge_structs(m, args);
 end
 

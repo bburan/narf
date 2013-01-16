@@ -23,9 +23,10 @@ m.input2 = 'respavg';
 m.time   = 'stim_time';
 m.train_score = 'score_train_corr';
 m.test_score = 'score_test_corr';
+m.output = 'corr_score';  % A score must be minimizeable, use '1/r^2'
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0
     m = merge_structs(m, args);
 end
 
@@ -60,8 +61,10 @@ function x = do_correlation(stack, xxx)
     R = corrcoef(excise([V1 V2]));
     if isnan(R)
         x.(mdl.train_score) = R;
+        x.(mdl.output) = R;
     else
         x.(mdl.train_score) = R(2,1)^2;
+        x.(mdl.output) = 1/R(2,1)^2;
     end
     
     %---------------
@@ -79,6 +82,7 @@ function x = do_correlation(stack, xxx)
     else
         x.(mdl.test_score) = R(2,1)^2;
     end
+    
 end
 
 function do_plot_inputs(stack, xxx)

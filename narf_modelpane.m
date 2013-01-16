@@ -441,9 +441,7 @@ handles.load_model_button = uicontrol('Parent', handles.container_panel, ...
     'Units', 'pixels', 'Position', [500 5 140 25], ...
     'Callback', @load_model_stack_callback);
 
-% Create a wrapper fn and button which fits params using least squares
-function wrapper_for_lsqcurvefit()
-    fit_with_lsqcurvefit();
+function update_any_changed_tables_and_recalc()
     first_fit_depth = 1;
     % Loop through and update any data tables which changed
     for ii = 1:length(STACK)
@@ -457,14 +455,30 @@ function wrapper_for_lsqcurvefit()
     % Recalc from the first fittable point all the way to the end
     recalc_xxx(first_fit_depth);
     module_plot_callback(first_fit_depth);
+end
 
+% Create a wrapper fn and button which fits params using least squares
+function wrapper_for_lsqcurvefit()
+    fit_with_lsqcurvefit(); 
+    update_any_changed_tables_and_recalc();
+end
+
+function wrapper_for_fit_objective()
+    fit_objective();
+    update_any_changed_tables_and_recalc();
 end
 
 handles.lsqcurvefit_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
-    'String', 'Run lsqcurvefit()', ...
+    'String', 'Fit w/lsqcurvefit()', ...
     'Units', 'pixels', 'Position', [700 5 150 25], ...
     'Callback', @(a, b, c) wrapper_for_lsqcurvefit());
+
+handles.fit_objective_button = uicontrol('Parent', handles.container_panel, ...
+    'Style', 'pushbutton', 'Enable', 'on', ...
+    'String', 'Fit w/fit_objective()', ...
+    'Units', 'pixels', 'Position', [860 5 150 25], ...
+    'Callback', @(a, b, c) wrapper_for_fit_objective());
 
 function rebuild_gui_from_stack()
     delete_all_module_guis();
@@ -550,8 +564,8 @@ end
 % because...MATLAB doesn't use Java swing panels! 
 % Therefore, the closest we could do would be to make mouse wheel scrolling
 % work just for the scrollbar, although that isn't nearly as much fun.
-%hJ = findjobj(handles.container_slider);
-%hJ.MouseWheelMovedCallback = @(ch, evt, z) disp(get(evt, 'wheelRotation'));
+% hJ = findjobj(handles.container_slider);
+% hJ.MouseWheelMovedCallback = @(ch, evt, z) disp(get(evt, 'wheelRotation'));
 % TODO: 
 
 % Define a close window callback which will remove all GUI hooks from the
