@@ -25,9 +25,10 @@ m.time   = 'stim_time';
 m.error  = 'error';
 m.train_score  = 'score_train_mse';
 m.test_score  = 'score_test_mse';
+m.output = 'score_train_mse';
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0
     m = merge_structs(m, args);
 end
 
@@ -69,7 +70,7 @@ function x = do_mean_squared_error(stack, xxx)
     
     x.(mdl.train_score) = train_score;
     x.(mdl.test_score) = test_score;
-    
+    x.(mdl.output) = train_score;
 end
 
 function do_plot_inputs_and_mse(stack, xxx)

@@ -1,4 +1,3 @@
-
 function m = downsample_decimate(args)
 % Wraps the behavior of MATLAB's decimate() function.
 %
@@ -23,7 +22,7 @@ m.output_time = 'stim_time';
 m.output_fs = 'stim_fs';
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0 
     m = merge_structs(m, args);
 end
 

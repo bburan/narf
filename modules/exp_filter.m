@@ -43,7 +43,7 @@ m.plot_fns{5}.pretty_name = 'EXP Coefficients (Stem)';
 m.plot_gui_create_fn = @(hh, stack, xxx) create_chan_selector_gui(hh, stack, xxx(1:end-1), m.input);
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0
     m = merge_structs(m, args);
 end
 

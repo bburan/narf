@@ -23,7 +23,7 @@ m.plot_fns{1}.fn = @do_plot_raw_ISIs;
 m.plot_fns{1}.pretty_name = 'Raw ISIs';
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0
     m = merge_structs(m, args);
 end
 
