@@ -21,7 +21,7 @@ m.error  = 'error';
 m.score  = 'score_mse';
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0
     m = merge_structs(m, args);
 end
 

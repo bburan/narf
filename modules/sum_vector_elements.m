@@ -24,7 +24,7 @@ m.plot_fns{1}.fn = @(stack, xxx) do_plot_signal(stack, xxx, m.output);
 m.plot_fns{1}.pretty_name = 'Output vs Time';
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0
     m = merge_structs(m, args);
 end
 

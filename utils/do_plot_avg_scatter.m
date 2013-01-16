@@ -11,6 +11,11 @@ x = xxx{end};
 [sf, stim_idx, unused] = get_baphy_plot_controls(stack);
 dat = x.dat.(sf);  
 
+if ~isequal(size(dat.(field1)), size(dat.(field2)))
+    text(0.35, 0.5, 'Cannot scatter plot a multi-channel input.');
+    axis([0, 1, 0 1]);
+    return;
+end
 % Sort and average them by groups of 100
 D = [dat.(field1)(:) dat.(field2)(:)]; 
 D = sortrows(D);

@@ -3,8 +3,11 @@ function m = fir_filter(args)
 %
 % The total number of filter coefficients = num_coefs * num_dims
 % 
-% num_dims should always equal the size of the 'chan' dimension.
+% NUM_DIMS should always equal the size of the 'channel' input dimension.
 %
+% If THE_XXX is defined, NUM_DIMS and COEFS will be initialized from that,
+% regardless of what you put into ARGS. 
+
 % Module fields that must ALWAYS be defined
 m = [];
 m.mdl = @fir_filter;
@@ -18,13 +21,15 @@ m.isready_pred = @isready_always;
 % Module fields that are specific to THIS MODULE
 m.num_coefs = 20;
 m.num_dims = 2;
-m.baseline=0;
+m.baseline = 0;
 m.coefs = zeros(m.num_coefs, m.num_dims);
 m.input =  'stim';
 m.time =   'stim_time';
 m.output = 'stim';
+m.init_fit_sig = 'respavg'; % For initializing coefficients only
 
 % Optional fields
+m.auto_init = @auto_init_fir_filter;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_fir_coefs_as_heatmap;
 m.plot_fns{1}.pretty_name = 'FIR Coefficients (Heat map)';
@@ -39,7 +44,7 @@ m.plot_fns{5}.pretty_name = 'FIR Coefficients (Stem)';
 m.plot_gui_create_fn = @(hh, stack, xxx) create_chan_selector_gui(hh, stack, xxx(1:end-1), m.input);
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0
     m = merge_structs(m, args);
 end
 
@@ -48,8 +53,44 @@ if ~isequal([m.num_dims m.num_coefs], size(m.coefs))
     m.coefs = zeros(m.num_dims, m.num_coefs);
 end
 
+
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
+
+function mm = auto_init_fir_filter(stack, xxx)
+    % NOTE: Unlike most plot functions, auto_init functions get a 
+    % STACK and XXX which do not yet have this module or module's data
+    % added to them. 
+    mm = m;
+    
+    if ~isfield(mm, 'fit_fields') 
+        return
+    end
+
+    % Initialize coefs automatically if it's in fit_fields
+    if any(strcmp('coefs', mm.fit_fields))
+        stim = [];
+        resp = [];
+        for ii = 1:length(xxx{end}.training_set),
+            f = xxx{end}.training_set{ii};
+            stim = cat(1, stim, xxx{end}.dat.(f).(mm.input));        
+            resp = cat(1, resp, xxx{end}.dat.(f).(mm.init_fit_sig));
+        end
+        resp = resp(:);
+        [Tx,Sx] = size(resp);
+        stim=reshape(permute(stim, [1 3 2]), Tx, numel(stim) / Tx);
+        params = [];
+        params.altcore     = 'xccorefet';  % Either 'cdcore' or 'xccorefet'
+        params.maxlag      = mm.num_coefs - 1;
+        params.resampcount = mm.num_coefs - 1;
+        params.sfscount    = 10;
+        params.sfsstep     = 3;
+        strf = cellxcdataloaded(stim, resp, params);
+        mm.coefs = strf(1).h;
+        mm.num_dims = size(mm.coefs, 1); 
+    end
+end
+
 function x = do_fir_filtering(stack, xxx)
     mdl = stack{end};
     x = xxx{end};   % Unfortunately, this doesn't seem to copy deeply

@@ -1,16 +1,13 @@
 * NEXT STEPS:
-  1. [X] Brainstorm a better way of building up models to try (see test_likely_candidates)
-  2. [X] Refine fit_with_lsqcurvefit() so that it accepts arguments
-  3. [X] Make a passthru module
-  4. [ ] Refactor a function which extracts info from all saved files in a directory
-  5. [ ] Instead of giving models index numbers, let's make an 'append_module' (auto-guesses parameters + picks index), and a 'set_module_field' function (finds index, sets field)
-  6. [ ] Instead of building multiple models in multiple files, let's instead use a single generic script to try many combinations
-	 Modules to try are listed as a nested cell array of structs (field names name module block), which is flattened/iterated through via recursive algorithm
-	 Uses 'append module' to build the STACK
-	 Numbers and saves the fitted model with a string identifying structure
-	 Builds a big vector of the models
-	 Extracts some parameters before saving (To avoid having to rebuild them later)
-	 Returns those parameters
+  1. [X] BRAINSTORM: (SEE DESIGN QUESTIONS BELOW) 
+  2. [X] Instead of giving models index numbers, let's make an 'append_module' function.
+	 Append function will give the current stack data so that modules may auto-guess their parameters. 
+  3. LEFT OFF HERE: try to make test_likely_candidates work automatically, picking FIR coefs and estimating things before finally fitting everything
+     I may need to make a LOCAL fit function, rather than possibly losing the fit-fields of previous things. 
+     Should things be fit locally as things progress, or globally?
+  4. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
+  5. [ ] Define a method called 'auto-initialization' using a .guess_params() 
+  6. [ ] Refactor a function which extracts info from all saved files in a directory
   7. [ ] Find that weird bug that still exists when saving/loading files
   8. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
   9. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
@@ -22,9 +19,9 @@
   15. [ ] IRRITATION: Why are the editable text boxes so damn small?
   16. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
   17. [ ] Try nlinfit 
-  18. [ ] Try fminval
-  19. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
-  20. [ ] Module: Nonlinearity
+  18. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
+  19. [ ] Try fminval
+  20. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
   21. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
           1) Make the list of models a global, so I don't have it scattered around everywhere in my code.
           2) Many repeated blocks of code have evolved and need to be destroyed.
@@ -44,24 +41,28 @@
           15) make anything named 'do_' into a method for use with modules?
           16) make anything named 'update_' into a function used purely for its side effects
   22. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
-
+  23. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
+  
+* DESIGN QUESTIONS TO BRAINSTORM:
+  1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
+	 Auto-initialization of model params is done by allowing modules to update their design based on the data by calling the optional 'auto_init' method.
+	 Arg 1 is the STACK, not including the model itself. 
+	 Arg 2 is the XXX data input, not including the model's output data itself. 
+  2. [X] How can jack-knifing be integrated in to the optimization routine to prevent over-fitting?
+	 Split the big long RESP and STIM vectors in fit_with_lsqcurvefit into 10 chunks
+	 Take groups of 9 of those chunks, run lsqcurvefit, then test on remaining chunk
+	 Take weighted average of all jackknifed solutions, weighting each by inverse variance?
+	 Return weighted average.
+  3. [X] How should optimization constraints be incorporated in the design?
+	 Probably the easiest way is to define a structure which may be used by pack/unpack to create upper and lower bounds, which are then passed to the optimization routine
+	 opt_hints = struct('alpha', [-1 3], 'beta', [0 inf]); % Constrain alpha from -1 to 3 and beta from 0 to infinity. 
+  4. [X] How should models be automatically generated in a quick and scriptable way?
+	 See analysis/test_likely_candidates.m
+  5. [X] How can design internal degrees of freedom be detected and corrected during optimization?
+	 (Probably they cannot!)
+	  
 * DISCUSSIONS
   Observation: Be very careful using sigmoid nonlinearity: it tends to squash data into two groups. It almost always helps to widen the sigma parameter before fitting again.
-
-* DESIGN QUESTIONS
-  1. How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
-  2. How can jack-knifing be integrated in to the optimization routine to prevent over-fitting?
-     for each stim file:
-     n_j = min(length(number_of_stim_indexes), 10);
-     training_set = first n_j / number_of_stim_indexes
-     test_set = remainder of stim_indexes
-     Train
-     test
-     Scale by variance when taking the mean off all of those?
-  3. Is punting on initial conditions an ok thing to do?
-  4. How should models be automatically generated in a quick and scriptable way?
-  5. How can fitting constraints be added to each module? 
-  6. How can design internal degrees of freedom be detected and corrected during optimization?
 
 * SCIENTIFIC QUESTIONS
   1. Should training set data be weighted by manually-set stimfile weights to account for biasing effect of sheer large numbers of samples?
@@ -70,27 +71,28 @@
 * LATER TODO LIST
   1. [ ] Add a module which can pick out a particular dimension from a vector and give it a name as a signal
   2. [ ] Make inter_spike_intervals work
-  3. [ ] Make bayesian_likelihood() work
-  4. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  5. [ ] Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
-  6. [ ] Get linear_fit_with_preprocessing working again (working from a WAV file, that is)
-  7. [ ] Make gammatone filter bank work like elliptic bandpass filter so interface is standard
-  8. [ ] Provide functions to cover the input space logarithmically with filters
-  9. [ ] Write a crash course guide on using NARF
-  10. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  11. [ ] Make logging work for the GUI by including the log space in narf_modelpane?
-  12. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
-  13. [ ] Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
-  14. [ ] Write several different performance metric functions: MSE and a point-process fit
-  15. [ ] Write a jack-knifing optimization which can work with any of the optimization modules 
-  16. [ ] Single channel gammatone filter (for speed, once sensitivity has been identified)
-  17. [ ] Add a method to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
-  18. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
-  19. [X] Handle NaN's better...right now they can cause problems! (Use nanmean())
-  20. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
-  21. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
-  22. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
-  23. [ ] Suggest an improvement: Use BAPHY to cache intermediate values
+  3. [ ] Make a faster but less general version of Stephen's IIR filter
+  4. [ ] Make bayesian_likelihood() work
+  5. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  6. [ ] Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
+  7. [ ] Get linear_fit_with_preprocessing working again (working from a WAV file, that is)
+  8. [ ] Make gammatone filter bank work like elliptic bandpass filter so interface is standard
+  9. [ ] Provide functions to cover the input space logarithmically with filters
+  10. [ ] Write a crash course guide on using NARF
+  11. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  12. [ ] Make logging work for the GUI by including the log space in narf_modelpane?
+  13. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
+  14. [ ] Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
+  15. [ ] Write several different performance metric functions: MSE and a point-process fit
+  16. [ ] Write a jack-knifing optimization which can work with any of the optimization modules 
+  17. [ ] Single channel gammatone filter (for speed, once sensitivity has been identified)
+  18. [ ] Add a method to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
+  19. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
+  20. [X] Handle NaN's better...right now they can cause problems! (Use nanmean())
+  21. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
+  22. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
+  23. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
+  24. [ ] Suggest an improvement: Use BAPHY to cache intermediate values
 	  
 * LUXURY, UNESSENTIAL TODO ITEMS 
   - [ ] Make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization

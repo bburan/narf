@@ -30,7 +30,7 @@ m.output_resp_time = 'resp_time';
 m.include_prestim = 1;
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0
     m = merge_structs(m, args);
 end
 

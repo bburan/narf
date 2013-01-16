@@ -1,5 +1,5 @@
 function m = normalize_channels(args)
-% Normalize mean value of each channel to be 1.
+% Normalize mean value of each channel to be roughly TODO
 % Also, remove DC offset of the channel so that it has zero mean.
 
 % Module fields that must ALWAYS be defined
@@ -27,7 +27,7 @@ m.plot_fns{3}.pretty_name = 'Normalized Channel Heatmap';
 m.plot_gui_create_fn = @create_chan_selector_gui;
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0
     m = merge_structs(m, args);
 end
 

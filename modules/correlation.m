@@ -25,7 +25,7 @@ m.train_score = 'score_train_corr';
 m.test_score = 'score_test_corr';
 
 % Overwrite the default module fields with arguments 
-if nargin == 1
+if nargin > 0
     m = merge_structs(m, args);
 end
 
