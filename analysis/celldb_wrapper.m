@@ -8,6 +8,9 @@
 %
 function celldb_wrapper(cellid,batch)
 
+close all
+drawnow
+
 disp('celldb_wrapper.m:');
 baphy_set_path;
 narf_set_path;
@@ -58,18 +61,14 @@ if ~exist(savepath,'dir'),
     mkdir(fileparts(savepath),cellid);
 end
 
-mi=1;
-m = models{mi};
-
 % Build the model and train it 
-fn = str2func(m);
-fn(cellid, train_set);
+linear_fit_spn_depression(cellid, train_set);
 
 open_narf_gui;
 hnarf=gcf;
 drawnow;
 
-STACK{4}.fit_fields={'coefs'};
+STACK{4}.fit_fields={'coefs','baseline'};
 recalc_xxx(3);
 fit_with_lsqcurvefit;
 
@@ -80,20 +79,23 @@ drawnow;
 
 linpredmin=min(min(XXX{5}.dat.(train_set{1}).stim));
 linpredmax=max(max(XXX{5}.dat.(train_set{1}).stim));
+
+STACK{5} = mdls.nonparm_nonlinearity.auto_init(STACK,XXX);
 %phi3=max(max(XXX{5}.dat.(train_set{1}).respavg))./6;
 %phi1=linpredmin+(linpredmax-linpredmin)./10;
 %phi2=0.001;
 %STACK{5} = mdls.nonlinearity.mdl(struct('phi', [phi1 phi2 phi3 0], ...
 %                                        'nlfn', @sigmoidal));
-phi2=linpredmin+(linpredmax-linpredmin)./10;
-phi1=0.01;
-STACK{5} = mdls.nonlinearity.mdl(struct('phi', [phi1 phi2], ...
-                                        'nlfn', @exponential));
+%phi2=linpredmin+(linpredmax-linpredmin)./10;
+%phi1=0.01;
+%STACK{5} = mdls.nonlinearity.mdl(struct('phi', [phi1 phi2], ...
+%                                        'nlfn', @exponential));
 STACK{6} = mdls.correlation;
 
-STACK{4}.fit_fields = {};
-STACK{5}.fit_fields = {'phi'};
-fit_with_lsqcurvefit();
+%STACK{4}.fit_fields = {};
+%STACK{5}.fit_fields = {'phi'};
+%fit_with_lsqcurvefit();
+recalc_xxx(1); 
 
 close(hnarf);
 
@@ -104,11 +106,11 @@ XXX{1}.test_set = test_set;
 recalc_xxx(1); 
 
 % Save the file name 
-filename = sprintf('%s/%s__%f__%f__%s.mat', ...
+filename = sprintf('%s/%s__%f__%f__bat%d.mat', ...
                    savepath, cellid, ...
                    XXX{end}.score_train_corr, ...
                    XXX{end}.score_test_corr, ...
-                   m);
+                   batch);
 
 save_model_stack(filename, STACK, XXX);
 

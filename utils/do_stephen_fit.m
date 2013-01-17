@@ -11,6 +11,7 @@ resp = [];
 
 % Concatenate the stimulus of every stim file
 % TODO: Complain to stephen that overlapping could be a problem
+
 for sf = fieldnames(x.dat)', sf = sf{1};
 %     ARBITRARY DIMENSION STUB ----------------------------
 %     % Get the stimulus matrix and column selector/accessor
@@ -23,8 +24,20 @@ for sf = fieldnames(x.dat)', sf = sf{1};
 %         tmpstim(:, chan_idx) = tmp(:);
 %     end
 %     ARBITARY_DIMENSION_STUB------------------------------
-    stim = cat(1, stim, x.dat.(sf).(mdl.stimfield));
-    resp = cat(1, resp, x.dat.(sf).(mdl.respfield));
+
+    tstim = x.dat.(sf).(mdl.stimfield);
+    tresp = x.dat.(sf).(mdl.respfield);
+    
+    % Adjust the data's format to match Stephen's
+    % interface. process each file separately in there are
+    % different numbers of stimuli or reps in each file
+    tresp=nanmean(tresp,3);
+    tresp=tresp(:);
+    [T,S] = size(tresp);
+    tstim=reshape(permute(tstim, [1 3 2]), T, numel(tstim) / T);
+    
+    stim = cat(1, stim, tstim);
+    resp = cat(1, resp, tresp);
 end
 
 % choose fit algorithm and set various parameters
@@ -35,11 +48,6 @@ params.resampcount = mdl.resampcount;
 params.sfscount    = mdl.sfscount;
 params.sfsstep     = mdl.sfsstep;
 
-% Adjust the data's format to match Stephen's interface
-resp=nanmean(resp,3);
-resp=resp(:);
-[T,S] = size(resp);
-stim=reshape(permute(stim, [1 3 2]), T, numel(stim) / T);
 
 % Make an STRF
 strf = cellxcdataloaded(stim, resp, params);

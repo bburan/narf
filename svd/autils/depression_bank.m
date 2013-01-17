@@ -45,9 +45,9 @@ for jj=1:dcount,
    
    taui=tau(jj);
    if ~fixu,
-      ui=u(jj)./DEPSTIMMAX;
+       ui=u(jj)./DEPSTIMMAX(:);
    else
-      ui=u(jj);
+       ui=u(:,jj);
    end
    if verbose,
       fprintf(' efficacy = %.3f (max(stim)=%.3f)\n',ui,DEPSTIMMAX);
@@ -55,7 +55,7 @@ for jj=1:dcount,
               taui,taui./internalfs);
    end
    
-   if ui>0,
+   if any(ui),
       % apply threshold to stim going into adaptation mechanism
       tstim=(stim>istimthresh).*stim - istimthresh;
       tstim=max(tstim,0);
