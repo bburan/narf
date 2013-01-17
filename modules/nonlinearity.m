@@ -63,7 +63,7 @@ function x = do_nonlinearity(stack, xxx)
     for sf = fieldnames(x.dat)', sf=sf{1};
         [T, S, C] = size(x.dat.(sf).(mdl.input_stim));
         y = zeros(T, S, C);
-       
+        
         % TODO: If a scalar-valued function, use this
         %y = arrayfun(@(in) mdl.nlfn(mdl.phi, in), x.dat.(sf).(mdl.input_stim));
         

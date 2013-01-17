@@ -103,6 +103,17 @@ function x = do_load_from_baphy(stack, xxx)
         % stim = define_dims(stim, {'time', 'stim', 'chan'});
         
         x.dat.(f).(mdl.output_stim) = stim;
+
+        % calculate min and max of all files in the training
+        % set... used by depression_filter_bank
+        stimminmax=[squeeze(nanmin(nanmin(stim,[],1),[],2))';
+                    squeeze(nanmax(nanmax(stim,[],1),[],2))'];
+        if f_idx==1,
+            x.stimminmax=stimminmax;
+        elseif f_idx<=length(x.training_set),
+            x.stimminmax=[nanmin(x.stimminmax(1,:),stimminmax(1,:));
+                          nanmax(x.stimminmax(2,:),stimminmax(2,:))];
+        end
         
         % Load the raw_resp part of the data structure
         options = [];
