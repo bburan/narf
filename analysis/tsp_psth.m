@@ -104,12 +104,10 @@ for ii=1:length(useidx),
     mresp=max(mresp,mr);
 end
 
-
-figure(1);
-clf
+figure;
 if length(torcdata)>0,
-    ha1=subplot(3,3,1);
-    ha2=subplot(3,3,2);
+    ha1=subplot(4,3,1);
+    ha2=subplot(4,3,2);
     parmfile=[torcdata(1).stimpath torcdata(1).stimfile];
     spikefile=[torcdata(1).path torcdata(1).respfile];
     
@@ -117,7 +115,7 @@ if length(torcdata)>0,
 end
 
 for ii=1:length(useidx),
-    ha=subplot(3,3,ii+2);
+    ha=subplot(4,3,ii+1);
     options.psth=1;
     options.psthmax=mresp.*0.95;
     options.PreStimSilence=prestimsilence(ii);
