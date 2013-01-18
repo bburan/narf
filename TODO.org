@@ -1,22 +1,32 @@
+* Notes on data models:
+  Try different compressions across multiple cellids
+  Fn to Rip parameters out of saved files
+  A generic, quick display of how n models are performing (show CORRs, compression, FIR coefs, nonlinearity, pred)
+  Exploit celldb_wrapper for batch 240 
+  Try updating
+
 * NEXT STEPS:
-  1. [X] Use fminsearch() as an unconstrained optimization routine in fit_objective()
-  2. [X] Add a new directory for each cell that is being processed, and prefix the filename with the cellid
-  3. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
-  4. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
-  5. [ ] Try nlinfit() as an alternative to lsqcurvefit()
-  6. [ ] Refactor a function which extracts info from all saved files in a directory
-  7. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
-  8. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
-  9. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
-  10. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
-  11. [ ] IRRITATION: Why isn't there an 'undo' function?
-  12. [ ] IRRITATION: Why can't I resize windows?
-  13. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
-  14. [ ] IRRITATION: Why are the editable text boxes so damn small?
-  15. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
-  16. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
-  17. [ ] Find that weird bug that still exists when saving/loading files
-  18. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
+  1. [ ] Function to display models in viewer, sorted by test score!
+  2. 
+  3. [ ] Extract the 'generate models' part of test_likely_candidates and make it usable by multiple scripts
+  4. [ ] Make find_module return ALL modules found, in case there are multiple FIR or multiple nonlinearities
+  5. [ ] Try -r instead of '1/r^2" as the correlation score 
+  6. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
+  7. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
+  8. [ ] Try nlinfit() as an alternative to lsqcurvefit()
+  9. [ ] Refactor a function which extracts info from all saved files in a directory
+  10. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
+  11. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
+  12. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
+  13. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
+  14. [ ] IRRITATION: Why isn't there an 'undo' function?
+  15. [ ] IRRITATION: Why can't I resize windows?
+  16. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
+  17. [ ] IRRITATION: Why are the editable text boxes so damn small?
+  18. [ ] Examine the cause of the error when loading "por022b12_a_TSP"
+  19. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
+  20. [ ] Find that weird bug that still exists when saving/loading files
+  21. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
           1) Make the list of models a global, so I don't have it scattered around everywhere in my code.
           2) Many repeated blocks of code have evolved and need to be destroyed.
           3) Paths have become a bit messy: grep for NARF_PATH and correct (also: replace with filesep when possible)
@@ -34,8 +44,8 @@
           14) Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
           15) make anything named 'do_' into a method for use with modules?
           16) make anything named 'update_' into a function used purely for its side effects
-  19. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
-  20. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
+  22. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
+  23. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
   
 * DESIGN QUESTIONS TO BRAINSTORM:
   1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
@@ -54,6 +64,7 @@
 	 See analysis/test_likely_candidates.m
   5. [X] How can design internal degrees of freedom be detected and corrected during optimization?
 	 (Probably they cannot!)
+  6. [ ] IF we only have one data file, how can we hold out some fraction of the stimuli so that we can to training/test on a single data file?
 	  
 * DISCUSSIONS
   Observation: Be very careful using sigmoid nonlinearity: it tends to squash data into two groups. It almost always helps to widen the sigma parameter before fitting again.
