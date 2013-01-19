@@ -105,7 +105,7 @@ for ii = 1:length(score)
 end
 ax = newax;
 
-% Set up the scrollbar and it's callback. 
+% Set up the scrollbar and its callback. 
 function scroll_callback(h, evts, hds)
     
     y0 = - get(h,'Value');
@@ -123,7 +123,7 @@ y0max = h*length(filenames) - h_win;
 scr = uicontrol('Parent', fig, 'Style','slider', 'Units', 'pixels', ...
           'Position', [w 0 20 h_win], 'Min', 0-eps, 'Max', y0max, 'Value', 0, ...
           'Callback', @scroll_callback);
-% 'SliderStep', [0.02 (h_win / y0max)], ...
+% 'SliderStep', [0.02 (h_win / y0max)], ...  
       
 scroll_callback(scr, [], []);
 
@@ -150,61 +150,6 @@ set(gca, 'Position', [0.1300    0.4100    0.7750    0.5150])
 
 legend('Test Score', 'Training Score', 'Location', 'NorthWest');
 
-title('Test and Training Scores', 'Interpreter', 'none');
+title(filenames{1}, 'Interpreter', 'none');
 
 end
-
-% % 
-% % end
-% 
-% 
-% function ret = extract_field(c, f)
-%     ret = cellfun(@(x) getfield(x, f), c, 'UniformOutput', false);
-% end
-% 
-% n = load([NARF_SAVED_ANALYSIS_PATH filesep 'por028d-b1_results.mat'], 'results');
-% results = n.results;
-% results_mse = results(cellfun(@(x) strcmp(x.optimized_on, 'mean_squared_error'), results));
-% results_corr = results(cellfun(@(x) strcmp(x.optimized_on, 'correlation'), results));
-% %res_mse = results(cellfun(@()strcmp(results)));
-% n = load([NARF_SAVED_ANALYSIS_PATH filesep 'por028d-b1_results_lsq.mat'], 'results_lsq');
-% results_lsq = n.results_lsq;
-% results_mse_lsq = results(cellfun(@(x) strcmp(x.optimized_on, 'mean_squared_error'), results_lsq));
-% results_corr_lsq = results(cellfun(@(x) strcmp(x.optimized_on, 'correlation'), results_lsq));
-% 
-% % Sort by score
-% filenames = extract_field(results_mse, 'filename');
-% s_mse = cell2mat(extract_field(results_mse, field));
-% s_mse_lsq = cell2mat(extract_field(results_mse_lsq, field));
-% s_corr = cell2mat(extract_field(results_corr, field));
-% s_corr_lsq = cell2mat(extract_field(results_corr_lsq, field));
-% 
-% sorted_indexes = sortrows([s_mse, [1:length(s_mse)]']);
-% si = sorted_indexes(:, 2);
-% 
-% sorted_mse = s_mse(si);
-% sorted_mse_lsq = s_mse_lsq(si);
-% sorted_corr = s_corr(si);
-% sorted_corr_lsq = s_corr_lsq(si);
-% sorted_filenames = filenames(si);
-% 
-% sss = {'z_none', 'root2', 'root3', 'log3', 'log4', 'volterra', 'depress'};
-% 
-% leg = {};
-% hold on;
-% for ii = 1:length(sss);
-%     searchstr = sss{ii};
-%     
-%     % Extract ONLY those files which match searchstr
-%     idxs = find(cellfun(@(x) ~isempty(regexp(x, searchstr)), sorted_filenames));
-%     %idxs = 1:length(sorted_mse);
-%     
-%     % Graph the results
-%     plot(1:length(idxs), sorted_mse(idxs), pickcolor(2*ii) );
-%     plot(1:length(idxs), sorted_mse_lsq(idxs), pickcolor(2*ii-1));
-%     
-%     leg{end+1} = searchstr;
-%     leg{end+1} = [searchstr '+lsq'];
-% 
-% end
-% hold off
