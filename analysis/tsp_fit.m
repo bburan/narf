@@ -26,39 +26,27 @@ files_to_analyze = {...
     
     
     % TWO-SPEAKER RECORDINGS
-    
-    {'por022a-a1',  'por022a12_p_SPN', 	'por022a13_a_TSP',	'por022a14_p_SPN'};  
+    {'por022a-a1', 'por022a12_p_SPN', 	'por022a13_a_TSP',	'por022a14_p_SPN'};      % 'por022a08_p_SPN', 'por022a09_a_TSP'
     {'por022a-c1', 'por022a08_p_SPN'	'por022a09_a_TSP', 	'por022a12_p_SPN',	'por022a13_a_TSP',	'por022a14_p_SPN'};
     {'por022b-a1', 'por022b08_p_SPN', 	'por022b10_a_TSP', 	'por022b11_p_SPN'}; 
     {'por022b-a2', 'por022b08_p_SPN',	'por022b10_a_TSP', 	'por022b11_p_SPN'}; 
     {'por023a-a1', 'por023a06_p_SPN', 	'por023a07_a_TSP',  'por023a09_p_TSP',	'por023a10_p_SPN'};                     
-    %%{'por023a-b1', 'por023a06_p_SPN', 'por023a07_a_TSP', 	'por023a09_p_TSP',	'por023a10_p_SPN'};                                         
-    {'por023b-a1', 'por023b12_p_SPN', 'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'}; 
+    {'por023a-b1', 'por023a06_p_SPN', 'por023a07_a_TSP', 	'por023a09_p_TSP',	'por023a10_p_SPN'};                                         
+    {'por023b-a1', 'por023b12_p_SPN',  'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'}; 
     {'por023b-b1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'}; 
     {'por023b-d1', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN'}; 
-    {'por023b-d2', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'}; 
-    {'por024a-c1', 'por024a09_a_SPN',  'por024a13_a_TSP',  'por024a14_a_TSP',  'por024a15_p_SPN'};                      
+    {'por023b-d2', 'por023b12_p_SPN', 	'por023b13_a_TSP', 	'por023b15_p_SPN',	'por023b16_a_TSP', 	'por023b18_p_SPN'};                       
     {'por025a-b1', 'por025a09_p_SPN', 	'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'};
     %%{'por025a-c1', 'por025a09_p_SPN', 'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'}; 
     %%{'por025a-d1', 'por025a09_p_SPN', 'por025a10_a_TSP', 	'por025a11_p_SPN', 	'por025a12_a_TSP', 	'por025a13_p_SPN'};
-    {'por025c-c2', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'}; % crash
-    %%{'por026a-b1', 'por026a08_p_SPN', 'por026a09_a_TSP', 	'por026a10_p_SPN', 	'por026a11_a_TSP',	'por026a12_p_SPN'};
-    %%{'por026a-d1', 'por026a08_p_SPN', 'por026a09_a_TSP', 	'por026a10_p_SPN'};                                         % Better w/o these two 'por026a11_a_TSP','por026a12_p_SPN'
-    {'por027a-a1', 'por027a06_p_SPN',	'por027a07_a_TSP',	'por027a08_p_SPN',	'por027a09_a_TSP',	'por027a13_p_SPN'}; 
-    {'por026b-b1', 'por026b11_p_SPN',  'por026b12_a_TSP',  'por026b13_p_SPN'};  
-    {'por027a-a1', 'por027a06_p_SPN',	'por027a07_a_TSP',	'por027a08_p_SPN'};
-    %%{'por027a-b1', 'por027a06_p_SPN',	'por027a07_a_TSP',	'por027a08_p_SPN'}; 
-    
-    %{'por027a-c1', 'por027a06_p_SPN',	'por027a07_a_TSP',	'por027a08_p_SPN',	'por027a09_a_TSP',	'por027a13_p_SPN'};
-    %%{'por027b-b1', 'por027b06_p_SPN', 'por027b08_a_TSP',	'por027b11_p_SPN',	'por027b14_a_TSP',	'por027b16_p_SPN'}; 
+    %%{'por025c-c2', 'por025c04_p_SPN',	'por025c05_a_TSP', 	'por025c06_p_SPN', 	'por025c07_a_TSP', 	'por025c08_a_SPN'}; 
+    %%{'por026a-b1', 'por026a08_p_SPN', 'por026a09_a_TSP', 	'por026a10_p_SPN', 	'por026a11_a_TSP',	'por026a12_p_SPN'};                                    
+    {'por027a-a1', 'por027a06_p_SPN',	'por027a07_a_TSP',	'por027a08_p_SPN'};  
+    {'por027a-b1', 'por027a06_p_SPN',	'por027a07_a_TSP',	'por027a08_p_SPN'}; 
+    {'por027a-c1', 'por027a06_p_SPN',	'por027a07_a_TSP',	'por027a08_p_SPN',	'por027a09_a_TSP',	'por027a13_p_SPN'};
     {'por027b-b2', 'por027b06_p_SPN', 	'por027b08_a_TSP',	'por027b11_p_SPN',	'por027b14_a_TSP',	'por027b16_p_SPN'};                                         
-    {'por027b-c1', 'por027b06_p_SPN', 	'por027b08_a_TSP',	'por027b11_p_SPN',	'por027b14_a_TSP',	'por027b16_p_SPN'}; 
-    {'por028b-a1', 'por028b02_p_SPN',	'por028b05_a_TSP',	'por028b06_p_SPN',	'por028b10_a_TSP',	'por028b12_p_SPN'}; 
-    {'por028b-b1', 'por028b02_p_SPN',	'por028b05_a_TSP',	'por028b06_p_SPN',	'por028b10_a_TSP',	'por028b12_p_SPN'}; 
-    {'por028b-b2', 'por028b02_p_SPN',	'por028b05_a_TSP',	'por028b06_p_SPN',	'por028b10_a_TSP',	'por028b12_p_SPN'}; 
-    {'por028b-c1', 'por028b02_p_SPN',	'por028b05_a_TSP',	'por028b06_p_SPN',	'por028b10_a_TSP',	'por028b12_p_SPN'};
-    {'por028b-d1', 'por028b02_p_SPN',	'por028b05_a_TSP',	'por028b06_p_SPN',	'por028b10_a_TSP',	'por028b12_p_SPN'}; 
-    };
+    {'por027b-c1', 'por027b06_p_SPN', 	'por027b08_a_TSP',	'por027b11_p_SPN',	'por027b14_a_TSP',	'por027b16_p_SPN'};
+                   };
 
 % -------------------------------------------------------------------------
 % Define the model
@@ -210,6 +198,7 @@ ylabel('File-specific response');
 
 fullpage portrait
 
-fprintf('print command:  print -f2 -djpeg -r150 /auto/users/svd/data/batch241/%s.jpg\n',cellid);
+fprintf('printing:  print -f2 -djpeg -r150 /auto/users/svd/data/batch241/%s.jpg\n',cellid);
+print('-f2','-djpeg','-r150',sprintf('/auto/users/svd/data/batch241/%s.jpg',cellid));
 
 %keyboard

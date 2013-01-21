@@ -138,12 +138,14 @@ elseif batchcount==0 && params.predfrac>0,
    attcount=size(strf,2);
    respcount=size(strf,3);
    
-   if params.fitboot,
-      predres=xcval(strf(:),params,times(3));
-   else
-      predres=xcval(reshape(permute(strf,[1 3 2]),nlcount*respcount,...
-                            attcount),params,times(3));
-   end
+   error('times not defined');
+   
+   %if params.fitboot,
+   %   predres=xcval(strf(:),params,times(3));
+   %else
+   %   predres=xcval(reshape(permute(strf,[1 3 2]),nlcount*respcount,...
+   %                         attcount),params,times(3));
+   %end
 elseif batchcount>0,
    
    if params.fitboot,

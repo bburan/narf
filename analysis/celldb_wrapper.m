@@ -80,7 +80,7 @@ drawnow;
 linpredmin=min(min(XXX{5}.dat.(train_set{1}).stim));
 linpredmax=max(max(XXX{5}.dat.(train_set{1}).stim));
 
-STACK{5} = mdls.nonparm_nonlinearity.auto_init(STACK,XXX);
+STACK{5} = mdls.nonparm_nonlinearity;
 %phi3=max(max(XXX{5}.dat.(train_set{1}).respavg))./6;
 %phi1=linpredmin+(linpredmax-linpredmin)./10;
 %phi2=0.001;
@@ -96,8 +96,6 @@ STACK{6} = mdls.correlation;
 %STACK{5}.fit_fields = {'phi'};
 %fit_with_lsqcurvefit();
 recalc_xxx(1); 
-
-close(hnarf);
 
 % Add the test set AFTER the training has occured, so that it is
 % not needlessly computed by default by the system. Recompute so
@@ -116,6 +114,7 @@ save_model_stack(filename, STACK, XXX);
 
 
 % Plot the results
+close(hnarf);
 open_narf_gui;
 
 

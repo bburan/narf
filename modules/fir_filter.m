@@ -66,7 +66,7 @@ function mm = auto_init_fir_filter(stack, xxx)
     if ~isfield(mm, 'fit_fields') 
         return
     end
-
+    
     % Initialize coefs automatically if it's in fit_fields
     if any(strcmp('coefs', mm.fit_fields))
         stim = [];
@@ -82,7 +82,7 @@ function mm = auto_init_fir_filter(stack, xxx)
         params = [];
         params.altcore     = 'xccorefet';  % Either 'cdcore' or 'xccorefet'
         params.maxlag      = mm.num_coefs - 1;
-        params.resampcount = mm.num_coefs - 1;
+        params.resampcount = 12;
         params.sfscount    = 10;
         params.sfsstep     = 3;
         strf = cellxcdataloaded(stim, resp, params);
