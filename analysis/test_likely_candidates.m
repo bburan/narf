@@ -54,7 +54,7 @@ mm{1}.env100hz = {MODULES.load_stim_resps_from_baphy.mdl(...
 
 % GROUP 2: COMPRESSION OF INPUT INTENSITY
 mm{2} = [];
-mm{2}.none = {MODULES.passthru};
+mm{2}.nocomp = {MODULES.passthru};
 mm{2}.root2 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
                                                'nlfn', @(phi, z) abs(sqrt(z))))};
 mm{2}.root25 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
@@ -70,6 +70,8 @@ mm{2}.root3 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
 mm{2}.rootfit = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
                                                  'phi', [1/2.5], ...
                                                  'nlfn', @(phi, z) abs(z.^(phi(1)))))};
+mm{2}.log1  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
+                                               'nlfn', @(phi, z) log(z + 10^-1)))};
 mm{2}.log2  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
                                                'nlfn', @(phi, z) log(z + 10^-2)))};
 mm{2}.log3  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
@@ -123,7 +125,7 @@ mm{3}.depfir =  {MODULES.depression_filter_bank, ...
 
 % GROUP 4: POST-FILTER NONLINEARITIES
 mm{4} = [];
-mm{4}.none = {MODULES.passthru};
+mm{4}.nonl = {MODULES.passthru};
 mm{4}.sig  = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
                                               'phi', [0 1 1 0], ...
                                               'nlfn', @sigmoidal))};
@@ -159,12 +161,11 @@ N_models = prod(N_opts);
 fprintf('Number of models to be tested: %d\n', N_models); 
 
 results = cell(N_models, 1);
-results_lsq = cell(N_models, 1);
 mkdir([NARF_SAVED_MODELS_PATH filesep cellid]);
 analysis_file = [NARF_SAVED_ANALYSIS_PATH filesep cellid '_results.mat'];
 
 % Load existing analysis file, so that incomplete analyses may be continued
-if exist(modelfile, 'file') == 2
+if exist(analysis_file, 'file') == 2
     fprintf('Loading existing analysis file.\n');
     nnn = load(analysis_file, 'results');
     results = nnn.results;
@@ -190,8 +191,9 @@ for ii = 1:N_models,
     blocks = cellfun(@getfield, mm, opt_names, 'UniformOutput', false);
     
     tmp = cellfun(@(n) sprintf('%s_', n), opt_names, 'UniformOutput', false);
-    modelname = strcat(cellid, '_', tmp{:}, training_set{:});
-    modelfile = [NARF_SAVED_MODELS_PATH filesep cellid filesep modelname '.mat'];
+    modelname = strcat(tmp{:});
+    modelname = modelname(1:end-1); % Remove last underscore character
+    modelfile = [NARF_SAVED_MODELS_PATH filesep cellid filesep cellid '_' modelname '_' strcat(training_set{:}) '.mat'];
     fprintf('MODEL [%d/%d]: %s\n', ii, N_models, modelname);
     
     % If the model savefile exists, we assume we don't need to fit 
@@ -231,7 +233,8 @@ for ii = 1:N_models,
     results{ii}.training_set = XXX{1}.training_set;
     results{ii}.test_set = XXX{1}.test_set;
     results{ii}.optimized_on = STACK{end}.name;
-    results{ii}.filename     = modelname;
+    results{ii}.filename     = modelfile;
+    results{ii}.modelname    = modelname;
     
     save_model_stack(modelfile, STACK, XXX);
     

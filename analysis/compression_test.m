@@ -3,7 +3,7 @@
 % At present, each cell takes approximately 30sec x 54 models = 30 minutes
 % With 33 cells to test, this should take approximately 18 hours to execute
 
-global NARF_SAVED_MODELS_PATH;
+global NARF_SAVED_MODELS_PATH NARF_SAVED_ANALYSIS_PATH;
 
 % Use request_celldb_batch() to easily use a batch file
 cells = request_celldb_batch(240);
@@ -17,7 +17,12 @@ for ii = 1:length(cells)
     test_likely_candidates(cellid, training_set, test_set);
 end
 
-% After the analysis has finished, you can view the results with:
+% Display heat maps of test and training set performance
+analysis_files = {[NARF_SAVED_ANALYSIS_PATH filesep 'por025a-b1_results.mat']};
+plot_saved_analyses(@(c) getfield(c, 'score_test_corr'), analysis_files);
+plot_saved_analyses(@(c) getfield(c, 'score_train_corr'), analysis_files);
+
+% After the analysis has finished, you can compare models with:
 % for ii = 1:length(cells)
 %     cellid = cells{ii}.cellid;
 %     training_set = cells{ii}.training_set;

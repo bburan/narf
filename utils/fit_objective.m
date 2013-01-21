@@ -24,7 +24,7 @@ if nargin < 1
 end
 if nargin < 2
     options = optimset('MaxIter', 1000, ...
-                       'MaxFunEvals', 5000, ...
+                       'MaxFunEvals', 1000, ...
                        'TolFun', 1e-12, ...
                        'TolX', 1e-9);  
 end
@@ -57,7 +57,7 @@ end
 recalc_xxx(1); 
 fprintf('Fitting %d variables with fminsearch()\n', length(phi_init));
 
-[phi_best,fval,termcond] = fminsearch(@my_obj_fn, phi_init);
+[phi_best,fval,termcond] = fminsearch(@my_obj_fn, phi_init, options);
 unpack_fittables(phi_best);
 
 end
