@@ -15,7 +15,7 @@ disp('celldb_wrapper.m:');
 baphy_set_path;
 narf_set_path;
 global NARF_PATH STACK XXX mdls;
-mdls = scan_directory_for_modules([NARF_PATH filesep 'modules/']);
+mdls = scan_directory_for_modules();
 
 if ~exist('batch','var'),
    disp('syntax error: spn_wrapper(cellid,batch) parameters required');

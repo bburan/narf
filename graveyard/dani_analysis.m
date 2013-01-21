@@ -3,10 +3,10 @@
 % Save the fitted params and plot the results.
 
 narf_set_path;
-global NARF_PATH STACK XXX;
-mdls = scan_directory_for_modules([NARF_PATH filesep 'modules']);
+global NARF_SAVED_MODELS_PATH STACK XXX;
+mdls = scan_directory_for_modules();
 
-savepath = [NARF_PATH filesep 'saved_models'];
+savepath = NARF_SAVED_MODELS_PATH;
 
 files_to_analyze = [...
     {'por022a-a1', 'por022a08_p_SPN', 	'por022a09_a_TSP', 	'por022a12_p_SPN', 	'por022a13_a_TSP',	'por022a14_p_SPN'}; % PROBLEM: 

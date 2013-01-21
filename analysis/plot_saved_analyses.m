@@ -72,5 +72,5 @@ for ii = 1:length(tokens)
 end
 plot(1:length(tokens), mu, 'b-');
 hold off;
-title('Min, Mean, and Max Performance Across All Cellids');
+title('Mean Model Performance Across All Cellids');
 xticks(1:length(tokens), tokens);

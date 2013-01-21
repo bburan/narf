@@ -55,6 +55,8 @@ mm{1}.env100hz = {MODULES.load_stim_resps_from_baphy.mdl(...
 % GROUP 2: COMPRESSION OF INPUT INTENSITY
 mm{2} = [];
 mm{2}.nocomp = {MODULES.passthru};
+mm{2}.root15 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
+                                               'nlfn', @(phi, z) abs(z.^(1/1.5))))};
 mm{2}.root2 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
                                                'nlfn', @(phi, z) abs(sqrt(z))))};
 mm{2}.root25 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
@@ -211,8 +213,8 @@ for ii = 1:N_models,
     end
     
     fprintf('Fitting all parameters\n');
-    exit_code = fit_objective('score');
-    exit_code = fit_with_lsqcurvefit();
+    exit_code1 = fit_objective('score');
+    exit_code2 = fit_with_lsqcurvefit();
     
     results{ii}.score_train_corr = XXX{end}.score_train_corr;
     results{ii}.score_test_corr = XXX{end}.score_test_corr;
@@ -227,7 +229,8 @@ for ii = 1:N_models,
     % results{ii}.nl_phi = STACK{find_module(STACK{3}'nonlinearity')}.phi;
     results{ii}.fit_time = toc;
     results{ii}.n_free_params = length(pack_fittables(STACK));
-    results{ii}.exit_code = exit_code;
+    results{ii}.exit_code1 = exit_code1;
+    results{ii}.exit_code = exit_code2;
     
     results{ii}.cellid = XXX{1}.cellid;
     results{ii}.training_set = XXX{1}.training_set;

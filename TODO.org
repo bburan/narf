@@ -1,46 +1,42 @@
 * NEXT STEPS:
-  1. [X] Heat map with labeled xtics, ytics, and color+numeric cells
-  2. [X] Add a quick check to ensure that overfitting does not occur when doing lsqcurvefit
-  3. [X] Add a MSE performance metric with a 'smoothness' weight
-  4. [X] Make a scatter plot to verify different compressors are better than others across all models
-  5. [ ] Jacknifing fitting routine
-  6. [ ] A plot function to display test/train info for various models, using only saved anaalysis file for speed
-  7. [ ] Refactor a function which extracts info from all saved files in a directory (stack or XXX?)
-  8. [ ] Extract the 'generate models' part of test_likely_candidates and make it usable by multiple scripts
-  9. [ ] Make find_module return ALL modules found, in case there are multiple FIR or multiple nonlinearities
-  10. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
-  11. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
-  12. [ ] Try nlinfit() as an alternative to lsqcurvefit()
-  13. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
-  14. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
-  15. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
-  16. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
-  17. [ ] IRRITATION: Why isn't there an 'undo' function?
-  18. [ ] IRRITATION: Why can't I resize windows?
-  19. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
-  20. [ ] IRRITATION: Why are the editable text boxes so damn small?
-  21. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
-  22. [ ] Find that weird bug that still exists when saving/loading files
-  23. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
+  5. [ ] Break out second part of performance plotting into a second function
+	 We need to be able to display test/train performance curves on the same plot?
+  6. [ ] Jacknifing fitting routine
+  7. [ ] A plot function to display test/train info for various models, using only saved anaalysis file for speed
+  8. [ ] Refactor a function which extracts info from all saved files in a directory (stack or XXX?)
+  9. [ ] Extract the 'generate models' part of test_likely_candidates and make it usable by multiple scripts
+  10. [ ] Make find_module return ALL modules found, in case there are multiple FIR or multiple nonlinearities
+  11. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
+  12. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
+  13. [ ] Try nlinfit() as an alternative to lsqcurvefit()
+  14. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
+  15. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
+  16. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
+  17. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
+  18. [ ] IRRITATION: Why isn't there an 'undo' function?
+  19. [ ] IRRITATION: Why can't I resize windows?
+  20. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
+  21. [ ] IRRITATION: Why are the editable text boxes so damn small?
+  22. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
+  23. [ ] Find that weird bug that still exists when saving/loading files
+  24. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
           1) Make the list of models a global, so I don't have it scattered around everywhere in my code.
           2) Many repeated blocks of code have evolved and need to be destroyed.
           3) Paths have become a bit messy: grep for NARF_PATH and correct (also: replace with filesep when possible)
           4) Names probably could use some rethinking as well, especially defaults (like using 'stim' default even in the fitting algorithms, for example)
           5) Move the 'gui' stuff to a separate global structure?
           6) Cleaner way of building models in a script than accessing by index number?
-          7) Use this idiom more often to search through struct or cell arrays:
-	     hits = arrayfun(@(x)strcmp(x.stimfile, sf), XXX{2}.cfd);   % Use cellfun instead of arrayfun if needed.
-          8) Look for obvious repetition and make some more functions in util/
-          9) Remove/rename useless functions in util that have accumulated.
-          10) In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it be in a 3rd structure?
-          11) It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
-          12) Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?
-          13) Go through the TODO's in existing files
-          14) Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-          15) make anything named 'do_' into a method for use with modules?
-          16) make anything named 'update_' into a function used purely for its side effects
-  24. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
-  25. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
+          7) Look for obvious repetition and make some more functions in util/
+          8) Remove/rename useless functions in util that have accumulated.
+          9) In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it be in a 3rd structure?
+          10) It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
+          11) Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?
+          12) Go through the TODO's in existing files
+          13) Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+          14) make anything named 'do_' into a method for use with modules?
+          15) make anything named 'update_' into a function used purely for its side effects
+  25. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
+  26. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
   
 * DESIGN QUESTIONS TO BRAINSTORM:
   1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?

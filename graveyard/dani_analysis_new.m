@@ -6,9 +6,8 @@ close all
 % Save the fitted params and plot the results.
 
 narf_set_path;
-global NARF_PATH STACK XXX;
-mdls = scan_directory_for_modules([NARF_PATH filesep 'modules']);
-
+global STACK XXX;
+mdls = scan_directory_for_modules();
 
 files_to_analyze = [...
     % OLD SINGLE-SPEAKER RECORDINGS

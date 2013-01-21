@@ -1,6 +1,6 @@
 % Load all models in savepath, rebuild them, extract correlation scores
-global NARF_PATH XXX STACK;
-savepath = [NARF_PATH filesep 'saved_models'];
+global NARF_PATH NARF_SAVED_MODELS_PATH XXX STACK;
+savepath = NARF_SAVED_MODELS_PATH;
 D = dir([savepath filesep '*.mat']);
 sss = sprintf('\n\nCELLID    \tTRAIN CORR\tTRAINED ON\n');
 for ii = 1:length(D),

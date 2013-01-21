@@ -2,6 +2,11 @@ function mods = scan_directory_for_modules(scanpath)
 % Scan a directory for executable module objects
 % If any exception occurs when loading a module, it will be dropped.
 
+global NARF_MODULES_PATH;
+if nargin < 1
+    scanpath = NARF_MODULES_PATH;
+end
+
 fprintf('Scanning dir for modules: %s\n', scanpath);
 files = dir(fullfile(scanpath, '*.m'));
 mods = [];
