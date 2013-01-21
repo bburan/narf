@@ -14,7 +14,9 @@ function results = test_likely_candidates(cellid, training_set, test_set)
 global STACK XXX MODULES NARF_PATH NARF_SAVED_MODELS_PATH ...
     NARF_MODULES_PATH NARF_SAVED_ANALYSIS_PATH;
 
-MODULES = scan_directory_for_modules(NARF_MODULES_PATH);
+if isempty(MODULES)
+    MODULES = scan_directory_for_modules(NARF_MODULES_PATH);
+end
 
 mm = {}; 
 
@@ -46,15 +48,19 @@ mm{1}.env100hz = {MODULES.load_stim_resps_from_baphy.mdl(...
 %                                            'conv_fn', @mean, ...
 %                                            'postconv_fn', @(x) x))};
 
+% TODO: I needed the abs() around the sqrt() because for some reason
+% load_stim_from_baphy is giving negative zero values for the envelope,
+% which then turn complex and crash the sigmoidal nonlinearity?
+
 % GROUP 2: COMPRESSION OF INPUT INTENSITY
 mm{2} = [];
 mm{2}.none = {MODULES.passthru};
 mm{2}.root2 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                               'nlfn', @(phi, z) sqrt(z)))};
+                                               'nlfn', @(phi, z) abs(sqrt(z))))};
 mm{2}.root25 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                               'nlfn', @(phi, z) z.^(1/2.5)))};
+                                               'nlfn', @(phi, z) abs(z.^(1/2.5))))};
 mm{2}.root3 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                                'nlfn', @(phi, z) z.^(1/3)))};
+                                                'nlfn', @(phi, z) abs(z.^(1/3))))};
 % mm{2}.root4 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
 %                                                'nlfn', @(phi, z) z.^(1/4)))};
 % mm{2}.root5 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
@@ -63,7 +69,7 @@ mm{2}.root3 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
 %                                                'nlfn', @(phi, z) z.^(1/6)))};
 mm{2}.rootfit = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
                                                  'phi', [1/2.5], ...
-                                                 'nlfn', @(phi, z) z.^(phi(1))))};
+                                                 'nlfn', @(phi, z) abs(z.^(phi(1)))))};
 mm{2}.log2  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
                                                'nlfn', @(phi, z) log(z + 10^-2)))};
 mm{2}.log3  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
@@ -155,6 +161,14 @@ fprintf('Number of models to be tested: %d\n', N_models);
 results = cell(N_models, 1);
 results_lsq = cell(N_models, 1);
 mkdir([NARF_SAVED_MODELS_PATH filesep cellid]);
+analysis_file = [NARF_SAVED_ANALYSIS_PATH filesep cellid '_results.mat'];
+
+% Load existing analysis file, so that incomplete analyses may be continued
+if exist(modelfile, 'file') == 2
+    fprintf('Loading existing analysis file.\n');
+    nnn = load(analysis_file, 'results');
+    results = nnn.results;
+end
 
 for ii = 1:N_models,
     STACK = {};
@@ -162,58 +176,66 @@ for ii = 1:N_models,
     XXX{1}.cellid = cellid;
     XXX{1}.training_set = training_set;
     XXX{1}.test_set = test_set;
-
-    tic;    
+    
+    tic;
     
     % Behold matlab's ugliness for destructuring binds!
     [i1 i2 i3 i4 i5 i6 i7 i8 i9] = ind2sub(N_opts, ii);
     indexes = [i1 i2 i3 i4 i5 i6 i7 i8 i9];
     
     opt_names = arrayfun(@(gi, ind) opts{gi}{ind}, ...
-                      1:length(opts), indexes(1:length(opts)), ...
-                     'UniformOutput', false);
-
+        1:length(opts), indexes(1:length(opts)), ...
+        'UniformOutput', false);
+    
     blocks = cellfun(@getfield, mm, opt_names, 'UniformOutput', false);
-   
+    
     tmp = cellfun(@(n) sprintf('%s_', n), opt_names, 'UniformOutput', false);
-	modelname = strcat(cellid, '_', tmp{:}, training_set{:});
-    fprintf('\n\nMODEL [%d/%d]: %s\n', ii, N_models, modelname);
+    modelname = strcat(cellid, '_', tmp{:}, training_set{:});
+    modelfile = [NARF_SAVED_MODELS_PATH filesep cellid filesep modelname '.mat'];
+    fprintf('MODEL [%d/%d]: %s\n', ii, N_models, modelname);
+    
+    % If the model savefile exists, we assume we don't need to fit 
+    if exist(modelfile, 'file') == 2
+        fprintf('Skipping because model file exists.\n');
+        continue;
+    end
     
     % Append each block one at a time
-     for jj = 1:length(blocks),
-         fprintf('Fitting stage [%d/%d]\n', jj, length(blocks));
-         for kk = 1:length(blocks{jj})
-             append_module(blocks{jj}{kk}); % Calls auto_init for each
-         end
-     end
-     
-     exit_code = fit_objective('score');
-     exit_code = fit_with_lsqcurvefit();
-
-     results{ii}.score_train_corr = XXX{end}.score_train_corr;
-     results{ii}.score_test_corr = XXX{end}.score_test_corr;
-     results{ii}.score_train_mse = XXX{end}.score_train_mse;
-     results{ii}.score_test_mse = XXX{end}.score_test_mse;
-     firmod = find_module(STACK, 'fir_filter');
-     results{ii}.fir_coefs = firmod.coefs;
-     
-     % TODO: Find a 'nonlinearity' module in the stack, but start the search
-     % at a lower depth than just 1 so that it doesn't find the pre-FIR
-     % nonlinearity. 
-     % results{ii}.nl_phi = STACK{find_module(STACK{3}'nonlinearity')}.phi;
-     results{ii}.fit_time = toc;
-     results{ii}.n_free_params = length(pack_fittables(STACK));
-     results{ii}.exit_code = exit_code;
-     
-     results{ii}.cellid = XXX{1}.cellid;
-     results{ii}.training_set = XXX{1}.training_set;
-     results{ii}.test_set = XXX{1}.test_set;
-     results{ii}.optimized_on = STACK{end}.name;
-     results{ii}.filename     = modelname;
-     
-     save_model_stack([NARF_SAVED_MODELS_PATH filesep cellid filesep modelname '.mat'], STACK, XXX);
+    for jj = 1:length(blocks),
+        fprintf('Auto-initalizing module [%d/%d]\n', jj, length(blocks));
+        for kk = 1:length(blocks{jj})
+            append_module(blocks{jj}{kk}); % Calls auto_init for each
+        end
+    end
     
-     % Save results incrementally to file
-     save([NARF_SAVED_ANALYSIS_PATH filesep cellid '_results.mat'], 'results');
-
+    fprintf('Fitting all parameters\n');
+    exit_code = fit_objective('score');
+    exit_code = fit_with_lsqcurvefit();
+    
+    results{ii}.score_train_corr = XXX{end}.score_train_corr;
+    results{ii}.score_test_corr = XXX{end}.score_test_corr;
+    results{ii}.score_train_mse = XXX{end}.score_train_mse;
+    results{ii}.score_test_mse = XXX{end}.score_test_mse;
+    firmod = find_module(STACK, 'fir_filter');
+    results{ii}.fir_coefs = firmod.coefs;
+    
+    % TODO: Find a 'nonlinearity' module in the stack, but start the search
+    % at a lower depth than just 1 so that it doesn't find the pre-FIR
+    % nonlinearity.
+    % results{ii}.nl_phi = STACK{find_module(STACK{3}'nonlinearity')}.phi;
+    results{ii}.fit_time = toc;
+    results{ii}.n_free_params = length(pack_fittables(STACK));
+    results{ii}.exit_code = exit_code;
+    
+    results{ii}.cellid = XXX{1}.cellid;
+    results{ii}.training_set = XXX{1}.training_set;
+    results{ii}.test_set = XXX{1}.test_set;
+    results{ii}.optimized_on = STACK{end}.name;
+    results{ii}.filename     = modelname;
+    
+    save_model_stack(modelfile, STACK, XXX);
+    
+    % Save results incrementally to analysis file
+    save(analysis_file, 'results');
+    
 end

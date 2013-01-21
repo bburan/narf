@@ -97,6 +97,14 @@ function x = do_load_from_baphy(stack, xxx)
                               0, mdl.include_prestim);
         stim = permute(stim, [2 3 1]);
         
+        % TODO: Right now the envelope returned by baphy is not positive
+        % semidefinite, and when run through a square root compressor
+        % results in complex numbers being developed. This should be fixed
+        % on the baphy side, but for now let's just add a workaround here. 
+        if strcmp(mdl.stimulus_format, 'envelope')
+            stim = abs(stim);
+        end
+        
         % If you ever need arbitrary dimensions, I started planning
         % out how that could be accomplished...but it doesn't help plotting
         % See documentation in narf/doc/

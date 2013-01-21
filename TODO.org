@@ -1,23 +1,22 @@
 * NEXT STEPS:
-  1. [X] Function to display models in viewer, sorted by test score!
-  2. [ ] A plot function to display test/train info for various models, using only saved anaalysis file for speed
-  3. [ ] Refactor a function which extracts info from all saved files in a directory
-  4. [ ] Extract the 'generate models' part of test_likely_candidates and make it usable by multiple scripts
-  5. [ ] Make find_module return ALL modules found, in case there are multiple FIR or multiple nonlinearities
-  6. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
-  7. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
-  8. [ ] Try nlinfit() as an alternative to lsqcurvefit()
-  9. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
-  10. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
-  11. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
-  12. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
-  13. [ ] IRRITATION: Why isn't there an 'undo' function?
-  14. [ ] IRRITATION: Why can't I resize windows?
-  15. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
-  16. [ ] IRRITATION: Why are the editable text boxes so damn small?
-  17. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
-  18. [ ] Find that weird bug that still exists when saving/loading files
-  19. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
+  1. [ ] A plot function to display test/train info for various models, using only saved anaalysis file for speed
+  2. [ ] Refactor a function which extracts info from all saved files in a directory (stack or XXX?)
+  3. [ ] Extract the 'generate models' part of test_likely_candidates and make it usable by multiple scripts
+  4. [ ] Make find_module return ALL modules found, in case there are multiple FIR or multiple nonlinearities
+  5. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
+  6. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
+  7. [ ] Try nlinfit() as an alternative to lsqcurvefit()
+  8. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
+  9. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
+  10. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
+  11. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
+  12. [ ] IRRITATION: Why isn't there an 'undo' function?
+  13. [ ] IRRITATION: Why can't I resize windows?
+  14. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
+  15. [ ] IRRITATION: Why are the editable text boxes so damn small?
+  16. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
+  17. [ ] Find that weird bug that still exists when saving/loading files
+  18. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
           1) Make the list of models a global, so I don't have it scattered around everywhere in my code.
           2) Many repeated blocks of code have evolved and need to be destroyed.
           3) Paths have become a bit messy: grep for NARF_PATH and correct (also: replace with filesep when possible)
@@ -35,8 +34,8 @@
           14) Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
           15) make anything named 'do_' into a method for use with modules?
           16) make anything named 'update_' into a function used purely for its side effects
-  20. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
-  21. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
+  19. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
+  20. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
   
 * DESIGN QUESTIONS TO BRAINSTORM:
   1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
