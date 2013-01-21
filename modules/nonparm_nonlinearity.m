@@ -14,7 +14,6 @@ m.editable_fields = {'input_stim', 'input_resp', 'time', 'output', 'bincount'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.auto_init = @auto_init_nonparm_nonlinearity;
 m.input_stim = 'stim';
 m.input_resp = 'respavg';
 m.time = 'stim_time';
@@ -45,27 +44,25 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function mm = auto_init_nonparm_nonlinearity(stack, xxx)
-    % NOTE: Unlike most plot functions, auto_init functions get a 
-    % STACK and XXX which do not yet have this module or module's data
-    % added to them. 
-    mm = m;
+function [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx)
+    % calculate nonparm_nonlinearity parameters
     
+    mdl = stack{end};
     x = xxx{end};
     
     % find out parameters:
     pred=[]; resp=[];
     for sf = x.training_set,
         sf=sf{1};
-        pred=cat(1,pred,x.dat.(sf).(mm.input_stim)(:));
-        resp=cat(1,resp,x.dat.(sf).(mm.input_resp)(:));
+        pred=cat(1,pred,x.dat.(sf).(mdl.input_stim)(:));
+        resp=cat(1,resp,x.dat.(sf).(mdl.input_resp)(:));
     end
     
     keepidx=find(~isnan(resp));
     pred=pred(keepidx);
     resp=resp(keepidx);
     
-    bincount=mm.bincount;
+    bincount=mdl.bincount;
     pp=zeros(bincount,1);
     rr=zeros(bincount,1);
     rre=zeros(bincount,1);
@@ -104,14 +101,17 @@ function mm = auto_init_nonparm_nonlinearity(stack, xxx)
         rr(:)=gsmooth(rr(:),1);
         %[pp(:,dd),rr(:,dd)]
     end
-    mm.phi={pp,rr};
-    mm.outbinserr=rre;
+    
+    phi={pp,rr};
+    outbinserr=rre;
     
  end
 
 function x = do_nonlinearity(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
+    
+    [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx);
     
     for sf = fieldnames(x.dat)', sf=sf{1};
         [T, S, C] = size(x.dat.(sf).(mdl.input_stim));
@@ -121,7 +121,7 @@ function x = do_nonlinearity(stack, xxx)
         %y = arrayfun(@(in) mdl.nlfn(mdl.phi, in), x.dat.(sf).(mdl.input_stim));
         
         % Otherwise use the much faster vector valued functions
-        y = raw_nl(mdl.phi, x.dat.(sf).(mdl.input_stim)(:));      
+        y = raw_nl(phi, x.dat.(sf).(mdl.input_stim)(:));      
         
         % TODO: Find a better solution than this hacky way of zeroing nans
         % so that optimization continue in the presence of singularities
@@ -129,7 +129,6 @@ function x = do_nonlinearity(stack, xxx)
         
         x.dat.(sf).(mdl.output) = reshape(y,[T,S,C]);
     end
-
 end
 
 function do_plot_scatter_and_nonlinearity(stack, xxx)
@@ -141,7 +140,8 @@ function do_plot_scatter_and_nonlinearity(stack, xxx)
     xlims = xlim();
     %xs = linspace(xlims(1), xlims(2), 100);
     %plot(xs, raw_nl(mdl.phi, xs));
-    errorbar(mdl.phi{1},mdl.phi{2},mdl.outbinserr);
+    [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx(1:end-1));
+    errorbar(phi{1},phi{2},outbinserr);
     hold off
 end
 
@@ -150,10 +150,11 @@ function do_plot_smooth_scatter_and_nonlinearity(stack, xxx)
     x = xxx{end};
     hold on;
     do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
-    xlims = xlim();
+    %xlims = xlim();
     %xs = linspace(xlims(1), xlims(2), 100)';
     %plot(xs, raw_nl(mdl.phi, xs));
-    errorbar(mdl.phi{1},mdl.phi{2},mdl.outbinserr);
+    [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx(1:end-1));
+    errorbar(phi{1},phi{2},outbinserr);
     hold off
 end
 
