@@ -1,25 +1,29 @@
 * NEXT STEPS:
-  5. [ ] Break out second part of performance plotting into a second function
+  1. [X] Jacknifing fitting routine with lsqcurvefit
+  2. [ ] Break out second part of performance plotting into a second function
 	 We need to be able to display test/train performance curves on the same plot?
-  6. [ ] Jacknifing fitting routine
-  7. [ ] A plot function to display test/train info for various models, using only saved anaalysis file for speed
-  8. [ ] Refactor a function which extracts info from all saved files in a directory (stack or XXX?)
-  9. [ ] Extract the 'generate models' part of test_likely_candidates and make it usable by multiple scripts
-  10. [ ] Make find_module return ALL modules found, in case there are multiple FIR or multiple nonlinearities
-  11. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
-  12. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
-  13. [ ] Try nlinfit() as an alternative to lsqcurvefit()
-  14. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
-  15. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
-  16. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
-  17. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
-  18. [ ] IRRITATION: Why isn't there an 'undo' function?
-  19. [ ] IRRITATION: Why can't I resize windows?
-  20. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
-  21. [ ] IRRITATION: Why are the editable text boxes so damn small?
-  22. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
-  23. [ ] Find that weird bug that still exists when saving/loading files
-  24. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
+  3. [ ] Refactoring of test_likely_candidates
+	 1) [ ] Models to test should be specified as an argument
+	 2) [ ] The recording of various data should also be specified as a separate function so it can be called by 'recache_analysis'
+	 3) [ ] Function to rebuild cached values (save cached values in XXX{1})
+  4. [ ] Refactoring of plot_saved_analysis
+  5. [ ] A plot function to display test/train info for various models, using only saved analysis file for speed
+  6. [ ] Refactor a function which extracts info from all saved files in a directory
+  7. [ ] Make find_module return ALL modules found, in case there are multiple FIR or multiple nonlinearities
+  8. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
+  9. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
+  10. [ ] Try nlinfit() as an alternative to lsqcurvefit()
+  11. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
+  12. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
+  13. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
+  14. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
+  15. [ ] IRRITATION: Why isn't there an 'undo' function?
+  16. [ ] IRRITATION: Why can't I resize windows?
+  17. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
+  18. [ ] IRRITATION: Why are the editable text boxes so damn small?
+  19. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
+  20. [ ] Find that weird bug that still exists when saving/loading files
+  21. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
           1) Make the list of models a global, so I don't have it scattered around everywhere in my code.
           2) Many repeated blocks of code have evolved and need to be destroyed.
           3) Paths have become a bit messy: grep for NARF_PATH and correct (also: replace with filesep when possible)
@@ -35,8 +39,8 @@
           13) Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
           14) make anything named 'do_' into a method for use with modules?
           15) make anything named 'update_' into a function used purely for its side effects
-  25. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
-  26. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
+  22. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
+  23. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
   
 * DESIGN QUESTIONS TO BRAINSTORM:
   1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
@@ -56,10 +60,8 @@
   5. [X] How can design internal degrees of freedom be detected and corrected during optimization?
 	 (Probably they cannot!)
   6. [ ] IF we only have one data file, how can we hold out some fraction of the stimuli so that we can to training/test on a single data file?
+  7. [ ] It is awkward in non-parametric non-linearity module to recalc the phi every time you need it. Some place to cache it would be good. 
 	  
-* DISCUSSIONS
-  Observation: Be very careful using sigmoid nonlinearity: it tends to squash data into two groups. It almost always helps to widen the sigma parameter before fitting again.
-
 * LATER TODO LIST
   1. [ ] Add a module which can pick out a particular dimension from a vector and give it a name as a signal
   2. [ ] Make inter_spike_intervals work

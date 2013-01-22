@@ -14,8 +14,8 @@ m.mdl = @mean_squared_error;
 m.name = 'mean_squared_error';
 m.fn = @do_mean_squared_error;
 m.pretty_name = 'Mean Squared Error';
-m.editable_fields = {'input1', 'input2', 'time', 'error', 'smoothness_weight'...
-                     'train_score', 'test_score'};
+m.editable_fields = {'input1', 'input2', 'time', 'error', 'output', ...
+                     'smoothness_weight', 'train_score', 'test_score'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
@@ -71,12 +71,15 @@ function x = do_mean_squared_error(stack, xxx)
 
     % Add a penalty related to the non-smoothness of the FIR coefs
     firmod = find_module(stack, 'fir_filter');
-    diff = sum(sum(filter([1,-1], 1, firmod.coefs, [], 2), 2),1);
-    reldiff = diff / sum(sum(firmod.coefs,2),1);
+    filterrms = sqrt(sum(firmod.coefs(:).^2));
+    diff = filter([1,-1], 1, firmod.coefs, [], 2);
+    diff = sqrt(sum(diff(:).^2));
+    %reldiff = diff / sum(sum(firmod.coefs,2),1);
 
     x.(mdl.train_score) = train_score;
     x.(mdl.test_score) = test_score;
-    x.(mdl.output) = train_score + (mdl.smoothness_weight * reldiff);
+    x.(mdl.output) = ((1-mdl.smoothness_weight)*(train_score) + ...
+                     (mdl.smoothness_weight * diff));
 end
 
 function do_plot_inputs_and_mse(stack, xxx)

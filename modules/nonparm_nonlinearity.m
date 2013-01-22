@@ -8,7 +8,7 @@ function m = nonparm_nonlinearity(args)
 m = [];
 m.mdl = @nonparm_nonlinearity;
 m.name = 'nonparm_nonlinearity';
-m.fn = @do_nonlinearity;
+m.fn = @do_np_nonlinearity;
 m.pretty_name = 'Nonparametric Nonlinearity';
 m.editable_fields = {'input_stim', 'input_resp', 'time', 'output', 'bincount'};
 m.isready_pred = @isready_always;
@@ -107,7 +107,7 @@ function [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx)
     
  end
 
-function x = do_nonlinearity(stack, xxx)
+function x = do_np_nonlinearity(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     

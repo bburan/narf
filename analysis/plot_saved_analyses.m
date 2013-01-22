@@ -53,8 +53,9 @@ figure; clf;
 heatmap(M, xlabs, ylabs, '%2.0f', 'TickAngle', 90,...
         'ShowAllTicks', true, 'TickFontSize', 6);
 
-% Also, display a mean/var plot for each model token between underscores
-tokens = cellfun(@(l) regexp(l, '_(.*?)_', 'tokens'), xlabs, 'UniformOutput', false);
+
+% Also, display a performance plot for each model token
+tokens = cellfun(@(l) regexp(l, '(.*?)(?:_|$)', 'tokens'), xlabs, 'UniformOutput', false);
 tokens = cat(1, tokens{:});
 tokens = unique(cat(2, tokens{:}));
 mu = [];
@@ -66,7 +67,7 @@ for ii = 1:length(tokens)
     tmp =  M(:, mods);
     scores = tmp(:);
     mu(ii) = nanmean(scores(:));
-    plot(ii*ones(1, length(scores)), scores, 'k.');
+    plot(ii*ones(1, length(scores))+0.01*randn(1, length(scores)), scores, 'k.');
 %     s_min(ii) = nanmin(scores(:));
 %     s_max(ii) = nanmax(scores(:));
 end

@@ -5,7 +5,7 @@
 
 global MODULES NARF_SAVED_MODELS_PATH NARF_SAVED_ANALYSIS_PATH;
 
-MODULES = scan_directory_for_modules(NARF_MODULES_PATH);
+MODULES = scan_directory_for_modules();
 
 % Use request_celldb_batch() to easily use a batch file
 cells = request_celldb_batch(240);
@@ -20,10 +20,12 @@ for ii = 1:length(cells)
 end
 
 % Display heat maps of test and training set performance
-analysis_files = {[NARF_SAVED_ANALYSIS_PATH filesep 'por025a-b1_results.mat'], ...
-    [NARF_SAVED_ANALYSIS_PATH filesep 'por025a-c1_results.mat'], ...
-    [NARF_SAVED_ANALYSIS_PATH filesep 'por025a-c2_results.mat'], ...
-    [NARF_SAVED_ANALYSIS_PATH filesep 'por025a-d1_results.mat']};
+analysis_files = {[NARF_SAVED_ANALYSIS_PATH filesep 'por025a-b1_results.mat']};
+%, ...
+%    [NARF_SAVED_ANALYSIS_PATH filesep 'por025a-c1_results.mat']};
+%, ...
+%    [NARF_SAVED_ANALYSIS_PATH filesep 'por025a-c2_results.mat'], ...
+%    [NARF_SAVED_ANALYSIS_PATH filesep 'por025a-d1_results.mat']};
 
 plot_saved_analyses(@(c) 100*getfield(c, 'score_test_corr'), analysis_files);
 plot_saved_analyses(@(c) 100*getfield(c, 'score_train_corr'), analysis_files);
@@ -42,12 +44,14 @@ plot_saved_analyses(@(c) getfield(c, 'exit_code'), analysis_files);
 %     compare_models(filenames);
 % end
 
-% % UNCOMMENT AND RUN THIS WHEN DEVELOPING
-% cellid = 'por025a-a1';
+% % % UNCOMMENT AND RUN THIS WHEN DEVELOPING
+% cellid = 'por025a-b1';
 % training_set = {'por025a03_p_SPN'}; 
 % test_set = {'por025a04_p_SPN'};
 % filenames = dir2cell([NARF_SAVED_MODELS_PATH filesep cellid filesep '*.mat']);
 % filenames = cellfun(@(f) [NARF_SAVED_MODELS_PATH filesep cellid filesep f], ...
 %                         filenames, 'UniformOutput', false);
-% 
-% compare_models(filenames);
+%  
+% % Careful! For some reason matlab often crashes when you compare many
+% % models together at the same time.
+% compare_models(filenames(1:5));
