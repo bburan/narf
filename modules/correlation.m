@@ -60,8 +60,8 @@ function x = do_correlation(stack, xxx)
     end
     R = corrcoef(excise([V1 V2]));
     if isnan(R)
-        x.(mdl.train_score) = R;
-        x.(mdl.output) = R;
+        x.(mdl.train_score) = NaN;
+        x.(mdl.output) = NaN;
     else
         x.(mdl.train_score) = R(2,1)^2;
         x.(mdl.output) = 1/R(2,1)^2;
@@ -78,7 +78,7 @@ function x = do_correlation(stack, xxx)
     end
     R = corrcoef(excise([V1 V2]));
     if isnan(R)
-        x.(mdl.test_score) = R;
+        x.(mdl.test_score) = NaN;
     else
         x.(mdl.test_score) = R(2,1)^2;
     end

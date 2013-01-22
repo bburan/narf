@@ -1,0 +1,55 @@
+OBSERVATIONS ON VARIOUS MODELS
+
+* General Model Structure.
+  1. MODEL COMPRESSOR: Any nonlinearity before the FIR filter a "compressor". 
+  2. FIR FILTER: Has sufficient coefficients to cover the past 100ms of history and span the input dimensions
+  3. NONLINEARITY: A global nonlinearity on the output of the FIR filter. 
+
+* Compressors (Jan 22, 2013)
+  We have been considering fits using:
+  1) No compression
+  2) logarithms with a constant offset ($log(x+10^-offset)$), where offset=1, 2, 3, 4, 5, or is fit via optimization
+  3) nth-root filters, where n=1.5,2,2.5,3,4,5, or is fit via optimization
+
+  Looking at preliminary results for 18 cells, we can make the following statements:
+  1) Compression helps almost always.
+  2) However, fitting the compressor via optimization failed to reach peak performance in every case and often prevented convergence. 
+  3) For every good fitting nth-root compressor, there is always a better-fitting log compressor.
+  4) For some strange reason, even numbered nth-root compressors (2,4,6) perform more poorly than odd ones (3,5,7, etc). This is weird. 
+  5) The best log fit varies between log(x+10^-1) and log(x+10^-4). I presume these account for different spontaneous rates of fire.
+
+  Hypotheses:
+  1) Log compressors are beating the nth-root ones because they predict a nonzero firing rate even when there is no stimulus. 
+
+  Future Experiments: 
+  1) Define a sqrt compressor with a nonzero firing rate for no stimulus. Phi = [zerorate, exponent]
+  2) Define a logarithmic compressor which uses base 2, 3, 4, 5, 6 instead of e. Phi = [zerorate, exponent] 
+  3) Try a sigmoidal compressor to account for firing rate saturation. 
+* Fitting Routines (Jan 22, 2013)
+  There is no "Best Fitting Routine", there are only fitting routines that work better in some circumstances than others.
+
+  Five routines were tried: 
+  1) fminsearch
+  2) least squares,
+  3) jackknifed lsq, 
+  4) fminsearch with a smoothing weight, which has a penalty proportional to the RMS magnitude of the FIR filter coefs
+  5) fminsearch followed by lsq
+
+  Observations from testing on 18 cells:
+  1) Lsqcurvefit() by itself fails to converge occasionally but is fast
+  2) fminsearch() followed by lsqcurvefit() was always the best choice for cells with strong responses
+  3) smoothed MSE fitter or Jackknifed fitter resulted in higher test scores for some cells with weaker responses (presumably because they avoided overfitting).
+  4) Probably the best approach is to fit the model multiple times using different approaches, and take the one with the highest test score, and save it.
+
+  Future Experiments
+  1) Fit each element independently before doing the global final fit (could be done in auto-init)
+  2) Bayesian likelihood fits
+   
+
+* Nonlinearities (Jan 22, 2013)
+  Needs to be examined. 
+  
+   
+
+
+

@@ -1,4 +1,4 @@
-function [M, xlabs, ylabs] = plot_saved_analyses(thefn, analysis_files)
+function [M, xlabs, ylabs] = plot_saved_analyses(thetitle, thefn, analysis_files)
 % Plot a heat map of every saved analysis file given as an argument
 % The value of the heat map is equal to the return value of THEFN, which is
 % applied to each element of the 'results' cell array. Assumes that the
@@ -44,7 +44,11 @@ M = NaN * zeros(length(ylabs), length(xlabs));
 for ii = 1:length(ylabs),
     for jj = 1:length(xlabs),
         if isfield(H.(ylabs{ii}), xlabs{jj})
-            M(ii,jj) = H.(ylabs{ii}).(xlabs{jj});
+            if isnan(H.(ylabs{ii}).(xlabs{jj}))
+                M(ii,jj) = nan;
+            else
+                M(ii,jj) = H.(ylabs{ii}).(xlabs{jj});
+            end
         end
     end
 end
@@ -52,13 +56,15 @@ end
 figure; clf;
 heatmap(M, xlabs, ylabs, '%2.0f', 'TickAngle', 90,...
         'ShowAllTicks', true, 'TickFontSize', 6);
-
+set(gca,'Position',[.05 .2 .9 .75])
+title(sprintf('Heat Map: %s', thetitle));
 
 % Also, display a performance plot for each model token
 tokens = cellfun(@(l) regexp(l, '(.*?)(?:_|$)', 'tokens'), xlabs, 'UniformOutput', false);
 tokens = cat(1, tokens{:});
 tokens = unique(cat(2, tokens{:}));
 mu = [];
+top10 = [];
 figure;
 hold on;
 for ii = 1:length(tokens)
@@ -66,12 +72,16 @@ for ii = 1:length(tokens)
     mods = cellfun(@(x)~isempty(x), regexp(xlabs, tok));
     tmp =  M(:, mods);
     scores = tmp(:);
+    sorted_scores = sort(scores(:));
+    sorted_scores(any(isnan(sorted_scores),2),:)=[];
     mu(ii) = nanmean(scores(:));
+    top10(ii) = nanmean(sorted_scores(floor(end-length(sorted_scores)/10):end));
     plot(ii*ones(1, length(scores))+0.01*randn(1, length(scores)), scores, 'k.');
-%     s_min(ii) = nanmin(scores(:));
-%     s_max(ii) = nanmax(scores(:));
 end
 plot(1:length(tokens), mu, 'b-');
+plot(1:length(tokens), top10, 'r-');
+set(gca,'ButtonDownFcn','selectmoveresize');
+set(gca,'Position',[.05 .05 .9 .9])
 hold off;
-title('Mean Model Performance Across All Cellids');
+title(sprintf('Mean & Top 10\% Model Performance Across All Cellids: %s', thetitle));
 xticks(1:length(tokens), tokens);

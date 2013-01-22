@@ -55,21 +55,23 @@ mm{1}.env100hz = {MODULES.load_stim_resps_from_baphy.mdl(...
 % GROUP 2: COMPRESSION OF INPUT INTENSITY
 mm{2} = [];
 mm{2}.nocomp = {MODULES.passthru};
-mm{2}.root15 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                               'nlfn', @(phi, z) abs(z.^(1/1.5))))};
-mm{2}.root2 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                               'nlfn', @(phi, z) abs(sqrt(z))))};
-mm{2}.root25 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                               'nlfn', @(phi, z) abs(z.^(1/2.5))))};
-mm{2}.root3 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                                'nlfn', @(phi, z) abs(z.^(1/3))))};
-mm{2}.root4 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                                'nlfn', @(phi, z) z.^(1/4)))};
-mm{2}.root5 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
-                                               'nlfn', @(phi, z) z.^(1/5)))};
-mm{2}.rootfit = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
-                                                 'phi', [1/2.5], ...
-                                                 'nlfn', @(phi, z) abs(z.^(phi(1)))))};
+% The nth-root compressors do not work as well as log compressors, but if
+% you want to try them feel free.
+% mm{2}.root15 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
+%                                                'nlfn', @(phi, z) abs(z.^(1/1.5))))};
+% mm{2}.root2 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
+%                                                'nlfn', @(phi, z) abs(sqrt(z))))};
+% mm{2}.root25 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
+%                                                'nlfn', @(phi, z) abs(z.^(1/2.5))))};
+% mm{2}.root3 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
+%                                                 'nlfn', @(phi, z) abs(z.^(1/3))))};
+% mm{2}.root4 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
+%                                                 'nlfn', @(phi, z) z.^(1/4)))};
+% mm{2}.root5 = {MODULES.nonlinearity.mdl(struct('phi', [], ...
+%                                                'nlfn', @(phi, z) z.^(1/5)))};
+% mm{2}.rootfit = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
+%                                                  'phi', [1/2.5], ...
+%                                                  'nlfn', @(phi, z) abs(z.^(phi(1)))))};
 mm{2}.log1  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
                                                'nlfn', @(phi, z) log(z + 10^-1)))};
 mm{2}.log2  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
@@ -78,9 +80,12 @@ mm{2}.log3  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
                                                'nlfn', @(phi, z) log(z + 10^-3)))};
 mm{2}.log4  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
                                                'nlfn', @(phi, z) log(z + 10^-4)))};
-mm{2}.logfit  = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
-                                                 'phi', [-13], ...
-                                                 'nlfn', @(phi, z) log(z + exp(phi(1)))))};
+mm{2}.log5  = {MODULES.nonlinearity.mdl(struct('phi', [], ...
+                                               'nlfn', @(phi, z) log(z + 10^-5)))};
+
+% mm{2}.logfit  = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
+%                                                  'phi', [-13], ...
+%                                                  'nlfn', @(phi, z) log(z + exp(phi(1)))))};
 
 %mm{2}.volterra = {MODULES.concat_second_order_terms}; 
 %mm{2}.depress  = {MODULES.depression_filter_bank}; 
@@ -94,7 +99,7 @@ mm{3}.fir =      {MODULES.normalize_channels, ...
 %                 MODULES.normalize_channels, ...
 %                 MODULES.fir_filter.mdl(struct('num_coefs', 12, ...
 %                                               'fit_fields', {{'coefs', 'baseline'}}))};
-                                            
+
 % mm{3}.firbase =  {MODULES.normalize_channels, ...
 %                   MODULES.fir_filter.mdl(struct('num_coefs', 12, ...
 %                                                 'fit_fields', {{'coefs', 'baseline'}}))};
@@ -125,7 +130,7 @@ mm{4}.nonl = {MODULES.passthru};
 mm{4}.sig  = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
                                              'phi', [0 1 1 0], ...
                                              'nlfn', @sigmoidal))};
-m{4}.npnl = {MODULES.nonparm_nonlinearity};
+mm{4}.npnl = {MODULES.nonparm_nonlinearity};
 
 % mm{4}.exp  = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
 %                                               'phi', [1 1], ...
@@ -152,7 +157,10 @@ mm{5}.smooth = {MODULES.correlation, ...
                                               'smoothness_weight', 10^-6))};
 mm{5}.jack = {MODULES.correlation, ...
                MODULES.mean_squared_error.mdl(struct('output', 'score'))};
-
+mm{5}.twostep = {MODULES.correlation, ...
+                 MODULES.mean_squared_error.mdl(struct('output', 'score'))};
+mm{5}.threestep = {MODULES.correlation, ...
+                 MODULES.mean_squared_error.mdl(struct('output', 'score'))};
 % ------------------------------------------------------------------------
 % BUILD THE MODELS
 
@@ -211,6 +219,13 @@ for ii = 1:N_models,
         end
     end
     
+    % TODO: 
+    % The correct way to fit things is to realize that each fitter will
+    % work better in different circumstances, and there is no perfect
+    % fitting routine which works for everything. 
+    % Therefore, we simply try several fit routines, and pick the
+    % best-performing parameters found among all fit routines. 
+
     fprintf('Fitting all parameters\n');
     if strcmp(opt_names{end}, 'fmin'),
         exit_code = fit_objective('score');
@@ -223,23 +238,60 @@ for ii = 1:N_models,
         exit_code = fit_objective('score');
     elseif strcmp(opt_names{end}, 'jack')
         exit_code = fit_with_jacklsq();
+    elseif strcmp(opt_names{end}, 'twostep')
+        % Fit FIR by itself, then NL by itself
+        indexes = find_module_indexes(STACK, 'nonlinearity');
+        [firmod, firmodidx] = find_module(STACK, 'fir_filter');
+        if ~isempty(indexes) && isfield(STACK{indexes(end)}, 'fit_fields')
+            firfields = firmod.fit_fields;
+            nlfields = STACK{indexes(end)}.fit_fields;
+            % Step 1: Just FIR
+            STACK{indexes(end)}.fit_fields = {};
+            fit_objective('score');
+            fit_with_lsqcurvefit();
+            % Step 2: Just NL
+            STACK{firmodidx}.fit_fields = {};
+            STACK{indexes(end)}.fit_fields = nlfields;
+        end
+        fit_objective('score');
+        exit_code = fit_with_lsqcurvefit();
+    elseif strcmp(opt_names{end}, 'threestep')
+        % Fit FIR by itself, then NL by itself
+        indexes = find_module_indexes(STACK, 'nonlinearity');
+        [firmod, firmodidx] = find_module(STACK, 'fir_filter');
+        if ~isempty(indexes) && isfield(STACK{indexes(end)}, 'fit_fields')
+            firfields = firmod.fit_fields;
+            nlfields = STACK{indexes(end)}.fit_fields;
+            % Step 1: Just FIR
+            STACK{indexes(end)}.fit_fields = {};
+            fit_objective('score');
+            fit_with_lsqcurvefit();
+            % Step 2: Just NL
+            STACK{firmodidx}.fit_fields = {};
+            STACK{indexes(end)}.fit_fields = nlfields;
+            fit_objective('score');
+            fit_with_lsqcurvefit();
+            % Step 3: BOTH
+            STACK{firmodidx}.fit_fields = fir_fields;
+        end
+        fit_objective('score');
+        exit_code = fit_with_lsqcurvefit();
     end
     
+    % TODO: Move this to 'make_analysis_cache'
     results{ii}.score_train_corr = XXX{end}.score_train_corr;
     results{ii}.score_test_corr = XXX{end}.score_test_corr;
     results{ii}.score_train_mse = XXX{end}.score_train_mse;
     results{ii}.score_test_mse = XXX{end}.score_test_mse;
     firmod = find_module(STACK, 'fir_filter');
-    results{ii}.fir_coefs = firmod.coefs;
-    
-    % TODO: Find a 'nonlinearity' module in the stack, but start the search
-    % at a lower depth than just 1 so that it doesn't find the pre-FIR
-    % nonlinearity.
-    % results{ii}.nl_phi = STACK{find_module(STACK{3}'nonlinearity')}.phi;
+    results{ii}.fir_coefs = firmod.coefs;    
+    indexes = find_module_indexes(STACK, 'nonlinearity');
+    if ~isempty(indexes)
+        results{ii}.nl_phi = STACK{indexes(end)}.phi;
+    end
     results{ii}.fit_time = toc;
     results{ii}.n_free_params = length(pack_fittables(STACK));
-    results{ii}.exit_code = exit_code;
-    
+    results{ii}.exit_code = exit_code;    
     results{ii}.cellid = XXX{1}.cellid;
     results{ii}.training_set = XXX{1}.training_set;
     results{ii}.test_set = XXX{1}.test_set;
@@ -247,6 +299,7 @@ for ii = 1:N_models,
     results{ii}.filename     = modelfile;
     results{ii}.modelname    = modelname;
     
+    % TODO: Remove this when I'm done debugging
     XXX{1}.results_cache = results{ii};
     
     save_model_stack(modelfile, STACK, XXX);

@@ -12,6 +12,7 @@ cells = request_celldb_batch(240);
 
 % For each cell/train/test combination presented for that batch file
 for ii = 1:length(cells)
+    %ii = 1+ length(cells) - ii;
     % Test the most likely model combinations
     cellid = cells{ii}.cellid;
     training_set = cells{ii}.training_set;
@@ -20,17 +21,13 @@ for ii = 1:length(cells)
 end
 
 % Display heat maps of test and training set performance
-analysis_files = {[NARF_SAVED_ANALYSIS_PATH filesep 'por025a-b1_results.mat']};
-%, ...
-%    [NARF_SAVED_ANALYSIS_PATH filesep 'por025a-c1_results.mat']};
-%, ...
-%    [NARF_SAVED_ANALYSIS_PATH filesep 'por025a-c2_results.mat'], ...
-%    [NARF_SAVED_ANALYSIS_PATH filesep 'por025a-d1_results.mat']};
+analysis_files = dir2cell([NARF_SAVED_ANALYSIS_PATH filesep '*.mat'])
+analysis_files = cellfun(@(x) [NARF_SAVED_ANALYSIS_PATH filesep x], analysis_files, 'UniformOutput', false);
 
-plot_saved_analyses(@(c) 100*getfield(c, 'score_test_corr'), analysis_files);
-plot_saved_analyses(@(c) 100*getfield(c, 'score_train_corr'), analysis_files);
-plot_saved_analyses(@(c) getfield(c, 'fit_time'), analysis_files);
-plot_saved_analyses(@(c) getfield(c, 'exit_code'), analysis_files);
+plot_saved_analyses('Test Corr', @(c) 100*getfield(c, 'score_test_corr'), analysis_files);
+plot_saved_analyses('Train Corr', @(c) 100*getfield(c, 'score_train_corr'), analysis_files);
+plot_saved_analyses('Fit Time', @(c) getfield(c, 'fit_time'), analysis_files);
+plot_saved_analyses('Exit Code', @(c) getfield(c, 'exit_code'), analysis_files);
 
 % After the analysis has finished, you can compare models in detail with:
 % for ii = 1:length(cells)
@@ -45,13 +42,13 @@ plot_saved_analyses(@(c) getfield(c, 'exit_code'), analysis_files);
 % end
 
 % % % UNCOMMENT AND RUN THIS WHEN DEVELOPING
-% cellid = 'por025a-b1';
-% training_set = {'por025a03_p_SPN'}; 
-% test_set = {'por025a04_p_SPN'};
-% filenames = dir2cell([NARF_SAVED_MODELS_PATH filesep cellid filesep '*.mat']);
-% filenames = cellfun(@(f) [NARF_SAVED_MODELS_PATH filesep cellid filesep f], ...
-%                         filenames, 'UniformOutput', false);
-%  
-% % Careful! For some reason matlab often crashes when you compare many
-% % models together at the same time.
-% compare_models(filenames(1:5));
+cellid = 'por025a-b1';
+training_set = {'por025a03_p_SPN'}; 
+test_set = {'por025a04_p_SPN'};
+filenames = dir2cell([NARF_SAVED_MODELS_PATH filesep cellid filesep '*.mat']);
+filenames = cellfun(@(f) [NARF_SAVED_MODELS_PATH filesep cellid filesep f], ...
+                        filenames, 'UniformOutput', false);
+ 
+% Careful! For some reason matlab often crashes when you compare many
+% models together at the same time.
+compare_models(filenames(1:5));

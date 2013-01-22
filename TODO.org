@@ -1,47 +1,78 @@
-* NEXT STEPS:
-  1. [X] Jacknifing fitting routine with lsqcurvefit
-  2. [ ] Break out second part of performance plotting into a second function
-	 We need to be able to display test/train performance curves on the same plot?
-  3. [ ] Refactoring of test_likely_candidates
+* Topics for Stephen
+  1. [ ] Give me the shrinkage tutorial and mathematics
+  2. [ ] Tell me about your distributed computation system
+  
+* NEW FEATURES
+  1. [X] Try fitting FIR filter before nl, then both, and compare
+  2. [X] Make find_module return ALL modules found, in case there are multiple FIR or multiple nonlinearities
+  3. [ ] Refactor plot_saved_analysis
+	 1) [ ] Break out second part of performance plotting into a second function and make it return avg curves in case you want to  display test/train performance curves on the same plot
+  4. [ ] Refactor test_likely_candidates
 	 1) [ ] Models to test should be specified as an argument
 	 2) [ ] The recording of various data should also be specified as a separate function so it can be called by 'recache_analysis'
 	 3) [ ] Function to rebuild cached values (save cached values in XXX{1})
-  4. [ ] Refactoring of plot_saved_analysis
-  5. [ ] A plot function to display test/train info for various models, using only saved analysis file for speed
-  6. [ ] Refactor a function which extracts info from all saved files in a directory
-  7. [ ] Make find_module return ALL modules found, in case there are multiple FIR or multiple nonlinearities
-  8. [ ] Add a 'set_module_field' function (finds index, sets field, so you can mess with things later in scirpts)
-  9. [ ] Check STRFlab for how they are doing their fitting, underneath the hood. Can I call their stuff?
-  10. [ ] Try nlinfit() as an alternative to lsqcurvefit()
-  11. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
-  12. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
-  13. [ ] IRRITATION: Why doesn't a plotted signal have a legend?
-  14. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
-  15. [ ] IRRITATION: Why isn't there an 'undo' function?
-  16. [ ] IRRITATION: Why can't I resize windows?
-  17. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
-  18. [ ] IRRITATION: Why are the editable text boxes so damn small?
-  19. [ ] Make a faster IIR filter by running threshold  on signal to cut off negative values, then filter that, to allow for assymetric filters
-  20. [ ] Find that weird bug that still exists when saving/loading files
-  21. [ ] REFACTORING AS SOON AS STEPHEN/DANIELA'S ANALYSIS IS READY
-          1) Make the list of models a global, so I don't have it scattered around everywhere in my code.
-          2) Many repeated blocks of code have evolved and need to be destroyed.
-          3) Paths have become a bit messy: grep for NARF_PATH and correct (also: replace with filesep when possible)
-          4) Names probably could use some rethinking as well, especially defaults (like using 'stim' default even in the fitting algorithms, for example)
-          5) Move the 'gui' stuff to a separate global structure?
-          6) Cleaner way of building models in a script than accessing by index number?
-          7) Look for obvious repetition and make some more functions in util/
-          8) Remove/rename useless functions in util that have accumulated.
-          9) In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it be in a 3rd structure?
-          10) It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
-          11) Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?
-          12) Go through the TODO's in existing files
-          13) Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-          14) make anything named 'do_' into a method for use with modules?
-          15) make anything named 'update_' into a function used purely for its side effects
-  22. [ ] Build a non-cheating model which extracts envelopes directly from the WAV files using a prefilter
-  23. [ ] Why can't I edit the type of module in the MIDDLE of the stack with the GUI? Right now you can only use the dropdown to change the last one.
-  
+	 4) [ ] Save the best models in /auto/data
+  5. [ ] ARCHITECTURE: Fitting routines need to become generalized fns that are given models and sit in the 'fitters' directory
+	 In test_likely_candidates, all of the functions in 'fitters' are called, and the best parameter set for each model is stored
+  6. [ ] Function which applies a fn to every saved model file
+  7. [ ] Function to use analysis to rank models for each cell file.
+  8. [ ] Function to rebuild analysis caches from saved things. 
+  9. [ ] Function to plot top 5 10% chunks of values
+  10. [ ] Function to select and display top N best models for each cell
+  11. [ ] Function to save model performance graphs to disk as PNG
+  12. [ ] Function to verify that saved model and cached performance models actually match (failures could signal a bug in my saving code)
+  13. [ ] Function to 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  14. [ ] Function to record the GIT commit when the model was trained.
+  15. [ ] FITTER: Simulated annealing
+  16. [ ] FITTER: Shrinkage Fitter	 
+  17. [ ] FITTER: nlinfit()
+  18. [ ] FITTER: Boosting() 
+  19. [ ] FITTER: Conjugate boosting' algorithm, which takes steps in a single direction until the objective function stops improving.
+  20. [ ] FITTER: Import fitting routines from STRFlab
+  21. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
+  22. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  23. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
+  24. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  25. [ ] MODULE: Standardized single/multi channel gammatone filter
+  26. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  27. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
+  28. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
+  30. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+
+* END USER CONVENIENCES
+  1. [ ] Why isn't auto recalc the default?
+  2. [ ] Make logging work for the GUI by including the log space in narf_modelpane?
+  3. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
+  4. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
+  5. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
+  6. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
+  7. [ ] IRRITATION: Why isn't there an 'undo' function?
+  8. [ ] IRRITATION: Why can't I resize windows?
+  9. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
+  10. [ ] IRRITATION: Why are the editable text boxes so damn small?
+  11. [ ] IRRITATION: Why can't I edit a module type in the middle of the stack via the GUI?
+  12. [ ] Write a crash course guide on using NARF
+
+* BUG FIXES AND CLEANING
+  1) [ ] Make the list of models a global, so I don't have it scattered around everywhere in my code.
+  2) [ ] Many repeated blocks of code have evolved and need to be destroyed.
+  3) [ ] Paths have become a bit messy: grep for NARF_PATH and correct (also: replace with filesep when possible)
+  4) [ ] Names probably could use some rethinking as well, especially defaults (like using 'stim' default even in the fitting algorithms, for example)
+  5) [ ] Move the 'gui' stuff to a separate global structure?
+  6) [ ] Cleaner way of building models in a script than accessing by index number?
+  7) [ ] Look for obvious repetition and make some more functions in util/
+  8) [ ] Remove/rename useless functions in util that have accumulated.
+  9) [ ] In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it be in a 3rd structure?
+  10) [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
+  11) [ ] Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?
+  12) [ ] Go through the TODO's, FIXME's, etc in existing files
+  13) [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+  14) [ ] make anything named 'do_' into a method for use with modules?
+  15) [ ] make anything named 'update_' into a function used purely for its side effects
+  16) [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
+  17) [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
+  18) [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+
 * DESIGN QUESTIONS TO BRAINSTORM:
   1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
 	 Auto-initialization of model params is done by allowing modules to update their design based on the data by calling the optional 'auto_init' method.
@@ -50,7 +81,7 @@
   2. [X] How can jack-knifing be integrated in to the optimization routine to prevent over-fitting?
 	 Split the big long RESP and STIM vectors in fit_with_lsqcurvefit into 10 chunks
 	 Take groups of 9 of those chunks, run lsqcurvefit, then test on remaining chunk
-	 Take weighted average of all jackknifed solutions, weighting each by inverse variance?
+	 Take weighted average of all jackknifed solutions, weighting each by inverse variance? Or just mean, if we assume they all have same variance.
 	 Return weighted average.
   3. [X] How should optimization constraints be incorporated in the design?
 	 Probably the easiest way is to define a structure which may be used by pack/unpack to create upper and lower bounds, which are then passed to the optimization routine
@@ -61,46 +92,16 @@
 	 (Probably they cannot!)
   6. [ ] IF we only have one data file, how can we hold out some fraction of the stimuli so that we can to training/test on a single data file?
   7. [ ] It is awkward in non-parametric non-linearity module to recalc the phi every time you need it. Some place to cache it would be good. 
-	  
-* LATER TODO LIST
-  1. [ ] Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  2. [ ] Make inter_spike_intervals work
-  3. [ ] Try -r instead of '1/r^2" as the correlation score 
-  4. [ ] Make a faster but less general version of Stephen's IIR filter
-  5. [ ] Make bayesian_likelihood() work
-  6. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  7. [ ] Write a 'scaled boosting' algorithm, which takes a step in the direction inversely proportional to power of that channel (reweighting the channels by their power, essentially)
-  8. [ ] Get linear_fit_with_preprocessing working again (working from a WAV file, that is)
-  9. [ ] Make gammatone filter bank work like elliptic bandpass filter so interface is standard
-  10. [ ] Provide functions to cover the input space logarithmically with filters
-  11. [ ] Write a crash course guide on using NARF
-  12. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  13. [ ] Make logging work for the GUI by including the log space in narf_modelpane?
-  14. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
-  15. [ ] Write a 'conjugate boosting' algorithm, which is normal boosting but takes steps in a single direction until the objective function stops improving.
-  16. [ ] Write several different performance metric functions: MSE and a point-process fit
-  17. [ ] Write a jack-knifing optimization which can work with any of the optimization modules 
-  18. [ ] Single channel gammatone filter (for speed, once sensitivity has been identified)
-  19. [ ] Add a method to "save analysis", connecting the stimfile train/test sets, model structure and params, optimization method, and GIT code hash number all together in a single, savable structure.
-  20. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
-  21. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound?
-  22. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
-  23. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
-  24. [ ] Suggest an improvement: Use BAPHY to cache intermediate values, and store results
+  8. [ ] There is no best fitting routine, only fitting routines which work better for different cells
+  9. [ ] Can jackknifing or the equivalent be applied to ANY fitting routine as a higher level function?
 	  
 * LUXURY, UNESSENTIAL TODO ITEMS 
-  - [ ] Make raw/stimulus response have two dropdowns to pick out colorbar thresholds for easier visualization
-  - [ ] Add a filter that processess phase information from a stimulus, not just the magnitude
+  - [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
+  - [ ] Make gui plot functions response have two dropdowns to pick out colorbar thresholds for easier visualization?
+  - [ ] MODULE: Add a filter that processess phase information from a stimulus, not just the magnitude
   - [ ] Write a function which swaps out the STACK into the BACKGROUND so you can 'hold' a model as a reference and play around with other settings, and see the results graphically by switching back and forth.
-  - [ ] Write dbchoosecellfiles()
-  - [ ] Use inter_curve_v3 to interactively make FIR things
-  - [ ] Try adding color to histograms and scatter plots
+  - [ ] Write dbchoosecellfiles() and connect it to NARF_MODELPANE
+  - [ ] Try adding informative color to histograms and scatter plots
   - [ ] Try improving contrast of various intensity plots
-  - [ ] Add BIC or AIC to model comparison data
-  - [ ] Optimization report card and status information logged
-  - [ ] Rank model fits and plot correlations
-  - [ ] New training method:
-	1. Search for coefficients from a spanning filter bank
-        2. Find the signal contributing most (using the FIR coefficients)
-	3. Do a second filter bank that is only an octave wide, with the signal in the center, to get more substructure
-	   
+  - [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
+  - [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound
