@@ -59,6 +59,26 @@ heatmap(M, xlabs, ylabs, '%2.0f', 'TickAngle', 90,...
 set(gca,'Position',[.05 .2 .9 .75])
 title(sprintf('Heat Map: %s', thetitle));
 
+% Make another figure with models ranked by average performance
+M2 = nanmean(M, 1);
+Mc = num2cell(M2');
+
+for ii = 1:length(Mc);
+    Mc{ii} = {Mc{ii}, xlabs{ii}, {M(:, ii)}};
+end
+
+[vals,order] = sort(cellfun(@(v) v{1}, Mc));
+sortedM = Mc(order);
+sxl = cellfun(@(v) v{2}, sortedM, 'UniformOutput', false);
+sM = cellfun(@(v) v{3}, sortedM);
+sM = cat(2, sM{:});
+figure; clf;
+heatmap(sM, sxl, ylabs, '%2.0f', 'TickAngle', 90,...
+        'ShowAllTicks', true, 'TickFontSize', 6);
+set(gca,'Position',[.05 .2 .9 .75])
+title(sprintf('Heat Map: %s, sorted by column nanmean()', thetitle));
+
+
 % Also, display a performance plot for each model token
 tokens = cellfun(@(l) regexp(l, '(.*?)(?:_|$)', 'tokens'), xlabs, 'UniformOutput', false);
 tokens = cat(1, tokens{:});

@@ -11,8 +11,7 @@ MODULES = scan_directory_for_modules();
 cells = request_celldb_batch(240);
 
 % For each cell/train/test combination presented for that batch file
-for ii = 1:length(cells)
-    %ii = 1+ length(cells) - ii;
+for ii = 1:length(cells)   
     % Test the most likely model combinations
     cellid = cells{ii}.cellid;
     training_set = cells{ii}.training_set;
@@ -40,6 +39,9 @@ plot_saved_analyses('Exit Code', @(c) getfield(c, 'exit_code'), analysis_files);
 %                             filenames, 'UniformOutput', false);
 %     compare_models(filenames);
 % end
+
+% Display the top 5 models for a cell
+
 
 % % % UNCOMMENT AND RUN THIS WHEN DEVELOPING
 cellid = 'por025a-b1';

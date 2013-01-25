@@ -1,43 +1,50 @@
 * Topics for Stephen
-  1. [ ] Give me the shrinkage tutorial and mathematics
-  2. [ ] Tell me about your distributed computation system
+  1. [ ] Need a shrinkage tutorial and mathematics
+  2. [ ] Need to start using your distributed computation system
   
 * NEW FEATURES
   1. [X] Try fitting FIR filter before nl, then both, and compare
   2. [X] Make find_module return ALL modules found, in case there are multiple FIR or multiple nonlinearities
-  3. [ ] Refactor plot_saved_analysis
+  3. [ ] Collapse models vertically, 
+  4. [ ] Function to save top five models as PNGs
+	 set(gcf, 'Position', [100 100 500 500], 'Color', 'w')
+	 x=0:0.01:10;
+	 plot(x, sin(x))
+	 set(gca, 'FontSize, 20, 'FontName', 'Arial')
+	 export_fig 'strip-diff-far-forward.png' -painters -nocrop
+  5. [ ] Refactor plot_saved_analysis
 	 1) [ ] Break out second part of performance plotting into a second function and make it return avg curves in case you want to  display test/train performance curves on the same plot
-  4. [ ] Refactor test_likely_candidates
+  6. [ ] Refactor test_likely_candidates
 	 1) [ ] Models to test should be specified as an argument
 	 2) [ ] The recording of various data should also be specified as a separate function so it can be called by 'recache_analysis'
 	 3) [ ] Function to rebuild cached values (save cached values in XXX{1})
 	 4) [ ] Save the best models in /auto/data
-  5. [ ] ARCHITECTURE: Fitting routines need to become generalized fns that are given models and sit in the 'fitters' directory
+  7. [ ] ARCHITECTURE: Fitting routines need to become generalized fns that are given models and sit in the 'fitters' directory
 	 In test_likely_candidates, all of the functions in 'fitters' are called, and the best parameter set for each model is stored
-  6. [ ] Function which applies a fn to every saved model file
-  7. [ ] Function to use analysis to rank models for each cell file.
-  8. [ ] Function to rebuild analysis caches from saved things. 
-  9. [ ] Function to plot top 5 10% chunks of values
-  10. [ ] Function to select and display top N best models for each cell
-  11. [ ] Function to save model performance graphs to disk as PNG
-  12. [ ] Function to verify that saved model and cached performance models actually match (failures could signal a bug in my saving code)
-  13. [ ] Function to 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
-  14. [ ] Function to record the GIT commit when the model was trained.
-  15. [ ] FITTER: Simulated annealing
-  16. [ ] FITTER: Shrinkage Fitter	 
-  17. [ ] FITTER: nlinfit()
-  18. [ ] FITTER: Boosting() 
-  19. [ ] FITTER: Conjugate boosting' algorithm, which takes steps in a single direction until the objective function stops improving.
-  20. [ ] FITTER: Import fitting routines from STRFlab
-  21. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
-  22. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  23. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
-  24. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  25. [ ] MODULE: Standardized single/multi channel gammatone filter
-  26. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  27. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
-  28. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
-  30. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  8. [ ] Function which applies a fn to every saved model file
+  9. [ ] Function to use analysis to rank models for each cell file.
+  10. [ ] Function to rebuild analysis caches from saved things. 
+  11. [ ] Function to plot top 5 10% chunks of values
+  12. [ ] Function to select and display top N best models for each cell
+  13. [ ] Function to save model performance graphs to disk as PNG
+  14. [ ] Function to verify that saved model and cached performance models actually match (failures could signal a bug in my saving code)
+  15. [ ] Function to 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  16. [ ] Function to record the GIT commit when the model was trained.
+  17. [ ] FITTER: Simulated annealing
+  18. [ ] FITTER: Shrinkage Fitter	 
+  19. [ ] FITTER: nlinfit() (maybe we don't know the stim as well as we think)
+  20. [ ] FITTER: Boosting() 
+  21. [ ] FITTER: Conjugate boosting' algorithm, which takes steps in a single direction until the objective function stops improving.
+  22. [ ] FITTER: Import fitting routines from STRFlab
+  23. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
+  24. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  25. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
+  26. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  27. [ ] MODULE: Standardized single/multi channel gammatone filter
+  28. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  29. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
+  30. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
+  31. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
 
 * END USER CONVENIENCES
   1. [ ] Why isn't auto recalc the default?
