@@ -6,7 +6,7 @@ function tsp_fit(cellid)
 
 if ~exist('dbgetscellfile','file'), baphy_set_path; end
 if ~exist('fir_filter','file'), narf_set_path; end
-global NARF_PATH STACK XXX;
+global NARF_PATH STACK XXX META;
 
 close all
 
@@ -100,7 +100,7 @@ append_module(mdls.fir_filter.mdl(struct('num_coefs',10,...
 append_module(mdls.correlation);
 
 %filename = sprintf('%s/%s_all_xccorefet.mat', savepath, cellid);
-%save_model_stack(filename, STACK, XXX);
+%save_model(filename, STACK, XXX, META);
 
 % re-fit fir filter using least-square
 firmodidx = 3; % find_module(STACK, 'fir_filter');
@@ -131,7 +131,7 @@ STACK{5} = mdls.nonparm_nonlinearity.auto_init(STACK,XXX);
 STACK{6} = mdls.correlation;
 
 filename = sprintf('%s/%s_all.mat', savepath, cellid);
-save_model_stack(filename, STACK, XXX);
+save_model(filename, STACK, XXX, META);
 
 % Now train the model again on each respfile individually, holding the
 % depression and FIR coefficients free and letting the nonlinearity slide
@@ -154,7 +154,7 @@ for rfi = 2:filecount,
     %fit_with_lsqcurvefit();
     
     filename = sprintf('%s/%s_%s.mat', savepath, cellid, rf);
-    save_model_stack(filename, STACK, XXX);
+    save_model(filename, STACK, XXX, META);
     
     % save some results for plotting
     x=linspace(linpredmin,linpredmax,nlbins)';

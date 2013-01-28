@@ -1,7 +1,7 @@
 function [M, xlabs, ylabs] = plot_saved_analyses(thetitle, thefn, analysis_files)
 % Plot a heat map of every saved analysis file given as an argument
 % The value of the heat map is equal to the return value of THEFN, which is
-% applied to each element of the 'results' cell array. Assumes that the
+% applied to each element of the 'summary' cell array. Assumes that the
 % value of THEFN is a number between 0 and 100, such as 100/r^2, where r is
 % the correlation coefficient.
 % 
@@ -15,16 +15,16 @@ function [M, xlabs, ylabs] = plot_saved_analyses(thetitle, thefn, analysis_files
 
 H = []; % A big struct of structs to save data in
 
-% Put all analysis results into a big struct array
+% Put all analysis summaries into a big struct array
 for ii = 1:length(analysis_files);
     af = analysis_files{ii};
     
-    % Load the results of the analysis
-    results = getfield(load(af, 'results'), 'results');
+    % Load the summary of the analysis
+    summary = getfield(load(af, 'summary'), 'summary');
     
-    % Rip out all the analysis results and store them in the big struct
-    for ii = 1:length(results)
-        res = results{ii};
+    % Rip out all the analysis summaries and store them in the big struct
+    for ii = 1:length(summary)
+        res = summary{ii};
         if isempty(res) 
             continue;
         end
@@ -33,6 +33,7 @@ for ii = 1:length(analysis_files);
         H.(cellid).(modelname) = thefn(res);
     end
 end
+
 
 % Convert the struct of structs into a sorted matrix and sorted labels
 ylabs = sort(fieldnames(H));
@@ -58,6 +59,7 @@ heatmap(M, xlabs, ylabs, '%2.0f', 'TickAngle', 90,...
         'ShowAllTicks', true, 'TickFontSize', 6);
 set(gca,'Position',[.05 .2 .9 .75])
 title(sprintf('Heat Map: %s', thetitle));
+
 
 % Make another figure with models ranked by average performance
 M2 = nanmean(M, 1);

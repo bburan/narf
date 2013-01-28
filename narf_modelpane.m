@@ -30,7 +30,7 @@ function refresh_modelpane = narf_modelpane(parent_handle, modules)
 % everything then has to be shifted around in the positive spaces as the
 % number of module blocks changes.
 
-global STACK XXX NARF_PATH NARF_SAVED_MODELS_PATH;
+global STACK XXX META NARF_PATH NARF_SAVED_MODELS_PATH;
 
 pos = get(parent_handle, 'Position');
 w = pos(3); % Width of the parent panel
@@ -396,20 +396,20 @@ function del_mod_block()
     
 end
 
-function save_model_stack_callback (a, b, c)
+function save_model_callback (a, b, c)
     [filename, pathname] = uiputfile({[NARF_SAVED_MODELS_PATH '/*.mat']}, ...
                                      'Save Model Stack As');
 	if ~isempty(filename)                                 
-        save_model_stack([pathname filesep filename], STACK, XXX);
+        save_model([pathname filesep filename], STACK, XXX);
     end
 end
 
-function load_model_stack_callback (a, b, c)
+function load_model_callback (a, b, c)
     [filename, pathname] = uigetfile({[NARF_SAVED_MODELS_PATH '/*.mat']}, ...
                                      'Select Model Stack');
 	if ~isequal(filename, 0)
         delete_all_module_guis();
-        load_model_stack([pathname filesep filename]);
+        load_model([pathname filesep filename]);
         recalc_xxx(1);
         rebuild_gui_from_stack();
     end
@@ -433,13 +433,13 @@ handles.save_model_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Save Module Stack', ...
     'Units', 'pixels', 'Position', [350 5 140 25], ...
-    'Callback', @save_model_stack_callback);
+    'Callback', @save_model_callback);
 
 handles.load_model_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Load Module Stack', ...
     'Units', 'pixels', 'Position', [500 5 140 25], ...
-    'Callback', @load_model_stack_callback);
+    'Callback', @load_model_callback);
 
 function update_any_changed_tables_and_recalc()
     first_fit_depth = 1;

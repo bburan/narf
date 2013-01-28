@@ -1,11 +1,12 @@
-function compare_models(filenames) 
+function fig = compare_models(filenames) 
 % Given a cell array of file names, display a dense summary of information
 % about each one in a scrollable window.  Not very general yet; right now,
 % it simply plots:
 %    1. The default plot of the module in STACK{2}
 %    2. The first FIR filter coefs that it finds.
 %    3. The default plot of the module immediately after the FIR filter
-% Remember that filenames must be the FULL PATH TO THE FILES
+% Remember that filenames must be the FULL PATH TO THE FILES.
+% Returns the figure handle to the window displayed.
 
 global STACK XXX NARF_SAVED_MODELS_PATH;
 
@@ -48,7 +49,7 @@ for ii = 1:length(filenames)
     % load the model STACK and XXX{1} and extract needed info
     f = filenames{ii};
     load_model_stack(f);
-    f = regexprep(f, [NARF_SAVED_MODELS_PATH filesep], ''); % Remove redundant prefix
+    f = regexprep(f, [NARF_SAVED_MODELS_PATH filesep], ''); % Remove redundant prefix just for printing
     
     recalc_xxx(1);
     [firmod, firmod_idx] = find_module(STACK, 'fir_filter');
@@ -127,29 +128,31 @@ scr = uicontrol('Parent', fig, 'Style','slider', 'Units', 'pixels', ...
       
 scroll_callback(scr, [], []);
 
-% ----------------------
-% Also, show the test/train curves
-figure;
-plot(1:length(filenames), score(:,1), ...
-     1:length(filenames), score(:,3));
-xticks(1:length(filenames));
+% % ----------------------
+% % % Also, show the test/train curves
+% fh_tt = figure;
+% plot(1:length(filenames), score(:,1), ...
+%      1:length(filenames), score(:,3));
+% xticks(1:length(filenames));
+% 
+% % label the x axis with filenames at a 90 degree angle
+% lab = char(sorted_filenames);
+% hx = get(gca,'XLabel');
+% set(hx, 'Units', 'data');
+% pos = get(hx, 'Position');
+% 
+% for ii = 1:size(lab,1)
+%     t(ii) = text(ii, pos(2), lab(ii,:), 'Interpreter', 'none');
+% end
+% 
+% P=get(gca,'Position');
+% set(t, 'Rotation', 90, 'HorizontalAlignment', 'right') 
+% set(gca, 'Position', [0.1300    0.4100    0.7750    0.5150])
+% 
+% legend('Test Score', 'Training Score', 'Location', 'NorthWest');
+% 
+% title(filenames{1}, 'Interpreter', 'none');
 
-% label the x axis with filenames at a 90 degree angle
-lab = char(sorted_filenames);
-hx = get(gca,'XLabel');
-set(hx, 'Units', 'data');
-pos = get(hx, 'Position');
-
-for ii = 1:size(lab,1)
-    t(ii) = text(ii, pos(2), lab(ii,:), 'Interpreter', 'none');
-end
-
-P=get(gca,'Position');
-set(t, 'Rotation', 90, 'HorizontalAlignment', 'right') 
-set(gca, 'Position', [0.1300    0.4100    0.7750    0.5150])
-
-legend('Test Score', 'Training Score', 'Location', 'NorthWest');
-
-title(filenames{1}, 'Interpreter', 'none');
-
+% fh1 = fig;
+% fh2 = fh_tt;
 end

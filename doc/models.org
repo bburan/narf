@@ -45,11 +45,17 @@ OBSERVATIONS ON VARIOUS MODELS
   1) Fit each element independently before doing the global final fit (could be done in auto-init)
   2) Bayesian likelihood fits
    
-
 * Nonlinearities (Jan 22, 2013)
   Needs to be examined. 
   
-   
-
-
-
+* UPDATE (Jan 25, 2013)
+  COMPRESSORS: Seems like Log1, log2, log3, log4 pretty much span the input range across 30 cells.
+  FITTERS: fminlsq is the overall winner. Multi-step approaches did not help.
+  LEVEL SHIFTING, LACK OF ATTENTION, OR MY EYE PLAYING TRICKS ON ME?: I swear to god that in many of these sound files, in stimulus #1, the very first edge (right after the sound begins) looks like it not neurally tracked like the others.
+  FIR: Probably I should put fitting the FIR baseline back in, since it looks like it helps in many cases to clean up the filter visually.
+** Why we can't pick the model with the best test set fit:
+   Each fitting method will still have some 'noise' in the parameters
+   Choosing a fitting method will choose one set of noise over another
+   If we do ANY selection of model parameters based on TEST SET performance, we are picking a set of noise and that is a no-no
+   However, we could of course pick the model with the best TRAINING SET performance, that would be fine.
+  

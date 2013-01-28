@@ -5,46 +5,50 @@
 * NEW FEATURES
   1. [X] Try fitting FIR filter before nl, then both, and compare
   2. [X] Make find_module return ALL modules found, in case there are multiple FIR or multiple nonlinearities
-  3. [ ] Collapse models vertically, 
-  4. [ ] Function to save top five models as PNGs
-	 set(gcf, 'Position', [100 100 500 500], 'Color', 'w')
-	 x=0:0.01:10;
-	 plot(x, sin(x))
-	 set(gca, 'FontSize, 20, 'FontName', 'Arial')
-	 export_fig 'strip-diff-far-forward.png' -painters -nocrop
-  5. [ ] Refactor plot_saved_analysis
-	 1) [ ] Break out second part of performance plotting into a second function and make it return avg curves in case you want to  display test/train performance curves on the same plot
-  6. [ ] Refactor test_likely_candidates
-	 1) [ ] Models to test should be specified as an argument
-	 2) [ ] The recording of various data should also be specified as a separate function so it can be called by 'recache_analysis'
-	 3) [ ] Function to rebuild cached values (save cached values in XXX{1})
-	 4) [ ] Save the best models in /auto/data
-  7. [ ] ARCHITECTURE: Fitting routines need to become generalized fns that are given models and sit in the 'fitters' directory
-	 In test_likely_candidates, all of the functions in 'fitters' are called, and the best parameter set for each model is stored
-  8. [ ] Function which applies a fn to every saved model file
-  9. [ ] Function to use analysis to rank models for each cell file.
-  10. [ ] Function to rebuild analysis caches from saved things. 
-  11. [ ] Function to plot top 5 10% chunks of values
-  12. [ ] Function to select and display top N best models for each cell
-  13. [ ] Function to save model performance graphs to disk as PNG
-  14. [ ] Function to verify that saved model and cached performance models actually match (failures could signal a bug in my saving code)
-  15. [ ] Function to 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
-  16. [ ] Function to record the GIT commit when the model was trained.
-  17. [ ] FITTER: Simulated annealing
-  18. [ ] FITTER: Shrinkage Fitter	 
-  19. [ ] FITTER: nlinfit() (maybe we don't know the stim as well as we think)
-  20. [ ] FITTER: Boosting() 
-  21. [ ] FITTER: Conjugate boosting' algorithm, which takes steps in a single direction until the objective function stops improving.
-  22. [ ] FITTER: Import fitting routines from STRFlab
-  23. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
-  24. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  25. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
-  26. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  27. [ ] MODULE: Standardized single/multi channel gammatone filter
-  28. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  29. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
-  30. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
-  31. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  3. [X] Collapse models vertically
+  4. [X] Function to select and display top N best models for each cell
+  5. [X] Function to save top five models for each cellid as PNGs
+  6. [X] Function to use analysis to rank models for each cell file.
+  7. [X] Function to save model performance graphs to disk as PNG
+  8. [X] Refactor plot_saved_analysis
+	 1) [X] Break out second part of performance plotting into a second function and make it return avg curves in case you want to  display test/train performance curves on the same plot
+  9. [X] Refactor test_likely_candidates
+	 1) [X] Models to test should be specified as an argument
+	 2) [X] The recording of various data should also be specified as a separate function so it can be called by 'recache_analysis'
+	 3) [X] Function to rebuild cached values (save cached values in XXX{1})
+  10. [X] ARCHITECTURE: Fitting routines need to become generalized fns that are somehow attached to models and sit in the 'fitters' directory
+  11. [X] Function to rebuild analysis caches from saved things. 
+  12. [X] Add a META global which provides a location to store information about the model (metadata) 
+	  - Records the model name, sans cellid and 
+	  - Records the model file name (sans path)
+	  - Records the full model file path
+	  - Records what optimization method was taken
+	  - Records optimization exit codes
+	  - Records how long the optimization took
+  13. [ ] Try training a model across two data sets before fitting it
+  14. [ ] Replace all the 'true' and 'false' arguments with textual flags and vargin that are more descriptive
+  15. [ ] Change path of models to be in /auto/data by default?
+  16. [ ] Scatter plot of training score / test score data for every model. (Am I overfitting? Is there a peak?)
+  17. [ ] SHELL SCRIPT: Start up 6 instances of headless matlab, and start them on an analysis
+  18. [ ] Function which applies a fn to every saved model file for a given cellid
+  19. [ ] Function to record the GIT commit when the model was trained.
+  20. [ ] Function to 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  21. [ ] FITTER: Fit FIR BEFORE THE NL IS ATTACHED
+  22. [ ] FITTER: Simulated annealing
+  23. [ ] FITTER: Shrinkage Fitter	 
+  24. [ ] FITTER: nlinfit() (maybe we don't know the stim as well as we think)
+  25. [ ] FITTER: Boosting() 
+  26. [ ] FITTER: Conjugate boosting' algorithm, which takes steps in a single direction until the objective function stops improving.
+  27. [ ] FITTER: Import fitting routines from STRFlab
+  28. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
+  29. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  30. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
+  31. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  32. [ ] MODULE: Standardized single/multi channel gammatone filter
+  33. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  34. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
+  35. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
+  36. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
 
 * END USER CONVENIENCES
   1. [ ] Why isn't auto recalc the default?
@@ -88,7 +92,7 @@
   2. [X] How can jack-knifing be integrated in to the optimization routine to prevent over-fitting?
 	 Split the big long RESP and STIM vectors in fit_with_lsqcurvefit into 10 chunks
 	 Take groups of 9 of those chunks, run lsqcurvefit, then test on remaining chunk
-	 Take weighted average of all jackknifed solutions, weighting each by inverse variance? Or just mean, if we assume they all have same variance.
+	 Take weighted average of all jackknifed solutions, weighting each by inverse variance? Or just mean, if we assume they all have same variance?
 	 Return weighted average.
   3. [X] How should optimization constraints be incorporated in the design?
 	 Probably the easiest way is to define a structure which may be used by pack/unpack to create upper and lower bounds, which are then passed to the optimization routine
@@ -100,7 +104,17 @@
   6. [ ] IF we only have one data file, how can we hold out some fraction of the stimuli so that we can to training/test on a single data file?
   7. [ ] It is awkward in non-parametric non-linearity module to recalc the phi every time you need it. Some place to cache it would be good. 
   8. [ ] There is no best fitting routine, only fitting routines which work better for different cells
-  9. [ ] Can jackknifing or the equivalent be applied to ANY fitting routine as a higher level function?
+  9. [ ] Can jackknifing or the equivalent be applied to ANY fitting routine as a higher level function
+  10. [X] There needs to be a place to store information about a whole model. 
+	  For example, 'model name' and 'fitter' are two examples of fields that don't really belong in a module.
+	  Right now there is nowhere to put these.
+  11. [ ] Right now, it's very convenient to be able to have the 'fitter' and 'score' quantity to be in modules
+	  I can plug in all the module groups and let the fitter run. I can compare different fit routines automatically.
+	  However, a fitter is not really part of a module, it's part of a whole model.
+	  Therefore, in the future, the fitter and score quantity should be stored in the model META structure.
+	  Why should this be done instead of leaving it in the STACK?
+	  (Because we may want to try multiple fit routines, and pick the model with the best training score?)
+	  (?)	  
 	  
 * LUXURY, UNESSENTIAL TODO ITEMS 
   - [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
