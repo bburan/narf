@@ -48,7 +48,7 @@ for ii = 1:length(filenames)
     
     % load the model STACK and XXX{1} and extract needed info
     f = filenames{ii};
-    load_model_stack(f);
+    load_model(f);
     f = regexprep(f, [NARF_SAVED_MODELS_PATH filesep], ''); % Remove redundant prefix just for printing
     
     recalc_xxx(1);

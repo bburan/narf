@@ -21,7 +21,7 @@ global STACK XXX META MODULES...
     NARF_SAVED_MODELS_PATH ...
     NARF_SAVED_ANALYSIS_PATH;
 
-if nargin < 4
+if nargin < 5
     skipexisting = true;
 end
 
@@ -29,12 +29,13 @@ if isempty(MODULES)
     MODULES = scan_directory_for_modules(NARF_MODULES_PATH);
 end
 
-opts = cellfun(@fieldnames, mm, 'UniformOutput', false);
-N_opts = cellfun(@(m) length(fieldnames(m)), mm);
-N_models = prod(N_opts);
+[models, modelnames] = module_combinations(mm);
+N_models = length(models);
+
 fprintf('Number of models to be fit %d\n', N_models); 
 
 summary = cell(N_models, 1);
+
 mkdir([NARF_SAVED_MODELS_PATH filesep cellid]);
 analysis_file = [NARF_SAVED_ANALYSIS_PATH filesep cellid '_summary.mat'];
 
@@ -53,47 +54,34 @@ for ii = 1:N_models,
     
     tic;
     
-    % Behold matlab's ugliness for destructuring binds!
-    [i1 i2 i3 i4 i5 i6 i7 i8 i9] = ind2sub(N_opts, ii);
-    indexes = [i1 i2 i3 i4 i5 i6 i7 i8 i9];
-    
-    % Build the model name
-    opt_names = arrayfun(@(gi, ind) opts{gi}{ind}, ...
-        1:length(opts), indexes(1:length(opts)), ...
-        'UniformOutput', false);
-    blocks = cellfun(@getfield, mm, opt_names, 'UniformOutput', false);
-    tmp = cellfun(@(n) sprintf('%s_', n), opt_names, 'UniformOutput', false);
-    modelname = strcat(tmp{:});
-
-    META.modelname = modelname(1:end-1); % Remove redundant extra underscore
-    META.modelfile = [cellid '_' modelname '_' strcat(training_set{:}) '.mat'];
+    META.modelname = modelnames{ii};
+    META.modelfile = [cellid '_' modelnames{ii} '_' strcat(training_set{:}) '.mat'];
     META.modelpath = [NARF_SAVED_MODELS_PATH filesep cellid filesep META.modelfile];
     
-    fprintf('MODEL [%d/%d]: %s\n', ii, N_models, modelname);
+    fprintf('MODEL [%d/%d]: %s\n', ii, N_models, modelnames{ii});
     
     % If the model savefile exists and we aren't skipping, don't fit
-    if skipexisting && exist(modelfile, 'file') == 2
+    if skipexisting && exist(META.modelfile, 'file') == 2
         fprintf('Skipping because model file exists.\n');
         continue;
     end
-    
+      
     % Append modules from each block one at a time
-    for jj = 1:length(blocks),
-        fprintf('Auto-initalizing module [%d/%d]\n', jj, length(blocks));
-        for kk = 1:length(blocks{jj})
-            append_module(blocks{jj}{kk}); % Calls auto_init for each
-        end
+    model = models{ii};
+    for jj = 1:length(model),
+        fprintf('Auto-initalizing module [%d/%d]\n', jj, length(model));
+        append_module(model{jj}); % Calls auto_init for each
     end
     
     % Fit the model using whatever optimization routine it has
     cormod = find_module(STACK, 'correlation');
     META.exit_code = cormod.fitter();
-    META.fit_time = toc;
     META.fitter = func2str(cormod.fitter);
+    META.fit_time = toc;
     
     summary{ii} = summarize_model();
     
-    save_model(modelfile, STACK, XXX, META);
+    save_model(META.modelpath, STACK, XXX, META);
     
     save(analysis_file, 'summary');
 end

@@ -1,5 +1,6 @@
 function fh = plot_best_models(cellid, n, savetodisk, sortfield)
-% Uses compare_models() to view the best-performing models. 
+% Uses compare_models() to view the best-performing models. Assumes that a
+% cellid summary file has been built already. 
 % 
 % ARGUMENTS:
 %    CELLID     Self-explanatory
@@ -48,9 +49,9 @@ sr = sort_by_field(smry, sortfield);
 
 best = sr(max(1, end-n+1):end);
 
-filenames = extract_field(best, 'modelname');
+filepaths = extract_field(best, 'modelpath');
 
-fh = compare_models(filenames);
+fh = compare_models(filepaths);
 pngfile = [NARF_SAVED_ANALYSIS_PATH filesep cellid '.png'];
 if savetodisk
     set(gcf,'PaperPositionMode','auto');

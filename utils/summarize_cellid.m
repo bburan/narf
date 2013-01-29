@@ -1,7 +1,7 @@
-function cache_summaries(cellid, skip_existing)
+function summarize_cellid(cellid, skip_existing)
 % Scans 'NARF_SAVED_MODELS_PATH/cellid/*.mat' for any model files.
 % Loads the models, rebuilds the XXX path all the way through, and 
-% caches quantities which are applicable to analysis in a 'model summary'
+% caches quantities which are applicable to analysis in a 'cellid summary'
 % file, which is stored as 'NARF_SAVED_ANALYSIS_PATH/cellid_summary.mat'.
 %
 % This is basically a way to build a cache so that later analyses can be
@@ -12,7 +12,7 @@ function cache_summaries(cellid, skip_existing)
 %     SKIP_EXISTING   When true, filenames already in the analysis file are
 %                     not loaded, allowing a cache to be rebuilt very 
 %                     quickly to only include new models not yet cached.
-%                     Defaults to false.
+%                     Defaults to false (i.e. builds summary from scratch)
 
 global NARF_SAVED_MODELS_PATH NARF_SAVED_ANALYSIS_PATH;
 
@@ -37,7 +37,7 @@ for ii = 1:length(modelfiles)
     mf = modelfiles{ii};
     mp = modelpaths{ii};
     fprintf('Loading model file %s\n', mf);
-    load_model_stack(mp);
+    load_model(mp);
     summary{ii} = summarize_model();
 end
 

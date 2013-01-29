@@ -18,3 +18,6 @@ end
 % Save to disk
 xxx = xxx{1};
 save(filename, 'stack', 'xxx', 'meta');
+
+% Change the file to be read-only so you don't accidentally alter it later
+unix(['chmod 444 ' filename]);

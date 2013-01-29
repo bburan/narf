@@ -3,11 +3,8 @@ function s = summarize_model()
 % This function is often used to build an analysis summary cache file so 
 % that the performance and coefficients of many models may be compared
 % quickly without having to open each file each time.
-%
-% Iterates through the model, pulls out parameters that were fit, and 
-% stores them in a structure for comparison of different fits.
 
-global STACK XXX META;
+global STACK XXX META NARF_PATH;
 
 if length(STACK) > length(XXX)
     recalc_xxx(1);
@@ -44,3 +41,24 @@ s.modelpath   = META.modelpath;
 s.fit_time    = META.fit_time;
 s.fitter      = META.fitter;
 s.exit_code   = META.exit_code;
+
+% Complain and throw an error if GIT detects outstanding changes.
+git = ['git --git-dir=''' NARF_PATH '.git'' ' ...
+           '--work-tree=''' NARF_PATH ' '];
+
+[unix_ret_value, unix_string] = unix([git 'diff-files --quiet HEAD']);
+
+if unix_ret_value ~= 0 
+    error(sprintf(['\n\n--------------------------------------------------\n' ...
+           'ERROR: Unstaged or uncommited changes to NARF detected! \n' ...
+           'This is not allowed! We need to store the git commit hash\n' ...
+           'to properly mark when a model was fit, and in what exact manner.\n' ...
+           'Please commit your changes and try again. Local commits are fine.\n' ...
+           '(There is no need to commit your changes to the public repository yet.)\n' ...
+           '--------------------------------------------------\n']));
+end
+
+% Otherwise, store the git commit hash
+cmd = [git 'rev-parse HEAD'];
+[unix_ret_value, unix_string] = unix(cmd);
+s.git_commit  = regexprep(unix_string, '\n', '');

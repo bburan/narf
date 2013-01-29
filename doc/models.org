@@ -21,10 +21,13 @@ OBSERVATIONS ON VARIOUS MODELS
   Hypotheses:
   1) Log compressors are beating the nth-root ones because they predict a nonzero firing rate even when there is no stimulus. 
 
-  Future Experiments: 
+  Future Experimental Options:
   1) Define a sqrt compressor with a nonzero firing rate for no stimulus. Phi = [zerorate, exponent]
+     -> Decided it's a waste of time. Established scientific theory already says that we aren't really expecting this nonlinearity. 
   2) Define a logarithmic compressor which uses base 2, 3, 4, 5, 6 instead of e. Phi = [zerorate, exponent] 
+     -> Decided not necessary, since FIR scaling can effectively transform one log base into another. They only differ by a constant factor. Remember: Log_a (x) / log_a(b) = log_b (x)
   3) Try a sigmoidal compressor to account for firing rate saturation. 
+     -> TODO
 * Fitting Routines (Jan 22, 2013)
   There is no "Best Fitting Routine", there are only fitting routines that work better in some circumstances than others.
 
