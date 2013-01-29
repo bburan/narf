@@ -24,10 +24,10 @@ mm{6} = module_groups('mse');      % The only option right now is to fit using M
     % Technically fit_models builds a cache already, but when continuing
     % an analysis after debugging or coding, it helps to rebuild the cache
     % with the following:
-    summarize_cellid(cells{ii}.cellid, true); 
+    %summarize_cellid(cells{ii}.cellid, true); 
     
     % Generate PNGs showing the top 5 models for each cellid.
-    plot_best_models(cells{ii}.cellid, 5, true);
+    %plot_best_models(cells{ii}.cellid, 5, true);
 end
 
 % Finally, display and save heat maps of test and training set performance.

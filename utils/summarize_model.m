@@ -43,12 +43,13 @@ s.fitter      = META.fitter;
 s.exit_code   = META.exit_code;
 
 % Complain and throw an error if GIT detects outstanding changes.
-git = ['git --git-dir=''' NARF_PATH '.git'' ' ...
-           '--work-tree=''' NARF_PATH ' '];
+git = ['git --git-dir=' NARF_PATH '/.git ' ...
+           '--work-tree=' NARF_PATH ' '];
 
-[unix_ret_value, unix_string] = unix([git 'diff-files --quiet HEAD']);
+[unix_ret_value, unix_string] = unix([git 'diff-files --quiet']);
 
 if unix_ret_value ~= 0 
+    fprintf('CMD:%s\n', [git 'diff-files --quiet']);
     error(sprintf(['\n\n--------------------------------------------------\n' ...
            'ERROR: Unstaged or uncommited changes to NARF detected! \n' ...
            'This is not allowed! We need to store the git commit hash\n' ...
