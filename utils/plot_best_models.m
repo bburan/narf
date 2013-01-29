@@ -1,4 +1,4 @@
-function fh = plot_best_models(cellid, n, savetodisk, sortfield)
+function fh = plot_best_models(cellid, summaries, n, savetodisk, sortfield)
 % Uses compare_models() to view the best-performing models. Assumes that a
 % cellid summary file has been built already. 
 % 
@@ -16,49 +16,26 @@ function fh = plot_best_models(cellid, n, savetodisk, sortfield)
 
 global NARF_SAVED_ANALYSIS_PATH;
 
-if nargin < 2
+if nargin < 3
     n = 5;
 end
 
-if nargin < 3
+if nargin < 4
     savetodisk = false;
 end
 
-if nargin < 4
+if nargin < 5
     sortfield = 'score_test_corr';
 end
-   
-summary_file = [NARF_SAVED_ANALYSIS_PATH filesep cellid '_summary.mat'];
 
-if exist(summary_file, 'file') ~= 2
-    fprintf('Summary file not found: %s\n', summary_file);
-    return
-end
-
-summary = getfield(load(summary_file, 'summary'), 'summary');
-
-% Strip out any empty summary
-smry = {};
-for ii = 1:length(summary)
-    if ~isempty(summary{ii})
-        smry{end+1} = summary{ii};
-    end
-end
-
-sr = sort_by_field(smry, sortfield);
+sr = sort_by_field(summaries, sortfield);
 
 best = sr(max(1, end-n+1):end);
 
 filepaths = extract_field(best, 'modelpath');
 
 fh = compare_models(filepaths);
-pngfile = [NARF_SAVED_ANALYSIS_PATH filesep cellid '.png'];
-if savetodisk
-    set(gcf,'PaperPositionMode','auto');
-    set(gcf,'InvertHardcopy','off');
-    print(fh, pngfile, '-dpng');    
-    close(fh);
-    fh = nan;
-end
+
+savethefig(fh, cellid, sprintf('%s_best%d.png', cellid, n));
 
 end

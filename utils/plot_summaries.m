@@ -1,17 +1,27 @@
-function plot_summary_heatmaps(summaries, prefix)
+function plot_summaries(summaries, prefix, savetodisk)
 % A high level function which creates several PNG summary plots extracted
 % from multiple cellid summary files. A good example of how to use
-% select_summaries.m to create useful plots.
+% select_summaries.m and heat maps to create useful plots.
 % 
 % ARGUMENTS:
 %    SUMMARY_FILES    A cell array of files to use
 
 global NARF_SAVED_ANALYSIS_PATH;
 
+if nargin < 3
+    savetodisk = false;
+end
+
+function saveit (fh, filename)
+    if savetodisk
+        savethefig(fh, [prefix '_' filename]);
+    end
+end
+
 function fh = phm(M, xl, yl, the_title, filename) 
     fh = figure('Position', [0 0 2000 1200]); clf;
     heatmap(M, xl, yl, '%2.0f', 'TickAngle', 90,...
-                'ShowAllTicks', true, 'TickFontSize', 6);
+                'ShowAllTicks', true, 'TickFontSize', 12);
     set(gca,'Position',[.05 .2 .9 .75])
     title(the_title);
 end
@@ -19,85 +29,78 @@ end
 % ------------------------------------------------------------------------
 % Abscissa sorted alphabetically by 1st Token (Envelope)
 
-[M, xl, yl] = select_summaries(summary_files, ...
+[M, xl, yl] = select_summaries(summaries, ...
                 @(c) 100*getfield(c, 'score_test_corr'));
 
 fh = phm(M, xl, yl, 'Test Set r^2, Alphabetical Abscissa and Ordinate');
-savethefig(fh, 'heat1.png');
+saveit(fh, 'heat1.png');
 
 % ------------------------------------------------------------------------
 % Abscissa sorted alphabetically by 2nd Token (Usually compressor)
 
-[M, xl, yl] = select_summaries(summary_files, ...
+[M, xl, yl] = select_summaries(summaries, ...
                 @(c) 100*getfield(c, 'score_test_corr'), ...
-                @(c) true, ...
                 @(cc) rotate_tokens(cc{1}.modelname, 2), ...
                 @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));
 fh = phm(M, xl, yl, 'Test Set r^2, Abscissa Sorted by 2nd Token, Value-Sorted Ordinate');
-savethefig(fh, 'heat2.png');
+saveit(fh, 'heat2.png');
 
 % ------------------------------------------------------------------------
 % Abscissa sorted alphabetically by 3rd Token (Usually FIR type)
-[M, xl, yl] = select_summaries(summary_files, ...
+[M, xl, yl] = select_summaries(summaries, ...
                 @(c) 100*getfield(c, 'score_test_corr'), ...
-                @(c) true, ...
                 @(cc) rotate_tokens(cc{1}.modelname, 3), ...
                 @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));
 fh = phm(M, xl, yl, 'Test Set r^2, Abscissa Sorted by 3rd Token, Value-Sorted Ordinate');
-savethefig(fh, 'heat2.png');
+saveit(fh, 'heat2.png');
 
 % ------------------------------------------------------------------------
 % Abscissa sorted alphabetically by 4th Token (Usually Nonlinearity)
-[M, xl, yl] = select_summaries(summary_files, ...
+[M, xl, yl] = select_summaries(summaries, ...
                 @(c) 100*getfield(c, 'score_test_corr'), ...
-                @(c) true, ...
                 @(cc) rotate_tokens(cc{1}.modelname, 4), ...
                 @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));
 fh = phm(M, xl, yl, 'Test Set r^2, Abscissa Sorted by 4th Token, Value-Sorted Ordinate');
-savethefig(fh, 'heat3.png');
+saveit(fh, 'heat3.png');
 
 % ------------------------------------------------------------------------
 % Abscissa and Ordinate sorted by value
 
-[M, xl, yl] = select_summaries(summary_files, ...
+[M, xl, yl] = select_summaries(summaries, ...
                 @(c) 100*getfield(c, 'score_test_corr'), ...
-                @(c) true, ...
                 @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))), ...
                 @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));
 fh = phm(M, xl, yl, 'Test Set r^2, Value-Sorted Abscissa and Ordinate');
-savethefig(fh, 'heat.png');
+saveit(fh, 'heat.png');
 
 % ------------------------------------------------------------------------
 % Sorted by Fitting time
-[M, xl, yl] = select_summaries(summary_files, ...
+[M, xl, yl] = select_summaries(summaries, ...
                 @(c) getfield(c, 'fit_time'), ...
-                @(c) true, ...
                 @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'fit_time')))));
 fh = phm(M, xl, yl, 'Fitting Time, Value-Sorted Abscissa');
-savethefig(fh, 'fit_time.png');
+saveit(fh, 'fit_time.png');
 
 % ------------------------------------------------------------------------
 % Exit code heatmap
-[M, xl, yl] = select_summaries(summary_files, ...
+[M, xl, yl] = select_summaries(summaries, ...
                 @(c) getfield(c, 'exit_code'), ...
-                @(c) true, ...
                 @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))), ...
                 @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));            
 fh = phm(M, xl, yl, 'Exit Code, Sorted Time-Sorted Abscissa');
-savethefig(fh, 'heat_exit.png');
+saveit(fh, 'heat_exit.png');
 
 % ------------------------------------------------------------------------
 % Labeled scatter plot?
 
-S = cat_summary_files(summary_files, @(c) true);
-test_scores = cell2mat(extract_field(S, 'score_test_corr'));
-train_scores = cell2mat(extract_field(S, 'score_train_corr'));
+test_scores = cell2mat(extract_field(summaries, 'score_test_corr'));
+train_scores = cell2mat(extract_field(summaries, 'score_train_corr'));
 fh = figure;
 plot(train_scores, test_scores, 'k.');
 xlabel('Training Set r^2');
 ylabel('Test Set r^2');
 title('Training/Test Performance for all Models and Cellids');
-savethefig(fh, 'test_train.png');
+saveit(fh, 'test_train.png');
 
 % ------------------------------------------------------------------------
 % Average Token Performance
@@ -128,9 +131,6 @@ savethefig(fh, 'test_train.png');
 % hold off;
 % title(sprintf('Mean Performance Across All Cellids: %s', thetitle));
 % xticks(1:length(tokens), tokens);
-% 
-% 
-
 
 % ------------------------------------------------------------------------
 

@@ -1,28 +1,31 @@
 * NEW FEATURES
   1. [X] Distribute computation using headless matlab instances and shell scripts
-  2. [ ] Change path of models to be in /auto/data by default?
-  3. [ ] FITTER: Shrinkage Fitter	 
-  4. [ ] FITTER: lsqnonlin()
-  5. [ ] FITTER: nlinfit() (maybe we don't know the stim as well as we think)
-  6. [ ] FITTER: Boosting() 
-  7. [ ] FITTER: Simulated annealing
-  8. [ ] FITTER: FIT FIR BEFORE THE NL IS ATTACHED
-  9. [ ] FITTER: Conjugate boosting algorithm, which takes steps in a single direction until the objective function stops improving.
-  10. [ ] Replace all the 'true' and 'false' arguments with textual flags and vargin that are more descriptive
-  11. [ ] Try training a model across two data sets before fitting it
-  12. [ ] SHELL SCRIPT: Start up 6 instances of headless matlab, and start them on an analysis
-  13. [ ] Function to 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
-  14. [ ] FITTER: Import fitting routines from STRFlab
-  15. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
-  16. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  17. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
-  18. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  19. [ ] MODULE: Standardized single/multi channel gammatone filter
-  20. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  21. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
-  22. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
-  23. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  24. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
+  2. [X] Change path of models to be in /auto/data by default?
+  3. [X] SHELL SCRIPT: Start up 3 instances of headless matlab, and start them on an analysis
+  4. [ ] Gene
+  5. [ ] FITTER: Shrinkage Fitter
+  6. [ ] FITTER: lsqnonlin()
+  7. [ ] FITTER: nlinfit() (maybe we don't know the stim as well as we think)
+  8. [ ] FITTER: Boosting() 
+  9. [ ] FITTER: Simulated annealing
+  10. [ ] FITTER: Conjugate boosting algorithm, which takes steps in a single direction until the objective function stops improving.
+  11. [ ] FITTER: FIT FIR BEFORE THE NL IS ATTACHED
+  12. [ ] FITTER: Hybrid that tries several things, picks the one with the best training score
+  13. [ ] FN: Cleanliness of a FIR filter based on how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments, which could be used.
+  14. [ ] UPDATE: Should the sigmoidal nonlinearity take the ABS of a parameter, so that only rightward-increasing sigmoids appear?
+  15. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  16. [ ] FITTER: Import fitting routines from STRFlab
+  17. [ ] CLEAN: Replace all the 'true' and 'false' arguments with textual flags and vargin that are more descriptive
+  18. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
+  19. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  20. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
+  21. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  22. [ ] MODULE: Standardized single/multi channel gammatone filter
+  23. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  24. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
+  25. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
+  26. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  27. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
 
 * END USER CONVENIENCES
   1. [ ] Why isn't auto recalc the default?

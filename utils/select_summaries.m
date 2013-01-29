@@ -1,5 +1,5 @@
-function [M, xl, yl] = select_summary(summary_files, extractor_fn, ...
-    selector_fn, xsort_fn, ysort_fn, xfield, yfield)
+function [M, xl, yl] = select_summaries(summaries, extractor_fn, ...
+                                xsort_fn, ysort_fn, xfield, yfield)
 % Builds a summary matrix selecting only certain models using SELECT_FN,
 % extracting some data using EXTRACT_FN, and sorting the X and Y axes using
 % the XSORTER_FN and YSORTER_FN functions' return values. Only the first
@@ -8,12 +8,8 @@ function [M, xl, yl] = select_summary(summary_files, extractor_fn, ...
 % Incomplete values will be marked with NaN.
 %
 % ARGUMENTS:
-%     SUMMARY_FILES    Which cellid summary files to use. A summary file
-%                      may contain data for multiple cellids, but usually
-%                      there will be just models for a single cellid.
-%     SELECTOR_FN      Predicate function to determine if a model should be
-%                      included in the summary matrix. SELECTOR_FN will be
-%                      passed a model summary structure.
+%     SUMMARIES        A cell array of model summaries for any number of
+%                      cellids.
 %     EXTRACTOR_FN     A function to extract a field from each model
 %                      summary structure (which was produced by the
 %                      summarize_model function).
@@ -22,6 +18,8 @@ function [M, xl, yl] = select_summary(summary_files, extractor_fn, ...
 %                      model summary structures, but is rather passed the
 %                      entire column of sorted summary structures.
 %     YSORT_FN         Same but for Y axis so rows are passed to YSORTER_FN
+%     XFIELD           Must have textual data. Defaults to 'modelname'.
+%     YFIELD           Must have textual data. Defaults to 'cellid'.
 %
 % RETURNS:
 %     M    Data matrix full of the outputs of EXTRACT_FN.
@@ -38,19 +36,19 @@ function [M, xl, yl] = select_summary(summary_files, extractor_fn, ...
 
 S = {};
 
+if nargin < 1
+    error('select_summaries() requires at least 1 argument.');
+end
+
 if nargin < 2
-    error('select_summaries() requires at least 2 arguments.');
+    extractor_fn = @(s) true; % Default is to select everything
 end
 
 if nargin < 3
-    selector_fn = @(s) true; % Default is to select everything
-end
-
-if nargin < 4
     xsort_fn = @(ss) ss{1}.modelname;
 end
 
-if nargin < 5
+if nargin < 4
     ysort_fn = @(ss) ss{1}.cellid;
 end
 
@@ -58,33 +56,11 @@ if nargin < 5
     xfield = 'modelname';
 end
 
-if nargin < 5
+if nargin < 6
     yfield = 'cellid';
 end
 
-% Put all analysis summaries into a big struct array
-for ii = 1:length(summary_files)
-    sf = summary_files{ii};
-    
-    % Skip if the summary file doesn't exist
-    if exist(sf, 'file') ~= 2
-        fprintf('Skipping nonexistant summary file: %s\n', sf);
-        continue;
-    end
-    
-    summary = getfield(load(sf, 'summary'), 'summary');
-    
-    % Concatenate those summaries onto S if they are selected
-    for ii = 1:length(summary)
-        s = summary{ii};
-        if isempty(s)
-            continue;
-        end
-        if selector_fn(s)
-            S{end+1} = s;
-        end
-    end
-end
+S = summaries;
 
 % A reverse lookup table builder to find index number based on value
 % Only works for cell arrays in which every element is unique.

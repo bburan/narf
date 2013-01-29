@@ -38,7 +38,7 @@ for ii = 1:length(modelfiles)
     mp = modelpaths{ii};
     fprintf('Loading model file %s\n', mf);
     load_model(mp);
-    summary{ii} = summarize_model();
+    summary{ii} = summarize_model(false);
 end
 
 save(analysis_file, 'summary');
