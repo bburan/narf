@@ -1,5 +1,11 @@
 % A script to analyze every cell in BAPHY's batch #240.
+function analysis_batch_240(instance_number)
+% Right now, instance should be 1,2 or 3 so that different matlab instances
+% work on different cellids.
 
+addpath('/home/ivar/matlab/baphy');
+addpath('/home/ivar/matlab/narf');
+baphy_set_path;
 narf_set_path; 
 global MODULES NARF_SAVED_ANALYSIS_PATH;
 MODULES = scan_directory_for_modules();
@@ -17,9 +23,11 @@ mm{6} = module_groups('mse');      % The only option right now is to fit using M
 
 % For every cellid
  for ii = 1:length(cells)   
-     fit_models(mm, cells{ii}.cellid, ...
-                    cells{ii}.training_set, ...
-                    cells{ii}.test_set);
+     if mod(ii + instance_number,3) == 0
+        fit_models(mm, cells{ii}.cellid, ...
+                        cells{ii}.training_set, ...
+                        cells{ii}.test_set);
+     end
                 
     % Technically fit_models builds a cache already, but when continuing
     % an analysis after debugging or coding, it helps to rebuild the cache
