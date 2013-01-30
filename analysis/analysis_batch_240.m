@@ -8,6 +8,8 @@ function analysis_batch_240(instance_num, total_instances)
 %    matlab -r "analysis_batch_240(3,4)" &
 %    matlab -r "analysis_batch_240(4,4)" &
 
+addpath('/home/ivar/matlab/baphy');
+addpath('/home/ivar/matlab/narf');
 baphy_set_path;
 narf_set_path; 
 global MODULES NARF_SAVED_ANALYSIS_PATH;
