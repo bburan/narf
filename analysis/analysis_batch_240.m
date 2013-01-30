@@ -18,19 +18,19 @@ cells = request_celldb_batch(240);
 % Define how groups of modules should be combined to make many models
 mm = {}; 
 mm{1} = module_groups('env100');
-mm{2} = module_groups('nocomp', 'log1', 'log2', 'log3', 'log4');
-%mm{2} = module_groups('log1', 'log2', 'log3', 'log4');
+%mm{2} = module_groups('nocomp', 'log1', 'log2', 'log3', 'log4');
+mm{2} = module_groups('log1', 'log2', 'log3', 'log4');
 mm{3} = module_groups('fir', 'firb', 'depfir');
 %mm{3} = module_groups('firb');
-mm{4} = module_groups('nonl', 'npnl', 'sig', 'step');
-%mm{4} = module_groups('npnl', 'sig');
-mm{5} = module_groups('fmin', 'fminlsq');  % Fitter is stored in corr module
+%mm{4} = module_groups('nonl', 'npnl', 'sig', 'step');
+mm{4} = module_groups('sig');
+mm{5} = module_groups('fminunc', 'lsqnl', 'boost', 'fmin', 'fminlsq');  % Fitter is stored in corr module
 mm{6} = module_groups('mse');      % Fit using MSE as score. 
 
 [~, modelnames] = module_combinations(mm);
 
  for ii = 1:length(cells)
-    if mod(ii + instance_number,4) == 0
+    if mod(ii + instance_num, total_instances) == 0
         fit_models(mm, cells{ii}.cellid, ...
                        cells{ii}.training_set, ...
                        cells{ii}.test_set);

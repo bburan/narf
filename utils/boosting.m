@@ -1,9 +1,9 @@
-function [x_bst, s_bst] = boosting(x_0, objfn, termfn, stepsize)
+function [x_bst, s_bst] = boosting(objfn, x_0, termfn, stepsize)
 % Ivar's interpretation of a (perhaps not truly) boosting algorithm.
 %
 % ARGUMENTS: 
-%    x_0       Starting point for the optimization of vector x.
 %    objfn     Objective function. Must accept vector x and return a scalar
+%    x_0       Starting point for the optimization of vector x.
 %    termfn    Termination function. Accepts arguments:
 %                     n    Step number of this iteration.
 %                     x    The present x being considered.
@@ -23,11 +23,6 @@ function [x_bst, s_bst] = boosting(x_0, objfn, termfn, stepsize)
 % Will terminate whenever @termfn(n,x,s) returns a boolean true value.
 %
 % Returns the best point found and the score of that point. 
-%
-% TODO:
-%    Step size should probably be dhelifferent for each dimension of x or
-%    scaling problems could present difficulties. Or, maybe the variance
-%    produced by each change should be the scaling factor?
 %     
 % Oct 12, 2012. Ivar Thorson.
 
@@ -63,13 +58,13 @@ while ~termfn(n,x,s)
         s_bck = objfn(x_bck);
         
         % Take a step forward if that is better
-        if s_fwd > s_next
+        if s_fwd < s_next
             s_next = s_fwd;
             x_next = x_fwd;
         end
 
         % Take a step backward if that is better
-        if s_bck > s_next
+        if s_bck < s_next
             s_next = s_bck;
             x_next = x_bck;
         end

@@ -185,10 +185,19 @@ for ii = 1:length(group_names)
         case {'lsq'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_with_lsqcurvefit))};
         case {'fminlsq'}
-            mm = {MODULES.correlation.mdl(struct('fitter', @fit_fminlsq))};
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_fminlsq))};   
         case {'jack'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_with_jacklsq))};
-
+        case {'boost'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_boosting))};
+        case {'lsqnl'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_lsqnonlin))};
+        case {'twostep'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_twostep))};
+        case {'fminunc'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_fminunc))};
+        otherwise
+            error('WTF kind of key is that: %s', g);
     end
     
     ret.(g) = mm;

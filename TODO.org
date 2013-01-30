@@ -2,14 +2,14 @@
   1. [X] Distribute computation using headless matlab instances and shell scripts
   2. [X] Change path of models to be in /auto/data by default?
   3. [X] SHELL SCRIPT: Start up 3 instances of headless matlab, and start them on an analysis
-  4. [ ] Gene
-  5. [ ] FITTER: Shrinkage Fitter
-  6. [ ] FITTER: lsqnonlin()
-  7. [ ] FITTER: nlinfit() (maybe we don't know the stim as well as we think)
-  8. [ ] FITTER: Boosting() 
+  4. [X] FITTER: Boosting() 
+  5. [X] FITTER: lsqnonlin()
+  6. [X] FITTER: fminunc();
+  7. [ ] FITTER: FIT FIR BEFORE THE NL IS ATTACHED
+  8. [ ] FITTER: Shrinkage Fitter
   9. [ ] FITTER: Simulated annealing
   10. [ ] FITTER: Conjugate boosting algorithm, which takes steps in a single direction until the objective function stops improving.
-  11. [ ] FITTER: FIT FIR BEFORE THE NL IS ATTACHED
+  11. [ ] Refactor the Fitters because they are all pretty much the same damn thing
   12. [ ] FITTER: Hybrid that tries several things, picks the one with the best training score
   13. [ ] FN: Cleanliness of a FIR filter based on how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments, which could be used.
   14. [ ] UPDATE: Should the sigmoidal nonlinearity take the ABS of a parameter, so that only rightward-increasing sigmoids appear?
