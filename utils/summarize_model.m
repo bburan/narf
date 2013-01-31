@@ -75,5 +75,9 @@ if require_clean_git_repo
     [unix_ret_value, unix_string] = unix(cmd);
     s.git_commit  = regexprep(unix_string, '\n', '');
 else
-    s.git_commit  = META.git_commit;
+    if isfield(s, 'git_commit')
+        s.git_commit  = META.git_commit;
+    else
+        s.git_commit  = NaN;
+    end
 end

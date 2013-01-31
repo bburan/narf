@@ -1,31 +1,26 @@
 * NEW FEATURES
-  1. [X] Distribute computation using headless matlab instances and shell scripts
-  2. [X] Change path of models to be in /auto/data by default?
-  3. [X] SHELL SCRIPT: Start up 3 instances of headless matlab, and start them on an analysis
-  4. [X] FITTER: Boosting() 
-  5. [X] FITTER: lsqnonlin()
-  6. [X] FITTER: fminunc();
-  7. [ ] FITTER: FIT FIR BEFORE THE NL IS ATTACHED
-  8. [ ] FITTER: Shrinkage Fitter
-  9. [ ] FITTER: Simulated annealing
-  10. [ ] FITTER: Conjugate boosting algorithm, which takes steps in a single direction until the objective function stops improving.
-  11. [ ] Refactor the Fitters because they are all pretty much the same damn thing
-  12. [ ] FITTER: Hybrid that tries several things, picks the one with the best training score
-  13. [ ] FN: Cleanliness of a FIR filter based on how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments, which could be used.
-  14. [ ] UPDATE: Should the sigmoidal nonlinearity take the ABS of a parameter, so that only rightward-increasing sigmoids appear?
-  15. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
-  16. [ ] FITTER: Import fitting routines from STRFlab
-  17. [ ] CLEAN: Replace all the 'true' and 'false' arguments with textual flags and vargin that are more descriptive
-  18. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
-  19. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  20. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
-  21. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  22. [ ] MODULE: Standardized single/multi channel gammatone filter
-  23. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  24. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
-  25. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
-  26. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  27. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
+  1. [X] FITTER: FIT FIR BEFORE THE NL IS ATTACHED
+  2. [ ] FITTER: Shrinkage Fitter
+  3. [ ] FITTER: Simulated annealing
+  4. [ ] FITTER: Conjugate boosting algorithm, which takes steps in a single direction until the objective function stops improving.
+  5. [ ] FITTER: Hybrid that simply loads all saved fits, and picks the one with the best training score
+  6. [ ] Rename fit_with_* to be just fit_*
+  7. [ ] Refactor the Fitters because they are all pretty much the same damn thing over and over again
+  8. [ ] FN: Cleanliness of a FIR filter based on weight of DC coef, and how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments.
+  9. [ ] UPDATE: Should the sigmoidal nonlinearity take the ABS of a parameter, so that only rightward-increasing sigmoids appear?
+  10. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  11. [ ] FITTER: Import fitting routines from STRFlab
+  12. [ ] CLEAN: Replace all the 'true' and 'false' arguments with textual flags and vargin that are more descriptive
+  13. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
+  14. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  15. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
+  16. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  17. [ ] MODULE: Standardized single/multi channel gammatone filter
+  18. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  19. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
+  20. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
+  21. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  22. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
 
 * END USER CONVENIENCES
   1. [ ] Why isn't auto recalc the default?

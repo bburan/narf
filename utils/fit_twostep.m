@@ -2,8 +2,8 @@ function termcond = fit_twostep()
     global STACK XXX;
     % Rewire the model so the FIR filter connects directly to the output
     [tempfirmod, firidx] = find_module(STACK, 'fir_filter');
-    STACK{firidx}.output = 'fittertempstim';
     [tempcorrmod, corridx] = find_module(STACK, 'correlation');
+    STACK{firidx}.output = 'fittertempstim';
     STACK{corridx}.input1 = 'fittertempstim';
     % Cache the phi values, and remove any fits after the fir filter
     tempff = cell(1, length(STACK));
@@ -19,7 +19,8 @@ function termcond = fit_twostep()
     end
     
     % Now we will just fit the FIR
-    fit_fminlsq();
+    fit_objective();
+    fit_with_lsqcurvefit('fittertempstim', 'respavg');
     
     % Wire the NL up again and fit the NL independently    
     STACK{firidx}.output = tempfirmod.output;
@@ -31,9 +32,12 @@ function termcond = fit_twostep()
             STACK{ii}.fit_fields = tempff{ii};
         end
     end
+    STACK{firidx}.output = 'stim';
+    STACK{corridx}.input1 = 'stim';
     
     % Now we will just fit the NL
-    fit_fminlsq();
+    fit_objective();
+    fit_with_lsqcurvefit('stim', 'respavg');
     
     % Restore the stack phi values
 	for ii = 1:length(STACK)

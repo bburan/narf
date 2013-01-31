@@ -61,7 +61,7 @@ for ii = 1:N_models,
     fprintf('MODEL [%d/%d]: %s\n', ii, N_models, modelnames{ii});
     
     % If the model savefile exists and we aren't skipping, don't fit
-    if skipexisting && exist(META.modelfile, 'file') == 2
+    if skipexisting && exist(META.modelpath, 'file') == 2
         fprintf('Skipping because model file exists.\n');
         continue;
     end
