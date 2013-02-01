@@ -23,7 +23,6 @@ mm{1} = module_groups('env100');
 mm{2} = module_groups('nocomp', 'log1', 'log2', 'log3', 'log4');
 mm{3} = module_groups('fir', 'firb', 'depfir');
 mm{4} = module_groups('nonl', 'npnl', 'sig', 'step');
-mm{4} = module_groups('sig', 'step');
 mm{5} = module_groups('twostep', 'fminunc', 'lsqnl', 'boost', 'fmin', 'fminlsq');
 mm{6} = module_groups('mse');
 
