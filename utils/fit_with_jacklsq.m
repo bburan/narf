@@ -29,7 +29,7 @@ cnt = 1;  % For printing progress dots
 if nargin < 3
     field1 = 'stim';
     field2 = 'respavg';
-    n_jacks = 10;
+    n_jacks = 20;
 end
 if nargin < 4
     options = optimset('MaxIter', 1000, ...
@@ -99,8 +99,14 @@ for jj = 1:n_jacks
     unpack_fittables(phi_init); % Reset where you start from every time
     phi_jack(:, jj) = lsqcurvefit(@my_obj_fn, phi_init, {start_depth jj jack_idxs},  ...
                                     zeros(len, 1), LB, UB, options);
-end                            
-phi_best = mean(phi_jack, 2);
+end
+
+% Compute how much to shrink each parameter
+phi_mu = mean(phi_jack, 2);
+phi_sig = var(phi_jack, [], 2);
+
+phi_best = phi_mu .* sqrt(1 - (phi_sig ./ phi_mu).^2);
+
 termcond = nan;
 unpack_fittables(phi_best);
 end
