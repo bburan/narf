@@ -121,7 +121,7 @@ for ci = 1:M,
     %     offset = 0;
     %     STACK{5}.phi = [mu sigma amp offset];
          
-    fit_with_lsqcurvefit();
+    fit_lsq();
     filename = sprintf('%s/%s_all.mat', savepath, cellid);
     save_model_stack(filename, STACK, XXX);
     
@@ -138,7 +138,7 @@ for ci = 1:M,
         XXX{1}.cellid = cellid;  
         XXX{1}.test_set = {};
         STACK{5}.phi = [0.05 0.5 0.05 0];  % Reset phi each time to avoid minima
-        fit_with_lsqcurvefit();
+        fit_lsq();
         filename = sprintf('%s/%s_%s.mat', savepath, cellid, rf);
         save_model_stack(filename, STACK, XXX);
     end

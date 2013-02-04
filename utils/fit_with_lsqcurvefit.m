@@ -1,5 +1,5 @@
-function termcond = fit_with_lsqcurvefit(field1, field2, options)
-% termcond = fit_with_lsqcurvefit(field1, field2, options)
+function termcond = fit_lsq(field1, field2, options)
+% termcond = fit_lsq(field1, field2, options)
 %
 % Fits all parameters in STACK marked with 'fit_fields' such that signals
 % FIELD1 and FIELD2 have a least-squared error that is minimized. Uses only

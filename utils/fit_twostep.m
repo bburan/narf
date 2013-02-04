@@ -20,7 +20,7 @@ function termcond = fit_twostep()
     
     % Now we will just fit the FIR
     fit_objective();
-    fit_with_lsqcurvefit('fittertempstim', 'respavg');
+    fit_lsq('fittertempstim', 'respavg');
     
     % Wire the NL up again and fit the NL independently    
     STACK{firidx}.output = tempfirmod.output;
@@ -37,7 +37,7 @@ function termcond = fit_twostep()
     
     % Now we will just fit the NL
     fit_objective();
-    fit_with_lsqcurvefit('stim', 'respavg');
+    fit_lsq('stim', 'respavg');
     
     % Restore the stack phi values
 	for ii = 1:length(STACK)

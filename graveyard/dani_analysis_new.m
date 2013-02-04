@@ -126,11 +126,11 @@ for ci = 1:M,
     
     % re-fit fir filter using least-square
     STACK{3}.fit_fields = {'coefs','baseline'};
-    fit_with_lsqcurvefit();
+    fit_lsq();
     
     % re-fit fir filter using least-square
     STACK{3}.fit_fields = {'coefs'};
-    fit_with_lsqcurvefit();
+    fit_lsq();
     
      % add output NL to stack
     linpredmin=min(XXX{4}.dat.(sf).stim(:));
@@ -142,7 +142,7 @@ for ci = 1:M,
     %                                        'nlfn', @sigmoidal));
     %STACK{3}.fit_fields = {};
     %STACK{4}.fit_fields = {'phi'};
-    %fit_with_lsqcurvefit();
+    %fit_lsq();
     %phi_init=STACK{4}.phi;
     STACK{4} = mdls.nonparm_nonlinearity.auto_init(STACK,XXX);
    
@@ -170,7 +170,7 @@ for ci = 1:M,
         STACK{4} = mdls.nonparm_nonlinearity.auto_init(STACK(1:3),XXX(1:4));
         
         %STACK{4}.phi = phi_init;  % Reset phi each time to avoid minima
-        %fit_with_lsqcurvefit();
+        %fit_lsq();
         
         filename = sprintf('%s/%s_%s.mat', savepath, cellid, rf);
         save_model_stack(filename, STACK, XXX);

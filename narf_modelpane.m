@@ -459,7 +459,7 @@ end
 
 % Create a wrapper fn and button which fits params using least squares
 function wrapper_for_lsqcurvefit()
-    fit_with_lsqcurvefit(); 
+    fit_lsq(); 
     update_any_changed_tables_and_recalc();
 end
 

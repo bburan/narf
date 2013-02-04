@@ -1,5 +1,5 @@
-function termcond = fit_with_jacklsq(field1, field2, n_jacks, options)
-% termcond = fit_with_jacklsq(field1, field2, n_jacks, options)
+function termcond = fit_jacklsq(field1, field2, n_jacks, options)
+% termcond = fit_jacklsq(field1, field2, n_jacks, options)
 %
 % Fits all parameters in STACK marked with 'fit_fields' such that signals
 % FIELD1 and FIELD2 have a least-squared error that is minimized. Uses only

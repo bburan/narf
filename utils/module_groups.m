@@ -183,11 +183,11 @@ for ii = 1:length(group_names)
         case {'fmin'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_objective))};   
         case {'lsq'}
-            mm = {MODULES.correlation.mdl(struct('fitter', @fit_with_lsqcurvefit))};
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_lsq))};
         case {'fminlsq'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_fminlsq))};   
         case {'jack'}
-            mm = {MODULES.correlation.mdl(struct('fitter', @fit_with_jacklsq))};
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_jacklsq))};
         case {'boost'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_boosting))};
         case {'lsqnl'}

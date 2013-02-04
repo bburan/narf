@@ -70,7 +70,7 @@ drawnow;
 
 STACK{4}.fit_fields={'coefs','baseline'};
 recalc_xxx(3);
-fit_with_lsqcurvefit;
+fit_lsq;
 
 close(hnarf);
 open_narf_gui;
@@ -94,7 +94,7 @@ STACK{6} = mdls.correlation;
 
 %STACK{4}.fit_fields = {};
 %STACK{5}.fit_fields = {'phi'};
-%fit_with_lsqcurvefit();
+%fit_lsq();
 recalc_xxx(1); 
 
 % Add the test set AFTER the training has occured, so that it is
