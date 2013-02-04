@@ -14,7 +14,7 @@
 * NEW FEATURES
   1. [X] FITTER: FIT FIR BEFORE THE NL IS ATTACHED
   2. [X] FIXME: Some bestN plots are showing NANs
-  3. [ ] FIXME: Need a heatmap sorted by 5th token(fitter)
+  3. [X] FIXME: Need a heatmap sorted by 5th token(fitter)
   4. [ ] Badly needed: generic shrinkage routine
   5. [ ] Fitter: bslsq (Boost FIR, shrink FIR fit, lsq curvefit NL) 
   6. [ ] Badly needed: is a likelihood estimator which is allowed to drop particularly ridiculous points.
