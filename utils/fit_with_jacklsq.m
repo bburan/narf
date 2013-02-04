@@ -103,7 +103,7 @@ end
 
 % Compute how much to shrink each parameter
 phi_mu = mean(phi_jack, 2);
-phi_sig = var(phi_jack, [], 2);
+phi_sig = sqrt(var(phi_jack, [], 2)) ./ sqrt(length(phi_init));
 
 phi_best = phi_mu .* sqrt(1 - (phi_sig ./ phi_mu).^2);
 
