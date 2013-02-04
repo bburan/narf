@@ -48,7 +48,7 @@ for ii = 1:length(cells)
     
     % Generate PNGs showing the best models, tokens for each cellid
     plot_cellid_summary(cells{ii}.cellid, summaries, true);
-   
+
 end
 
 % Finally, display and save heat maps of test and training set performance

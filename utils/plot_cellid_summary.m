@@ -56,7 +56,7 @@ for ii = 1:length(toks)
 end
 
 % Now generate scatter and bar plots for each of those
-for ii = 2:4
+for ii = 2:5
     fh = plot_token_performance(summaries, [cellid sprintf(', token group %d', ii)], ii, tokens{ii});
     append_or_save(fh, sprintf('%s_tok%d', cellid, ii));
 end
