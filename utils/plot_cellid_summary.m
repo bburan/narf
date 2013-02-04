@@ -1,4 +1,4 @@
-function fhs = plot_cellid_summary(cellid, summaries, savetodisk)
+function fhs = plot_cellid_summary(cellid, summaries, savetodisk, savedir)
 % Creates several figures which describe, and saves them to disk if
 % SAVETODISK is true. Assumes that a cellid summary file has been built.
 % 
@@ -7,6 +7,9 @@ function fhs = plot_cellid_summary(cellid, summaries, savetodisk)
 %    SUMMARIES  Cell array of summary structs.
 %    SAVETODISK If true, a PNG file will be created in the analysis dir.
 %               Defaults to false if not provided.
+%    SAVEDIR    If SAVETODISK is true, saves in a subdirectory of 
+%               NARF_SAVED_ANALYSIS_PATH named SAVEDIR.
+%               Defaults to nothing if not provided.
 %
 % Returns cell array of handles to the windows that were opened. 
 % If savetodisk is true, these windows will automatically be closed and
@@ -16,12 +19,16 @@ if nargin < 3
     savetodisk = false;
 end
 
+if nargin < 4
+    savedir = '';
+end
+
 fhs = {};
 
 function append_or_save(fh, filename)
     if savetodisk
         % Save to disk and close
-        savethefig(fh, filename);
+        savethefig(fh, filename, savedir);
     else 
         fhs{end+1} = fh;
     end
@@ -29,9 +36,19 @@ end
 
 % ------------------------------------------------------------------------
 % TOP N MODEL SUMMARIES
-n = 5;
+n = 10;
 sr = sort_by_field(summaries, 'score_test_corr');
-best = sr(max(1, end-n+1):end);
+best = {};
+for ii = 1:length(sr)
+    jj = length(sr) - ii + 1;
+    s = sr{jj};
+    if ~isnan(s.score_test_corr)
+        best{end+1} = sr{jj};
+    end
+    if length(best) >= 5
+        break;
+    end
+end
 filepaths = extract_field(best, 'modelpath');
 fh = compare_models(filepaths);
 append_or_save(fh, sprintf('%s_best%d', cellid, n));

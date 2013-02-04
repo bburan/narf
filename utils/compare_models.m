@@ -14,11 +14,11 @@ ax = cell(size(filenames));
 
 % Size parameters of GUI
 w = 1200;  
-h = 150;
+h = 100;
 y0 = 10;  % For scrolling
 vspace = 0.2; % Relative
 hspace = 0.05; 
-h_win = min(800, h*length(filenames));
+h_win = min(1200, h*length(filenames));
 
 fig = figure('Menubar','figure', 'Resize','off', ...
              'doublebuffer', 'on', 'Units','pixels', ...
