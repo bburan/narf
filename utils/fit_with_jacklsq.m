@@ -104,8 +104,9 @@ end
 % Compute how much to shrink each parameter
 phi_mu = mean(phi_jack, 2);
 phi_sig = sqrt(var(phi_jack, [], 2)) ./ sqrt(length(phi_init));
-
-phi_best = phi_mu .* sqrt(1 - (phi_sig ./ phi_mu).^2);
+scale = 1 - (phi_sig ./ phi_mu).^2; 
+scale(scale <= 0) = 0;
+phi_best = phi_mu .* sqrt(scale);
 
 termcond = nan;
 unpack_fittables(phi_best);
