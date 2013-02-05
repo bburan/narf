@@ -45,7 +45,7 @@ for ii = 1:length(sr)
     if ~isnan(s.score_test_corr)
         best{end+1} = sr{jj};
     end
-    if length(best) >= 5
+    if length(best) >= n
         break;
     end
 end
