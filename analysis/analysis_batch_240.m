@@ -42,11 +42,12 @@ mm{6} = module_groups('mse');
 [~, modelnames] = module_combinations(mm);
 
 for ii = 1:length(cells)
-    if mod(ii + instance_num, total_instances) == 0
-        fit_models(mm, cells{ii}.cellid, ...
-                       cells{ii}.training_set, ...
-                       cells{ii}.test_set);
+    if mod(ii + instance_num, total_instances) ~= 0
+        continue
     end
+    fit_models(mm, cells{ii}.cellid, ...
+                   cells{ii}.training_set, ...
+                   cells{ii}.test_set);
        
     % Technically, fit_models builds a cache already, a fresh cache can
     % give us a little peace of mind if we don't know what state its in.
