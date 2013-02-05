@@ -7,6 +7,8 @@ function termcond = fit_boost(objective_score, iterations)
 % ARGUMENTS:
 %    objective_score    The name of the signal to use as objective score.
 %                       Defaults to 'score' if no argument is passed
+%    iterations         How many boosting loops to do.
+%                       Default: max(50, #parameters x 10)
 %
 % RETURNS:
 %    termcond    Termination condition of optimization.
@@ -17,7 +19,7 @@ if nargin < 1
     objective_score = 'score';
 end
 if nargin < 2
-    iterations = length(pack_fittables(STACK)) * 10;
+    iterations = max(50, length(pack_fittables(STACK)) .* 5);
 end
 
 start_depth = find_fit_start_depth(STACK);
