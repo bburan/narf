@@ -20,7 +20,8 @@ function [x_bst, s_bst] = boosting(objfn, x_0, termfn, stepsize)
 % if it improves the score according to objective function objfn(x) more
 % than any alternative direction. 
 %
-% Will terminate whenever @termfn(n,x,s) returns a boolean true value.
+% Will terminate whenever @termfn(n,x,s) returns a boolean true value, or
+% the stepsize goes below 10^-9.
 %
 % Returns the best point found and the score of that point. 
 %     
@@ -38,7 +39,7 @@ s = objfn(x);
 l = length(x_0);
 n = 1;  % Step number
 
-while ~termfn(n,x,s)
+while stepsize > 10^-9 && ~termfn(n,x,s)
     x_pre = x;   % The state before taking any steps
     x_next = x;  % The best direction to step in so far
     s_next = s;
