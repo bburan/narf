@@ -1,44 +1,40 @@
 * Questions, and Graphs that Answer Them:
   1. What qualitatively influences FIR coefficients that we don't want to think about right now?
-     - [X] Given constant everything (no depression), what is the effect of compressor on FIR coefs?
-     - [X] Given constant everything (no depression), what is the effect of a NL on performance?
-     - [X] Given constant everything (no depression, no NL), what is the effect of a fitter on coefs?
-     - [ ] Given constant everything (no depression, with NL), what is the effect of a fitter on coefs?
-     - [ ] The same four above, but with depression.
-  2. Would adding a log compressor as an EXTRA channel be useful, so that the exact compression could be found as a balance between the two?
+     - [ ] Given constant everything (no NL), what is the effect of compressor on FIR coefs?
+     - [ ] Given constant everything (const compressor), what is the effect of a NL on performance?
+     - [ ] Given constant everything (log2, no NL), what is the effect of a fitter on coefs?
+     - [ ] Given constant everything (log2, with NL), what is the effect of a fitter on coefs?
+  2. Would adding a log compressor as an EXTRA channel rather than a replacing channel be useful, so that the exact compression could be found as a balance between the two?
   3. Would normalizing the output of the FIR be useful for allowing the FIR to be fit (when comparing active/passive)
-     (It would let me automaticalyl know sigmoidal mean, at least)
+     (It would let me automatically know sigmoidal mean, although I don't know if that would really help with the fits very much.)
   4. Does it make sense to use a linear filter on a positive definite input? Should there be a threshold after the FIR?
-  5. There's a problem with the FIR filters: they have a spike at the beginning since they start from a zero state.
    
 * NEW FEATURES
-  1. [X] FIXME: FIR filters are showing spike because of poor initial conditions. 
-  2. [ ] FN: Cleaning function which DELETES any models which have NaNs for test/train fits
-  3. [ ] FITTER: anneal    (Simulated annealing)
-  4. [ ] FITTER: Conjugate boosting algorithm, which takes steps in a single direction until the objective function stops improving.
-  5. [ ] FITTER: Import fitting routines from STRFlab
-  6. [ ] FITTER: Go shopping online for free matlab fitting routines
-  7. [ ] FN: Plot multiple models' NPNLs on the SAME PLOT?
-  8. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
-  9. [ ] UPDATE: Should the sigmoidal nonlinearity take the ABS of a parameter, so that only rightward-increasing sigmoids appear?
-  10. [ ] FN: Cleanliness of a FIR filter based on weight of DC coef, and how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments.
-  11. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
-  12. [ ] CLEAN: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  13. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
-  14. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  15. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
-  16. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  17. [ ] MODULE: Standardized single/multi channel gammatone filter
-  18. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  19. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
-  20. [ ] MODULE INIT: Make a module which has a complex init process
+  1. [X] Set the sigmoidal nonlinearity take the ABS of the AMP parameter, so that only rightward-increasing sigmoids appear?
+  2. [ ] FITTER: anneal (Simulated annealing)
+  3. [ ] FITTER: Import fitting routines from STRFlab
+  4. [ ] FITTER: Go shopping online for free matlab fitting routines
+  5. [ ] FN: Plot multiple models' NPNLs on the SAME PLOT?
+  6. [ ] FN: Cleanliness of a FIR filter based on weight of DC coef, and how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments.
+  7. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  8. [ ] FN: Cleaning function which DELETES any models which have NaNs for test/train fits
+  9. [ ] CLEAN: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
+  10. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
+  11. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
+  12. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  13. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
+  14. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  15. [ ] MODULE: Standardized single/multi channel gammatone filter
+  16. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  17. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
+  18. [ ] MODULE INIT: Make a module which has a complex init process
 	  1) Creates a spanning filterbank of gammatones
 	  2) Trains the FIR filter on that spanning filterbank
 	  3) Picks the top N (Usually 1, 2 or 3) filters based on their power
 	  4) Crops all other filters
-  21. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
-  22. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  23. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
+  19. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
+  20. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  21. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
 
 * END USER CONVENIENCES
   1. [ ] Why isn't auto recalc the default?
@@ -62,13 +58,15 @@
   4) [ ] Many repeated blocks of code have evolved and need to be destroyed.
   5) [ ] Names probably could use some rethinking as well, especially defaults (like using 'stim' default even in the fitting algorithms, for example)
   6) [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
-  7) [ ] In retrospect, 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it be in a 3rd structure?
+  7) [ ] In retrospect, 'gui' and 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...should it be in a 3rd structure?
   8) [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
   9) [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
   10) [ ] Go through the TODO's, FIXME's, etc in existing files
-  11) [ ] make anything named 'do_' into a method for use with modules?
-  12) [ ] make anything named 'update_' into a function used purely for its side effects?
-  13) [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
+  11) [ ] Create a module methods directory for shared methods
+  12) [ ] Create a module keywords directory for helping with combinatoric name management.
+  13) [ ] make anything named 'do_' into a method for use with modules?
+  14) [ ] make anything named 'update_' into a function used purely for its side effects?
+  15) [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
 
 * DESIGN QUESTIONS TO BRAINSTORM:
   1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
