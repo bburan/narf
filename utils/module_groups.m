@@ -204,6 +204,8 @@ for ii = 1:length(group_names)
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_anneal))};
         case {'gene'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_genetic))};
+        case {'sgene'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_sgene))};
         otherwise
             error('WTF kind of key is that: %s', g);
     end

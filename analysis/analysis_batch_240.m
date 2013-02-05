@@ -35,7 +35,7 @@ mm{3} = module_groups('firb');
 mm{4} = module_groups('npnl', 'sig');
 %mm{5} = module_groups('jack', 'twostep', 'fminunc', 'lsqnl', 'boost', 'fmin', 'fminlsq');
 %mm{5} = module_groups('slsqtwo');
-mm{5} = module_groups('anneal', 'gene', 'slsq', 'sboost', 'twostep', 'boost', 'fminlsq');
+mm{5} = module_groups('gene', 'sgene', 'anneal', 'slsq', 'sboost', 'twostep', 'boost', 'fminlsq');
 %mm{5} = module_groups('twostep');
 mm{6} = module_groups('mse');
 
@@ -51,7 +51,7 @@ for ii = 1:length(cells)
        
     % Technically, fit_models builds a cache already, a fresh cache can
     % give us a little peace of mind if we don't know what state its in.
-    %summarize_cellid(cells{ii}.cellid, true); 
+    % summarize_cellid(cells{ii}.cellid, true); 
     
     % Otherwise, load the summaries. 
     sf = [NARF_SAVED_ANALYSIS_PATH filesep cells{ii}.cellid '_summary.mat'];

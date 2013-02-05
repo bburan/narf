@@ -49,7 +49,7 @@ if isempty(phi_init)
     return 
 end
 
-fprintf('Fitting %d variables with fminsearch()\n', length(phi_init));
+fprintf('Fitting %d variables with genetic algorithm ga()\n', length(phi_init));
 
 [phi_best, ~, termcond] = ga(@my_obj_fn, length(phi_init));
 unpack_fittables(phi_best);

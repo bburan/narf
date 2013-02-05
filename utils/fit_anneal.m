@@ -21,8 +21,7 @@ end
 if nargin < 2
     options = saoptimset('MaxIter', 9000, ...
                          'MaxFunEvals', 9000, ...
-                         'TolFun', 1e-12, ...
-                         'TolX', 1e-9);  
+                         'TolFun', 1e-12);  
 end
 
 start_depth = find_fit_start_depth(STACK);
@@ -50,9 +49,9 @@ if isempty(phi_init)
     return 
 end
 
-fprintf('Fitting %d variables with fminsearch()\n', length(phi_init));
+fprintf('Fitting %d variables with simulannealbnd()\n', length(phi_init));
 
-[phi_best, ~,termcond] = simannealbnd(@my_obj_fn, phi_init, [], [], options);
+[phi_best, ~,termcond] = simulannealbnd(@my_obj_fn, phi_init, [], [], options);
 unpack_fittables(phi_best);
 
 end
