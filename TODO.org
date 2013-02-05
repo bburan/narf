@@ -10,30 +10,30 @@
   4. Does it make sense to use a linear filter on a positive definite input? Should there be a threshold after the FIR?
    
 * NEW FEATURES
-  1. [X] Set the sigmoidal nonlinearity take the ABS of the AMP parameter, so that only rightward-increasing sigmoids appear?
-  2. [ ] FITTER: anneal (Simulated annealing)
-  3. [ ] FITTER: Import fitting routines from STRFlab
-  4. [ ] FITTER: Go shopping online for free matlab fitting routines
-  5. [ ] FN: Plot multiple models' NPNLs on the SAME PLOT?
-  6. [ ] FN: Cleanliness of a FIR filter based on weight of DC coef, and how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments.
-  7. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
-  8. [ ] FN: Cleaning function which DELETES any models which have NaNs for test/train fits
-  9. [ ] CLEAN: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  10. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
-  11. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
-  12. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  13. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
-  14. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  15. [ ] MODULE: Standardized single/multi channel gammatone filter
-  16. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  17. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
-  18. [ ] MODULE INIT: Make a module which has a complex init process
+  1. [X] FITTER: anneal (Simulated annealing)
+  2. [X] FITTER: genetic algorithm
+  3. [ ] FITTER: Go shopping online for free matlab fitting routines
+  4. [ ] FN: Plot multiple models' NPNLs on the SAME PLOT?
+  5. [ ] FN: Cleanliness of a FIR filter based on weight of DC coef, and how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments.
+  6. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  7. [ ] FN: Cleaning function which DELETES any models which have NaNs for test/train fits
+  8. [ ] CLEAN: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
+  9. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
+  10. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
+  11. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  12. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
+  13. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  14. [ ] MODULE: Standardized single/multi channel gammatone filter
+  15. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  16. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
+  17. [ ] MODULE INIT: Make a module which has a complex init process
 	  1) Creates a spanning filterbank of gammatones
 	  2) Trains the FIR filter on that spanning filterbank
 	  3) Picks the top N (Usually 1, 2 or 3) filters based on their power
 	  4) Crops all other filters
-  19. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
-  20. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  18. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
+  19. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  20. [ ] FITTER: Import fitting routines from STRFlab
   21. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
 
 * END USER CONVENIENCES

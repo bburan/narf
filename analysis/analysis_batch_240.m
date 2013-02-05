@@ -34,8 +34,8 @@ mm{3} = module_groups('firb');
 %mm{4} = module_groups('nonl', 'npnl', 'sig', 'step');
 mm{4} = module_groups('npnl', 'sig');
 %mm{5} = module_groups('jack', 'twostep', 'fminunc', 'lsqnl', 'boost', 'fmin', 'fminlsq');
-%mm{5} = module_groups('slsq', 'sboost', 'slsqtwo', 'twostep', 'boost', 'fminlsq');
-mm{5} = module_groups('slsq', 'sboost', 'twostep', 'boost', 'fminlsq');
+%mm{5} = module_groups('slsqtwo');
+mm{5} = module_groups('anneal', 'gene', 'slsq', 'sboost', 'twostep', 'boost', 'fminlsq');
 %mm{5} = module_groups('twostep');
 mm{6} = module_groups('mse');
 

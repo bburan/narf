@@ -200,6 +200,10 @@ for ii = 1:length(group_names)
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_sboost))};
         case {'slsqtwo'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_slsqtwo))};
+        case {'anneal'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_anneal))};
+        case {'gene'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_genetic))};
         otherwise
             error('WTF kind of key is that: %s', g);
     end
