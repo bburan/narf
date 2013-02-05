@@ -1,5 +1,5 @@
-function termcond = fit_objective(objective_score, options)
-% termcond = fit_objective(objective_score, options)
+function termcond = fit_fminsearch(objective_score, options)
+% termcond = fit_ofminsearch(objective_score, options)
 %
 % Fits all parameters in STACK marked with 'fit_fields' such that at the
 % end of the STACK, the 'objective_score' field is minimized.
@@ -54,7 +54,6 @@ if isempty(phi_init)
     return 
 end
 
-recalc_xxx(1); 
 fprintf('Fitting %d variables with fminsearch()\n', length(phi_init));
 
 [phi_best,fval,termcond] = fminsearch(@my_obj_fn, phi_init, options);

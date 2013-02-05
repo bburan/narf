@@ -8,6 +8,11 @@ function analysis_batch_240(instance_num, total_instances)
 %    matlab -r "analysis_batch_240(3,4)" &
 %    matlab -r "analysis_batch_240(4,4)" &
 
+if nargin < 2
+    instance_num = 1;
+    total_instances = 1;
+end
+
 addpath('/home/ivar/matlab/baphy');
 addpath('/home/ivar/matlab/narf');
 baphy_set_path;
@@ -29,7 +34,7 @@ mm{3} = module_groups('firb');
 %mm{4} = module_groups('nonl', 'npnl', 'sig', 'step');
 mm{4} = module_groups('npnl');
 %mm{5} = module_groups('jack', 'twostep', 'fminunc', 'lsqnl', 'boost', 'fmin', 'fminlsq');
-mm{5} = module_groups('slsq', 'sboost', 'stwo', 'twostep', 'boost', 'fminlsq');
+mm{5} = module_groups('slsq', 'sboost', 'slsqtwo', 'twostep', 'boost', 'fminlsq');
 %mm{5} = module_groups('twostep');
 mm{6} = module_groups('mse');
 

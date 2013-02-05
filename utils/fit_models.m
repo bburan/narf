@@ -1,4 +1,8 @@
 function fit_models(mm, cellid, training_set, test_set, skipexisting)
+% Builds all possible model combinations defined in MM, and trains them on
+% the data defined by the CELLID and TRAINING_SET. Tests their performance,
+% and writes the resulting model file to disk.
+%
 % ARGUMENTS:
 %   MM      Cell array of structs whose values are cell arrays of modules
 %           and whose fieldnames are textual abbreviations of functionality

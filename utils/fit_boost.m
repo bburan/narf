@@ -36,7 +36,6 @@ if isempty(phi_init)
     return 
 end
 
-recalc_xxx(1); 
 fprintf('Fitting %d variables with fit_boost()\n', length(phi_init));
 
 [phi_best, score_best] = boosting(@my_obj_fn, phi_init', @(n,x,s) (n > iterations), 1);

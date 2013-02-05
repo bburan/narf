@@ -181,7 +181,7 @@ for ii = 1:length(group_names)
                                                         'smoothness_weight', 10^-6))};
             
         case {'fmin'}
-            mm = {MODULES.correlation.mdl(struct('fitter', @fit_objective))};   
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_fminsearch))};   
         case {'lsq'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_lsq))};
         case {'fminlsq'}

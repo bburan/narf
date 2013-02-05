@@ -1,4 +1,5 @@
 function ret = fit_sboost()
+global STACK;
 n_params = pack_fittables(STACK);
 n_jacks = 10;
 n_iterations = n_params * 10;
