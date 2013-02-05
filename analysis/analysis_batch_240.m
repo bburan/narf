@@ -27,9 +27,9 @@ mm{2} = module_groups('log2');
 %mm{3} = module_groups('fir', 'firb', 'depfir');
 mm{3} = module_groups('firb');
 %mm{4} = module_groups('nonl', 'npnl', 'sig', 'step');
-mm{4} = module_groups('nonl');
+mm{4} = module_groups('npnl');
 %mm{5} = module_groups('jack', 'twostep', 'fminunc', 'lsqnl', 'boost', 'fmin', 'fminlsq');
-mm{5} = module_groups('jack', 'twostep', 'boost', 'jboost', 'fminlsq');
+mm{5} = module_groups('slsq', 'sboost', 'stwo', 'twostep', 'boost', 'fminlsq');
 %mm{5} = module_groups('twostep');
 mm{6} = module_groups('mse');
 

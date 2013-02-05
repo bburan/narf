@@ -1,6 +1,5 @@
-function termcond = fit_jboost(objective_score)
-% termcond = fit_jboost(objective_score, options)
-% Boosts on 10 jackknifes, then shrinks
+function termcond = fit_boost(objective_score, iterations)
+% termcond = fit_boost(objective_score, options)
 %
 % Fits all parameters in STACK marked with 'fit_fields' such that at the
 % end of the STACK, the 'objective_score' field is minimized.
@@ -13,24 +12,17 @@ function termcond = fit_jboost(objective_score)
 %    termcond    Termination condition of optimization.
 
 global XXX STACK;
-cnt = 1;  % For printing progress dots
 
 if nargin < 1
     objective_score = 'score';
+end
+if nargin < 2
+    iterations = length(pack_fittables(STACK)) * 10;
 end
 
 start_depth = find_fit_start_depth(STACK);
 
 function score = my_obj_fn(phi)
-    % Print 1 progress dot for every 20 iterations, and newline every 1000
-%     if isequal(mod(cnt, 1000), 1)
-%         fprintf('\n[Iteration %d]', cnt);
-%     end
-%     if isequal(mod(cnt, 20), 1)
-%         fprintf('.');
-%     end
-    cnt = cnt + 1;
-
     unpack_fittables(phi);
     recalc_xxx(start_depth);
     score = XXX{end}.(objective_score);
@@ -45,9 +37,9 @@ if isempty(phi_init)
 end
 
 recalc_xxx(1); 
-fprintf('Fitting %d variables with Boosting()\n', length(phi_init));
+fprintf('Fitting %d variables with fit_boost()\n', length(phi_init));
 
-[phi_best, score_best] = boosting(@my_obj_fn, phi_init', @(n,x,s) (n > 200), 1);
+[phi_best, score_best] = boosting(@my_obj_fn, phi_init', @(n,x,s) (n > iterations), 1);
 unpack_fittables(phi_best);
 termcond = NaN;
 

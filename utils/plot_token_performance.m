@@ -21,7 +21,7 @@ token_group  = cell2mat(cellfun(@pickgroup, ...
                                  'UniformOutput', false));
 
 fh = figure;
-gscatter(train_scores, test_scores, token_group, 'bgrcmk', 'o');
+gscatter(train_scores, test_scores, token_group, 'bgrcmky', 'o');
 xlabel('Training Set r^2');
 ylabel('Test Set r^2');
 title(['Training/Test Performance for ' titlename]);
