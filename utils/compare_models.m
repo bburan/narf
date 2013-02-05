@@ -18,7 +18,7 @@ h = 100;
 y0 = 10;  % For scrolling
 vspace = 0.2; % Relative
 hspace = 0.05; 
-h_win = min(1200, h*length(filenames));
+h_win = 1200;
 
 fig = figure('Menubar','figure', 'Resize','off', ...
              'doublebuffer', 'on', 'Units','pixels', ...
