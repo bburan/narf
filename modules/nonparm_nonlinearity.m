@@ -30,14 +30,14 @@ m.plot_fns{1}.pretty_name = 'Stim/Resp Smooth Scatter';
 m.plot_fns{2}.fn = @(stack, xxx) do_plot_signal(stack, xxx, stack{end}.time, stack{end}.output);
 m.plot_fns{2}.pretty_name = 'Output vs Time';
 
-m.plot_fns{3}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), false);
-m.plot_fns{3}.pretty_name = 'Nonlinearity';
+%m.plot_fns{3}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), false);
+%m.plot_fns{3}.pretty_name = 'Nonlinearity';
 
-m.plot_fns{4}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), true);
-m.plot_fns{4}.pretty_name = 'Nonlinearity + Histogram';
+%m.plot_fns{4}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), true);
+%m.plot_fns{4}.pretty_name = 'Nonlinearity + Histogram';
 
-m.plot_fns{5}.fn = @do_plot_scatter_and_nonlinearity; 
-m.plot_fns{5}.pretty_name = 'Stim/Resp Scatter';
+m.plot_fns{3}.fn = @do_plot_scatter_and_nonlinearity; 
+m.plot_fns{3}.pretty_name = 'Stim/Resp Scatter';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
