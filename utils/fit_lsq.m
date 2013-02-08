@@ -57,7 +57,11 @@ function error = my_obj_fn(phi, start_depth)
     % Set error to zero where there is a NaN in respavg 
     % I would have preferred to just excise the NaNs, but lsqcurvefit
     % works on a constant length vector for X and Y, so that's not
-    % possible.
+    % possible.    
+    % Make the error zero for any predictions with NaNs
+    respavg(isnan(pred)) = 0; 
+    pred(isnan(pred)) = 0;
+    % Make the error zero for any respavg's with NaNs
     respavg(isnan(respavg)) = pred(isnan(respavg));
     
     % This will be compared with zero and squared to calc MSE
@@ -79,7 +83,7 @@ fprintf('Fitting %d variables with lsqcurvefit()\n', length(phi_init));
 
 len = length(flatten_field(XXX{end}.dat, XXX{1}.training_set, 'respavg'));
 start_depth = find_fit_start_depth(STACK);
-[phi_best, resnorm, residual, termcond] = lsqcurvefit(...
+[phi_best, ~, ~, termcond] = lsqcurvefit(...
                                     @my_obj_fn, phi_init, start_depth,  ...
                                     zeros(len, 1), LB, UB, options);
 unpack_fittables(phi_best);
