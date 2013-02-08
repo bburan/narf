@@ -1,4 +1,4 @@
-function analysis_batch_240(instance_num, total_instances)
+function analysis_batch_241(instance_num, total_instances)
 % A script to analyze every cell in BAPHY's batch #240.
 % It is expected you would call this from a bash shell script
 % and that you want to run multiple instances of matlab simultaneously.
@@ -19,23 +19,24 @@ narf_set_path;
 global MODULES NARF_SAVED_ANALYSIS_PATH;
 MODULES = scan_directory_for_modules();
 
-analysis_prefix = 'a240';
+analysis_prefix = 'a241';
 
-cells = request_celldb_batch(240);
-
+cells = request_celldb_batch(241);
 
 % Define how groups of modules should be combined to make many models
 mm = {}; 
+% mm{1} = module_groups('env100');
+% mm{2} = module_groups('nocomp', 'log2');
+% mm{3} = module_groups('firb');
+% mm{4} = module_groups('nonl', 'npnl', 'sig', 'step');
+% mm{5} = module_groups('gene', 'sgene', 'anneal', 'slsq', 'sboost', 'twostep', 'boost', 'fminlsq');
+% mm{6} = module_groups('mse');
 mm{1} = module_groups('env100');
-%mm{2} = module_groups('nocomp', 'log1', 'log2', 'log3', 'log4');
-mm{2} = module_groups('nocomp', 'log2');
-%mm{3} = module_groups('fir', 'firb', 'depfir');
+mm{2} = module_groups('nocomp');
 mm{3} = module_groups('firb');
-mm{4} = module_groups('nonl', 'npnl', 'sig', 'step');
-%mm{5} = module_groups('slsqtwo', 'twostep', 'fminunc', 'lsqnl', 'boost', 'fmin', 'fminlsq');
-mm{5} = module_groups('gene', 'sgene', 'anneal', 'slsq', 'sboost', 'twostep', 'boost', 'fminlsq');
+mm{4} = module_groups('nonl');
+mm{5} = module_groups('lsq');
 mm{6} = module_groups('mse');
-
 [~, modelnames] = module_combinations(mm);
 
 for ii = 1:length(cells)
@@ -45,7 +46,7 @@ for ii = 1:length(cells)
     fit_models(mm, cells{ii}.cellid, ...
                    cells{ii}.training_set, ...
                    cells{ii}.test_set);
-       
+
     % Technically, fit_models already built a perfect cache, even if interrupted,
     % but rebuilding it can give us a little peace of mind so let's do it.
     % summarize_cellid(cells{ii}.cellid, true); 
