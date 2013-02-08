@@ -1,4 +1,8 @@
 function fit_models(mm, cellid, training_set, test_set, skipexisting)
+% Builds all possible model combinations defined in MM, and trains them on
+% the data defined by the CELLID and TRAINING_SET. Tests their performance,
+% and writes the resulting model file to disk.
+%
 % ARGUMENTS:
 %   MM      Cell array of structs whose values are cell arrays of modules
 %           and whose fieldnames are textual abbreviations of functionality
@@ -36,7 +40,9 @@ fprintf('Number of models to be fit %d\n', N_models);
 
 summary = cell(N_models, 1);
 
-mkdir([NARF_SAVED_MODELS_PATH filesep cellid]);
+if ~exist([NARF_SAVED_MODELS_PATH filesep cellid], 'dir')
+    mkdir([NARF_SAVED_MODELS_PATH filesep cellid]);
+end
 analysis_file = [NARF_SAVED_ANALYSIS_PATH filesep cellid '_summary.mat'];
 
 % Load existing analysis file, so that incomplete analyses may be continued

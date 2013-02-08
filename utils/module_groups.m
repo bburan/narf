@@ -181,26 +181,36 @@ for ii = 1:length(group_names)
                                                         'smoothness_weight', 10^-6))};
             
         case {'fmin'}
-            mm = {MODULES.correlation.mdl(struct('fitter', @fit_objective))};   
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_fminsearch))};   
         case {'lsq'}
-            mm = {MODULES.correlation.mdl(struct('fitter', @fit_with_lsqcurvefit))};
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_lsq))};
         case {'fminlsq'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_fminlsq))};   
-        case {'jack'}
-            mm = {MODULES.correlation.mdl(struct('fitter', @fit_with_jacklsq))};
         case {'boost'}
-            mm = {MODULES.correlation.mdl(struct('fitter', @fit_boosting))};
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_boost))};
         case {'lsqnl'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_lsqnonlin))};
         case {'twostep'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_twostep))};
         case {'fminunc'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_fminunc))};
+        case {'slsq'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_slsq))};
+        case {'sboost'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_sboost))};
+        case {'slsqtwo'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_slsqtwo))};
+        case {'anneal'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_anneal))};
+        case {'gene'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_genetic))};
+        case {'sgene'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_sgene))};
         otherwise
             error('WTF kind of key is that: %s', g);
     end
     
     ret.(g) = mm;
     
-    end
+end
              

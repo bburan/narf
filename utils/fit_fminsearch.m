@@ -1,4 +1,20 @@
-function termcond = fit_fminunc(objective_score, options)
+function termcond = fit_fminsearch(objective_score, options)
+% termcond = fit_ofminsearch(objective_score, options)
+%
+% Fits all parameters in STACK marked with 'fit_fields' such that at the
+% end of the STACK, the 'objective_score' field is minimized.
+%
+% ARGUMENTS:
+%    objective_score    The name of the signal to use as objective score.
+%                       Defaults to 'score' if no argument is passed
+%    options  Options passed to nlfit to help fit. Defaults are:
+%                MaxIter 1000
+%                MaxFunEvals 5000
+%                TolFun 1e-12
+%                TolX 1e-9
+%
+% RETURNS:
+%    termcond    Termination condition of optimization.
 
 global XXX STACK;
 cnt = 1;  % For printing progress dots
@@ -38,11 +54,9 @@ if isempty(phi_init)
     return 
 end
 
-fprintf('Fitting %d variables with fminunc()\n', length(phi_init));
+fprintf('Fitting %d variables with fminsearch()\n', length(phi_init));
 
-len = length(flatten_field(XXX{end}.dat, XXX{1}.training_set, 'respavg'));
-
-[phi_best, ~, termcond] = fminunc(@my_obj_fn, phi_init, options);
-                                
+[phi_best,fval,termcond] = fminsearch(@my_obj_fn, phi_init, options);
 unpack_fittables(phi_best);
+
 end

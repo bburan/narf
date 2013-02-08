@@ -115,11 +115,11 @@ append_module(mdls.correlation);
 % re-fit fir filter using least-square
 firmodidx = 3; % find_module(STACK, 'fir_filter');
 STACK{firmodidx}.fit_fields = {'coefs','baseline'};
-fit_with_lsqcurvefit();
+fit_lsq();
 
 % re-fit fir filter using least-square
 STACK{firmodidx}.fit_fields = {'coefs'};
-fit_with_lsqcurvefit();
+fit_lsq();
 
 % add output NL to stack
 sf=respfiles{1};
@@ -154,7 +154,7 @@ for rfi = 2:filecount,
     STACK{5} = mdls.nonparm_nonlinearity;
     
     %STACK{4}.phi = phi_init;  % Reset phi each time to avoid minima
-    %fit_with_lsqcurvefit();
+    %fit_lsq();
     
     filename = sprintf('%s/%s_%s.mat', savepath, cellid, rf);
     if exist(filename,'file'),

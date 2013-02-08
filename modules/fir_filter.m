@@ -131,8 +131,13 @@ function x = do_fir_filtering(stack, xxx)
          tmp = zeros(T, S, C);        
          for s = 1:S
              for c = 1:C,
+                 % Find proper initial conditions for the filter
+                 [~, Zf] = filter(mdl.coefs(c,:)', [1], ...
+                                  ones(length(mdl.coefs(c,:)') * 2, 1) .* x.dat.(sf).(mdl.input)(1, s, c));
+                              
                  tmp(:, s, c) = filter(mdl.coefs(c,:)', [1], ...
-                                       x.dat.(sf).(mdl.input)(:, s, c));
+                                       x.dat.(sf).(mdl.input)(:, s, c), ...
+                                       Zf);
              end
          end
          % The output is the sum of the filtered channels
@@ -151,10 +156,13 @@ function do_plot_all_filtered_channels(stack, xxx)
     [T, S, C] = size(xold.dat.(sf).(mdl.input));
     
     hold on;
-    for c = 1:C
+    for c = 1:C       
+        [~, Zf] = filter(mdl.coefs(c,:)', [1], ...
+                         ones(length(mdl.coefs(c,:)') * 2, 1) .* xold.dat.(sf).(mdl.input)(1, stim_idx, c));
+                              
         plot(xold.dat.(sf).(mdl.time), ...
              filter(mdl.coefs(c, :) , [1], ...
-                    xold.dat.(sf).(mdl.input)(:, stim_idx, c)), ...
+                    xold.dat.(sf).(mdl.input)(:, stim_idx, c), Zf), ...
              pickcolor(c));
     end
     axis tight;
@@ -170,10 +178,13 @@ function do_plot_single_filtered_channel(stack, xxx)
     [sf, stim_idx, baphy_chan_idx] = get_baphy_plot_controls(stack);
     chan_idx = popup2num(mdl.plot_gui.selected_chan_popup);
     dat = x.dat.(sf);
-   
+
+    [~, Zf] = filter(mdl.coefs(c,:)', [1], ...
+                     ones(length(mdl.coefs(c,:)') * 2, 1) .* xold.dat.(sf).(mdl.input)(1, stim_idx, chan_idx));
+
     plot(xold.dat.(sf).(mdl.time), ...
          filter(mdl.coefs(chan_idx, :) , [1], ...
-                    xold.dat.(sf).(mdl.input)(:, stim_idx, chan_idx)));
+                    xold.dat.(sf).(mdl.input)(:, stim_idx, chan_idx)), Zf);
     axis tight;
 end
 

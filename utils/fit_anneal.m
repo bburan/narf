@@ -1,5 +1,5 @@
-function termcond = fit_objective(objective_score, options)
-% termcond = fit_objective(objective_score, options)
+function termcond = fit_anneal(objective_score, options)
+% termcond = fit_anneal(objective_score, options)
 %
 % Fits all parameters in STACK marked with 'fit_fields' such that at the
 % end of the STACK, the 'objective_score' field is minimized.
@@ -7,11 +7,7 @@ function termcond = fit_objective(objective_score, options)
 % ARGUMENTS:
 %    objective_score    The name of the signal to use as objective score.
 %                       Defaults to 'score' if no argument is passed
-%    options  Options passed to nlfit to help fit. Defaults are:
-%                MaxIter 1000
-%                MaxFunEvals 5000
-%                TolFun 1e-12
-%                TolX 1e-9
+
 %
 % RETURNS:
 %    termcond    Termination condition of optimization.
@@ -23,10 +19,9 @@ if nargin < 1
     objective_score = 'score';
 end
 if nargin < 2
-    options = optimset('MaxIter', 9000, ...
-                       'MaxFunEvals', 9000, ...
-                       'TolFun', 1e-12, ...
-                       'TolX', 1e-9);  
+    options = saoptimset('MaxIter', 9000, ...
+                         'MaxFunEvals', 9000, ...
+                         'TolFun', 1e-12);  
 end
 
 start_depth = find_fit_start_depth(STACK);
@@ -54,10 +49,9 @@ if isempty(phi_init)
     return 
 end
 
-recalc_xxx(1); 
-fprintf('Fitting %d variables with fminsearch()\n', length(phi_init));
+fprintf('Fitting %d variables with simulannealbnd()\n', length(phi_init));
 
-[phi_best,fval,termcond] = fminsearch(@my_obj_fn, phi_init, options);
+[phi_best, ~,termcond] = simulannealbnd(@my_obj_fn, phi_init, [], [], options);
 unpack_fittables(phi_best);
 
 end

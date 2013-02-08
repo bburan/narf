@@ -1,5 +1,5 @@
-function termcond = fit_boosting(objective_score)
-% termcond = fit_boosting(objective_score, options)
+function termcond = fit_genetic(objective_score, options)
+% termcond = fit_genetic(objective_score, options)
 %
 % Fits all parameters in STACK marked with 'fit_fields' such that at the
 % end of the STACK, the 'objective_score' field is minimized.
@@ -7,6 +7,7 @@ function termcond = fit_boosting(objective_score)
 % ARGUMENTS:
 %    objective_score    The name of the signal to use as objective score.
 %                       Defaults to 'score' if no argument is passed
+
 %
 % RETURNS:
 %    termcond    Termination condition of optimization.
@@ -17,17 +18,22 @@ cnt = 1;  % For printing progress dots
 if nargin < 1
     objective_score = 'score';
 end
+if nargin < 2
+%     options = gaoptimset('MaxIter', 9000, ...
+%                          'MaxFunEvals', 9000, ...
+%                          'TolFun', 1e-12);  
+end
 
 start_depth = find_fit_start_depth(STACK);
 
 function score = my_obj_fn(phi)
     % Print 1 progress dot for every 20 iterations, and newline every 1000
-%     if isequal(mod(cnt, 1000), 1)
-%         fprintf('\n[Iteration %d]', cnt);
-%     end
-%     if isequal(mod(cnt, 20), 1)
-%         fprintf('.');
-%     end
+    if isequal(mod(cnt, 1000), 1)
+        fprintf('\n[Iteration %d]', cnt);
+    end
+    if isequal(mod(cnt, 20), 1)
+        fprintf('.');
+    end
     cnt = cnt + 1;
 
     unpack_fittables(phi);
@@ -43,11 +49,9 @@ if isempty(phi_init)
     return 
 end
 
-recalc_xxx(1); 
-fprintf('Fitting %d variables with Boosting()\n', length(phi_init));
+fprintf('Fitting %d variables with genetic algorithm ga()\n', length(phi_init));
 
-[phi_best, score_best] = boosting(@my_obj_fn, phi_init', @(n,x,s) (n > 200), 1);
+[phi_best, ~, termcond] = ga(@my_obj_fn, length(phi_init));
 unpack_fittables(phi_best);
-termcond = NaN;
 
 end

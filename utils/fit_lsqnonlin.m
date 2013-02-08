@@ -76,7 +76,6 @@ end
 
 LB = [];
 UB = [];
-recalc_xxx(1); 
 fprintf('Fitting %d variables with lsqnonlin()\n', length(phi_init));
 
 len = length(flatten_field(XXX{end}.dat, XXX{1}.training_set, 'respavg'));

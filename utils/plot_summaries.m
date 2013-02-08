@@ -14,7 +14,7 @@ end
 
 function saveit (fh, filename)
     if savetodisk
-        savethefig(fh, [prefix '_' filename]);
+        savethefig(fh, filename, prefix);
     end
 end
 
@@ -25,6 +25,17 @@ function fh = phm(M, xl, yl, the_title, filename)
     set(gca,'Position',[.05 .2 .9 .75])
     title(the_title);
 end
+
+
+% ------------------------------------------------------------------------
+% Abscissa and Ordinate sorted by value
+
+[M, xl, yl] = select_summaries(summaries, ...
+                @(c) 100*getfield(c, 'score_test_corr'), ...
+                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))), ...
+                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));
+fh = phm(M, xl, yl, 'Test Set r^2, Value-Sorted Abscissa and Ordinate');
+saveit(fh, 'heat0.png');
 
 % ------------------------------------------------------------------------
 % Abscissa sorted alphabetically by 1st Token (Envelope)
@@ -64,14 +75,13 @@ fh = phm(M, xl, yl, 'Test Set r^2, Abscissa Sorted by 4th Token, Value-Sorted Or
 saveit(fh, 'heat3.png');
 
 % ------------------------------------------------------------------------
-% Abscissa and Ordinate sorted by value
-
+% Abscissa sorted alphabetically by 5th Token (Usually Fitter)
 [M, xl, yl] = select_summaries(summaries, ...
                 @(c) 100*getfield(c, 'score_test_corr'), ...
-                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))), ...
+                @(cc) rotate_tokens(cc{1}.modelname, 5), ...
                 @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));
-fh = phm(M, xl, yl, 'Test Set r^2, Value-Sorted Abscissa and Ordinate');
-saveit(fh, 'heat.png');
+fh = phm(M, xl, yl, 'Test Set r^2, Abscissa Sorted by 5th Token, Value-Sorted Ordinate');
+saveit(fh, 'heat4.png');
 
 % ------------------------------------------------------------------------
 % Sorted by Fitting time
@@ -79,7 +89,7 @@ saveit(fh, 'heat.png');
                 @(c) getfield(c, 'fit_time'), ...
                 @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'fit_time')))));
 fh = phm(M, xl, yl, 'Fitting Time, Value-Sorted Abscissa');
-saveit(fh, 'fit_time.png');
+saveit(fh, 'heat_time.png');
 
 % ------------------------------------------------------------------------
 % Exit code heatmap
