@@ -13,10 +13,9 @@ if nargin < 2
     total_instances = 1;
 end
 
-addpath('/home/ivar/matlab/baphy');
-addpath('/home/ivar/matlab/narf');
 baphy_set_path;
 narf_set_path; 
+
 global MODULES NARF_SAVED_ANALYSIS_PATH;
 MODULES = scan_directory_for_modules();
 
