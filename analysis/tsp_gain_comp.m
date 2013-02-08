@@ -1,4 +1,4 @@
-function tsp_gain_comp(cellid,ha)
+function [setidx,linewidths]=tsp_gain_comp(cellid,ha)
 % function tsp_gain_comp(cellid,ha[default=new figure])
 %
 % created SVD 2013-01 - compare differences in response for each
@@ -70,7 +70,7 @@ for ii=1:filecount,
 end
 
 if behavior_only,
-    activeidx=min(find(activefile));
+    activeidx=max(find(activefile));
     printmatch=double(sum(abs(stimprint-repmat(stimprint(activeidx,:),filecount,1)),2)==0);
 
     fprintf('found %d files with same parameters as active file %d\n',...
@@ -164,6 +164,7 @@ end
 tt=dbReadTuning(cellid);
 if ~isfield(tt,'bf'), tt.bf=0; end
 if ~isfield(tt,'bw'), tt.bw=0; end
+if ~isfield(tt,'torbf'), tt.torbf=0; end
 cellinfo=sprintf('%s - BF %.0f, BW %.2f',cellid,tt.bf,tt.bw);
 
 outpath='/auto/users/svd/data/spn_mod/';
@@ -197,7 +198,7 @@ for ii=puse,
     band2=sprintf('%.1f-%.1f(%d)-%s',stimlow(fidx,2)/1000,...
                   stimhigh(fidx,2)/1000,stimrelatten(fidx,2),bc);
     
-    if ~isempty(tarstr{fidx}),
+    if ~isempty(tarstr{fidx}) && activefile(fidx),
         filenames{ii}=sprintf('%s(%.0f): %s',cellfiledata(fidx).stimfile(8:(end-4)),...
                               cellfiledata(fidx).isolation,tarstr{fidx});
         if tarstr{fidx}(end)=='c',
@@ -205,8 +206,10 @@ for ii=puse,
         else
             setidx(ii)=4;
         end
-        if stimlow(fidx,tarband(fidx))<tt.bf && ...
-                stimhigh(fidx,tarband(fidx))>tt.bf,
+        if (stimlow(fidx,tarband(fidx))<tt.bf && ...
+                stimhigh(fidx,tarband(fidx))>tt.bf) ||...
+           (stimlow(fidx,tarband(fidx))<tt.torbf && ...
+                stimhigh(fidx,tarband(fidx))>tt.torbf),
             linewidths(ii)=2;
         end
     else

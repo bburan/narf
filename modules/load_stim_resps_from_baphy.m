@@ -92,7 +92,7 @@ function x = do_load_from_baphy(stack, xxx)
         % Load the raw_stim part of the data structure
         stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
         fprintf('Loading stimulus: %s\n', stimfile);
-        stim = loadstimfrombaphy(stimfile, [], [], mdl.stimulus_format, ...
+        [stim,stimparam] = loadstimfrombaphy(stimfile, [], [], mdl.stimulus_format, ...
                               mdl.raw_stim_fs, mdl.stimulus_channel_count, ...
                               0, mdl.include_prestim);
         stim = permute(stim, [2 3 1]);
@@ -110,8 +110,6 @@ function x = do_load_from_baphy(stack, xxx)
         % See documentation in narf/doc/
         % stim = define_dims(stim, {'time', 'stim', 'chan'});
         
-        x.dat.(f).(mdl.output_stim) = stim;
-
         % calculate min and max of all files in the training
         % set... used by depression_filter_bank
         stimminmax=[squeeze(nanmin(nanmin(stim,[],1),[],2))';
@@ -141,6 +139,13 @@ function x = do_load_from_baphy(stack, xxx)
             resp((end+1):size(stim,1),:,:)=nan;
         end
         
+        if 0 && size(resp,1)>325,
+            disp('KLUDGE ALERT: TRUNCATING LONG SPN STIMULI!!!');
+            resp=resp(1:325,:,:);
+            stim=stim(1:325,:,:);
+        end
+        
+        x.dat.(f).(mdl.output_stim) = stim;
         x.dat.(f).(mdl.output_resp) = permute(resp, [1, 3, 2]);
         x.dat.(f).respavg = squeeze(nanmean(x.dat.(f).(mdl.output_resp), 3));
 
@@ -153,7 +158,6 @@ function x = do_load_from_baphy(stack, xxx)
         
         x.dat.(f).(mdl.output_stim_time) = (1/mdl.raw_stim_fs).*[1:s1]';
         x.dat.(f).(mdl.output_resp_time) = (1/mdl.raw_resp_fs).*[1:r1]';
-        
     end
 end
 
