@@ -55,7 +55,7 @@ for ii=1:length(cellfiledata),
    poststimsilence(ii)=parms.Ref_PostStimSilence;
    poststimsilence(ii)=0; % force to zero below
 end
-firstactiveidx=min(find(activefile));
+firstactiveidx=max(find(activefile));
 if isempty(firstactiveidx),
     error('no active TSP data for this cell');
 end
