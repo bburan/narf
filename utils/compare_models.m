@@ -40,7 +40,7 @@ function ret = nonlinearity_pos (index)
     ret = [w*0.75 y0+h*(index-1) w*0.20 (1-vspace)*h];
 end
 
-scores = [];
+score = [];
 
 % For each model, 
 for ii = 1:length(filenames)
@@ -95,7 +95,7 @@ for ii = 1:length(filenames)
     
 end
 
-% Sort all the plots according to their score_test_corr
+% Sort all the plots according to their score_test_corr (if it exists)
 score = sortrows(score);
 newax = {};
 sorted_filenames = {};
