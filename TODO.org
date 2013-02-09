@@ -11,32 +11,47 @@
   5. Are neurons clusterable according to which models fit them best?
    
 * NEW FEATURES
-  1. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
-  2. [ ] N-step fitter (train FIR in common, train NL across each separately)
-  3. [ ] I think normalizing the FIR filter coefs BEFORE doing the mean across jackknifes would really help. 
+  1. [ ] N-step fitter (train FIR in common, train NL across each separately)
+	 Surprisingly difficult to make several models need to be fit all on the same data. yet ALSO need to run on different behavioral states. 
+	 WHY:
+         1. Violates my implicit expectation of 1 fitter -> 1 model. Now I have 1 fitter-> many models.
+	 2. Now that training_set{} may be edited, it shouldn't really be copied from one XXX{1} to XXX{2} and so on.
+	 Solution ideas: 
+	 - Quick hack: five new fitters added
+	   NL1, trains on all, but only trains NL on 1st
+	   NL2, trains FIR on all, but only trains NL on 2nd, 
+	   etc
+	 - Quick hack: Store each of the five models param sets in the same model
+	 - 
+	 
+
+  2. [ ] Generalize N-step fitter to let a particular module or set of modules float. 
+	 ?????
+  3. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
+  4. [ ] I think normalizing the FIR filter coefs BEFORE doing the mean across jackknifes would really help. 
 	 Probably output nonlinearities need to be refit after any averaging, as well.
-  4. [ ] FN: Plot multiple models' NPNLs on the SAME PLOT?
-  5. [ ] FN: Cleanliness of a FIR filter based on weight of DC coef, and how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments.
-  6. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
-  7. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
-  8. [ ] FITTER: SWARM. Hybrid fit routine which takes the top N% of models, scales all FIR powers to be the same, then shrinks them.
-  9. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  10. [ ] MODULE: Standardized single/multi channel gammatone filter
-  11. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  12. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
-  13. [ ] MODULE INIT: Make a module which has a complex init process
+  5. [ ] FN: Plot multiple models' NPNLs on the SAME PLOT?
+  6. [ ] FN: Cleanliness of a FIR filter based on weight of DC coef, and how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments.
+  7. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  8. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
+  9. [ ] FITTER: SWARM. Hybrid fit routine which takes the top N% of models, scales all FIR powers to be the same, then shrinks them.
+  10. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  11. [ ] MODULE: Standardized single/multi channel gammatone filter
+  12. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  13. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
+  14. [ ] MODULE INIT: Make a module which has a complex init process
 	  1) Creates a spanning filterbank of gammatones
 	  2) Trains the FIR filter on that spanning filterbank
 	  3) Picks the top N (Usually 1, 2 or 3) filters based on their power
 	  4) Crops all other filters
-  14. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
-  15. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  16. [ ] REFACTOR: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  17. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
-  18. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  19. [ ] FN: Cleaning function which DELETES any models which have NaNs for test/train fits
-  20. [ ] FITTER: Import fitting routines from STRFlab
-  21. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
+  15. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
+  16. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  17. [ ] REFACTOR: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
+  18. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
+  19. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  20. [ ] FN: Cleaning function which DELETES any models which have NaNs for test/train fits
+  21. [ ] FITTER: Import fitting routines from STRFlab
+  22. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
 
 * END USER CONVENIENCES
   1. [ ] Why isn't auto recalc the default?

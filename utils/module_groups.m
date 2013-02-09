@@ -206,6 +206,17 @@ for ii = 1:length(group_names)
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_genetic))};
         case {'sgene'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_sgene))};
+            
+        case {'nlsep1'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @( )fit_nlsep(1)))};
+        case {'nlsep2'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @() fit_nlsep(2)))};
+        case {'nlsep3'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @() fit_nlsep(3)))};
+        case {'nlsep4'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @() fit_nlsep(4)))};
+        case {'nlsep5'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @() fit_nlsep(5)))};
         otherwise
             error('WTF kind of key is that: %s', g);
     end

@@ -32,10 +32,10 @@ mm = {};
 % mm{5} = module_groups('gene', 'sgene', 'anneal', 'slsq', 'sboost', 'twostep', 'boost', 'fminlsq');
 % mm{6} = module_groups('mse');
 mm{1} = module_groups('env100');
-mm{2} = module_groups('nocomp');
+mm{2} = module_groups('log2');
 mm{3} = module_groups('firb');
-mm{4} = module_groups('nonl');
-mm{5} = module_groups('lsq');
+mm{4} = module_groups('sig');
+mm{5} = module_groups('nlsep1', 'nlsep2', 'nlsep3', 'nlsep4');
 mm{6} = module_groups('mse');
 [~, modelnames] = module_combinations(mm);
 
