@@ -217,6 +217,8 @@ for ii = 1:length(group_names)
             mm = {MODULES.correlation.mdl(struct('fitter', @() fit_nlsep(4)))};
         case {'nlsep5'}
             mm = {MODULES.correlation.mdl(struct('fitter', @() fit_nlsep(5)))};
+        case {'sb'}
+            mm = {MODULES.correlation.mdl(struct('fitter', @() fit_sparsebayes))};
         otherwise
             error('WTF kind of key is that: %s', g);
     end

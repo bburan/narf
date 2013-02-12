@@ -27,13 +27,11 @@ cells = request_celldb_batch(240);
 % Define how groups of modules should be combined to make many models
 mm = {}; 
 mm{1} = module_groups('env100');
-%mm{2} = module_groups('nocomp', 'log1', 'log2', 'log3', 'log4');
-mm{2} = module_groups('nocomp', 'log2');
-%mm{3} = module_groups('fir', 'firb', 'depfir');
+mm{2} = module_groups('log2');
 mm{3} = module_groups('firb');
-mm{4} = module_groups('nonl', 'npnl', 'sig', 'step');
-%mm{5} = module_groups('slsqtwo', 'twostep', 'fminunc', 'lsqnl', 'boost', 'fmin', 'fminlsq');
-mm{5} = module_groups('gene', 'sgene', 'anneal', 'slsq', 'sboost', 'twostep', 'boost', 'fminlsq');
+mm{4} = module_groups('npnl');
+%mm{5} = module_groups('slsq', 'twostep', 'boost', 'fminlsq');
+mm{5} = module_groups('sb');
 mm{6} = module_groups('mse');
 
 [~, modelnames] = module_combinations(mm);
