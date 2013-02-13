@@ -23,15 +23,13 @@ analysis_prefix = 'a240';
 
 cells = request_celldb_batch(240);
 
-
 % Define how groups of modules should be combined to make many models
 mm = {}; 
 mm{1} = module_groups('env100');
 mm{2} = module_groups('log2');
 mm{3} = module_groups('firb');
 mm{4} = module_groups('npnl');
-%mm{5} = module_groups('slsq', 'twostep', 'boost', 'fminlsq');
-mm{5} = module_groups('sb');
+mm{5} = module_groups('slsq', 'twostep', 'boost', 'fminlsq', 'sb');
 mm{6} = module_groups('mse');
 
 [~, modelnames] = module_combinations(mm);
@@ -46,7 +44,7 @@ for ii = 1:length(cells)
        
     % Technically, fit_models already built a perfect cache, even if interrupted,
     % but rebuilding it can give us a little peace of mind so let's do it.
-    % summarize_cellid(cells{ii}.cellid, true); 
+    summarize_cellid(cells{ii}.cellid, true); 
     
     % Otherwise, load the summaries. 
     sf = [NARF_SAVED_ANALYSIS_PATH filesep cells{ii}.cellid '_summary.mat'];

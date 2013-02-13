@@ -33,7 +33,7 @@ function basis = build_basis(phi)
 
     basis = zeros(N, M);
     
-    % Perturb each fittable field by delta
+    % Perturb each fittable field by delta 
     delta = 1;
     
     % Create basis vectors by subtracting default from the new prediction
@@ -51,8 +51,9 @@ function basis = build_basis(phi)
 end
 
 fprintf('Fitting %d variables with SparseBayes()\n', length(phi_init));
-N_iterations = 500;    
-
+N_iterations = 100;    
+%t = [];
+%b = [];
 for ii = 1:N_iterations
     fprintf('SparseBayes Iteration %d/%d\n', ii, N_iterations);
     phi = pack_fittables(STACK);
@@ -60,8 +61,15 @@ for ii = 1:N_iterations
     [P, H, D] = SparseBayes('Gaussian', basis, target);
     phi_delta = zeros(size(phi));
     phi_delta(P.Relevant) = P.Value;    
-    unpack_fittables(phi + phi_delta);
+    nphi = phi + phi_delta;  % Take a step
+    % nphi = sqrt(sum(nphi.^2))^-1 * nphi;     % Normalize
+    unpack_fittables(nphi);
+    %t(ii) = ii;
+    %b(ii) = XXX{end}.score_test_corr;
 end
+
+%figure;
+%plot(t,b);
 
 termcond = NaN;
 
