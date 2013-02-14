@@ -29,7 +29,7 @@ mm{1} = module_groups('env100');
 mm{2} = module_groups('log2');
 mm{3} = module_groups('firb');
 mm{4} = module_groups('npnl');
-mm{5} = module_groups('slsq', 'twostep', 'boost', 'fminlsq', 'sb');
+mm{5} = module_groups('fminlsq');
 mm{6} = module_groups('mse');
 
 [~, modelnames] = module_combinations(mm);
@@ -44,13 +44,13 @@ for ii = 1:length(cells)
        
     % Technically, fit_models already built a perfect cache, even if interrupted,
     % but rebuilding it can give us a little peace of mind so let's do it.
-    summarize_cellid(cells{ii}.cellid, true); 
+    %summarize_cellid(cells{ii}.cellid, true); 
     
-    % Otherwise, load the summaries. 
+    % Otherwise, load the model summaries for this cell from the cache
     sf = [NARF_SAVED_ANALYSIS_PATH filesep cells{ii}.cellid '_summary.mat'];
     summaries = load_summaries({sf}); 
     
-    % Limit the summaries to only those models from mm
+    % Limit the summaries to only those model combinations found in mm
     summaries = only_named_summaries(summaries, modelnames);
     
     % Generate PNGs showing the best models, tokens for each cellid

@@ -51,7 +51,7 @@ function basis = build_basis(phi)
 end
 
 fprintf('Fitting %d variables with SparseBayes()\n', length(phi_init));
-N_iterations = 100;    
+N_iterations = 200;    
 %t = [];
 %b = [];
 for ii = 1:N_iterations

@@ -157,6 +157,8 @@ for ii = 1:length(group_names)
             mm = {MODULES.passthru};
         case {'npnl'}
             mm = {MODULES.nonparm_nonlinearity};
+        case {'senl'}
+            mm = {MODULES.sparse_empirical_nonlinearity};
         case {'sig'}
             mm = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
                                                   'phi', [0 1 1 0], ...
