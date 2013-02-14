@@ -79,7 +79,7 @@ for nn = 1:length(rundata)
     else
         % figure out what files to use for what stage of the analysis
         [cellfiledata, times, params] = cellfiletimes(cellid, rundata(nn).batch);
-    
+        
         for ii=1:length(times(1).fileidx),
             if times(1).stop(ii)>times(1).start(ii),
                 train_set{end+1}=basename(params.stimfiles{times(1).fileidx(ii)});

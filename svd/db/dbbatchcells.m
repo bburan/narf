@@ -80,22 +80,67 @@ switch batchid,
   cellfiledata=cellfiledata(keepidx);
   
  case {206,207,221,222,223,224,225,226,227,228,231,232},
-  fprintf('batch %d: special, only one cell per site\n',...
-          batchid);
-  masterid=cat(1,cellfiledata.masterid);
-  singleid=cat(1,cellfiledata.singleid);
-  try,
-     [masterlist,uidx]=unique(masterid,'first');
-  catch
-     [masterlist,uidx]=unique(masterid);  % older versions of matlab
-  end
-  singlelist=singleid(uidx);
-  keepidx=find(ismember(singleid,singlelist));
-  
-  cellids=unique({cellfiledata(keepidx).cellid});
-  cellfileids=cellfileids(keepidx);
-  
-  cellfiledata=cellfiledata(keepidx);
+   fprintf('batch %d: special, only one cell per site\n',...
+           batchid);
+   masterid=cat(1,cellfiledata.masterid);
+   singleid=cat(1,cellfiledata.singleid);
+   try,
+       [masterlist,uidx]=unique(masterid,'first');
+   catch
+       [masterlist,uidx]=unique(masterid);  % older versions of matlab
+   end
+   singlelist=singleid(uidx);
+   keepidx=find(ismember(singleid,singlelist));
+   
+   cellids=unique({cellfiledata(keepidx).cellid});
+   cellfileids=cellfileids(keepidx);
+   
+   cellfiledata=cellfiledata(keepidx);
+end
+
+if isfield(params,'specialbatch'),
+    switch lower(params.specialbatch),
+      case 'cs',
+        
+        % spn / center-surround
+        keepfiles=zeros(size(cellfiledata));
+        keepcellids={};
+        for ii=1:length(cellfiledata),
+            parms=dbReadData(cellfiledata(ii).rawid);
+            if (~isfield(parms,'Ref_SplitChannels') ||...
+                    strcmpi(strtrim(parms.Ref_SplitChannels),'No')) &&...
+                    ismember(parms.Ref_LowFreq(end),[125 250 500]) &&...
+                    ismember(parms.Ref_HighFreq(end),[4000 8000 16000]),
+                keepfiles(ii)=1;
+                keepcellids=union(keepcellids,cellfiledata(ii).cellid);
+            end
+        end
+        
+        keepidx=find(keepfiles);
+        cellfileids=cellfileids(keepidx);
+        cellfiledata=cellfiledata(keepidx);
+        cellids=keepcellids;
+      case 'lr',
+        
+        % spn / left-right same spectral features batch
+        keepfiles=zeros(size(cellfiledata));
+        keepcellids={};
+        for ii=1:length(cellfiledata),
+            parms=dbReadData(cellfiledata(ii).rawid);
+            if isfield(parms,'Ref_SplitChannels') &&...
+                    strcmpi(strtrim(parms.Ref_SplitChannels),'Yes') &&...
+                    diff(parms.Ref_LowFreq)==0 &&...
+                    diff(parms.Ref_HighFreq)==0,
+                keepfiles(ii)=1;
+                keepcellids=union(keepcellids,cellfiledata(ii).cellid);
+            end
+        end
+        keepidx=find(keepfiles);
+        cellfileids=cellfileids(keepidx);
+        cellfiledata=cellfiledata(keepidx);
+        cellids=keepcellids;
+    end
+    
 end
 
 
