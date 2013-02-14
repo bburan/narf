@@ -8,13 +8,14 @@ m.mdl = @normalize_channels;
 m.name = 'normalize_channels';
 m.fn = @do_normalize_channels;
 m.pretty_name = 'Normalize Channels';
-m.editable_fields = {'input', 'time', 'output'};
+m.editable_fields = {'input', 'time', 'output', 'force_positive'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.input = 'stim'; 
 m.time  = 'stim_time';
 m.output = 'stim';
+m.force_positive = false;
 
 % Optional fields
 m.plot_fns = {};
@@ -41,7 +42,11 @@ function x = do_normalize_channels(stack, xxx)
         out = zeros(size(x.dat.(sf).(mdl.input)));
         for c = 1:C,
             tmp = x.dat.(sf).(mdl.input)(:,:,c);
-            mm = nanmean(tmp(:));
+            if mdl.force_positive
+                mm = min(tmp(:));
+            else
+                mm = nanmean(tmp(:));
+            end
             rms = sqrt(nanmean(tmp(:).^2));
             out(:,:,c) = (1/rms) .* (-mm + x.dat.(sf).(mdl.input)(:,:,c));
         end
