@@ -1,6 +1,6 @@
 function do_plot_avg_scatter(stack, xxx, field1, field2)
 % A visualization function which plots two fields vs each other
-% Sorts and groups into blocks of 100. 
+% Sorts and groups into blocks such that there are 100 data points plotted.
 
 % OLD WAY: Concatenate all data points into one big list, across ALL files
 %d1 = flatten_field(xxx1{end}.dat, field1);
@@ -19,7 +19,7 @@ end
 % Sort and average them by groups of 100
 D = [dat.(field1)(:) dat.(field2)(:)]; 
 D = sortrows(D);
-D = conv_fn(D, 1, @nanmean, 100, 0);
+D = conv_fn(D, 1, @nanmean, ceil(size(D, 1)/100), 0);
 
 plot(D(:,1), D(:,2), 'k.');
 axis tight;

@@ -8,7 +8,7 @@ m.mdl = @sparse_empirical_nonlinearity;
 m.name = 'sparse_empirical_nonlinearity';
 m.fn = @do_se_nonlinearity;
 m.pretty_name = 'Sparse Empirical Nonlinearity';
-m.editable_fields = {'n_gaussians', 'input_stim', 'input_resp', 'time', 'output'};
+m.editable_fields = {'relvar', 'input_stim', 'input_resp', 'time', 'output'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
@@ -17,7 +17,8 @@ m.input_stim = 'stim';
 m.input_resp = 'respavg';
 m.time = 'stim_time';
 m.output = 'stim';
-m.n_gaussians = 4; % TODO: Rename this? 1/variance? # of gaussians,more or less. Fewer = smoother
+m.relvar = 0.25;  % Magnitude of the gaussian variance, relative to the 
+                  % total range (max - min) of the input space.
 
 % Optional fields
 m.plot_fns = {};
@@ -77,7 +78,7 @@ function nl = calc_sparse_nonlinearity(stack, xxx)
     
     X = D(:,1);
     Y = D(:,2);
-    basisWidth	= (max(X) - min(X)) / mdl.n_gaussians;
+    basisWidth	= (max(X) - min(X)) * mdl.relvar;
     basis = exp(-distSquared(X,X)/(basisWidth^2));
     [P, H, D] = SparseBayes('Gaussian', basis, Y);
     w = zeros(size(basis,2),1); % Basis weights
@@ -97,7 +98,6 @@ function nl = calc_sparse_nonlinearity(stack, xxx)
     function z = interpolomatic(xs)
 
         % TODO: Vectorize this function to do the gaussian mixture stuff
-        % It should run faster
         
         %l = length(xs);
         %dists = abs(xs * ones(1, length(Cx)) - ones(l,1) * Cy');
