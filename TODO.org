@@ -1,4 +1,4 @@
-* Unanswered Questions:
+* Questions:
   1. What qualitatively influences FIR coefficients that we don't want to think about right now?
      - Given constant everything (no NL), what is the effect of compressor on FIR coefs?
      - Given constant everything (const compressor), what is the effect of a NL on performance?
@@ -12,14 +12,9 @@
   5. Are neurons clusterable according to which models fit them best?
   6. Training on the nonlinearity AFTER the FIR doesn't seem to work very well.
      Why do we expect that this would yield interesting results when training on subsets of the data?
-  7. Nonparametric Nonlinearity (NPNL) linearizes anything. 
-     It is very much data-driven, which is great. 
-     On the other hand, it fits itself to linearize almost anything, so we somehow learn less than a simple, parameter-driven model. 
-     How can we balance complexity in the FIR or complexity in the NL?
-  8. Are we confusing ourselves with having a compressor and a nonlinearity?
-     Is there any reason that all the nonlinearity couldn't be BEFORE the filter?
-     Would that help anything?
-
+  7. Are we confusing ourselves with having a compressor and a nonlinearity?
+     Is there any reason that the nonlinearity couldn't be BEFORE the filter?
+     
 * BATCHES
   Batch   --  Description
   233     --  Ferret vocalizations
@@ -28,57 +23,73 @@
   242     --  SPN left/right (same spectral properties)
 
 * NEW FEATURES
-  1. [ ] Vectorize SENL if it shows any promise as an improvement to NPNL
-  2. [ ] Try some variations to NPNL
-  3. [ ] Compare_models needs to sort based on training score if test_score doesn't exist.
-  4. [ ] Log2b = Log2 + Baseline Offset before the depression filter
-  5. [ ] Three-step fitter (First FIR, then NL, then both together)
-  6. [ ] Sparseness needs to be modeled on the FIR side, Smoothness on the NL side
-  7. [ ] A metric of FIR sparsity (L0 "norm": number of nonzero terms)
-  8. [ ] A metric of FIR magnitude (L1 norm: Sum of abs values)
-  9. [ ] A metric of NL smoothness (L1 or L2 norm of derivative of filter)
-  10. [ ] Expressing NL smoothness regularizer as a matrix
+  1. [X] Try some variations to NPNL with the binsize
+  2. [ ] Add a fitter which SMOOTHS respavg with a gaussian or poisson before doing FMINLSQ? 
+  3. [ ] FITTER: Zeroing/Relevancy boosting fitter. Uses scaling coefficient ALPHA. 0<ALPHA<10 is a good range. Higher values shrink harder, small values shrink less. 
+	 After training with any algorithm, perturb all values by a few small random deltas. 
+	 Compute the sample variance on the output and pretend that it's roughly the variance.
+	 Shrink ONLY the 'least important' coefficient by multiplying it by (1/var)^alpha. 
+	 That shrinkage is considered the 'step'.
+	 Proceed until there is N% of the power. 
+	 The solution should thus be sparse. Maybe not optimally so, but this is easy to implement.
+  4. [ ] FITTER: Boost/relevancy fitter. 
+	 
+  5. [ ] Vectorize SENL if it shows any promise as an improvement to NPNL so that it runs faster. 
+  6. [ ] MODULE: Gaussian/Poisson/InvGaussian kernel over TRAINING SET RESPAVG ONLY
+	 Running a gaussion or poisson kernel over the spiking smoothing would obviously improve RESPAVG smoothness.
+	 Using a fitter on this smoothed data would very likely give less noisey FIR filters. 
+	 However, it can't be used for actual comparison purposes because it modifies the must-be-inviolate test set data.
+  7. [ ] Fix fit_sparsebayes() so that it won't ever have positive definite problems 
+	 positivedefinite = all(eig(basis) > 0);
+	 OR use the 2nd return value of chol() when running the decomposition in sparse bayes
+  8. [ ] Compare_models needs to sort based on training score if test_score doesn't exist.
+  9. [ ] Log2b = Log2 + Baseline Offset before the depression filter
+  10. [ ] Three-step fitter (First FIR, then NL, then both together)
+  11. [ ] A metric of FIR sparsity (L0 "norm": number of nonzero terms)
+  12. [ ] A metric of FIR magnitude (L1 norm: Sum of abs values)
+  13. [ ] A metric of NL smoothness (L1 or L2 norm of derivative of filter)
+  14. [ ] Expressing NL smoothness regularizer as a matrix
 	  A Tikhonov matrix for regression: 
 	  diagonals are variance of each coef.
 	  2nd diagonals would add some correlation from one FIR coef to the next (smoothness?).
-  11. [ ] A check of NL homoskedasticity (How much is the variance changing along the abscissa)
-  12. [ ] Playing around with the number of NPNL bins, extrapolation, and smoothness.
-  13. [ ] FITTER: Log Likelihood because MSE is biased towards gaussian noise models, and for real-life data sets the probability tails are always heavier than a gaussian. 
-  14. [ ] Plot both test and training data for the NPNL.
-  15. [ ] A stronger shrinkage filter (Shrink by as much as you want)
-  16. [ ] A way to compare NPNLs for multiple data sets.
-  17. [ ] A histogram heat map of model performance for each cell
-  18. [ ] Automatic Relevancy Determination (ARD)
-  19. [ ] Automatic Smoothness Determination (ASD)
-  20. [ ] Get a histogram of the error of the NL. (Is it Gaussian or something else?)
-  21. [ ] FITTER: Fit the NL in a way that DISCARDS outliers. 
-  22. [ ] np2 = 'Nonparametric nonlinearity v2' (nbins, smoothing, extrapolation)
-  23. [ ] Generalize N-step fitter to let a particular module or set of modules float. 
-  24. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
-  25. [ ] I think normalizing the FIR filter coefs BEFORE doing the mean across jackknifes would really help. 
+  15. [ ] A check of NL homoskedasticity (How much is the variance changing along the abscissa)
+  16. [ ] Playing around with the number of NPNL bins, extrapolation, and smoothness.
+  17. [ ] FITTER: Log Likelihood because MSE is biased towards gaussian noise models, and for real-life data sets the probability tails are always heavier than a gaussian. 
+  18. [ ] Plot both test and training data for the NPNL.
+  19. [ ] A stronger shrinkage filter (Shrink by as much as you want)
+  20. [ ] A way to compare NPNLs for multiple data sets.
+  21. [ ] A histogram heat map of model performance for each cell
+  22. [ ] Automatic Relevancy Determination (ARD)
+  23. [ ] Automatic Smoothness Determination (ASD)
+  24. [ ] Get a histogram of the error of the NL. (Is it Gaussian or something else?)
+  25. [ ] FITTER: Fit the NL in a way that DISCARDS outliers. 
+  26. [ ] np2 = 'Nonparametric nonlinearity v2' (nbins, smoothing, extrapolation)
+  27. [ ] Generalize N-step fitter to let a particular module or set of modules float. 
+  28. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
+  29. [ ] I think normalizing the FIR filter coefs BEFORE doing the mean across jackknifes would really help. 
 	  Probably output nonlinearities need to be refit after any averaging, as well.
-  26. [ ] FN: Plot multiple models' NPNLs on the SAME PLOT?
-  27. [ ] FN: Cleanliness of a FIR filter based on weight of DC coef, and how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments.
-  28. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
-  29. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
-  30. [ ] FITTER: SWARM. Hybrid fit routine which takes the top N% of models, scales all FIR powers to be the same, then shrinks them.
-  31. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  32. [ ] MODULE: Standardized single/multi channel gammatone filter
-  33. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  34. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
-  35. [ ] MODULE INIT: Make a module which has a complex init process
+  30. [ ] FN: Plot multiple models' NPNLs on the SAME PLOT?
+  31. [ ] FN: Cleanliness of a FIR filter based on weight of DC coef, and how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments.
+  32. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  33. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
+  34. [ ] FITTER: SWARM. Hybrid fit routine which takes the top N% of models, scales all FIR powers to be the same, then shrinks them.
+  35. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  36. [ ] MODULE: Standardized single/multi channel gammatone filter
+  37. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  38. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
+  39. [ ] MODULE INIT: Make a module which has a complex init process
 	  1) Creates a spanning filterbank of gammatones
 	  2) Trains the FIR filter on that spanning filterbank
 	  3) Picks the top N (Usually 1, 2 or 3) filters based on their power
 	  4) Crops all other filters
-  36. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
-  37. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  38. [ ] REFACTOR: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  39. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
-  40. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  41. [ ] FN: Cleaning function which DELETES any models which have NaNs for test/train fits
-  42. [ ] FITTER: Import fitting routines from STRFlab
-  43. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
+  40. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
+  41. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  42. [ ] REFACTOR: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
+  43. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
+  44. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  45. [ ] FN: Cleaning function which DELETES any models which have NaNs for test/train fits
+  46. [ ] FITTER: Import fitting routines from STRFlab
+  47. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
 
 * END USER CONVENIENCES
   1. [ ] Why isn't auto recalc the default?
@@ -111,7 +122,7 @@
   13) [ ] make anything named 'do_' into a method for use with modules?
   14) [ ] make anything named 'update_' into a function used purely for its side effects?
   15) [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
-
+	  
 * DESIGN QUESTIONS TO BRAINSTORM:
   1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
 	 Auto-initialization of model params is done by allowing modules to update their design based on the data by calling the optional 'auto_init' method.
@@ -161,14 +172,20 @@
 	  Then, there would need to be a 'update-gui' function which can use those closed over variables.
 	  That fn could be called whenever you want to programmatically update it. 	  	  	 
   12. [ ] It is awkward in non-parametric non-linearity module to recalc the phi every time you need it for graphing. Some place to cache it would be good without risking cache staleness.
-  13. [ ] ENDGAME: 
+  13. [X] Nonparametric Nonlinearity (NPNL) linearizes anything. 
+	  It is very much data-driven, which is great. 
+	  On the other hand, it fits itself to linearize almost anything, so we somehow learn less than a simple, parameter-driven model. 
+	  How can we balance complexity in the FIR or complexity in the NL?
+	  ANSWER: Sparseness needs to be modeled on the FIR side, Smoothness on the NL side. 
+
+  14. [ ] ENDGAME: 
 	  Is the end goal of this system something that:
-	  - Spans the input space of nonlinearities
-	  - Spans the input space of depression
-	  - Has an inhibition and excitation filter
-	  - Has a NPNL for inhibition, and a NPNL for excitation
-	  - Uses ARD to eliminate all unimportant dimensions
-	  - Reports the best model
+	  - Spans the input space of nonlinearities?
+	  - Spans the input space of depression?
+	  - Has an inhibition and excitation filter?
+	  - Has a NPNL for inhibition, and a NPNL for excitation?
+	  - Uses ARD to eliminate all unimportant dimensions?
+	  - Reports the best model?
 
 * LUXURY, UNESSENTIAL TODO ITEMS 
   - [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)

@@ -159,4 +159,18 @@ OBSERVATIONS ON VARIOUS MODELS
    Automatic Relevancy Determination (ARD)
    Automatic Smoothness Determination (ASD)
    
-  
+* FEB 14, 2013 - 
+  The simulations I started yesterday aren't complete, but a few things are readily noticable. 
+
+** Observations
+   1. Changing the number of bins of NPNL doesn't seem to help much because it systematically does poorly at the edges.
+      Binning results in the minimum side of curve ALWAYS overestimating, and the top edge ALWAYS underestimating
+   2. The new Sparse Empirical Nonlinearity is beating the NPNL in most cases. When it's not, it does nearly as well. 
+      In light of observation #1, this isn't really surprising. It's nice to see it confirmed, however.
+   3. The new Sparse Bayesian fitter is essentially a boosting algorithm, and works great too.
+      It essentially steps with variable size. It also only steps ONLY toward the most relevant few dimensions. 
+      
+** Going forward
+   A post-fitter operation that makes solutions more sparse, either by shrinking or zeroing them (the extreme case of shrinking).
+
+

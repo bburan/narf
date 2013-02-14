@@ -71,6 +71,7 @@ for ii = 1:length(filenames)
     firmod.plot_fns{1}.fn(STACK(1:firmod_idx), XXX(1:firmod_idx+1));
     axes(ax{ii}.nlin);
     if strcmp(STACK{firmod_idx+1}.name, 'nonlinearity') | ...
+       strcmp(STACK{firmod_idx+1}.name, 'sparse_empirical_nonlinearity') | ...
        strcmp(STACK{firmod_idx+1}.name, 'nonparm_nonlinearity')     
         STACK{firmod_idx+1}.plot_fns{1}.fn(STACK(1:firmod_idx+1), XXX(1:firmod_idx+2));
     end

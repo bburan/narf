@@ -65,4 +65,3 @@ summaries = load_summaries(summary_files);
 summaries = only_named_summaries(summaries, modelnames);
 
 plot_summaries(summaries, analysis_prefix, true);
-
