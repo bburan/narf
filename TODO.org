@@ -20,55 +20,65 @@
      Is there any reason that all the nonlinearity couldn't be BEFORE the filter?
      Would that help anything?
 
+* BATCHES
+  Batch   --  Description
+  233     --  Ferret vocalizations
+  240     --  SPN center/surround (one speaker)
+  241     --  TSP -- Tone detection in SPnoise
+  242     --  SPN left/right (same spectral properties)
+
 * NEW FEATURES
-  1. [ ] Log2b = Log2 + Baseline Offset before the depression filter
-  2. [ ] Three-step fitter (First FIR, then NL, then both together)
-  3. [ ] Sparseness needs to be modeled on the FIR side, Smoothness on the NL side
-  4. [ ] A metric of FIR sparsity (L0 "norm": number of nonzero terms)
-  5. [ ] A metric of FIR magnitude (L1 norm: Sum of abs values)
-  6. [ ] A metric of NL smoothness (L1 or L2 norm of derivative of filter)
-  7. [ ] Expressing NL smoothness regularizer as a matrix
-	 A Tikhonov matrix for regression: 
-	 diagonals are variance of each coef.
-	 2nd diagonals would add some correlation from one FIR coef to the next (smoothness?).
-  8. [ ] A check of NL homoskedasticity (How much is the variance changing along the abscissa)
-  9. [ ] Playing around with the number of NPNL bins, extrapolation, and smoothness.
-  10. [ ] FITTER: Log Likelihood because MSE is biased towards gaussian noise models, and for real-life data sets the probability tails are always heavier than a gaussian. 
-  11. [ ] Plot both test and training data for the NPNL.
-  12. [ ] A stronger shrinkage filter (Shrink by as much as you want)
-  13. [ ] A way to compare NPNLs for multiple data sets.
-  14. [ ] A histogram heat map of model performance for each cell
-  15. [ ] Automatic Relevancy Determination (ARD)
-  16. [ ] Automatic Smoothness Determination (ASD)
-  17. [ ] Get a histogram of the error of the NL. (Is it Gaussian or something else?)
-  18. [ ] FITTER: Fit the NL in a way that DISCARDS outliers. 
-  19. [ ] np2 = 'Nonparametric nonlinearity v2' (nbins, smoothing, extrapolation)
-  20. [ ] Generalize N-step fitter to let a particular module or set of modules float. 
-  21. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
-  22. [ ] I think normalizing the FIR filter coefs BEFORE doing the mean across jackknifes would really help. 
+  1. [ ] Vectorize SENL if it shows any promise as an improvement to NPNL
+  2. [ ] Try some variations to NPNL
+  3. [ ] Compare_models needs to sort based on training score if test_score doesn't exist.
+  4. [ ] Log2b = Log2 + Baseline Offset before the depression filter
+  5. [ ] Three-step fitter (First FIR, then NL, then both together)
+  6. [ ] Sparseness needs to be modeled on the FIR side, Smoothness on the NL side
+  7. [ ] A metric of FIR sparsity (L0 "norm": number of nonzero terms)
+  8. [ ] A metric of FIR magnitude (L1 norm: Sum of abs values)
+  9. [ ] A metric of NL smoothness (L1 or L2 norm of derivative of filter)
+  10. [ ] Expressing NL smoothness regularizer as a matrix
+	  A Tikhonov matrix for regression: 
+	  diagonals are variance of each coef.
+	  2nd diagonals would add some correlation from one FIR coef to the next (smoothness?).
+  11. [ ] A check of NL homoskedasticity (How much is the variance changing along the abscissa)
+  12. [ ] Playing around with the number of NPNL bins, extrapolation, and smoothness.
+  13. [ ] FITTER: Log Likelihood because MSE is biased towards gaussian noise models, and for real-life data sets the probability tails are always heavier than a gaussian. 
+  14. [ ] Plot both test and training data for the NPNL.
+  15. [ ] A stronger shrinkage filter (Shrink by as much as you want)
+  16. [ ] A way to compare NPNLs for multiple data sets.
+  17. [ ] A histogram heat map of model performance for each cell
+  18. [ ] Automatic Relevancy Determination (ARD)
+  19. [ ] Automatic Smoothness Determination (ASD)
+  20. [ ] Get a histogram of the error of the NL. (Is it Gaussian or something else?)
+  21. [ ] FITTER: Fit the NL in a way that DISCARDS outliers. 
+  22. [ ] np2 = 'Nonparametric nonlinearity v2' (nbins, smoothing, extrapolation)
+  23. [ ] Generalize N-step fitter to let a particular module or set of modules float. 
+  24. [ ] PERF METRIC: inter_spike_intervals + bayesian_likelihood()
+  25. [ ] I think normalizing the FIR filter coefs BEFORE doing the mean across jackknifes would really help. 
 	  Probably output nonlinearities need to be refit after any averaging, as well.
-  23. [ ] FN: Plot multiple models' NPNLs on the SAME PLOT?
-  24. [ ] FN: Cleanliness of a FIR filter based on weight of DC coef, and how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments.
-  25. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
-  26. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
-  27. [ ] FITTER: SWARM. Hybrid fit routine which takes the top N% of models, scales all FIR powers to be the same, then shrinks them.
-  28. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  29. [ ] MODULE: Standardized single/multi channel gammatone filter
-  30. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  31. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
-  32. [ ] MODULE INIT: Make a module which has a complex init process
+  26. [ ] FN: Plot multiple models' NPNLs on the SAME PLOT?
+  27. [ ] FN: Cleanliness of a FIR filter based on weight of DC coef, and how 'peaky' it is. Set highest peak to zero, then compare overall magnitude to before. This gives a series of moments.
+  28. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  29. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
+  30. [ ] FITTER: SWARM. Hybrid fit routine which takes the top N% of models, scales all FIR powers to be the same, then shrinks them.
+  31. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  32. [ ] MODULE: Standardized single/multi channel gammatone filter
+  33. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  34. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
+  35. [ ] MODULE INIT: Make a module which has a complex init process
 	  1) Creates a spanning filterbank of gammatones
 	  2) Trains the FIR filter on that spanning filterbank
 	  3) Picks the top N (Usually 1, 2 or 3) filters based on their power
 	  4) Crops all other filters
-  33. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
-  34. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  35. [ ] REFACTOR: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  36. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
-  37. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  38. [ ] FN: Cleaning function which DELETES any models which have NaNs for test/train fits
-  39. [ ] FITTER: Import fitting routines from STRFlab
-  40. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
+  36. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
+  37. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  38. [ ] REFACTOR: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
+  39. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
+  40. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  41. [ ] FN: Cleaning function which DELETES any models which have NaNs for test/train fits
+  42. [ ] FITTER: Import fitting routines from STRFlab
+  43. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
 
 * END USER CONVENIENCES
   1. [ ] Why isn't auto recalc the default?

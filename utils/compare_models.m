@@ -99,7 +99,7 @@ end
 score = sortrows(score);
 newax = {};
 sorted_filenames = {};
-for ii = 1:length(score)
+for ii = 1:size(score, 1)
     newax{ii} = ax{score(ii,2)};
     sorted_filenames{ii} = filenames{score(ii,2)};
 end
