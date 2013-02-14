@@ -1,11 +1,13 @@
-function ret = request_celldb_batch(batch)
+function ret = request_celldb_batch(batch,cellid)
 % Exploiting all the code written by Stephen, find the cellids, training,
 % and test sets that correspond with a particular batch number. Returns a
 % cell array of structs with three fields per struct:
 %      .cellid
 %      .training_set
 %      .test_set
-
+% SVD -- added cellid parameter to make this run faster if you only
+%        information for one known cell (2013-02-13)
+%
 ret = {};
 
 if ~exist('batch'),
@@ -14,7 +16,12 @@ if ~exist('batch'),
 end
 
 dbopen;
-sql = ['SELECT * from sRunData WHERE batch=', num2str(batch)];
+if exist('cellid','var'),
+    sql = ['SELECT * from sRunData WHERE batch=', num2str(batch),...
+          ' AND cellid="',cellid,'"'];
+else
+    sql = ['SELECT * from sRunData WHERE batch=', num2str(batch)];
+end
 rundata = mysql(sql);
 
 if length(rundata) == 0,
@@ -79,7 +86,7 @@ for nn = 1:length(rundata)
     else
         % figure out what files to use for what stage of the analysis
         [cellfiledata, times, params] = cellfiletimes(cellid, rundata(nn).batch);
-    
+        
         for ii=1:length(times(1).fileidx),
             if times(1).stop(ii)>times(1).start(ii),
                 train_set{end+1}=basename(params.stimfiles{times(1).fileidx(ii)});
