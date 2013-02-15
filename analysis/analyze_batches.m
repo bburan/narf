@@ -31,11 +31,11 @@ for bi = 1:length(batches)
     
     % Define how groups of modules should be combined to make many models
     mm = {};
-    mm{1} = module_groups('env100');
-    mm{2} = module_groups('l2');
+    mm{1} = module_groups('env100', 'env100n');
+    mm{2} = module_groups('log2b', 'l2');
     mm{3} = module_groups('firc');
-    mm{4} = module_groups('npnl', 'senl');
-    mm{5} = module_groups('fminlsq', 'sb', 'boost');
+    mm{4} = module_groups('senl', 'npnl');
+    mm{5} = module_groups('fminlsq', 'boost');
     mm{6} = module_groups('mse');
     
     [~, modelnames] = module_combinations(mm);

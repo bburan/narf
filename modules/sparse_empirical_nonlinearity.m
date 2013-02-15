@@ -8,7 +8,7 @@ m.mdl = @sparse_empirical_nonlinearity;
 m.name = 'sparse_empirical_nonlinearity';
 m.fn = @do_se_nonlinearity;
 m.pretty_name = 'Sparse Empirical Nonlinearity';
-m.editable_fields = {'relvar', 'input_stim', 'input_resp', 'time', 'output'};
+m.editable_fields = {'numpts', 'relvar', 'input_stim', 'input_resp', 'time', 'output'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
@@ -17,8 +17,12 @@ m.input_stim = 'stim';
 m.input_resp = 'respavg';
 m.time = 'stim_time';
 m.output = 'stim';
-m.relvar = 0.25;  % Magnitude of the gaussian variance, relative to the 
-                  % total range (max - min) of the input space.
+m.numpts = 100; % Doubling number of points takes 4x the calc time
+                % However, more points is usually better
+                % Good range seems to be 50 to 1000 points.
+                % 100 is pretty fast and 'good enough'
+m.relvar = 0.2;  % Magnitude of the gaussian variance, relative to the 
+                 % total range (max - min) of the input space.
 
 % Optional fields
 m.plot_fns = {};
@@ -61,24 +65,23 @@ function nl = calc_sparse_nonlinearity(stack, xxx)
     pred=pred(keepidx);
     resp=resp(keepidx);
         
-    % Sort and average the entries so there are ~1000 data points
+    % Sort and average the entries so there are data points
     D = [pred resp]; 
     D = sortrows(D);
     N = size(D, 1);
-    D = conv_fn(D, 1, @nanmean, ceil(N/1000), 0);
-    
-    % TODO: This basis is incorrect because it assumes that the X are all
-    % equally spaced apart, which is untrue
-    function D2 = distSquared(X,Y)
-        nx	= size(X,1);
-        ny	= size(Y,1);
-        D2 = (sum((X.^2), 2) * ones(1,ny)) + ...
-             (ones(nx, 1) * sum((Y.^2),2)') - 2*X*Y';
-    end
+    D = conv_fn(D, 1, @nanmean, ceil(N/mdl.numpts), 0);
     
     X = D(:,1);
     Y = D(:,2);
     basisWidth	= (max(X) - min(X)) * mdl.relvar;
+    
+    function D2 = distSquared(Xa,Xb)
+        nx	= size(Xa,1);
+        ny	= size(Xb,1);
+        D2 = (sum((Xa.^2), 2) * ones(1,ny)) + ...
+             (ones(nx, 1) * sum((Xb.^2),2)') - 2*Xa*Xb';
+    end    
+       
     basis = exp(-distSquared(X,X)/(basisWidth^2));
     [P, H, D] = SparseBayes('Gaussian', basis, Y);
     w = zeros(size(basis,2),1); % Basis weights
@@ -93,33 +96,33 @@ function nl = calc_sparse_nonlinearity(stack, xxx)
     nl.X = X;
     nl.Y = Y;
     
+    % Compute an extra control point to the right
+    slope    = (P.Value(end) - P.Value(end-1)) / (Cx(end) - Cx(end-1));
+    Cx_extra = Cx(end) + (Cx(end) - Cx(end-1));
+    Cw_extra = P.Value(end) + (slope * (Cx_extra - Cx(end)));
+    
     % We also return a function that can be used to interpolate arbitrary
     % values of y using the gaussian mixture
     function z = interpolomatic(xs)
-
+        
         % TODO: Vectorize this function to do the gaussian mixture stuff
+        newbasis = exp(-distSquared(xs, [Cx' Cx_extra]') / (basisWidth^2));
+        z = newbasis * [P.Value', Cw_extra]';
         
-        %l = length(xs);
-        %dists = abs(xs * ones(1, length(Cx)) - ones(l,1) * Cy');
-        %z = sum(exp(-dists/(basisWidth^2)), 2);
+        % If we don't interpolate beyond the bounds of the training set,
+        % they quickly fall off to zero. These 'stretch' the starting and
+        % ending values, which is a very stupid approximation but also is
+        % pretty safe. 
+        %tops = xs > max(X);
+        %slope = (Cy(end) - Cy(end-1)) / (Cx(end) - Cx(end-1));
+        %start = Cy(end);
+        %z(tops) = xs(tops) + Cy(end) +;
         
-        %dists = distSquared(xs, Cx);
-        %z = sum(exp(-dists/(basisWidth^2)), 2);
-                
-        % VERY SLOW BUT SAFE WAY
-        for ii = 1:length(xs)
-            x = xs(ii);
-            i1 = find(x > X, 1, 'last');   
-            i2 = find(x <= X, 1, 'first');
-            if isempty(i1)  % Below lower bound case
-                z(ii) = Z(1);
-            elseif isempty(i2) % Above upper bound case
-                z(ii) = Z(end);
-            else % Bounded on both sides case
-                d = (x - X(i1)) / (X(i2) - X(i1));
-                z(ii) = (1-d)*Z(i1) + d*Z(i2); 
-            end
-        end
+        % On the bottom side, it's simplest just to let the values fall of
+        % to zero as they go sufficiently below any observed training set
+        % values. We don't have to do anything for that to happen, gaussian
+        % mixture models have this property already. 
+
     end
     nl.F = @interpolomatic;
  end
@@ -138,34 +141,46 @@ function x = do_se_nonlinearity(stack, xxx)
     end
 end
 
-function plotthecurve(nl)
-    %hold on;
+function plotthecurve(nl, xmin, xmax)
+    
     %plot(nl.X, nl.Y, 'g.');
-    plot(nl.X, nl.Z, 'b-');
-    errorbar(nl.Cx, nl.Cy, nl.Q, 'r.');
-    axis([min(nl.X), max(nl.X), min(nl.Y), max(nl.Y)]);
-    %hold off;
+    %plot(nl.X, nl.Z, 'r-');
+    %plot(nl.X, nl.F(nl.X), 'm-');
+    aa = linspace(xmin, xmax, 100);
+    plot(aa', nl.F(aa'), 'b-');
+    plot(nl.Cx, nl.Cy, 'rx');
+    % errorbar(nl.Cx, nl.Cy, nl.Q, 'r.');
+    % axis([min(nl.X), max(nl.X), min(nl.Y), max(nl.Y)]);
+    axis tight;
+
 end
 
 function do_plot_scatter_and_nonlinearity(stack, xxx)
     mdl = stack{end};
-    x = xxx{end};
     
     nl = calc_sparse_nonlinearity(stack, xxx(1:end-1));
     hold on;
     do_plot_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
-    plotthecurve(nl);
+    
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
+    xmin = min(xxx{end-1}.dat.(sf).(mdl.input_stim)(:));
+    xmax = max(xxx{end-1}.dat.(sf).(mdl.input_stim)(:));
+    plotthecurve(nl, xmin, xmax);
+    
     hold off;
 end
 
 function do_plot_smooth_scatter_and_nonlinearity(stack, xxx)
     mdl = stack{end};
-    x = xxx{end};
     
     nl = calc_sparse_nonlinearity(stack, xxx(1:end-1));
     hold on;
     do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);    
-    plotthecurve(nl);
+    
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
+    xmin = min(xxx{end-1}.dat.(sf).(mdl.input_stim)(:));
+    xmax = max(xxx{end-1}.dat.(sf).(mdl.input_stim)(:));    
+    plotthecurve(nl, xmin, xmax);
     hold off;
 end
 

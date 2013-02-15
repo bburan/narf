@@ -78,7 +78,8 @@ function x = do_mean_squared_error(stack, xxx)
 
     x.(mdl.train_score) = train_score;
     x.(mdl.test_score) = test_score;
-    x.(mdl.output) = ((1-mdl.smoothness_weight)*(train_score) + ...
+    % TODO: Careful! I am now training on r, not r^2! FIXME
+    x.(mdl.output) = ((1-mdl.smoothness_weight)*(sqrt(train_score)) + ...
                      (mdl.smoothness_weight * diff));
 end
 
