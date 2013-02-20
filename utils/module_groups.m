@@ -196,6 +196,22 @@ for ii = 1:length(group_names)
             mm = {MODULES.nonparm_nonlinearity};
         case {'senl'}
             mm = {MODULES.sparse_empirical_nonlinearity};
+        case {'senl2'}
+            mm = {MODULES.sparse_empirical_nonlinearity2};
+
+        case {'gmm3'}
+            mm = {MODULES.gmm_nonlinearity.mdl(struct('num_pts', 500, ...
+                                                      'num_gaussians', 3))};
+        case {'gmm4'}
+            mm = {MODULES.gmm_nonlinearity.mdl(struct('num_pts', 500, ...
+                                                      'num_gaussians', 4))};            
+        case {'gmm5'}
+            mm = {MODULES.gmm_nonlinearity.mdl(struct('num_pts', 500, ...
+                                                      'num_gaussians', 5))};
+        case {'gmm6'}
+            mm = {MODULES.gmm_nonlinearity.mdl(struct('num_pts', 500, ...
+                                                      'num_gaussians', 6))};
+            
         case {'sig'}
             mm = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
                                                   'phi', [0 1 1 0], ...
