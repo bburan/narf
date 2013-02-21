@@ -82,6 +82,8 @@ function interpfn = calc_gmm_nonlinearity(stack, xxx)
     
     Data = calc_data(mdl, x);
     
+    %disp(mdl.gmm_mu);
+    
     tic;
     [Priors, Mu, Sigma] = EM(Data, mdl.gmm_priors, mdl.gmm_mu, ...
                             mdl.gmm_sigma, mdl.thresh);
@@ -96,9 +98,12 @@ function interpfn = calc_gmm_nonlinearity(stack, xxx)
     % TODO: REMOVE THIS VERY NAUGHTY CODE! Updating the STACK in this way
     % is really frowned upon. But I can't think of another way of doing
     % this type of functionality. 
-    stack{end}.gmm_priors = Priors;
-    stack{end}.gmm_mu = Mu;
-    stack{end}.gmm_sigma = Sigma;
+    global STACK;
+    idx = length(stack);
+   
+    STACK{idx}.gmm_priors = Priors;
+    STACK{idx}.gmm_mu = Mu;
+    STACK{idx}.gmm_sigma = Sigma;
     
     interpfn = @interpolomatic;
  end
