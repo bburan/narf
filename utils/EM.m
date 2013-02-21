@@ -1,4 +1,4 @@
-function [Priors, Mu, Sigma, Pix] = EM(Data, Priors0, Mu0, Sigma0)
+function [Priors, Mu, Sigma, Pix] = EM(Data, Priors0, Mu0, Sigma0, thresh)
 %
 % Expectation-Maximization estimation of GMM parameters.
 % This source code is the implementation of the algorithms described in 
@@ -51,7 +51,11 @@ function [Priors, Mu, Sigma, Pix] = EM(Data, Priors0, Mu0, Sigma0)
 % }
 
 %% Criterion to stop the EM iterative update
-loglik_threshold = 1e-10;
+if nargin < 5
+    loglik_threshold = 1e-10;
+else
+    loglik_threshold = thresh;
+end
 
 %% Initialization of the parameters
 [nbVar, nbData] = size(Data);
@@ -67,6 +71,7 @@ Priors = Priors0;
 %% involving one-by-one computation, which is easier to understand)
 while 1
   %% E-step %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  Pxi = zeros(nbData,nbStates);
   for i=1:nbStates
     %Compute probability p(x|i)
     Pxi(:,i) = gaussPDF(Data, Mu(:,i), Sigma(:,:,i));
@@ -95,7 +100,8 @@ while 1
   end
   %Compute the log likelihood
   F = Pxi*Priors';
-  F(find(F<realmin)) = realmin;
+  %F(find(F<realmin)) = realmin;
+  F(F<realmin) = realmin;
   loglik = mean(log(F));
   %Stop the process depending on the increase of the log likelihood 
   if abs((loglik/loglik_old)-1) < loglik_threshold

@@ -17,8 +17,10 @@ m.time       = 'stim_time';
 m.output     = 'stim';
 m.num_gaussians = 4; 
 m.num_pts    = 100;
+m.thresh     = 1e-10; 
 
 % Optional fields
+m.auto_init = @auto_init_gmm;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_smooth_scatter_and_gmm; 
 m.plot_fns{1}.pretty_name = 'Stim/Resp Smooth Scatter';
@@ -34,10 +36,7 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function interpfn = calc_gmm_nonlinearity(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
+function Data = calc_data(mdl, x)
     % Create the pred and resp vectors
     pred = []; 
     resp = [];
@@ -62,14 +61,44 @@ function interpfn = calc_gmm_nonlinearity(stack, xxx)
     N = size(Data, 1);
     Data = conv_fn(Data, 1, @nanmean, ceil(N/mdl.num_pts), 0);
     Data = Data';
-    [Priors, Mu, Sigma] = EM_init_kmeans(Data, mdl.num_gaussians);
-    [Priors, Mu, Sigma] = EM(Data, Priors, Mu, Sigma);
+end
+
+function mm = auto_init_gmm(stack, xxx)
+    mm = m;
+    
+    Data = calc_data(mm, xxx{end});
+        
+    % Initialize gaussian mixture model starting point
+    [Priors, Mu, Sigma] = EM_init_kmeans(Data, mm.num_gaussians);    
+    
+	mm.gmm_priors = Priors;
+    mm.gmm_mu = Mu; 
+    mm.gmm_sigma = Sigma;
+end
+
+function interpfn = calc_gmm_nonlinearity(stack, xxx)
+    mdl = stack{end};
+    x = xxx{end};
+    
+    Data = calc_data(mdl, x);
+    
+    tic;
+    [Priors, Mu, Sigma] = EM(Data, mdl.gmm_priors, mdl.gmm_mu, ...
+                            mdl.gmm_sigma, mdl.thresh);
+    toc
     
     % Return a function that can be used to interpolate arbitrary values of
     % x using a gaussian mixture model.
     function [z, sig] = interpolomatic(xs)
         [z, sig] = GMR(Priors, Mu, Sigma, xs', [1], [2]);
     end
+    
+    % TODO: REMOVE THIS VERY NAUGHTY CODE! Updating the STACK in this way
+    % is really frowned upon. But I can't think of another way of doing
+    % this type of functionality. 
+    stack{end}.gmm_priors = Priors;
+    stack{end}.gmm_mu = Mu;
+    stack{end}.gmm_sigma = Sigma;
     
     interpfn = @interpolomatic;
  end
