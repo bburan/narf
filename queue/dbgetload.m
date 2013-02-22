@@ -27,7 +27,6 @@ else
        ' TIME_TO_SEC(NOW())-TIME_TO_SEC(lastdate)) AS secago',...
        ' FROM tComputer order by load1,name'];
 end
-
 compdata=mysql(sql);
 
 r=zeros(length(compdata),5);
