@@ -57,27 +57,28 @@ append_or_save(fh, sprintf('%s_best%d', cellid, n));
 % TOKEN SCATTER PLOTS
 
 % Build a list of summary tokens and a structure to store them in
-tokens = cell(1, 10); % FIXME
-for ii = 1:length(summaries)
-    s = summaries{ii};
-    toks = tokenize_modelname(s.modelname);
+tokens = cell(1, 10); % FIXME: 10 is a magic number I assume to be longer than toks
+if length(summaries) >= 1
+    for ii = 1:length(summaries)
+        s = summaries{ii};
+        toks = tokenize_modelname(s.modelname);
     
-    for jj = 1:length(toks)
-        tokens{jj} = cat(2, tokens{jj}, toks{jj});
-    end  
-end
+        for jj = 1:length(toks)
+            tokens{jj} = cat(2, tokens{jj}, toks{jj});
+        end  
+    end
 
-% Condense tokens
-for ii = 1:length(toks)
-    tokens{ii} = unique(tokens{ii});
+    % Condense tokens
+    for ii = 1:length(toks)
+        tokens{ii} = unique(tokens{ii});
+    end
+    
+    % Now generate scatter and bar plots for each of those
+    for ii = 1:5
+        fh = plot_token_performance(summaries, [cellid sprintf(', token group %d', ii)], ii, tokens{ii});
+        append_or_save(fh, sprintf('%s_tok%d', cellid, ii));
+    end
 end
-
-% Now generate scatter and bar plots for each of those
-for ii = 1:5
-    fh = plot_token_performance(summaries, [cellid sprintf(', token group %d', ii)], ii, tokens{ii});
-    append_or_save(fh, sprintf('%s_tok%d', cellid, ii));
-end
-
 % ------------------------------------------------------------------------
 
 end

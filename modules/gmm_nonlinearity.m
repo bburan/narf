@@ -84,9 +84,15 @@ function interpfn = calc_gmm_nonlinearity(stack, xxx)
     
     %disp(mdl.gmm_mu);
     
-    tic;
-    [Priors, Mu, Sigma] = EM(Data, mdl.gmm_priors, mdl.gmm_mu, ...
-                            mdl.gmm_sigma, mdl.thresh);
+    tic;   
+    if isfield(mdl, 'gmm_priors') && isfield(mdl, 'gmm_mu') &&...
+       isfield(mdl, 'gmm_sigma') && isfield(mdl, 'thresh')
+        [Priors, Mu, Sigma] = EM(Data, mdl.gmm_priors, mdl.gmm_mu, ...
+                                mdl.gmm_sigma, mdl.thresh);
+    else 
+        [Priors, Mu, Sigma] = EM_init_kmeans(Data, mdl.num_gaussians);   
+        [Priors, Mu, Sigma] = EM(Data, Priors, Mu, Sigma);
+    end
     toc
     
     % Return a function that can be used to interpolate arbitrary values of

@@ -240,7 +240,22 @@ for ii = 1:length(group_names)
         case {'msereg'}
             mm = {MODULES.mean_squared_error.mdl(struct('output', 'score', ...
                                                         'smoothness_weight', 10^-6))};
-            
+        case {'mses1'}
+            mm = {MODULES.mean_squared_error.mdl(struct('output', 'score', ...
+                                                        'sparseness_weight', 10^-1))};
+                                                    
+        case {'mses2'}
+            mm = {MODULES.mean_squared_error.mdl(struct('output', 'score', ...
+                                                        'sparseness_weight', 10^-2))};
+                                                    
+        case {'mses3'}
+            mm = {MODULES.mean_squared_error.mdl(struct('output', 'score', ...
+                                                        'sparseness_weight', 10^-3))};     
+        
+        case {'mses4'}
+            mm = {MODULES.mean_squared_error.mdl(struct('output', 'score', ...
+                                                        'sparseness_weight', 10^-4))};     
+        
         case {'fmin'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_fminsearch))};   
         case {'lsq'}
