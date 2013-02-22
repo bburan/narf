@@ -87,12 +87,12 @@ else
    
    shorthostname=strsep(hostname,'.');
    shorthostname=shorthostname{1};
-   disp([SSHCMD,user,'@',shorthostname,' /auto/p1/svd/bin/qsetload',bgstring]);
-   [s,w]=unix([SSHCMD,user,'@',shorthostname,' /auto/p1/svd/bin/qsetload',bgstring]);
+   disp([SSHCMD,user,'@',shorthostname,' /auto/users/svd/bin/qsetload',bgstring]);
+   [s,w]=unix([SSHCMD,user,'@',shorthostname,' /auto/users/svd/bin/qsetload',bgstring]);
    
    if s>0,
       fprintf('dbupdateload.m: s=%d re-checking load on: %s\n',s,hostname);
-      [s,w]=unix([SSHCMD,user,'@',shorthostname,' /auto/p1/svd/bin/qsetload']);
+      [s,w]=unix([SSHCMD,user,'@',shorthostname,' /auto/users/svd/bin/qsetload']);
       fprintf('failed with s=%d w=%s\n',s,w);
    end
    
