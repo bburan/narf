@@ -78,6 +78,10 @@ function x = do_mean_squared_error(stack, xxx)
     x.(mdl.test_score) = test_score;
     %fprintf('%f\t%f\t%f\n', train_score, mdl.smoothness_weight * diff, ...
     %                         mdl.sparseness_weight * nonpeakiness);
+    if ~isfield(mdl, 'sparseness_weight')
+        mdl.sparseness_weight = 0;
+    end
+    
     x.(mdl.output) = (train_score) + ...
                      mdl.smoothness_weight * smoothness_metric(firmod.coefs) + ...
                      mdl.sparseness_weight * sparsity_metric(firmod.coefs);

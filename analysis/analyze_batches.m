@@ -33,11 +33,10 @@ for bi = 1:length(batches)
     mm = {};
     mm{1} = module_groups('env100');
     mm{2} = module_groups('log2b');
-    mm{3} = module_groups('firc');
-    % mm{4} = module_groups('gmm3', 'gmm4', 'gmm5', 'gmm6');
-    mm{4} = module_groups('npnl', 'senl');
-    mm{5} = module_groups('fmin');
-    mm{6} = module_groups('mses1','mses2','mses3','mses4');
+    mm{3} = module_groups('firn');
+    mm{4} = module_groups('npfnl', 'npnl');
+    mm{5} = module_groups('fmin', 'boost');
+    mm{6} = module_groups('mse','mses2','mses3','mses4','mses5','mses6');
     
     [~, modelnames] = module_combinations(mm);
     
@@ -51,7 +50,7 @@ for bi = 1:length(batches)
          
         % Technically, fit_models already built a perfect cache, even if interrupted,
         % but rebuilding it can give us a little peace of mind so let's do it.
-        summarize_cellid(cells{ii}.cellid, true);
+        %summarize_cellid(cells{ii}.cellid, true);
         
         % Otherwise, load the model summaries for this cell from the cache
         sf = [NARF_SAVED_ANALYSIS_PATH filesep cells{ii}.cellid '_summary.mat'];

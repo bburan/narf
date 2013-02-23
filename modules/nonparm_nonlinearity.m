@@ -100,7 +100,7 @@ function [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx)
         rr(isnan(rr))=0;
         
         rr(:)=gsmooth(rr(:),1);
-        %[pp(:,dd),rr(:,dd)]
+        % [pp(:,dd),rr(:,dd)]
     end
     
     phi={pp,rr};
@@ -119,7 +119,7 @@ function x = do_np_nonlinearity(stack, xxx)
         y = zeros(T, S, C);
         
         % TODO: If a scalar-valued function, use this
-        %y = arrayfun(@(in) mdl.nlfn(mdl.phi, in), x.dat.(sf).(mdl.input_stim));
+        % y = arrayfun(@(in) mdl.nlfn(mdl.phi, in), x.dat.(sf).(mdl.input_stim));
         
         % Otherwise use the much faster vector valued functions
         y = raw_nl(phi, x.dat.(sf).(mdl.input_stim)(:));      
@@ -139,8 +139,8 @@ function do_plot_scatter_and_nonlinearity(stack, xxx)
     hold on;
     do_plot_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
     xlims = xlim();
-    %xs = linspace(xlims(1), xlims(2), 100);
-    %plot(xs, raw_nl(mdl.phi, xs));
+    % xs = linspace(xlims(1), xlims(2), 100);
+    % plot(xs, raw_nl(mdl.phi, xs));
     [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx(1:end-1));
     errorbar(phi{1},phi{2},outbinserr);
     hold off
@@ -151,9 +151,9 @@ function do_plot_smooth_scatter_and_nonlinearity(stack, xxx)
     x = xxx{end};
     hold on;
     do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
-    %xlims = xlim();
-    %xs = linspace(xlims(1), xlims(2), 100)';
-    %plot(xs, raw_nl(mdl.phi, xs));
+    % xlims = xlim();
+    % xs = linspace(xlims(1), xlims(2), 100)';
+    % plot(xs, raw_nl(mdl.phi, xs));
     [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx(1:end-1));
     errorbar(phi{1},phi{2},outbinserr);
     hold off

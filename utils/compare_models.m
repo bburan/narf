@@ -14,7 +14,7 @@ ax = cell(size(filenames));
 
 % Size parameters of GUI
 w = 1200;  
-h = 100;
+h = 120;
 y0 = 10;  % For scrolling
 vspace = 0.2; % Relative
 hspace = 0.05; 
@@ -79,15 +79,15 @@ for ii = 1:length(filenames)
     
     % Compute the moment of the distribution
     firmod = find_module(STACK, 'fir_filter');
-    moment = fir_moment(firmod.coefs);
+    sparsity = sparsity_metric(firmod.coefs);
     
     % Write to the text box some interesting values
     set(ax{ii}.text, 'String', ...
-        sprintf('%s\nTrain r^2: %.5f\nTest r^2:  %.5f\nMoment: %.5f', ...
+        sprintf('%s\nTrain r^2: %.5f\nTest r^2:  %.5f\nSparsity: %.5f', ...
                  f, ...
                  XXX{end}.score_train_corr, ...
                  XXX{end}.score_test_corr, ...
-                 moment));
+                 sparsity));
     
     score(ii,1) = XXX{end}.score_test_corr;
     score(ii,2) = ii;

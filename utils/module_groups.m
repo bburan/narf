@@ -200,6 +200,8 @@ for ii = 1:length(group_names)
             mm = {MODULES.passthru};
         case {'npnl'}
             mm = {MODULES.nonparm_nonlinearity};
+        case {'npfnl'}
+            mm = {MODULES.nonparm_filter_nonlinearity};
         case {'senl'}
             mm = {MODULES.sparse_empirical_nonlinearity};
         case {'senl2'}
@@ -254,10 +256,15 @@ for ii = 1:length(group_names)
         
         case {'mses4'}
             mm = {MODULES.mean_squared_error.mdl(struct('output', 'score', ...
-                                                        'sparseness_weight', 10^-4))};     
-        
+                                                        'sparseness_weight', 10^-4))};
+        case {'mses5'}
+            mm = {MODULES.mean_squared_error.mdl(struct('output', 'score', ...
+                                                        'sparseness_weight', 10^-5))};
+        case {'mses6'}
+            mm = {MODULES.mean_squared_error.mdl(struct('output', 'score', ...
+                                                        'sparseness_weight', 10^-6))};
         case {'fmin'}
-            mm = {MODULES.correlation.mdl(struct('fitter', @fit_fminsearch))};   
+            mm = {MODULES.correlation.mdl(struct('fitter', @fit_fminsearch))};    
         case {'lsq'}
             mm = {MODULES.correlation.mdl(struct('fitter', @fit_lsq))};
         case {'fminlsq'}

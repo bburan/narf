@@ -143,9 +143,9 @@ end
 
 function plotthecurve(nl, xmin, xmax)
     
-    %plot(nl.X, nl.Y, 'g.');
-    %plot(nl.X, nl.Z, 'r-');
-    %plot(nl.X, nl.F(nl.X), 'm-');
+    % plot(nl.X, nl.Y, 'g.');
+    % plot(nl.X, nl.Z, 'r-');
+    % plot(nl.X, nl.F(nl.X), 'm-');
     aa = linspace(xmin, xmax, 100);
     plot(aa', nl.F(aa'), 'b-');
     plot(nl.Cx, nl.Cy, 'rx');
@@ -170,6 +170,31 @@ function do_plot_scatter_and_nonlinearity2(stack, xxx)
     hold off;
 end
 
+% Ivar's edge-preserving convolution function convolves x with filter f
+function z = iconv(x, f)
+    z = zeros(size(x));
+    lx = length(x);
+    lf = length(f);
+    tmp = conv(x, f, 'full');
+    lt = length(tmp);
+    
+    % Copy the center part of the filter
+    for ii = 1:lx
+        z(ii) = tmp(ii+lf/2);
+    end
+    
+    % "Double up" the ends of the filter
+    for ii = 1:lf/2
+        z(ii) = (z(ii) + tmp((lf/2) - ii + 1)); % Left side
+        z(end-ii+1) = (z(end-ii+1) + tmp(end - (lf/2) + ii)); % Right side
+    end
+    
+    % figure;
+    % plot(1:lt, tmp, 'k-', lf/2:lt-lf/2, x, 'r-');
+    % plot(1:lx, x, 'r-', 1:lx, z);
+    
+end    
+
 function do_plot_smooth_scatter_and_nonlinearity2(stack, xxx)
     mdl = stack{end};
     
@@ -182,8 +207,13 @@ function do_plot_smooth_scatter_and_nonlinearity2(stack, xxx)
     xmax = max(xxx{end-1}.dat.(sf).(mdl.input_stim)(:));    
     %plotthecurve(nl, xmin, xmax);
         
+    
     % Build the gaussian smoothing filter   
-    gf = gausswin(10);
+    winsize = ceil(length(xxx{end-1}.dat.(sf).(mdl.input_stim)(:))/6);
+    if mod(winsize, 2) == 1
+        winsize = winsize + 1;
+    end
+    gf = gausswin(winsize);
     gf = gf / sum(gf);
     S = xxx{end-1}.dat.(sf).(mdl.input_stim)(:);
     R = xxx{end-1}.dat.(sf).(mdl.input_resp)(:);
@@ -192,21 +222,14 @@ function do_plot_smooth_scatter_and_nonlinearity2(stack, xxx)
     T = 1:size(SORTED,1);
     S = SORTED(:, 1);
     R = SORTED(:, 2);
+
+    for ii = 1:1
+        S = iconv(S, gf);
+        R = iconv(R, gf);
+    end
     
-    %S = conv(S, gf, 'same');
-    %R = conv(R, gf, 'same');
-    Data = [S, R]';
-    nbStates = 4;
-    nbVar = size(Data,1);
-    [Priors, Mu, Sigma] = EM_init_kmeans(Data, nbStates);
-    [Priors, Mu, Sigma] = EM(Data, Priors, Mu, Sigma);
-    expData(1,:) = linspace(min(Data(1,:)), max(Data(1,:)), 100);
-    [expData(2:nbVar,:), expSigma] = ...
-        GMR(Priors, Mu, Sigma,  expData(1,:), [1], [2:nbVar]);
-    %plotGMM(expData([1,2],:), expSigma(1,1,:), [0 0 .8], 3);
-    plot(expData(1,:), expData(2,:));
-    %plotthecurve(nl, xmin, xmax);
-    do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);    
+    plot(S, R);
+    do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp); 
     
     hold off;
 end
