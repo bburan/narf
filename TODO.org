@@ -44,17 +44,19 @@
   22. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
 
 ** FITTERS:
-  1. [ ] FITTER: A stronger shrinkage fitter (Shrink by as much as you want)
-  2. [ ] FITTER: Log Likelihood because MSE is biased towards gaussian noise models, and for real-life data sets the probability tails are always heavier than a gaussian. 
-  3. [ ] FITTER: Three-step fitter (First FIR, then NL, then both together)
+  1. [ ] FITTER: A lsqcurvefit with sparseness penalty (somehow read from later on?)
+  2. [ ] FITTER: A stronger shrinkage fitter (Shrink by as much as you want)
+  3. [ ] FITTER: Log Likelihood because MSE is biased towards gaussian noise models, and for real-life data sets the probability tails are always heavier than a gaussian. 
+  4. [ ] FITTER: Three-step fitter (First FIR, then NL, then both together)
 
 ** LARGER WORK
   1. [ ] Generalize N-step fitter to let a particular module or set of modules float. 
   2. [ ] inter_spike_intervals 
   3. [ ] bayesian_likelihood() perf metric
-  4. [ ] Automatic Relevancy Determination (ARD)
-  5. [ ] Automatic Smoothness Determination (ASD)
-  6. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
+  4. [ ] Use a single wavelet transform in place of downsampling + FIR filter (Hard and slow to fit, but extremely general)
+  5. [ ] Automatic Relevancy Determination (ARD)
+  6. [ ] Automatic Smoothness Determination (ASD)
+  7. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
 
 ** MODULES:
   1. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
