@@ -202,10 +202,12 @@ for ii = 1:length(group_names)
             mm = {MODULES.nonparm_nonlinearity};
         case {'npfnl'}
             mm = {MODULES.nonparm_filter_nonlinearity};
+        case {'npfnl3'}
+            mm = {MODULES.nonparm_filter_nonlinearity.mdl(struct('gwinval', 3))};
         case {'senl'}
             mm = {MODULES.sparse_empirical_nonlinearity};
-        case {'senl2'}
-            mm = {MODULES.sparse_empirical_nonlinearity2};
+        case {'senl3'}
+            mm = {MODULES.sparse_empirical_nonlinearity.mdl(struct('relvar', 0.3))};
 
         case {'gmm3'}
             mm = {MODULES.gmm_nonlinearity.mdl(struct('num_pts', 500, ...

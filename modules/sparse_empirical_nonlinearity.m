@@ -96,18 +96,17 @@ function nl = calc_sparse_nonlinearity(stack, xxx)
     nl.X = X;
     nl.Y = Y;
     
-    % Compute an extra control point to the right
-    slope    = (P.Value(end) - P.Value(end-1)) / (Cx(end) - Cx(end-1));
-    Cx_extra = Cx(end) + (Cx(end) - Cx(end-1));
-    Cw_extra = P.Value(end) + (slope * (Cx_extra - Cx(end)));
+%     % Compute an extra control point to the right
+%     slope    = (P.Value(end) - P.Value(end-1)) / (Cx(end) - Cx(end-1));
+%     Cx_extra = Cx(end) + (Cx(end) - Cx(end-1));
+%     Cw_extra = P.Value(end) + (slope * (Cx_extra - Cx(end)));
     
     % We also return a function that can be used to interpolate arbitrary
     % values of y using the gaussian mixture
     function z = interpolomatic(xs)
-        
         % TODO: Vectorize this function to do the gaussian mixture stuff
-        newbasis = exp(-distSquared(xs, [Cx' Cx_extra]') / (basisWidth^2));
-        z = newbasis * [P.Value', Cw_extra]';
+        newbasis = exp(-distSquared(xs, Cx) / (basisWidth^2));
+        z = newbasis * P.Value;
         
         % If we don't interpolate beyond the bounds of the training set,
         % they quickly fall off to zero. These 'stretch' the starting and

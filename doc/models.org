@@ -4,8 +4,10 @@ OBSERVATIONS ON VARIOUS MODELS
   1. MODEL COMPRESSOR: Any nonlinearity before the FIR filter a "compressor". 
   2. FIR FILTER: Has sufficient coefficients to cover the past 100ms of history and span the input dimensions
   3. NONLINEARITY: A global nonlinearity on the output of the FIR filter. 
+  4. FITTER: Whatever method is used to find the free parameters
+  5. PERFORMANCE METRIC: Whatever measurement is used to determine a 'good' fit.
 
-* Compressors (Jan 22, 2013)
+* Jan 22, 2013 - Compressor studies
   We have been considering fits using:
   1) No compression
   2) logarithms with a constant offset ($log(x+10^-offset)$), where offset=1, 2, 3, 4, 5, or is fit via optimization
@@ -28,7 +30,7 @@ OBSERVATIONS ON VARIOUS MODELS
      -> Decided not necessary, since FIR scaling can effectively transform one log base into another. They only differ by a constant factor. Remember: Log_a (x) / log_a(b) = log_b (x)
   3) Try a sigmoidal compressor to account for firing rate saturation. 
      -> TODO
-* Fitting Routines (Jan 22, 2013)
+* Jan 22, 2013 - Fitting Routines
   There is no "Best Fitting Routine", there are only fitting routines that work better in some circumstances than others.
 
   Five routines were tried: 
@@ -48,7 +50,7 @@ OBSERVATIONS ON VARIOUS MODELS
   1) Fit each element independently before doing the global final fit (could be done in auto-init)
   2) Bayesian likelihood fits
    
-* UPDATE (Jan 25, 2013)
+* Jan 25, 2013 - Update
   COMPRESSORS: Seems like Log1, log2, log3, log4 pretty much span the input range across 30 cells.
   FITTERS: fminlsq is the overall winner. Multi-step approaches did not help.
   LEVEL SHIFTING, LACK OF ATTENTION, OR MY EYE PLAYING TRICKS ON ME?: I swear to god that in many of these sound files, in stimulus #1, the very first edge (right after the sound begins) looks like it not neurally tracked like the others.
@@ -59,7 +61,7 @@ OBSERVATIONS ON VARIOUS MODELS
    If we do ANY selection of model parameters based on TEST SET performance, we are picking a set of noise and that is a no-no
    However, we could of course pick the model with the best TRAINING SET performance, that would be fine.
    
-* Feb 11, 2013: Analysis Batch 240 Notes
+* Feb 11, 2013 - Analysis Batch 240 Notes
   "Best" values chosen with my eye for qualitative considerations like simplicity and smoothness. 
   Sort with m-x org-table-sort-lines if desired.
 
@@ -159,7 +161,7 @@ OBSERVATIONS ON VARIOUS MODELS
    Automatic Relevancy Determination (ARD)
    Automatic Smoothness Determination (ASD)
    
-* FEB 14, 2013 - 
+* Feb 14, 2013 - Preliminary observations
   The simulations I started yesterday aren't complete, but a few things are readily noticable. 
 
 ** Observations
@@ -173,7 +175,7 @@ OBSERVATIONS ON VARIOUS MODELS
 ** Going forward
    A post-fitter operation that makes solutions more sparse, either by shrinking or zeroing them (the extreme case of shrinking).
 
-* Feb 19, 2013 - Batches
+* Feb 19, 2013 - Batches 240 and 242
   Batch 241 didn't work, but 240 and 242 are largely completed. 
 ** Stephen
    1. Correct: por023a-c2, por031a-09-1, por31a-19-1 have train=test set problem
@@ -241,7 +243,7 @@ OBSERVATIONS ON VARIOUS MODELS
    3. A sparse LSQ fitter
    4. A way of generating these tables automatically, not manually.
 
-* Feb 21, 2013 - Improved nonparametric nonlinearities.
+* Feb 21, 2013 - Improved nonparametric nonlinearities (GMM)
   The results aren't fully in yet because the gaussian mixture model (GMM) nonlinearity is extremely slow, and because it occasionally fails to initialize the K-means clustering. 
   However, for cells that DID complete, the analysis results are very promising.
 
@@ -272,3 +274,43 @@ OBSERVATIONS ON VARIOUS MODELS
       (Unfortunately, this would require rewriting the sparsebayes implementation. It has no support for multidimensional targets.
    2. Correct the GMM initialization bug. 
    3. Rewrite the GMM methods to avoid finding Kmeans from the beginning each time. Start from the PREVIOUS step?
+* Feb 25, 2013 - Full coverage planning for 240 and 242
+  Some results for batches 240, 241, and 242 are in, but I'll let Brian analyze them. 
+  
+  Today it seems more important for me to plan out some combinatorics which will fully cover our 'confusion space' right now. We don't know:
+  1. What nonparametnric nonlinearity is working? 
+  2. What amount of sparseness truly helps?
+  3. Which fitter (besides fminlsq, which was our old standby) works best in this new regime.
+
+  I would love to use fminlsq, but it doesn't play well with a sparseness/smoothness penalty. 
+  At least, I can't figure out how to wrap matlab's stupid lsqcurvefit such that it treats the sparseness in the right way. 
+
+** Combinatorics: 5x5x6 = 150 models per cellid. 67 Cellids.
+ 
+*** Compressor
+    1. log2b: log2 with baseline so positive semidefinite.
+*** FIR Filter 
+    1. firn: Normalization on inputs, normalization on output
+*** Nonlinearity
+    1. npnl: Ye olde "classic" standard, fast to compute and very good except for edges.
+    2. npfnl: Filter-based npnl five deviations wide. Relatively untested.
+    3. npfnl3: Filter-based npnl three deviations wide. Relatively untested. 
+    4. senl: Sparse gaussian mixture model which uses a small number of 1d gaussians (0.2 width) centered at 'representative' data points.
+    5. senl3: Sparse gaussian mixture model with slightly wider gaussians (0.3 width)
+    6. gmm4: Gaussian mixture model which uses four expectation-maximized 2D gaussians to create a nonparametric nonlinearity. 
+*** Fitters
+    1. fmin: Basic line search built in to matlab
+    2. boost: A simple boosting implementation.
+    3. sb: Sparse bayesian boosting. Kind of like nonlinear gradient descent, but with sparse steps that only go in some directions.
+*** Performance metrics
+    1. mse  : Performance metric is mean squared error, with no smoothness or sparseness penalty.
+    2. mses2: Same as MSE, but a sparseness penalty of 10^-2. Strong sparseness penalty
+    3. mses3: Same as MSE, but a sparseness penalty of 10^-3. 
+    4. mses4: Same as MSE, but a sparseness penalty of 10^-4. 
+    5. mses5: Same as MSE, but a sparseness penalty of 10^-5. 
+    6. mses6: Same as MSE, but a sparseness penalty of 10^-6. Weak sparseness penalty  
+
+** Going forward
+   1. Try a new performance metric than MSE. A blend of L1 and L2 norms is probably a good idea to reduce the effect of outliers. 
+   2. Try to develop an lsq fitter which deals with sparseness.
+   3. New batch which makes training set with TSP only, and with SPN only, then compares NPNLs.
