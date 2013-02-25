@@ -1,13 +1,19 @@
 * ROADMAP
-  1. Report on results of sparsity and new nl comparisons comparison across 240, 242
-  2. Input-spanning depression bank training
-  3. Start leveraging Stephen's job distribution code
-  4. Cleaning, bugfixes, and user interface changes that have accumulated and are burying me
-  5. Start using BAPHY for caching analysis results
+  1. [ ] Report on results of sparsity and new nl comparisons comparison across 240, 242
+  2. [ ] Try the Sparse bayes fitter
+  3. [ ] Fix the NL plots
+  4. [ ] Make a new large multiplot with a summary of the cellid, instead of 5 different plots.
+  5. [ ] Input-spanning depression bank training
+  6. [ ] Start leveraging Stephen's job distribution code
+  7. [ ] Cleaning, bugfixes, and user interface changes that have accumulated and are burying me
+  8. [ ] Start using BAPHY for caching analysis results
 
 * WORK
   1. [X] Try a few different values of sparse penalties and see what works (Looks like it's going to be 10^-2 to 10^-4 or smaller)
   2. [X] Try a NPNL with non-uniform bins and better extrapolation for ends (I'm calling it NPFNL)
+
+** CHANGES
+
 
 ** MINOR ADDITIONS
   1. [ ] Add a keyword with a log compressor as an extra channel
