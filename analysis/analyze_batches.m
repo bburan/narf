@@ -43,7 +43,7 @@ for bi = 1:length(batches)
     %else
     %    mm{4} = module_groups('npnl');  % On badger or localhost
     %end
-    mm{4} = module_groups{'npnl', 'npfnl', 'npfnl3', 'senl', 'senl3', 'gmm4'};
+    % mm{4} = module_groups('npnl', 'npfnl', 'npfnl3', 'senl', 'senl3', 'gmm4');
     mm{5} = module_groups('fmin', 'boost', 'sb', 'fminlsq');
     mm{6} = module_groups('mse', 'mses2','mses3','mses4','mses5','mses6');
     
