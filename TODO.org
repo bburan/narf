@@ -1,14 +1,13 @@
 * ROADMAP
-  1. [X] Report on results of sparsity and new nl comparisons comparison across 240, 242
-  2. [X] Try the Sparse bayes fitter
-  3. [X] Fix the NL plots
-  4. [ ] If empty test set, use 'training set' data for heat map plots
-  5. [ ] Choose a 'best on average' amount of sparseness penalty
-  6. [ ] Make a new summary for cellids, with HTML data table output with integrated images instead of 5 different plots.
-  7. [ ] Input-spanning depression bank. 
-  8. [ ] Start leveraging Stephen's job distribution code
-  9. [ ] Cleaning, bugfixes, and user interface changes that have accumulated and are burying me
-  10. [ ] Start using BAPHY for caching analysis results
+  1. [X] Get NARF running on 4 machines
+  2. [ ] Before running sb, clear the params so you start from zero?
+  3. [ ] Choose a 'best on average' amount of sparseness penalty
+  4. [ ] If empty test set is given for a cellid, what should we do? Hold 1 out cross validation?
+  5. [ ] Make a new summary for cellids, with HTML data table output with integrated images instead of 5 different plots.
+  6. [ ] Input-spanning depression bank. 
+  7. [ ] Start leveraging Stephen's job distribution code
+  8. [ ] Cleaning, bugfixes, and user interface changes that have accumulated and are burying me
+  9. [ ] Start using BAPHY for caching analysis results
 
 * WORK
 ** MINOR ADDITIONS
@@ -132,6 +131,9 @@
 	  On the other hand, I need to justify this: Why should this be done instead of leaving it in the STACK? What we have right now works and is convenient.
 	  (Because we may want to try multiple fit routines, and pick the model with the best training score?)
 	  (Because I expect that model specific fitters are necessary? That isn't a reason!)
+	  ANSWER: A better way to achieve this type of thing would be to have mutating functions which mutate a default copy of the stack. (Kind of like how calculus of variations work)
+	  By picking and choosing and intercombining these mutating functions, you could come up with many different variations.
+	  They also would not be restricted to the somewhat arbitrary groupings which I came up with, and would let multiple parts of stack be mutated simultaneously.
   11. [ ] Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?	  
 	  To do this, instead of a _global_ STACK and XXX, they would be closed-over by the GUI object.
 	  Then, there would need to be a 'update-gui' function which can use those closed over variables.
@@ -142,9 +144,13 @@
 	  On the other hand, it fits itself to linearize almost anything, so we somehow learn less than a simple, parameter-driven model. 
 	  How can we balance complexity in the FIR or complexity in the NL?
 	  ANSWER: Sparseness needs to be modeled on the FIR side, Smoothness on the NL side. 
-  14. [ ] Are neurons clusterable according to which models describe them well?
+  14. [X] How can LSQ curve fit use sparseness and smoothness metrics?
+	  You can cheat and destroy the module system by looking later in the STACK for the MSE element. 
+	  If the MSE module exists and has nonzero weights, add a bogus zero element the LSQ target vector, and a bogus LSQ prediction vector element with a value of the sqrt(smoothness_penalty).	  
+	  
+  15. [ ] Are neurons clusterable according to which models describe them well?
 	  Are they really different populations of neurons, or just points along a continuum?
-  15. [ ] ENDGAME: 
+  16. [ ] ENDGAME: 
 	  Is the end goal of this system something that:
 	  - Spans the input space of nonlinearities?
 	  - Spans the input space of depression?

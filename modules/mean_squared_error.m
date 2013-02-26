@@ -48,29 +48,38 @@ function x = do_mean_squared_error(stack, xxx)
     test_score = 0;
     
     % Compute the mean squared error of the training set
-    for ii = 1:length(x.training_set),
-        sf = x.training_set{ii};
-        [T S C] = size(x.dat.(sf).(mdl.input1));
-        for s = 1:S,
-            error = x.dat.(sf).(mdl.input1)(:,s) - ...
-                    x.dat.(sf).(mdl.input2)(:,s);
-            x.dat.(sf).(mdl.error)(:, s) = error;
-            train_score = train_score + nanmean(error.^2);
-        end
-    end
+%     for ii = 1:length(x.training_set),
+%         sf = x.training_set{ii};
+%         [T S C] = size(x.dat.(sf).(mdl.input1));
+%         for s = 1:S,
+%             error = x.dat.(sf).(mdl.input1)(:,s) - ...
+%                     x.dat.(sf).(mdl.input2)(:,s);
+%             x.dat.(sf).(mdl.error)(:, s) = error;
+%             train_score = train_score + nanmean(error.^2);
+%         end
+%     end
+%     
+    p = flatten_field(x.dat, xxx{1}.training_set, mdl.input1);
+    q = flatten_field(x.dat, xxx{1}.training_set, mdl.input2); 
+    train_score = nanmean((p - q).^2);
     
     % Compute the mean squared error of the test set
-    for ii = 1:length(x.test_set),
-        sf = x.test_set{ii};
-        [T S C] = size(x.dat.(sf).(mdl.input1));
-        for s = 1:S,
-            error = x.dat.(sf).(mdl.input1)(:,s) - ...
-                    x.dat.(sf).(mdl.input2)(:,s);
-            x.dat.(sf).(mdl.error)(:, s) = error;
-            test_score = test_score + nanmean(error.^2);
-        end
-    end
+%     for ii = 1:length(x.test_set),
+%         sf = x.test_set{ii};
+%         [T S C] = size(x.dat.(sf).(mdl.input1));
+%         for s = 1:S,
+%             error = x.dat.(sf).(mdl.input1)(:,s) - ...
+%                     x.dat.(sf).(mdl.input2)(:,s);
+%             x.dat.(sf).(mdl.error)(:, s) = error;
+%             test_score = test_score + nanmean(error.^2);
+%         end
+%     end
 
+    ptest = flatten_field(x.dat, xxx{1}.test_set, mdl.input1);
+    qtest = flatten_field(x.dat, xxx{1}.test_set, mdl.input2); 
+
+    test_score = nanmean((ptest - qtest).^2);
+    
     % Add a penalty related to the non-smoothness of the FIR coefs
     firmod = find_module(stack, 'fir_filter');
 
@@ -82,9 +91,12 @@ function x = do_mean_squared_error(stack, xxx)
         mdl.sparseness_weight = 0;
     end
     
+    %fprintf('mse metric: %f\n', sparsity_metric(firmod.coefs(:)));
+    %fprintf('MSE: %f\n', train_score + (mdl.sparseness_weight * sparsity_metric(firmod.coefs(:))));
+    
     x.(mdl.output) = (train_score) + ...
-                     mdl.smoothness_weight * smoothness_metric(firmod.coefs) + ...
-                     mdl.sparseness_weight * sparsity_metric(firmod.coefs);
+                     mdl.smoothness_weight * smoothness_metric(firmod.coefs(:)) + ...
+                     mdl.sparseness_weight * sparsity_metric(firmod.coefs(:));
 end
 
 function do_plot_inputs_and_mse(stack, xxx)
@@ -95,19 +107,19 @@ function do_plot_inputs_and_mse(stack, xxx)
     dat = x.dat.(sf);  
     
     plot(dat.(mdl.time), dat.(mdl.input1)(:, stim_idx), 'b-', ...
-         dat.(mdl.time), dat.(mdl.input2)(:, stim_idx), 'g-', ...
-         dat.(mdl.time), dat.(mdl.error)(:, stim_idx), 'r-');
+         dat.(mdl.time), dat.(mdl.input2)(:, stim_idx), 'g-'); %, ...
+         %dat.(mdl.time), dat.(mdl.error)(:, stim_idx), 'r-');
     axis tight;
-    legend(mdl.input1, mdl.input2, mdl.error);
+    legend(mdl.input1, mdl.input2); %, mdl.error);
     
     firmod = find_module(stack, 'fir_filter');
     sparsepenalty = mdl.sparseness_weight * sparsity_metric(firmod.coefs);
-
+    
     % Plot the score in the upper left
     themax = max([max(dat.(mdl.input1)(:, stim_idx)), ...
-                  max(dat.(mdl.input2)(:, stim_idx)), ...
-                  max(dat.(mdl.error)(:, stim_idx))]);
-    text(0, themax , sprintf(' Train MSE: %f\n Test MSE: %f\nPenalty: %f',...
+                  max(dat.(mdl.input2)(:, stim_idx))]); %, ...
+                  %max(dat.(mdl.error)(:, stim_idx))]);
+    text(0, themax , sprintf(' Train MSE: %f\n Test MSE: %f\n Penalty: %f',...
                              x.(mdl.train_score), x.(mdl.test_score), ...
                              sparsepenalty), ...
         'VerticalAlignment','top',...
