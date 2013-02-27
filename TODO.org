@@ -5,15 +5,10 @@
 
 * WORK
 ** TODAY
-   1. [ ] Plot results so far
+   1. [X] Plot results so far
    1. [ ] Fix cholskey decomp error and get npfnl started again
    2. [ ] Fix EM conditioning error and get gmm4 started again
    3. [ ] Try some test jobs using job distribution code
-
-** WITH BRIAN
-   1. [ ] Estimate 'best' MSE sparseness penalty
-   2. [ ] Look for 'weirdness', see if sparseness is 'working'
-   3. [ ] 
 
 ** MINOR ADDITIONS
   1. [ ] If empty test set is given for a cellid, what should we do? Hold 1 out cross validation? 
