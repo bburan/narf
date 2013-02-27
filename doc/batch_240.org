@@ -1,0 +1,92 @@
+#+title: Batch #240 Eyeball Check 
+#+date: Simulation taken on Feb 25-27, 2013
+#+author: Ivar Thorson, Brian Jones
+* Overview
+
+  The goal of this experiment is to answer the following questions:
+  1. Which of the many nonparametric nonlinearities is performing the best on average?
+  2. Which of the many fitters is performing the best on average?
+  3. Which of the sparseness penalties are performing the best on average?
+  4. Are there any mitigating qualitative factors that need to be considered?
+  5. For Batch #240 (Center/Surround), are there a few categories of patterns we can discern when observing best FIR filter coefficients?
+  6. For Batch #242 (Left/Right), are there a few categories of patterns we can discern when observing best FIR filter coefficients?
+
+* Model structure
+
+** Compressor
+    1. *log2b*: log2 with baseline so that the output is positive semidefinite.
+** FIR Filter 
+    1. *firn*: Normalization on inputs, normalization on output.
+** Nonlinearity
+    1. *npnl*: Ye olde "classic" standard, fast to compute and very good except for edges.
+    2. *npfnl*: Gaussian window filter npnl with filter widths equal to 1/5th of nonlinearity's input domain span. Relatively untested.
+    3. *npfnl3*: Gaussian window filter npnl three deviations wide. Relatively untested. 
+    4. *senl*: Sparse gaussian mixture model which uses a small number of 1d gaussians (0.2 relative width) centered at 'representative' data points.
+    5. *senl3*: Sparse gaussian mixture model with slightly wider gaussians (0.3 relative width).
+    6. *gmm4*: Gaussian mixture model which uses four expectation-maximized 2D gaussians to create a nonparametric nonlinearity. 
+** Fitters
+    1. *fmin*: Basic line search built in to matlab called fminsearch(), iterated 10000 times or until convergence.
+    2. *fminlsq*: First an fminsearch(), followed by lsqcurvefit(), iterated ??? times or until convergence.
+    3. *boost*: A simple boosting implementation. 200 steps taken.
+    4. *sb*: Sparse bayesian boosting. Kind of like nonlinear gradient descent, but with sparse steps that only go in some directions. 200 steps taken.
+** Performance metrics
+    1. *mse*  : Performance metric is mean squared error, with no smoothness or sparseness penalty.
+    2. *mses2*: Same as MSE, but a sparseness penalty of 10^-2. (Strong sparseness penalty)
+    3. *mses3*: Same as MSE, but a sparseness penalty of 10^-3. 
+    4. *mses4*: Same as MSE, but a sparseness penalty of 10^-4. 
+    5. *mses5*: Same as MSE, but a sparseness penalty of 10^-5. 
+    6. *mses6*: Same as MSE, but a sparseness penalty of 10^-6. (Weak sparseness penalty)
+
+* BATCH 240 EYEBALL CHECK:
+  Checklist for each cell:
+  1. Does the training set equal the test set? Discard as invalid if so.
+  2. Is the complete row filled out on the heat map?
+  3. Scatter plot tok4: is there a dominating nonlinearity?
+  4. Scatter plot tok5: is there a dominating fitter?
+
+  When evaluating FIR filters:
+  - Penalize noise and appearance
+  - Penalize large coefficients scattered around 'randomly'
+  - Penalize non-sparse things
+  - Penalize slightly large coefficients in first time bin, strongly if in last time bin
+  
+  Possible stereotypes:
+  - Single channel interest only
+  - Inhibition/excitation
+  - Offset inhibition/excitation
+  - Which channel is being excited
+
+  | Cell ID      | Satu-   | NARF's | Fitter | MSE# | R^2 | NARF's    |   | Brian's | Fitter | MSE# | R^2 | Stereotype? | Notes |
+  |              | ration  | NL     |        |      |     | STRF      |   | NL      |        |      |     |             |       |
+  |--------------+---------+--------+--------+------+-----+-----------+---+---------+--------+------+-----+-------------+-------|
+  | por023a-b1   | Linear  | npnl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
+  | por023a-c2   | Low     | senl   |        |      |     | 4-Clean   |   | no      |        |      |     |             |       |
+  | por024a-a1   | Sigmoid | npnl   |        |      |     | 3-OK      |   | yes     |        |      |     |             |       |
+  | por024a-b1   | Low     | npnl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
+  | por024a-c1   | Sigmoid | senl   |        |      |     | 2-Noisy   |   | no      |        |      |     |             |       |
+  | por025a-b1   | Low     | senl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
+  | por025a-c1   | High    | npnl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
+  | por025a-c2   | Low     | senl   |        |      |     | 1-Crap    |   | no      |        |      |     |             |       |
+  | por025a-d1   | Low     | npnl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
+  | por026a-b1   | Low     | senl   |        |      |     | 2-Noisy   |   | yes     |        |      |     |             |       |
+  | por026a-d1   | Linear  | npnl   |        |      |     | 3-OK      |   | yes     |        |      |     |             |       |
+  | por026b-a1   | Sigmoid | senl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
+  | por026b-a2   | Low     | senl   |        |      |     | 4-Clean   |   | no      |        |      |     |             |       |
+  | por026b-b1   | Low     | senl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
+  | por026b-b2   | Low     | senl   |        |      |     | 3-OK      |   | yes     |        |      |     |             |       |
+  | por026b-c1   | Sigmoid | npnl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
+  | por026b-d1   | Low     | senl   |        |      |     | 5-Perfect |   | no      |        |      |     |             |       |
+  | por026c-a1   | Low     | senl   |        |      |     | 3-OK      |   | no      |        |      |     |             |       |
+  | por026c-b1   | U       | npnl   |        |      |     | 3-OK      |   | yes     |        |      |     |             |       |
+  | por026c-c1   | Linear  | npnl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
+  | por026c-d2   | Low     | npnl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
+  | por027a-a1   | Sigmoid | npnl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
+  | por027a-b1   | Linear  | senl   |        |      |     | 3-OK      |   | yes     |        |      |     |             |       |
+  | por027b-b1   | Low     | npnl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
+  | por028b-b1   | U       | senl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
+  | por028b-c1   | Sigmoid | senl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
+  | por028b-d1   | High    | senl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
+  | por028d-a2   | Low     | npnl   |        |      |     | 4-Clean   |   | no      |        |      |     |             |       |
+  | por028d-d1   | High    | npnl   |        |      |     | 1-Crap    |   | yes     |        |      |     |             |       |
+  | por031a-09-1 | Linear  | npnl   |        |      |     | 2-Noisy   |   | yes     |        |      |     |             |       |
+

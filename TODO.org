@@ -1,22 +1,30 @@
 * ROADMAP
-  1. [X] Get NARF running on 4 machines
-  2. [ ] Before running sb, clear the params so you start from zero?
-  3. [ ] Choose a 'best on average' amount of sparseness penalty
-  4. [ ] If empty test set is given for a cellid, what should we do? Hold 1 out cross validation?
-  5. [ ] Make a new summary for cellids, with HTML data table output with integrated images instead of 5 different plots.
-  6. [ ] Input-spanning depression bank. 
-  7. [ ] Start leveraging Stephen's job distribution code
-  8. [ ] Cleaning, bugfixes, and user interface changes that have accumulated and are burying me
-  9. [ ] Start using BAPHY for caching analysis results
+  1. [ ] Input-spanning depression bank (50,200,500ms recovery values, and 0.5, 1.5, 2.5 depression rates)
+  2. [ ] Start using BAPHY for caching analysis results
+  3. [ ] Cleaning, bugfixes, and user interface changes that have accumulated
 
 * WORK
+** TODAY
+   1. [ ] Plot results so far
+   1. [ ] Fix cholskey decomp error and get npfnl started again
+   2. [ ] Fix EM conditioning error and get gmm4 started again
+   3. [ ] Try some test jobs using job distribution code
+
+** WITH BRIAN
+   1. [ ] Estimate 'best' MSE sparseness penalty
+   2. [ ] Look for 'weirdness', see if sparseness is 'working'
+   3. [ ] 
+
 ** MINOR ADDITIONS
-  1. [ ] Add a keyword with a log compressor as an extra channel
-  2. [ ] Plot both test and training data for smooth scatter plots.
-  3. [ ] Standardize colors for plot lines. 
-  4. [ ] A histogram heat map of model performance for each cell so you can see distribution of model performance
-  5. [ ] A way to compare nonlinearities for multiple data sets.  
-  6. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  1. [ ] If empty test set is given for a cellid, what should we do? Hold 1 out cross validation? 
+  2. [ ] Add a keyword with a log compressor as an extra channel
+  3. [ ] More concise summary of a cellid's models. HTML data table output?
+  4. [ ] Plot both test and training data for smooth scatter plots.
+  5. [ ] Standardize colors for plot lines. 
+  6. [ ] A histogram heat map of model performance for each cell so you can see distribution of model performance
+  7. [ ] A way to compare nonlinearities for multiple data sets.  
+  8. [ ] Can I hide windows when plotting on them so they don't pop up and ruin my day when coding?
+  9. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
 
 ** CLEANING AND BUGFIXES:
   1. [ ] Ooops, the git commit is not really being saved! It should go in META, not just in the cache
@@ -26,35 +34,37 @@
   5. [ ] CLEAN: Fix fit_sparsebayes() so that it won't ever have positive definite problems. eg, positivedefinite = all(eig(basis) > 0) OR use the 2nd return value of chol() when running the decomposition in sparse bayes
   6. [ ] REFACTOR: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
   7. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
-  8. [ ] Grep for TODO's, FIXME's, etc in existing files
-  9. [ ] Search for obviously dead code and bury it in the graveyard
-  10. [ ] Search for repeated blocks of code and refactor
-  11. [ ] Put proper docstrings on every function in util/
-  12. [ ] Check paths again, grep for NARF_PATH and correct (also: replace / with filesep when possible)
-  13. [ ] Names probably could use some rethinking as well, especially defaults (like using 'stim' default even in the fitting algorithms, for example)
-  14. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
-  15. [ ] In retrospect, 'gui' and 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...move it be in a 3rd structure?
-  16. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-  17. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
-  18. [ ] Create a module methods directory for shared methods
-  19. [ ] Create a module keywords directory for helping with combinatoric name management instead of 'module groups'? 
-  20. [ ] make anything named 'do_' into a method for use with modules?
-  21. [ ] make anything named 'update_' into a function used purely for its side effects?
-  22. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
+  8. [ ] Replace my nargin checks with "if ~exist('BLAH','var'),"
+  9. [ ] Grep for TODO's, FIXME's, etc in existing files
+  10. [ ] Search for obviously dead code and bury it in the graveyard
+  11. [ ] Search for repeated blocks of code and refactor
+  12. [ ] Put proper docstrings on every function in util/
+  13. [ ] Check paths again, grep for NARF_PATH and correct (also: replace / with filesep when possible)
+  14. [ ] Names probably could use some rethinking as well, especially defaults (like using 'stim' default even in the fitting algorithms, for example)
+  15. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
+  16. [ ] In retrospect, 'gui' and 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...move it be in a 3rd structure?
+  17. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+  18. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
+  19. [ ] Create a module methods directory for shared methods
+  20. [ ] Create a module keywords directory for helping with combinatoric name management instead of 'module groups'? 
+  21. [ ] make anything named 'do_' into a method for use with modules?
+  22. [ ] make anything named 'update_' into a function used purely for its side effects?
+  23. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
 
 ** FITTERS:
-  1. [ ] FITTER: A lsqcurvefit with sparseness penalty (somehow read from later on?)
-  2. [ ] FITTER: A stronger shrinkage fitter (Shrink by as much as you want)
+  1. [ ] FITTER: ARD + ASD
+  2. [ ] FITTER: A stronger shrinkage fitter (Shrink by as much as you want).
   3. [ ] FITTER: Log Likelihood because MSE is biased towards gaussian noise models, and for real-life data sets the probability tails are always heavier than a gaussian. 
-  4. [ ] FITTER: Three-step fitter (First FIR, then NL, then both together)
+  4. [ ] FITTER: Three-step fitter (First FIR, then NL, then both together).
+  5. [ ] FITTER: Multi-step sparseness fitters (Fit, sparseify, fit, sparsify, etc). Waste of time?
 
 ** LARGER WORK
   1. [ ] Generalize N-step fitter to let a particular module or set of modules float. 
   2. [ ] inter_spike_intervals 
   3. [ ] bayesian_likelihood() perf metric
-  4. [ ] Use a single wavelet transform in place of downsampling + FIR filter (Hard and slow to fit, but extremely general)
-  5. [ ] Automatic Relevancy Determination (ARD)
-  6. [ ] Automatic Smoothness Determination (ASD)
+  4. [ ] Automatic Relevancy Determination (ARD)
+  5. [ ] Automatic Smoothness Determination (ASD)
+  6. [ ] Use a single wavelet transform in place of downsampling + FIR filter (Hard and slow to fit, but extremely general)
   7. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
 
 ** MODULES:
