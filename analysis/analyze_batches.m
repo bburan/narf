@@ -43,8 +43,8 @@ for bi = 1:length(batches)
     %else
     %    mm{4} = module_groups('npnl');  % On badger or localhost
     %end
-    mm{4} = module_groups('npnl', 'npfnl', 'npfnl3', 'senl', 'senl3', 'gmm4');
-    mm{5} = module_groups('fmin', 'boost', 'sb', 'fminlsq');
+    mm{4} = module_groups('senl', 'senl3', 'npnl', 'npfnl', 'npfnl3'); % gmm4
+    mm{5} = module_groups('fmin', 'boost', 'fminlsq'); % 'sb'
     mm{6} = module_groups('mse', 'mses2','mses3','mses4','mses5','mses6');
     
     [~, modelnames] = module_combinations(mm);
@@ -53,9 +53,9 @@ for bi = 1:length(batches)
         if mod(ii + instance_num, total_instances) ~= 0
             continue
         end
-        %fit_models(mm, cells{ii}.cellid, ...
-        %     cells{ii}.training_set, ...
-        %     cells{ii}.test_set);
+        fit_models(mm, cells{ii}.cellid, ...
+             cells{ii}.training_set, ...
+             cells{ii}.test_set);
         
         % Technically, fit_models already built a perfect cache, even if interrupted,
         % but rebuilding it can give us a little peace of mind so let's do it.

@@ -55,6 +55,9 @@ s.exit_code   = META.exit_code;
 git = ['git --git-dir=' NARF_PATH '/.git ' ...
            '--work-tree=' NARF_PATH ' '];
 
+% TODO: Remove this hack line
+require_clean_git_repo = false;
+       
 if require_clean_git_repo
     % Complain and throw an error if GIT detects outstanding changes.
     [unix_ret_value, unix_string] = unix([git 'diff-files --quiet']);
