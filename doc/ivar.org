@@ -1,36 +1,37 @@
 * Ivar's quick analysis
- | Cell ID      | NL    | Fitter | MSE# |  R^2 |    S | Satu-   | Cen.        | Sur.   | Category     | Notes                 |
- |              |       |        |      |      |      | ration  |             |        |              |                       |
- |--------------+-------+--------+------+------+------+---------+-------------+--------+--------------+-----------------------|
- | por023a-b1   |       |        |      |      |      | Linear  |             |        |              |                       |
- | por023a-c2   |       |        |      |      |      | Low     |             |        |              |                       |
- | por024a-a1   |       |        |      |      |      | Sigmoid |             |        |              |                       |
- | por024a-b1   |       |        |      |      |      | Low     |             |        |              |                       |
- | por024a-c1   |       |        |      |      |      | Sigmoid |             |        |              |                       |
- |              |       |        |      |      |      |         |             |        |              |                       |
- | por025a-b1   | senl  | sb     | None | .542 | 7.93 | Low     | +2,-4       | None   | Center only  |                       |
- | por025a-c1   | npfnl | sb     | None | .340 | 6.83 | Sigmoid | +2          | None   | Center only  |                       |
- | por025a-c2   | npfnl | sb     | None | .150 | 14.1 | Low     | UGLY        | UGLY   | UGLY         |                       |
- | por025a-d1   | npfnl | boost  |    4 | .496 | 2.55 | Low     | +2,-5       | None   | Center only  |                       |
- | por026a-b1   | npfnl | boost  |    3 | .379 | 2.03 | Low     | +2,-7       | None   | Center only  | Depression candidate  |
- | por026a-d1   | npnl  | boost  | None | .152 | 7.92 | Linear  | UGLY        | UGLY   | Leading Surr | Ugly STRF.            |
- | por026b-a1   | gmm4  | boost  |    4 | .561 | 3.05 | Sigmoid | +3          | -3     | Simul        |                       |
- | por026b-a2   | senl  | boost  |    5 | .283 | 4.99 | Low     | +3,-6       | -3, +7 | Simul        | Depression candidate. |
- | por026b-b1   | senl  | boost  |    5 | .371 | 2.90 | Low     | +2,-4       | None   | Center only  |                       |
- | por026b-b2   | senl  | boost  |    5 | .646 | 6.18 | Low     | +1,+2,-4,-6 | +1,-4  | Simul        | Depression candidate. |
- | por026b-c1   | npfnl | boost  | None | .200 | 3.22 | Linear  | +2          | None   | Center only  | Wavy NL.              |
- | por026b-c2   | senl3 | boost  |    5 | .352 | 2.79 | Low     | +5          | None   | Center only  |                       |
- | por026b-d1   | npfnl | boost  |    3 | .295 | 2.38 | Low     | -3          | +5     |              |                       |
- | por026c-a1   |       |        |      |      |      | Low     | -3          |        |              |                       |
- | por026c-b1   |       |        |      |      |      | U       |             |        |              |                       |
- | por026c-c1   |       |        |      |      |      | Linear  |             |        |              |                       |
- | por026c-d2   |       |        |      |      |      | Low     |             |        |              |                       |
- | por027a-a1   |       |        |      |      |      | Sigmoid |             |        |              |                       |
- | por027a-b1   |       |        |      |      |      | Linear  |             |        |              |                       |
- | por027b-b1   |       |        |      |      |      | Low     |             |        |              |                       |
- | por028b-b1   |       |        |      |      |      | U       |             |        |              |                       |
- | por028b-c1   |       |        |      |      |      | Sigmoid |             |        |              |                       |
- | por028b-d1   |       |        |      |      |      | High    |             |        |              |                       |
- | por028d-a2   |       |        |      |      |      | Low     |             |        |              |                       |
- | por028d-d1   |       |        |      |      |      | High    |             |        |              |                       |
- | por031a-09-1 |       |        |      |      |      | Linear  |             |        |              |                       |
+ | Cell ID      | NL     | Fitter  | MSE# |  R^2 |     S | Satu-    | Cen.            | Sur.     | Category               | Notes                |                                     |              |                  |                                 |
+ |              |        |         |      |      |       | ration   |                 |          |                        |                      | STRF (Hz)                           | Best Fq (Hz) | Center Stim (Hz) | Notes                           |
+ |              |        |         |      |      |       |          |                 |          |                        |                      |                                     |              |                  |                                 |
+ |--------------+--------+---------+------+------+-------+----------+-----------------+----------+------------------------+----------------------+-------------------------------------+--------------+------------------+---------------------------------|
+ | por023a-b1   | npnl   | boost   |    5 | .566 |  3.05 | Linear   | +3              | None     | Center only            |                      | +1900->2900                         |         1449 | 1000->2000       |                                 |
+ | por023a-c2   | senl3  | fminlsq |    5 | .141 |  7.54 | Low      | +5,-6,+7        | -2,-3,+8 | Leading Surr           |                      | NOT FOUND                           |              |                  |                                 |
+ | por024a-a1   | npnl   | boost   |    6 | .306 |  5.40 | Sigmoid  | +2,+3,-6        | +2       | Simul                  | Depression candidate | +950->1600,-2100->3100,+3200->4250  |         1167 | 1200->2400       | STRF: contains off BF +/- peaks |
+ | por024a-b1   | senl3  | fminlsq |    6 | .452 |  7.58 | Low      | +2,+3,-4        | None     | Center only            |                      | +1350->1850,+2100->2800,-3200->3900 |              | 1200->2400       | STRF: contains off BF +/- peaks |
+ | por024a-c1   | senl3  | sb      |    3 | .116 | 10.11 | Invert U | +4,-6           | +4,-5,-8 | Simul                  | Depression candidate | -950->1300,+1350->2000              |         1490 | 1200->2400       |                                 |
+ |              |        |         |      |      |       |          |                 |          |                        |                      |                                     |              |                  |                                 |
+ | por025a-b1   | senl   | sb      | None | .542 |  7.93 | Low      | +2,-4           | None     | Center only            | Depression candidate | +1100->1700                         |         1342 | 950->1600        |                                 |
+ | por025a-c1   | npfnl  | sb      | None | .340 |  6.83 | Sigmoid  | +2              | None     | Center only            |                      | +800->1350                          |         1088 | 950->1600        |                                 |
+ | por025a-c2   | npfnl  | sb      | None | .150 |  14.1 | Low      | UGLY            | UGLY     | UGLY                   |                      | +500->800 +900->1200                |          600 | 950->1600        |                                 |
+ | por025a-d1   | npfnl  | boost   |    4 | .496 |  2.55 | Low      | +2,-5           | None     | Center only            | Depression candidate | +900->1500                          |         1167 | 950->1600        |                                 |
+ | por026a-b1   | npfnl  | boost   |    3 | .379 |  2.03 | Low      | +2,-7           | None     | Center only            | Depression candidate |                                     |              |                  |                                 |
+ | por026a-d1   | npnl   | boost   | None | .152 |  7.92 | Linear   | UGLY            | UGLY     | Leading Surr           | Ugly STRF.           | +1000->2000                         |         1251 | 1000->1600       |                                 |
+ | por026b-a1   | gmm4   | boost   |    4 | .561 |  3.05 | Sigmoid  | +3              | -3       | Simul                  |                      |                                     |              |                  |                                 |
+ | por026b-a2   | senl   | boost   |    5 | .283 |  4.99 | Low      | +3,-6           | -3, +7   | Simul                  | Depression candidate |                                     |              |                  |                                 |
+ | por026b-b1   | senl   | boost   |    5 | .371 |  2.90 | Low      | +2,-4           | None     | Center only            | Depression candidate |                                     |              |                  |                                 |
+ | por026b-b2   | senl   | boost   |    5 | .646 |  6.18 | Low      | +1,+2,-4,-6     | +1,-4    | Simul                  | Depression candidate |                                     |              |                  |                                 |
+ | por026b-c1   | npfnl  | boost   | None | .200 |  3.22 | Linear   | +2              | None     | Center only            | Wavy NL.             |                                     |              |                  |                                 |
+ | por026b-c2   | senl3  | boost   |    5 | .352 |  2.79 | Low      | +5              | None     | Center only            |                      |                                     |              |                  |                                 |
+ | por026b-d1   | npfnl  | boost   |    3 | .295 |  2.38 | Low      | -3              | +5       | Center E/Surr I Offset |                      |                                     |              |                  |                                 |
+ | por026c-a1   | senl3  | fminlsq |    3 | .670 |  2.43 | Low      | +2              | None     | Center only            |                      |                                     |              |                  |                                 |
+ | por026c-b1   | senl3  | boost   | None | .536 |  7.59 | Low      | +2,+3,+4,-7,-10 | +4,-10   | Simul                  | Depression candidate |                                     |              |                  |                                 |
+ | por026c-c1   | npnl   | boost   |    4 | .529 |  2.21 | Linear   | +3              | None     | Center only            |                      |                                     |              |                  |                                 |
+ | por026c-d2   | senl   | boost   |    2 | .187 |  1.00 | Low      | +2              | None     | Center only            |                      |                                     |              |                  |                                 |
+ | por027a-a1   | senl   | boost   |    6 | .130 |  5.27 | Linear   | +2,+3,-6,-7     | None     | Center only            | Depression candidate |                                     |              |                  |                                 |
+ | por027a-b1   | npfnl3 | boost   |    4 | .270 |  2.07 | Linear   | +2              | None     | Center only            |                      |                                     |              |                  |                                 |
+ | por027b-b1   | npnl   | fmin    |    4 | .229 |  6.73 | Sigmoid  | +1,+2           | +1       | Leading Surr           |                      |                                     |              |                  |                                 |
+ | por028b-b1   | senl3  | boost   |    4 | .188 |  3.34 | U        | -3              | +3       | Simul                  |                      |                                     |              |                  |                                 |
+ | por028b-c1   | senl   | boost   |    5 | .211 |  2.68 | Sigmoid  | +2              | -4       | Leading Cent           |                      |                                     |              |                  |                                 |
+ | por028b-d1   | npnl   | boost   |    4 | .345 |  4.83 | Linear   | +2,-6           | +1,+3,-7 | Leading Surr           | Depression candidate |                                     |              |                  |                                 |
+ | por028d-a2   | npfnl  | boost   |    6 | .262 |  3.61 | Low      | -5              | +2,-8    | Leading Surr           |                      |                                     |              |                  |                                 |
+ | por028d-d1   | npnl   | boost   |    4 | .311 |  5.66 | Low      | +2,-6,-9        | +2,-11   | Simul                  | Depression candidate |                                     |              |                  |                                 |
+ | por031a-09-1 | npnl   | boost   |    5 | .031 |  2.65 | Linear   | +5              | None     | Center only            |                      |                                     |              |                  |                                 |
