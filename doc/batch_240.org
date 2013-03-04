@@ -12,7 +12,8 @@
   6. For Batch #242 (Left/Right), are there a few categories of patterns we can discern when observing best FIR filter coefficients?
 
 * Model structure
-
+** Loader
+** 
 ** Compressor
     1. *log2b*: log2 with baseline so that the output is positive semidefinite.
 ** FIR Filter 
@@ -56,37 +57,38 @@
   - Offset inhibition/excitation
   - Which channel is being excited
 
-  | Cell ID      | Satu-   | NARF's | Fitter | MSE# | R^2 | NARF's    |   | Brian's | Fitter | MSE# | R^2 | Stereotype? | Notes |
-  |              | ration  | NL     |        |      |     | STRF      |   | NL      |        |      |     |             |       |
-  |--------------+---------+--------+--------+------+-----+-----------+---+---------+--------+------+-----+-------------+-------|
-  | por023a-b1   | Linear  | npnl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
-  | por023a-c2   | Low     | senl   |        |      |     | 4-Clean   |   | no      |        |      |     |             |       |
-  | por024a-a1   | Sigmoid | npnl   |        |      |     | 3-OK      |   | yes     |        |      |     |             |       |
-  | por024a-b1   | Low     | npnl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
-  | por024a-c1   | Sigmoid | senl   |        |      |     | 2-Noisy   |   | no      |        |      |     |             |       |
-  | por025a-b1   | Low     | senl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
-  | por025a-c1   | High    | npnl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
-  | por025a-c2   | Low     | senl   |        |      |     | 1-Crap    |   | no      |        |      |     |             |       |
-  | por025a-d1   | Low     | npnl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
-  | por026a-b1   | Low     | senl   |        |      |     | 2-Noisy   |   | yes     |        |      |     |             |       |
-  | por026a-d1   | Linear  | npnl   |        |      |     | 3-OK      |   | yes     |        |      |     |             |       |
-  | por026b-a1   | Sigmoid | senl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
-  | por026b-a2   | Low     | senl   |        |      |     | 4-Clean   |   | no      |        |      |     |             |       |
-  | por026b-b1   | Low     | senl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
-  | por026b-b2   | Low     | senl   |        |      |     | 3-OK      |   | yes     |        |      |     |             |       |
-  | por026b-c1   | Sigmoid | npnl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
-  | por026b-d1   | Low     | senl   |        |      |     | 5-Perfect |   | no      |        |      |     |             |       |
-  | por026c-a1   | Low     | senl   |        |      |     | 3-OK      |   | no      |        |      |     |             |       |
-  | por026c-b1   | U       | npnl   |        |      |     | 3-OK      |   | yes     |        |      |     |             |       |
-  | por026c-c1   | Linear  | npnl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
-  | por026c-d2   | Low     | npnl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
-  | por027a-a1   | Sigmoid | npnl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
-  | por027a-b1   | Linear  | senl   |        |      |     | 3-OK      |   | yes     |        |      |     |             |       |
-  | por027b-b1   | Low     | npnl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
-  | por028b-b1   | U       | senl   |        |      |     | 4-Clean   |   | yes     |        |      |     |             |       |
-  | por028b-c1   | Sigmoid | senl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
-  | por028b-d1   | High    | senl   |        |      |     | 5-Perfect |   | yes     |        |      |     |             |       |
-  | por028d-a2   | Low     | npnl   |        |      |     | 4-Clean   |   | no      |        |      |     |             |       |
-  | por028d-d1   | High    | npnl   |        |      |     | 1-Crap    |   | yes     |        |      |     |             |       |
-  | por031a-09-1 | Linear  | npnl   |        |      |     | 2-Noisy   |   | yes     |        |      |     |             |       |
+  | Cell ID      | Satu-   | NARF's | Fitter | MSE# | R^2 | NARF's    |      | Brian's | Fitter | MSE# | R^2 | Stereotype?                          |                        Torc STRF | Best Freq | Center Stim Range |                                  |
+  |              | ration  | NL     |        |      |     | STRF      |      | NL      |        |      |     |                                      |                             (Hz) |      (Hz) |              (Hz) |                                  |
+  |              |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  |--------------+---------+--------+--------+------+-----+-----------+------+---------+--------+------+-----+--------------------------------------+----------------------------------+-----------+-------------------+----------------------------------|
+  | por023a-b1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                       1900-2900E |      1449 |         1000-2000 |                                  |
+  | por023a-c2   |         |        |        |      |     | 4-Clean   |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por024a-a1   |         |        |        |      |     |           |      |         |        |      |     |                                      |  950-1600E 2100-3100I 3200-4250E |      1167 |         1200-2400 | STRF:contains off BF Ex/Inh peaks |
+  | por024a-b1   |         |        |        |      |     |           |      |         |        |      |     |                                      | 1350-1850E 2100-2800E 3200-3900I |      1544 |         1200-2400 | STRF:contains off BF Ex/Inh peaks |
+  | por024a-c1   |         |        |        |      |     | 2-Noisy   |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por025a-b1   | Sigmoid | senl   | sb     |    2 | .53 | 3-OK      | Same | senl3   | boost  |      |     | Center Ex/Inh Surround Ex            |                       1100-1700E |      1342 |          950-1600 |                                  |
+  | por025a-c1   | Sigmoid | npfnl  | sb     |    2 | .33 | 5-Perfect | Same | npnl    | boost  |      |     | Center Ex                            |                        800-1350E |      1088 |          950-1600 |                                  |
+  | por025a-c2   | Low     | npfnl  | sb     |    2 | .14 | 3-OK      | Same |         |        |      |     | Center Ex/Inh Surround Ex/Inh        |                500-800 900-1200E |       600 |          950-1600 |                                  |
+  | por025a-d1   | Low     | gmm4   | sb     |    3 | .50 | 5-Perfect | Same | npnl    | fmin   |      |     | Center Ex/Inh                        |                        900-1500E |      1167 |          950-1600 |                                  |
+  | por026a-b1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por026a-d1   | Sigmoid | npnl   | boost  |    0 | .15 | 3-OK      | Same |         | sb     |      |     | Center Inh/Ex Surround Inh/Ex Offset |                       1000-2000E |      1251 |         1000-1600 |                                  |
+  | por026b-a1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por026b-a2   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por026b-b1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por026b-b2   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por026b-c1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por026b-d1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por026c-a1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por026c-b1   | U       | npfnl3 | boost  |    5 | .34 | 3-OK      |      | Same    |        |      |     |                                      |                                  |           |                   |                                  |
+  | por026c-c1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por026c-d2   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por027a-a1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por027a-b1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por027b-b1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por028b-b1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por028b-c1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por028b-d1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por028d-a2   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por028d-d1   |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
+  | por031a-09-1 |         |        |        |      |     |           |      |         |        |      |     |                                      |                                  |           |                   |                                  |
 
