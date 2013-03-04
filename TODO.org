@@ -1,30 +1,59 @@
 * ROADMAP
-  1. [ ] Input-spanning depression bank (50,200,500ms recovery values, and 0.5, 1.5, 2.5 depression rates)
-  2. [ ] Start using BAPHY for caching analysis results
-  3. [ ] Cleaning, bugfixes, and user interface changes that have accumulated
+  1. [X] Input-spanning depression bank (50,200,500ms recovery values, and 0.5, 1.5, 2.5 depression rates)
+  2. [ ] Finish the big analysis batch and choose values
+  3. [ ] Start using BAPHY for caching analysis results
+  4. [ ] Cleaning, bugfixes, and user interface changes that have accumulated
+  5. [ ] Address question: Does variation in neural fuction as in A1 follow a continuum, or are there visible clusters?
+
+* WORKFLOW CHANGES
+  Some unmet needs are becoming clearer:
+  - [X] Need for a GUI summary browser (by cellid), with a link to launch the model stack, and a filter to pick only certain models (for viewing/comparison)
+  - [X] Need to cache performance, git hash, modelfile, etc in mysql database or in a local ACID type database
+  - [X] Need to generate reports sorting each model by some criteria 
+  - [X] Need for comparing two models visually at the same time. 
+  - [X] Need for different model combos to be tried on different batches (don't tie them together)
+  - [X] Need to try things that aren't pure flat model combinations (Depression, but NOT with other things)
+  - [X] Need to cache PNG images from each model's stack rather than rebuild every time
+  - [ ] Need a way of marking a particular 'block' so that particular 'plots' can be extracted despite positional differences
+  - [ ] Need to compare between models trained on different subsets (SPN vs TSP), and support for BAPHY to express this concisely.
+  These needs could be met by:
+  1. Using Baphy (OR flat file directories with tiny MAT files) to cache:
+     - information
+     - model file link
+     - png file links
+  2. Writing a cellid report browser which:
+     - Has filtering fields: cellid, training_set1, training_set2, training_set3
+     - Displays a scatter plot of the r^2 test/train performance of each displayed model
+     - 
+     - Lists matches from baphy, sorted by r^2, with (all?) stack plot PNGs, and a button to launch the stack viewer
+  3. Updated stack viewer
+     - Displays name, training set, test set, and other important info at top of window
+     - Standardized colors for plots
+  4. Putting an abstraction between Baphy for cellid selection and create a simpler batch structure
+     - Batches now are just lists of cellids paired with training sets and test sets, and a model-perturbation tree of keyworded functions.
+     - I'm going to disallow 'fitting' routines which mix and match data sets. If you want this, do it by hand!
+  5. Replacing 'model groups' abstraction with a list of arbitrary nested perturbing functions (with associated keywords)
 
 * WORK
 ** TODAY
-   1. [ ] Plot results so far
-   1. [ ] Fix cholskey decomp error and get npfnl started again
-   2. [ ] Fix EM conditioning error and get gmm4 started again
-   3. [ ] Try some test jobs using job distribution code
-
-** WITH BRIAN
-   1. [ ] Estimate 'best' MSE sparseness penalty
-   2. [ ] Look for 'weirdness', see if sparseness is 'working'
-   3. [ ] 
+   1. [X] Plot results so far, help brian get started on them
+   2. [X] Fix cholskey decomp error and get npfnl started again (Fixed by finding closest positive definite matrix)
+   3. [X] Try some test jobs using job distribution code (FAILURE)
+   4. [ ] Fix EM conditioning error and get gmm4 started again (Not sure how to fix!)
+   5. [ ] Partition code into fitting and plotting sections
 
 ** MINOR ADDITIONS
   1. [ ] If empty test set is given for a cellid, what should we do? Hold 1 out cross validation? 
-  2. [ ] Add a keyword with a log compressor as an extra channel
-  3. [ ] More concise summary of a cellid's models. HTML data table output?
-  4. [ ] Plot both test and training data for smooth scatter plots.
-  5. [ ] Standardize colors for plot lines. 
-  6. [ ] A histogram heat map of model performance for each cell so you can see distribution of model performance
-  7. [ ] A way to compare nonlinearities for multiple data sets.  
-  8. [ ] Can I hide windows when plotting on them so they don't pop up and ruin my day when coding?
-  9. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
+  2. [ ] A 2D sparse bayes approach. Make a 2D matrix with constant shape (elliptical, based on local deviation of N nearest points) to make representative gaussians, then flatten to 1D to make basis vectors fed through SB.
+  3. [ ] Alternatively, try doing 1D sparse bayesian trick once on each dimension separately, and then combining the two dimensions together. 
+  4. [ ] Add a keyword with a log compressor as an extra channel
+  5. [ ] More concise summary of a cellid's models. HTML data table output?
+  6. [ ] Plot both test and training data for smooth scatter plots.
+  7. [ ] Standardize colors for plot lines. 
+  8. [ ] A histogram heat map of model performance for each cell so you can see distribution of model performance
+  9. [ ] A way to compare nonlinearities for multiple data sets.  
+  10. [ ] Can I hide windows when plotting on them so they don't pop up and ruin my day when coding?
+  11. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
 
 ** CLEANING AND BUGFIXES:
   1. [ ] Ooops, the git commit is not really being saved! It should go in META, not just in the cache
@@ -157,7 +186,6 @@
   14. [X] How can LSQ curve fit use sparseness and smoothness metrics?
 	  You can cheat and destroy the module system by looking later in the STACK for the MSE element. 
 	  If the MSE module exists and has nonzero weights, add a bogus zero element the LSQ target vector, and a bogus LSQ prediction vector element with a value of the sqrt(smoothness_penalty).	  
-	  
   15. [ ] Are neurons clusterable according to which models describe them well?
 	  Are they really different populations of neurons, or just points along a continuum?
   16. [ ] ENDGAME: 

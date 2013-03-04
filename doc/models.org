@@ -285,7 +285,7 @@ OBSERVATIONS ON VARIOUS MODELS
   I would love to use fminlsq, but it doesn't play well with a sparseness/smoothness penalty. 
   At least, I can't figure out how to wrap matlab's stupid lsqcurvefit such that it treats the sparseness in the right way. 
 
-** Combinatorics: 5x5x6 = 150 models per cellid. 67 Cellids.
+** Combinatorics: 6x4x6 = 144 models per cellid. 67 Cellids. 9648 models! Oof...
  
 *** Compressor
     1. log2b: log2 with baseline so positive semidefinite.
@@ -300,8 +300,9 @@ OBSERVATIONS ON VARIOUS MODELS
     6. gmm4: Gaussian mixture model which uses four expectation-maximized 2D gaussians to create a nonparametric nonlinearity. 
 *** Fitters
     1. fmin: Basic line search built in to matlab
-    2. boost: A simple boosting implementation.
-    3. sb: Sparse bayesian boosting. Kind of like nonlinear gradient descent, but with sparse steps that only go in some directions.
+    2. fminlsq: Same, plus a lsqcurvefit() at end
+    3. boost: A simple boosting implementation.
+    4. sb: Sparse bayesian boosting. Kind of like nonlinear gradient descent, but with sparse steps that only go in some directions.
 *** Performance metrics
     1. mse  : Performance metric is mean squared error, with no smoothness or sparseness penalty.
     2. mses2: Same as MSE, but a sparseness penalty of 10^-2. Strong sparseness penalty
