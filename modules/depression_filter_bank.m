@@ -27,10 +27,10 @@ end
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_filtered_stim;
-m.plot_fns{1}.pretty_name = 'Filtered Stimulus vs Time';
-m.plot_fns{2}.fn = @do_plot_filtered_stim_heatmap;
-m.plot_fns{2}.pretty_name = 'Filtered Stimulus Heatmap';
+m.plot_fns{1}.fn = @do_plot_filtered_stim_heatmap;
+m.plot_fns{1}.pretty_name = 'Filtered Stimulus Heatmap';
+m.plot_fns{2}.fn = @do_plot_filtered_stim;
+m.plot_fns{2}.pretty_name = 'Filtered Stimulus vs Time';
 
 % Finally, define the 'methods' of this module, as if it were a class
 function x = do_depression_filter(stack, xxx)

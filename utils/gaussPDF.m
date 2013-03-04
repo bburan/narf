@@ -19,5 +19,8 @@ function prob = gaussPDF(Data, Mu, Sigma)
 
 Data = Data' - repmat(Mu',nbData,1);
 %prob = sum((Data*inv(Sigma)).*Data, 2);
+if any(isnan(Data))
+    error('How did a NaN get in our data?!');
+end
 prob = sum((Data / Sigma).*Data, 2);
 prob = exp(-0.5*prob) / sqrt((2*pi)^nbVar * (abs(det(Sigma))+realmin));

@@ -99,7 +99,27 @@ if LIKELIHOOD.InUse==LIKELIHOOD.Gaussian
   % Compute posterior covariance SIGMA (inverse Hessian) 
   % via Cholesky decomposition
   % 
-  U		= chol(PHI'*PHI*beta + diag(Alpha));
+  
+%   % ----BEGIN IVAR'S HACK BLOCK
+%   HACK = PHI'*PHI*beta + diag(Alpha);
+%   [E, D] = eigs(full(HACK));
+%   if any(0 > E)
+%       U = chol(E * max(D,0) / E); % Nearest positive semidef matrix to HACK
+%   else
+%       U = chol(HACK); % If HACK is positive semidef, cholesky is fine
+%   end
+%   
+  
+  [U, errp] = chol(PHI'*PHI*beta + diag(Alpha));
+  
+  if errp > 0 
+      keyboard;
+  end
+  
+  % ----END IVAR'S HACK BLOCK
+  % This was the original:
+  % U = chol(PHI'*PHI*beta + diag(Alpha));
+  
   Ui	= inv(U);
   SIGMA	= Ui * Ui';
   % Posterior mean Mu

@@ -285,7 +285,7 @@ OBSERVATIONS ON VARIOUS MODELS
   I would love to use fminlsq, but it doesn't play well with a sparseness/smoothness penalty. 
   At least, I can't figure out how to wrap matlab's stupid lsqcurvefit such that it treats the sparseness in the right way. 
 
-** Combinatorics: 5x5x6 = 150 models per cellid. 67 Cellids.
+** Combinatorics: 6x4x6 = 144 models per cellid. 67 Cellids. 9648 models! Oof...
  
 *** Compressor
     1. log2b: log2 with baseline so positive semidefinite.
