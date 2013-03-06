@@ -12,7 +12,6 @@ m.editable_fields = {'numpts', 'relvar', 'input_stim', 'input_resp', 'time', 'ou
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.get_parms = @init_nonparm_nonlinearity;
 m.input_stim = 'stim';
 m.input_resp = 'respavg';
 m.time = 'stim_time';
