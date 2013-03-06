@@ -12,13 +12,14 @@ function queuerun(queueid)
 
 [s,host]=unix('hostname');
 
-if ~exist('mysql','file'),
+if exist('narf_set_path','file'),
+    narf_set_path;
+end
+if exist('baphy_set_path','file'),
+    baphy_set_path;
+else
     addpath ~/code/baphy
     baphy_set_path
-    
-    %addpath ~svd/code/db/
-    %addpath ~svd/code/mutils/
-    %addpath ~svd/code/gen/
 end
 
 dbopen;
