@@ -29,8 +29,10 @@ if exist('queueid','var'),
 else
    BATQUEUEID=str2num(getenv('QUEUEID'));
 end
-
-disp(['PBS_JOBID: ',getenv('PBS_JOBID')]);
+QUEUEOUTPATH=getenv('QUEUEOUTPATH');
+if isempty(QUEUEOUTPATH),
+    QUEUEOUTPATH='/tmp';
+end
 
 if isempty(BATQUEUEID),
    disp('syntax error: cellxcmaster(queueid) parameter required');
@@ -38,7 +40,7 @@ if isempty(BATQUEUEID),
    return
 end
 
-queuedata=dbgetqueue(BATQUEUEID)
+queuedata=dbgetqueue(BATQUEUEID);
 if isempty(queuedata)
    fprintf('queue id=%d not found!\n',BATQUEUEID);
    return
@@ -49,27 +51,28 @@ if ~isempty(findstr(lower(host),'seil.umd.edu')),
 end
 
 % for debugging
-% fprintf('MYHOST=%s\n',getenv('MYHOST'));
+fprintf('QUEUEID=%d\n',BATQUEUEID);
+fprintf('MYHOST=%s\n',getenv('MYHOST'));
 
 % run the matlab commands specified in parmstring. presumably this
 % takes care of all the output.
 disp(['RUNNING: ' char(queuedata.parmstring)]);
 eval(char(queuedata.parmstring));
 
-
 % record that we're done with this queue entry
-BATQUEUEID=str2num(getenv('QUEUEID'));  % may've been cleared
+% (may've been cleared, so requery environment)
+BATQUEUEID=str2num(getenv('QUEUEID'));
 
 if isempty(findstr(lower(host),'seil.umd.edu')),
    figure(1);
    fullpage portrait
-   print('-f1','-djpeg',sprintf('/home/tmp/queue/%d.1.jpg',BATQUEUEID));
+   print('-f1','-djpeg',sprintf('%s/%d.1.jpg',QUEUEOUTPATH,BATQUEUEID));
    figure(2);
    fullpage portrait
-   print('-f2','-djpeg',sprintf('/home/tmp/queue/%d.2.jpg',BATQUEUEID));
+   print('-f2','-djpeg',sprintf('%s/%d.2.jpg',QUEUEOUTPATH,BATQUEUEID));
    figure(3);
    fullpage portrait
-   print('-f3','-djpeg',sprintf('/home/tmp/queue/%d.3.jpg',BATQUEUEID));
+   print('-f3','-djpeg',sprintf('%s/%d.3.jpg',QUEUEOUTPATH,BATQUEUEID));
 end
 
 dbsetqueue(BATQUEUEID,1000,1);
