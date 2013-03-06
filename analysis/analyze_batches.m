@@ -38,8 +38,9 @@ for bi = 1:length(batches)
     mm = {};
     mm{1} = module_groups('env100');
     mm{2} = module_groups('log2b');
-    mm{3} = module_groups('depn');
-    mm{4} = module_groups('senl25'); 
+    % mm{3} = module_groups('depn');
+    mm{3} = module_groups('firn');
+    mm{4} = module_groups('se2d'); 
     mm{5} = module_groups('boost');
     mm{6} = module_groups('mses4');
     
@@ -59,7 +60,7 @@ for bi = 1:length(batches)
         fit_models(mm, cells{ii}.cellid, ...
              cells{ii}.training_set, ...
              cells{ii}.test_set);
-%         
+         
 %         % Technically, fit_models already built a perfect cache, even if interrupted,
 %         % but rebuilding it can give us a little peace of mind so let's do it.
 %         summarize_cellid(cells{ii}.cellid, true);

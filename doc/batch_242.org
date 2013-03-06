@@ -1,0 +1,10 @@
+* Batch 242
+ | Cell ID    | NL     | Fitter | MSE# |  R^2 |    S | Satu-   | Cen.   | Sur.  | Category     | Notes                 |
+ |            |        |        |      |      |      | ration  |        |       |              |                       |
+ |------------+--------+--------+------+------+------+---------+--------+-------+--------------+-----------------------|
+ | por024b-b1 | npnfl3 | boost  | 5    | .258 | 5.25 | Low     | +2,-7  | +1,-7 | Simul/offset | Depression candidate. |
+ | por024b-b2 | senl   | sb     | none | .386 | 12.4 | Low     | -4, +9 | UGLY  |              |                       |
+ | por024b-c1 | npnl   | sb     | none | .493 | 10.3 | Sigmoid | +2, -6 | +2    | Simul        |                       |
+ | por025a-b1 | senl   | sb     | none | .542 | 7.93 | Low     | +2, -4 |       |              |                       |
+ | por025a-c1 | npfnl  | sb     | none |      |      |         |        |       |              |                       |
+
