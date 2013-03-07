@@ -22,8 +22,8 @@ token_group  = cell2mat(cellfun(@pickgroup, ...
 
 fh = figure;
 gscatter(train_scores, test_scores, token_group, 'bgrcmky', 'o');
-xlabel('Training Set r^2');
-ylabel('Test Set r^2');
+xlabel('Training Set r');
+ylabel('Test Set r');
 title(['Training/Test Performance for ' titlename]);
 legend(tokens, 'Location', 'SouthEast');
 end

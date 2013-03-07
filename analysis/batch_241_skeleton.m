@@ -67,25 +67,22 @@ mm{3} = module_groups('firn');
 mm{4} = module_groups('npnl');  % senl and npfnl4 usually beat npnl
 % TODO: NPNLX module group, which uses separate NPNLs for each respfile
 mm{5} = module_groups('sb', 'fminlsq', 'boost');  % The 3 best fitters
-mm{6} = module_groups('mse', 'mses1', 'mses5'); % Zero, heavy, and light sparsity
+mm{6} = module_groups('mse', 'mses1', 'mses5');   % Zero, heavy, and light sparsity
     
 [~, modelnames] = module_combinations(mm);
 
 % Generate every possible model combination for each cellid in this batch
 for ii = 1:length(cells)
-    fit_models(mm, cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
+    fit_models(mm, batch, cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
 end
 
-% Generate "top 10" plots and scatter plots for each cellid
+% Generate "top 10" plots for each cellid
 for ii = 1:length(cells)
-    % ----------- TO BE REPLACED WITH MYSQL CODE --------
-    % The following will hopefully be irrelevant soon because its SUPER DUPER DOG SLOW
-    summarize_cellid(cells{ii}.cellid, true);
-    sf = [NARF_SAVED_ANALYSIS_PATH filesep cells{ii}.cellid '_summary.mat'];
-    summaries = load_summaries({sf});
-    summaries = only_named_summaries(summaries, modelnames);
-    plot_cellid_summary(cells{ii}.cellid, summaries, true, analysis_prefix);
-    % -------------------- END REPLACEMENT -------------- 
+    % ----------UNTESTED BUT PROBABLY CLOSE-----------------    
+    % Plot the top 10 models
+    models = db_get_models(batch, cells{ii}.cellid);
+    compare_models(cellstr(char(models(1:10).modelfile)));
+    % TODO: Scatter plots
 end
 
 % TODO: Generate heat map plots (Buggy right now due to caching problem)
