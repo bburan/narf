@@ -78,10 +78,9 @@ end
 
 % Generate "top 10" plots for each cellid
 for ii = 1:length(cells)
-    % ----------UNTESTED BUT PROBABLY CLOSE-----------------    
     % Plot the top 10 models
     models = db_get_models(batch, cells{ii}.cellid);
-    compare_models(cellstr(char(models(1:10).modelfile)));
+    compare_models(cellstr(char(models(1:(min(length(models)), 10)).modelpath)));
     % TODO: Scatter plots
 end
 

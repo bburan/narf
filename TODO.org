@@ -1,11 +1,8 @@
 * ROADMAP
-  1. [ ] Skeleton script to Stephen
-  2. [ ] Start using mysql for caching analysis results
-  3. [ ] Start using queue system for starting model training files
-  4. [ ] Across-file NPNL 
-  5. [ ] Cleaning, bugfixes, and user interface changes that have accumulated
-  6. [ ] Address question: Does variation in neural fuction as in A1 follow a continuum, or are there visible clusters?
-
+  1. [ ] Start using queue system for starting model training files
+  2. [ ] Across-file NPNL 
+  3. [ ] Cleaning, bugfixes, and user interface changes that have accumulated
+  4. [ ] Address question: Does variation in neural fuction in A1 follow a continuum, or are there visible clusters?
 
 * WORKFLOW CHANGES
   Some unmet needs are becoming clearer:
@@ -37,12 +34,14 @@
   5. Replacing 'model groups' abstraction with a list of arbitrary nested perturbing functions (with associated keywords)
 
 * WORK
-** TODAY
-   1. [X] Plot results so far, help brian get started on them
-   2. [X] Fix cholskey decomp error and get npfnl started again (Fixed by finding closest positive definite matrix)
-   3. [X] Try some test jobs using job distribution code (FAILURE)
-   4. [ ] Fix EM conditioning error and get gmm4 started again (Not sure how to fix!)
-   5. [ ] Partition code into fitting and plotting sections
+** NEXT
+   1. [ ] REFACTOR STUFF:
+      - [ ] Write a pushing function which pushes a model into the database (not overwriting if it already exists)
+      - [ ] Push existing files into the database
+      - [ ] change fit_models() code to do a database push 
+      - [ ] Fix the damn bug with NaNs in sparsebayes fitter!?
+   2. [ ] Partition code into fitting and plotting sections
+   3. [ ] Fix EM conditioning error and get gmm4 started again (Not sure how to fix!)
 
 ** MINOR ADDITIONS
   1. [ ] If empty test set is given for a cellid, what should we do? Hold 1 out cross validation? 
@@ -81,6 +80,7 @@
   21. [ ] make anything named 'do_' into a method for use with modules?
   22. [ ] make anything named 'update_' into a function used purely for its side effects?
   23. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
+  24. [ ] Make sure that fitters return specific codes indicating how they terminated
 
 ** FITTERS:
   1. [ ] FITTER: ARD + ASD
@@ -190,7 +190,8 @@
 	  If the MSE module exists and has nonzero weights, add a bogus zero element the LSQ target vector, and a bogus LSQ prediction vector element with a value of the sqrt(smoothness_penalty).	  
   15. [ ] Are neurons clusterable according to which models describe them well?
 	  Are they really different populations of neurons, or just points along a continuum?
-  16. [ ] ENDGAME: 
+  16. [ ] Even auto-generated models should have their own 'summarize' function which plots relevant data?
+  17. [ ] ENDGAME: 
 	  Is the end goal of this system something that:
 	  - Spans the input space of nonlinearities?
 	  - Spans the input space of depression?
