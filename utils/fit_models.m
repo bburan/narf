@@ -75,8 +75,6 @@ for ii = 1:N_models,
     META.fitter = func2str(cormod.fitter);
     META.fit_time = toc;
     META.batch = batch;
-    % Old way
-    % summary{ii} = summarize_model();
     
     % New way!    
     save_model(META.modelpath, STACK, XXX, META);

@@ -3,7 +3,6 @@ function batch_241_skeleton()
 % LIMITATIONS:
 %   - Single machine, single matlab instance only 
 %   - Easy to generate many models, but hard to aggregate data from all of them
-% 
 % Both of these will be fixed ASAP. 
 
 batch = 241;
@@ -57,7 +56,7 @@ cells = request_celldb_batch(batch);
 % CAVEATS:
 %   'sb' fitter and 'senl' nonlinearities crash about once every few
 %   hundred models because of numerical instabilities. They work really
-%   well when the work, though.
+%   well when they work, though.
 
 % Recommended defaults for minimal search. As desired, add the above
 mm = {};
@@ -68,7 +67,7 @@ mm{4} = module_groups('npnl');  % senl and npfnl4 usually beat npnl
 % TODO: NPNLX module group, which uses separate NPNLs for each respfile
 mm{5} = module_groups('sb', 'fminlsq', 'boost');  % The 3 best fitters
 mm{6} = module_groups('mse', 'mses1', 'mses5');   % Zero, heavy, and light sparsity
-    
+
 [~, modelnames] = module_combinations(mm);
 
 % Generate every possible model combination for each cellid in this batch

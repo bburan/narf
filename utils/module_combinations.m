@@ -33,5 +33,4 @@ for ii = 1:N_models,
             models{ii}{end+1} = blocks{jj}{kk};
         end
     end  
-    
 end
