@@ -35,7 +35,7 @@ end
 % for ii = 1:length(cells)
 %     % Plot the top 10 models
 %     models = db_get_models(batch, cells{ii}.cellid);
-%     compare_models(cellstr(char(models(1:min(length(models), 10)).modelpath)));
+%     compare_models(cellstr(char(models(max(length(models)-10,1):end).modelpath)));
 %     % TODO: Scatter plots
 % end
 
