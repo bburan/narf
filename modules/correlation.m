@@ -64,7 +64,7 @@ function x = do_correlation(stack, xxx)
         x.(mdl.train_score) = NaN;
         x.(mdl.output) = NaN;
     else
-        x.(mdl.train_score) = R(2,1)^2;
+        x.(mdl.train_score) = R(2,1);
         x.(mdl.output) = 1/R(2,1)^2;
     end
     
@@ -81,7 +81,7 @@ function x = do_correlation(stack, xxx)
     if isnan(R)
         x.(mdl.test_score) = NaN;
     else
-        x.(mdl.test_score) = R(2,1)^2;
+        x.(mdl.test_score) = R(2,1);
     end
     
 end
@@ -107,7 +107,7 @@ function do_plot_inputs(stack, xxx)
     % Plot the score in the upper left
     themax = max([max(s1.*dat.(mdl.input1)(:, stim_idx)), ...
                   max(s2.*dat.(mdl.input2)(:, stim_idx))]);
-    text(0, themax , sprintf(' Train r^2: %f\n Test r^2 : %f', x.(mdl.train_score), x.(mdl.test_score)), ...
+    text(0, themax , sprintf(' Train r: %f\n Test r : %f', x.(mdl.train_score), x.(mdl.test_score)), ...
         'VerticalAlignment','top',...
         'HorizontalAlignment','left');
 

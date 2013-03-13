@@ -94,6 +94,7 @@ function x = do_mean_squared_error(stack, xxx)
     %fprintf('mse metric: %f\n', sparsity_metric(firmod.coefs(:)));
     %fprintf('MSE: %f\n', train_score + (mdl.sparseness_weight * sparsity_metric(firmod.coefs(:))));
     
+    x.sparsity = sparsity_metric(firmod.coefs); % FIXME
     x.(mdl.output) = (train_score) + ...
                      mdl.smoothness_weight * smoothness_metric(firmod.coefs(:)) + ...
                      mdl.sparseness_weight * sparsity_metric(firmod.coefs(:));

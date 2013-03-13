@@ -1,4 +1,4 @@
-function fit_models(mm, cellid, training_set, test_set, skipexisting)
+function fit_models(mm, batch, cellid, training_set, test_set, skipexisting)
 % Builds all possible model combinations defined in MM, and trains them on
 % the data defined by the CELLID and TRAINING_SET. Tests their performance,
 % and writes the resulting model file to disk.
@@ -22,10 +22,9 @@ function fit_models(mm, cellid, training_set, test_set, skipexisting)
 
 global STACK XXX META MODULES...
     NARF_MODULES_PATH ...
-    NARF_SAVED_MODELS_PATH ...
-    NARF_SAVED_ANALYSIS_PATH;
+    NARF_SAVED_MODELS_PATH;
 
-if nargin < 5
+if nargin < 6
     skipexisting = true;
 end
 
@@ -38,17 +37,8 @@ N_models = length(models);
 
 fprintf('Number of models to be fit %d\n', N_models); 
 
-summary = cell(N_models, 1);
-
 if ~exist([NARF_SAVED_MODELS_PATH filesep cellid], 'dir')
     mkdir([NARF_SAVED_MODELS_PATH filesep cellid]);
-end
-analysis_file = [NARF_SAVED_ANALYSIS_PATH filesep cellid '_summary.mat'];
-
-% Load existing analysis file, so that incomplete analyses may be continued
-if exist(analysis_file, 'file') == 2
-    fprintf('Loading existing analysis file.\n');
-    summary = getfield(load(analysis_file, 'summary'), 'summary'); 
 end
 
 for ii = 1:N_models,
@@ -84,10 +74,10 @@ for ii = 1:N_models,
     META.exit_code = cormod.fitter();
     META.fitter = func2str(cormod.fitter);
     META.fit_time = toc;
+    META.batch = batch;
     
-    summary{ii} = summarize_model();
-    
+    % New way!    
     save_model(META.modelpath, STACK, XXX, META);
+    db_insert_model();
     
-    save(analysis_file, 'summary');
 end

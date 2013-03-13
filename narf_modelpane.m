@@ -1,4 +1,4 @@
-function refresh_modelpane = narf_modelpane(parent_handle, modules)
+function refresh_modelpane = narf_modelpane(parent_handle)
 % A dynamic GUI for chaining together a large number of function calls with
 % associated plotting functions to display the input/outputs of the
 % function call. The number of functions that may be chained is dynamic and
@@ -30,7 +30,7 @@ function refresh_modelpane = narf_modelpane(parent_handle, modules)
 % everything then has to be shifted around in the positive spaces as the
 % number of module blocks changes.
 
-global STACK XXX META NARF_PATH NARF_SAVED_MODELS_PATH;
+global STACK XXX META NARF_PATH NARF_SAVED_MODELS_PATH MODULES;
 
 pos = get(parent_handle, 'Position');
 w = pos(3); % Width of the parent panel
@@ -87,14 +87,14 @@ end
 % Fill a popup menu with modules that are ready at stack depth 'mod_idx'
 function update_ready_modules(mod_idx)
     ready_mods = {'Select Module'};
-    fns = fieldnames(modules);
+    fns = fieldnames(MODULES);
     j=2;
     if mod_idx > length(XXX)  % If there is no data, don't do anything
         return
     end
     for idx = 1:length(fns);
-        if modules.(fns{idx}).isready_pred(STACK(1:mod_idx), XXX(1:mod_idx))
-            ready_mods{j} = modules.(fns{idx}).pretty_name;
+        if MODULES.(fns{idx}).isready_pred(STACK(1:mod_idx), XXX(1:mod_idx))
+            ready_mods{j} = MODULES.(fns{idx}).pretty_name;
             j = j+1;
         end 
     end
@@ -125,10 +125,10 @@ function module_selected_callback(mod_idx)
     % TODO: When my revolution comes, I will destroy languages with for loops and
     % repopulate the earth with higher level functional idioms
     f = [];
-    fns = fieldnames(modules);
+    fns = fieldnames(MODULES);
     for i = 1:length(fns)  
-        if isequal(pretty_name, modules.(fns{i}).pretty_name)
-            f = modules.(fns{i});
+        if isequal(pretty_name, MODULES.(fns{i}).pretty_name)
+            f = MODULES.(fns{i});
         end    
     end
     
@@ -144,7 +144,7 @@ function module_selected_callback(mod_idx)
     
     % All the above work just to find out what was selected! Oof!
     % Set the stack at this point to be the selected module. 
-    STACK{mod_idx} = merge_structs(STACK{mod_idx}, modules.(selected));
+    STACK{mod_idx} = merge_structs(STACK{mod_idx}, MODULES.(selected));
     m = STACK{mod_idx}; % Get a new shorthand abbreviation 
     
     % Invalidate data beyond this point
@@ -534,28 +534,6 @@ rebuild_gui_from_stack();
 % Make the scroll bar dynamically update whenever it is being dragged
 %hJScrollBar = findjobj(handles.container_slider);
 %hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions();
-
-function delete_all_module_guis()
-    for ii = 1:length(STACK)
-        if isfield(STACK{ii}, 'gh')
-            try
-                delete(STACK{ii}.gh.plot_axes);
-                delete(STACK{ii}.gh.plot_popup);
-                delete(STACK{ii}.gh.plot_panel);
-                delete(STACK{ii}.gh.fn_apply);
-                delete(STACK{ii}.gh.fn_table);
-                delete(STACK{ii}.gh.fn_popup);
-                delete(STACK{ii}.gh.fn_panel);
-            catch
-                % Do nothing if a delete failed
-            end
-            STACK{ii} = rmfield(STACK{ii}, 'gh');
-        end
-        if isfield(STACK{ii}, 'plot_gui')
-            STACK{ii} = rmfield(STACK{ii}, 'plot_gui');
-        end
-    end
-end
 
 % COMMENT:
 % I would love to make mouse wheel scrolling work with the cursor over the
