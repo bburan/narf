@@ -81,7 +81,10 @@ for nn = 1:length(rundata)
         printmatch=double(sum(abs(stimprint-repmat(stimprint(firstactiveidx,:),filecount,1)),2)==0);
         
         useidx=find(printmatch);
-        train_set={cellfiledata(useidx).stimfile};
+        for ii=1:length(useidx),
+            train_set{ii}=[cellfiledata(useidx(ii)).stimfile,'_est'];
+            test_set{ii}=[cellfiledata(useidx(ii)).stimfile,'_val'];
+        end
         
     else
         % figure out what files to use for what stage of the analysis

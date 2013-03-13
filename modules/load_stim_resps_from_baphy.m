@@ -78,16 +78,28 @@ function x = do_load_from_baphy(stack, xxx)
     for f_idx = 1:len;
         f = files_to_load{f_idx};
         
+        % SVD 2013-03-08 - check for special est/val subsets
+        if strcmpi(f((end-3):end),'_val'),
+            datasubset=2;
+            fname=f(1:(end-4));
+        elseif strcmpi(f((end-3):end),'_est'),
+            datasubset=1;
+            fname=f(1:(end-4));
+        else
+            datasubset=0;
+            fname=f;
+        end
+        
         % Find the index number of cfd corresponding to the file
         idx = 0;
         for j = 1:length(cfd)
-            if isequal(cfd(j).stimfile, f)
+            if isequal(cfd(j).stimfile, fname)
                 idx = j;
             end
         end
         if idx == 0 
-            error('Not found in cfd: %s\n', f); 
-        end        
+            error('Not found in cfd: %s\n', fname); 
+        end
           
         % Load the raw_stim part of the data structure
         stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
@@ -145,10 +157,30 @@ function x = do_load_from_baphy(stack, xxx)
             stim=stim(1:325,:,:);
         end
         
+        % SVD 2013-03-08 - if specified, pull out either estimation (fit) or
+        % validation (test) subset of the data
+        if datasubset,
+            repcount=squeeze(sum(~isnan(resp(1,:,:)),2));
+            if max(repcount)>2,
+                validx=min(find(repcount==max(repcount)));
+            else
+                [ff,ii]=sort(repcount,'descend');
+                validx=ii(1:2);
+            end
+            if datasubset==2
+                keepidx=validx;
+            else
+                keepidx=setdiff(find(repcount>0),validx);
+            end
+            stim=stim(:,keepidx,:);
+            resp=resp(:,:,keepidx);
+        end
+        
         x.dat.(f).(mdl.output_stim) = stim;
         x.dat.(f).(mdl.output_resp) = permute(resp, [1, 3, 2]);
-        x.dat.(f).respavg = squeeze(nanmean(x.dat.(f).(mdl.output_resp), 3));
-
+        x.dat.(f).respavg = squeeze(nanmean(x.dat.(f).(mdl.output_resp), ...
+                                            3));
+        
         % Create time signals for later convenience
         [s1 s2 s3] = size(x.dat.(f).(mdl.output_stim));
         [r1 r2 r3] = size(x.dat.(f).(mdl.output_resp));

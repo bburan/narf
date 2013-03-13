@@ -57,20 +57,11 @@ filter_length = 10;
 n_channels = 2;
 
 % -------------------------------------------------------------------------
-ci=0;
-for ii=1:length(files_to_analyze),
-    if strcmpi(cellid,files_to_analyze{ii}{1}),
-        ci=ii;
-    end
-end
-
-if ~ci,
-    ret=request_celldb_batch(241);
-    for ii=1:length(ret),
-        if strcmpi(cellid,ret{ii}.cellid),
-            files_to_analyze{end+1}={cellid ret{ii}.training_set{:}};
-            ci=size(files_to_analyze,1);
-        end
+ret=request_celldb_batch(241,cellid);
+for ii=1:length(ret),
+    if strcmpi(cellid,ret{ii}.cellid),
+        files_to_analyze{end+1}={cellid ret{ii}.training_set{:}};
+        ci=size(files_to_analyze,1);
     end
 end
 
@@ -90,7 +81,7 @@ respfiles = {files_to_analyze{ci}{2:filecount}};
 XXX = {};
 XXX{1}.cellid = cellid;  
 XXX{1}.training_set = respfiles; % {respfiles{1}};
-XXX{1}.test_set = {};
+XXX{1}.test_set = ret{ii}.test_set;
     
 STACK = {};
 append_module(mdls.load_stim_resps_from_baphy.mdl(...

@@ -110,7 +110,6 @@ if length(torcdata)>0,
     ha2=subplot(4,3,2);
     parmfile=[torcdata(1).stimpath torcdata(1).stimfile];
     spikefile=[torcdata(1).path torcdata(1).respfile];
-    
     tor_tuning(parmfile,spikefile,options.channel,options.unit,[ha1 ha2])
 end
 

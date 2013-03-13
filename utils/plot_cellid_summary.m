@@ -49,10 +49,19 @@ for ii = 1:length(sr)
         break;
     end
 end
+if isempty(best),
+    disp('kludge: no valid test scores, just including all models');
+    for ii = 1:length(sr)
+        jj = length(sr) - ii + 1;
+        best{end+1} = sr{jj};
+        if length(best) >= n
+            break;
+        end
+    end
+end
 filepaths = extract_field(best, 'modelpath');
 fh = compare_models(filepaths);
 append_or_save(fh, sprintf('%s_best%d', cellid, n));
-
 % ------------------------------------------------------------------------
 % TOKEN SCATTER PLOTS
 

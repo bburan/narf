@@ -12,9 +12,9 @@ narf_set_path;
 
 global MODULES NARF_SAVED_ANALYSIS_PATH;
 MODULES = scan_directory_for_modules();
-    
+
 analysis_prefix = 'a241';
-    
+
 cells = request_celldb_batch(batch);
 
 % MODEL BLOCK GROUPS THAT WORK WELL (as of 2013-03-06)
