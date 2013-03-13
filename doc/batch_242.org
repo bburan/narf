@@ -1,10 +1,41 @@
-* Batch 242
- | Cell ID    | NL     | Fitter | MSE# |  R^2 |    S | Satu-   | Cen.   | Sur.  | Category     | Notes                 |
- |            |        |        |      |      |      | ration  |        |       |              |                       |
- |------------+--------+--------+------+------+------+---------+--------+-------+--------------+-----------------------|
- | por024b-b1 | npnfl3 | boost  | 5    | .258 | 5.25 | Low     | +2,-7  | +1,-7 | Simul/offset | Depression candidate. |
- | por024b-b2 | senl   | sb     | none | .386 | 12.4 | Low     | -4, +9 | UGLY  |              |                       |
- | por024b-c1 | npnl   | sb     | none | .493 | 10.3 | Sigmoid | +2, -6 | +2    | Simul        |                       |
- | por025a-b1 | senl   | sb     | none | .542 | 7.93 | Low     | +2, -4 |       |              |                       |
- | por025a-c1 | npfnl  | sb     | none |      |      |         |        |       |              |                       |
 
+* Batch 242
+ | Cell ID    | NL     | Fitter  | MSE# |  R^2 |    S | Satu-   |Right         | Left     | Category     | Notes                 |
+ |            |        |         |      |      |      | ration  |              |          |              |                       |
+ |------------+--------+---------+------+------+------+---------+--------------+----------+--------------+-----------------------|
+ |            |        |         |      |      |      |         |              |          |              |                       |
+ |            |        |         |      |      |      |         |              |          |              |                       |
+ | por024b-b1 | npnfl3 | boost   |    5 | .258 | 5.25 | Low     | +2,-7        | +1,-7    | Simul/Offset | Depression candidate. |
+ | por024b-b2 | senl   | sb      | none | .386 | 12.4 | Low     | -4,+9        | UGLY     |              |                       |
+ | por024b-c1 | npnl   | sb      | none | .493 | 10.3 | Sigmoid | +2,-6        | +2       | Simul        |                       |
+ | por025a-b1 | senl   | sb      | none | .542 | 7.93 | Low     | +2,+3,-4,-6  | none     |              | Depression candidate  |
+ | por025a-c1 | npfnl  | sb      | none | .339 | 6.83 | Sigmoid | +2           | none     |              |                       |
+ | por025a-c2 | npfnl  | sb      | none | .149 | 14.1 | Low     | +2,-4        | +3,-4    | Offset/Simul | Depression candidate  |
+ | por025a-d1 | gmm4   | sb      |    3 | .503 | 6.18 | Low     | +2,-4        | none     |              | Depression candidate  |
+ | por026a-b1 | npfnl  | boost   |    3 | .378 | 2.03 | Low     | +2,-7        | none     |              | Depression candidate  |
+ | por026a-d1 | npnl   | boost   | none | .151 | 7.92 | Linear  | -3,-4,+8,+11 | -2,+7,+9 | Offset       |                       |
+ | por026b-a1 | gmm4   | boost   |    4 | .561 | 3.04 | Sigmoid | +3           | -3       | Simul        |                       |
+ | por026b-a2 | senl   | boost   |    5 | .283 | 4.98 | Low     | +3,-6        | -3,+7    | Simul/Offset | Depression candidate  |
+ | por026b-b1 | senl   | boost   | none | .374 | 3.84 | Sigmoid | +2           | none     |              |                       |
+ | por026b-b2 | senl3  | boost   |    5 | .589 | 3.85 | Low     | +2,-5        | none     |              | Depression candidate  |
+ | por026b-c1 | npfnl  | boost   | none | .199 | 3.22 | Wavy    | +2           | none     | Wavy         |                       |
+ | por026b-c2 | senl3  | boost   |    5 | .352 | 2.79 | Low     | +5           | none     |              |                       |
+ | por026b-d1 | npfnl  | boost   |    3 | .294 | 2.38 | Low     | -3           | +5       |              |                       |
+ | por026c-a1 | senl3  | fmin    |    5 | .686 | 5.54 | Low     | +2           | none     |              |                       |
+ | por026c-b1 | senl3  | boost   |    5 | .535 | 7.39 | Low     | +3,+4,-10    | -10      |              | Depression candidate  |
+ | por026c-b2 | npfnl3 | fminlsq |    3 | .025 | 2.62 | Low     | ?            | ?        | UGLY         |                       |
+ | por026c-c1 | npfnl  | boost   |    5 | .530 | 2.65 | Linear  | +3           | none     |              |                       |
+ | por026c-d1 | senl   | boost   |    3 | .199 | 1.00 | Wavy    | +5           | none     |              |                       |
+ | por027a-a1 | npfnl  | boost   |    6 | .128 | 4.06 | Low     | +2,+3,-6     | none     |              | Depression candidate  |
+ | por027a-b1 | npfnl3 | boost   |    5 | .273 | 3.13 | Linear  | +2           | none     |              |                       |
+ | por027a-c1 | npnl   | boost   |    5 | .232 | 3.01 | Sigmoid | +2,-4        | none     |              | Depression candidate  |
+ | por027b-b1 | npnl   | fmin    |    4 | .229 | 6.73 | Sigmoid | +2           | +1       | Offset       |                       |
+ | por027b-c1 | senl   | boost   |    6 | .144 | 9.37 | Low     | +3,-8,-10    | -6,-8    | Offset       | Depression candidate  |
+ | por028b-b1 | senl3  | boost   |    4 | .188 | 3.34 | U       | -3           | +3       | Simul        |                       |
+ | por028b-c1 | senl   | boost   |    5 | .211 | 2.68 | Sigmoid | +2           | -4       | Offset       |                       |
+ | por028b-d1 | npnl   | boost   |    4 | .345 | 4.83 | Linear  | -6           | -7       | Offset       |                       |
+ | por028d-a2 | npnl   | boost   | none | .266 | 4.64 | Linear  | -5           | +2,-7    | Offset       |                       |
+ | por028d-b1 | npnl   | boost   | none | .651 | 3.34 | Sigmoid | +3           | -3       | Simul        |                       |
+ | por028d-c1 | senl   | fmin    |    4 | .012 | 1.94 | Linear  | -1           | none     |              |                       |
+ | por028d-c2 | senl   | boost   |    5 | .356 | 3.17 | Low     | -11          | none     |              |                       |
+ | por028d-d1 | npnl   | boost   |    4 | .311 | 5.66 | Sigmoid | +2,-6,-9     | +2,-11   | Simul/Offset | Depression candidate  |
