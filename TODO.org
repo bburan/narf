@@ -1,5 +1,9 @@
 * ROADMAP
-  1. [ ] Model viewer 
+  1. [ ] Model viewer additions
+	 1) Modelpane Viewer
+	 2) Compare selected models
+	 3) Scatter plot test/train
+	 4) Heat Map the results
   2. [ ] Start using queue system for starting model training files
   3. [ ] POTENTIAL SOURCE OF BUGS: 
 	 Not all files have a META.batch property (for 240 and 242)

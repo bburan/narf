@@ -1,44 +1,42 @@
 function handles = narf_browser(parent_handle)
 
-global STACK XXX META NARF_PATH NARF_SAVED_MODELS_PATH;
+global STACK XXX META NARF_PATH NARF_SAVED_MODELS_PATH MODULES;
+
+dbopen;
+MODULES = scan_directory_for_modules();   
+
+h = 1000;  % Total window height
+w = 1800; % Total window width
+rh = 550; % Results height
+rw = 800; % Results width
+mw = 190; % Menu width
+iw = 450; % Image width
+ih = 650; % Image height
+ts = 25;  % Text spacing
+tw = 70;  % Text label width
+ta = -3;  % Text alignment vertical spacing
 
 if ~exist('parent_handle', 'var')
-    parent_handle = figure('Menubar','figure', 'Resize','off', ...
-       'Units','pixels', 'Position', [20 50 1200 900]);
+    parent_handle = figure('Menubar','none', 'Resize','off', ...
+       'Units','pixels', 'Position', [20 50 w h]);
 end
 
-pos = get(parent_handle, 'Position');
-w = pos(3); % Width of the parent panel
-h = pos(4); % Height of the parent panel
-mw = 250;   % Menu width
-ih = 600;   % Image section height
-lb = 10;    % Left border spacing
-ts = 25;    % Text spacing
-tw = 80;    % Text label width
-ta = -3;    % Text alignment vertical spacing
-
-% Struct array of DB hits
 db_results = [];
-sortby = 'R_test';
+sortby = 'r_test';
 sortdir = 'DESC';
+selected = [];
 
-% Create a panel inside it which will slide
-handles.container_panel = uipanel('Parent',parent_handle, ...
-    'Units','pixels', 'Position', [mw 0 w-20 ih]);
+handles.image_panel = uipanel('Parent',parent_handle, ...
+    'Units','pixels', 'Position', [mw rh-40 rw-mw ih]);
 
-% Create the scroll bar
-handles.container_slider = uicontrol('Parent',parent_handle, ...
-    'Style','slider', 'Enable','off', ...
-    'Units','pixels', 'Position', [w-20 0 20 ih], ...
-    'Min', 0-eps, 'Max', 0, 'Value', 0, ...
-    'Callback', @(h,evts,hds) update_panel_positions());
+handles.viewer_panel = uipanel('Parent',parent_handle, ...
+    'Units','pixels', 'Position', [rw 0 w-(rw) h]);
 
-% Create the data table
 handles.db_results = uitable('Parent', parent_handle, ...
         'Enable', 'on',  'Units', 'pixels', 'RowName', [],...
-        'ColumnWidth', {50, 40, 100, 300, 50, 50, 70, 150}, ...
+        'ColumnWidth', {50, 40, 100, 280, 50, 50, 70, 150}, ...
         'ColumnName', {'ID', 'Batch', 'CellID', 'ModelName', 'R_test', 'R_fit', 'Sparsity', 'Last Mod.'}, ...
-        'Position', [mw ih w-mw h-ih]);
+        'Position', [0 0 rw rh]);
     
 hJScroll = findjobj(handles.db_results); 
 hJTable = hJScroll.getViewport.getView; 
@@ -49,30 +47,85 @@ hJTablecb = handle(hJTable, 'CallbackProperties');
 set(hJTablecb, 'MousePressedCallback', {@results_row_select, gcf});
 set(hJTablecb, 'KeyPressedCallback', {@results_row_select, gcf});
 panax = axes('Units','normal', 'Position', [0 0 1 1],...
-    'Parent', handles.container_panel);
+             'Parent', handles.image_panel);
 
     function results_row_select(a,~,~)
         r = a.getSelectedRows();
         res = db_results(r+1);
+        selected = res; 
         [I,map] = imread(char(res.figurefile),'png');        
         axes(panax);
-        imshow(I, map, 'InitialMagnification', 25);
+        imshow(I, map);
     end
 
-    % Callback to allow scrolling of image summary
-    function update_panel_positions()
-        hSld = handles.container_slider;
-        hPan = handles.container_panel;
-        offset = get(hSld,'Value');
-        p = get(hPan, 'Position');
-        set(hPan, 'Position', [p(1) -offset p(3) p(4)]);
-        top = 1000;
-        for yi = 1:N
-            p = get(STACK{yi}.gh.fn_panel, 'Position');
-            set(STACK{yi}.gh.fn_panel, 'Position', [0 (top-ph*yi-offset) p(3) p(4)]);
+global STACK XXX META;
+delete_all_module_guis();
+STACK = {};
+XXX = {};
+META = {};
+modelpane_updater = narf_modelpane(handles.viewer_panel); 
+
+uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
+    'String', 'Inspect Selected Model', ...
+    'Units','pixels', 'Position', [0 rh mw 25], ...
+    'Callback', @view_selected_in_modelpane);
+
+    function view_selected_in_modelpane(~,~,~)
+        if ~isempty(selected)
+            delete_all_module_guis();
+            load_model(char(selected.modelpath));  
+            modelpane_updater();
         end
-        drawnow;
     end
+
+uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
+    'String', 'Preview in new Window', ...
+    'Units','pixels', 'Position', [0 rh+25 mw 25], ...
+    'Callback', @view_image_in_new_window);
+
+    function view_image_in_new_window(~,~,~)
+        if ~isempty(selected)
+            figure('Menubar', 'none');
+            [I,map] = imread(char(selected.figurefile),'png');        
+            imshow(I, map);
+        end
+    end
+
+uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
+    'String', 'View Selected Cell STRF', ...
+    'Units','pixels', 'Position', [0 rh+50 mw 25], ...
+    'Callback', @view_strf_button_callback);
+
+    function view_strf_button_callback(hObject, eventdata, handles)
+        if isempty(selected)
+            return
+        end
+        [cfd, ~, ~] = dbgetscellfile('cellid', selected.cellid);
+        for i = 1:length(cfd);
+            % TODO: Replace magic number  1 with better description of TOR files
+            if (cfd(i).runclassid == 1)                
+                figure;
+                strf_offline2([cfd(i).stimpath cfd(i).stimfile], ...
+                    [cfd(i).path cfd(i).respfile], ...
+                    cfd(i).channum, cfd(i).unit);
+            end
+        end
+    end
+
+
+uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
+    'String', 'View Selected in CellDB', ...
+    'Units','pixels', 'Position', [0 rh+75 mw 25], ...
+    'Callback', @launch_celldb_in_browser);
+    
+    function launch_celldb_in_browser(~,~,~)
+        if ~isempty(selected.cellid)
+            web('http://hyrax.ohsu.edu/celldb/celllist.php');
+        end
+    end
+
+% TODO: Scatter plot button
+% TODO: Heat map button
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -81,18 +134,18 @@ condition_handles = [];
 % Topmost label
 uicontrol('Parent', parent_handle, 'Style', 'text', 'Units', 'pixels',...
           'String', 'DB Query Conditions', ...
-          'Position', [lb h-ts+ta mw-lb ts]);
+          'Position', [0 h-ts+ta mw ts]);
 
     function make_condition_widget(n, label)
         
         uicontrol('Parent', parent_handle, 'Style', 'text', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', label, ...
-          'Position', [lb h-(ts*(n+1))+ta tw-lb ts]);
+          'Position', [0 h-(ts*(n+1))+ta tw ts]);
       
         condition_handles(n) = uicontrol('Parent', parent_handle, ...
         'Style', 'popupmenu', 'Enable', 'on', ...
         'String', '*', ...
-        'Units', 'pixels', 'Position', [tw h-(ts*(n+1)) mw-tw ts], ...
+        'Units', 'pixels', 'Position', [tw h-(ts*(n+1)) (mw-tw) ts], ...
         'Callback', @any_condition_changed_callback);
     
     end
@@ -169,13 +222,12 @@ make_condition_widget(9, 'Direction:');
 
         ret = mysql(['SELECT DISTINCT cellid FROM (' inner_sql ') AS sq ORDER BY cellid']);
         set(condition_handles(2), 'String', {'*', ret(:).cellid});
-        
-        % IFF CELLID & BATCH ARE DEFINED
+                
         ret = mysql(['SELECT DISTINCT modelname FROM (' inner_sql ') AS sq']);
         ret = cellstr(char(ret(:).modelname));
         ret = sprintf('%s_', ret{:}); % Big long string
         toks = tokenize_modelname(ret); % Break it up into chunks
-        toks = cat(2, {'*'}, unique([toks{:}])); % Create options
+        toks = cat(2, {'*'}, unique([toks{:}])); % Create unique options
         
         set(condition_handles(3), 'String', toks);
         set(condition_handles(4), 'String', toks);
@@ -186,9 +238,8 @@ make_condition_widget(9, 'Direction:');
         sortby = popup2str(condition_handles(8));
         set(condition_handles(9), 'String', {'DESC', 'ASC'});
         sortdir = popup2str(condition_handles(9));
-        
-        
-        % Update the popup selected values
+               
+        % Update the popups so that selected values don't change
         set(condition_handles(1), 'Value', ...
             find(ismember(cellstr(get(condition_handles(1), 'String')), sel_batch)));
         set(condition_handles(2), 'Value', ...
@@ -203,9 +254,7 @@ make_condition_widget(9, 'Direction:');
             find(ismember(cellstr(get(condition_handles(6), 'String')), sel_token4)));
     end
 
-    
     function update_query_results_table()
-        %fprintf('Updating Query Results Table\n');
         l = length(db_results);
         c = cell(l,8);
         for i = 1:l
@@ -225,7 +274,6 @@ make_condition_widget(9, 'Direction:');
     function any_condition_changed_callback(~,~,~)
         rebuild_condition_options();
         db_results = mysql([sql_query_builder() ' ORDER BY ' sortby ' ' sortdir ' LIMIT 0, 1000']);
-        % TODO: Perhaps adding a 'sort' field would be useful?
         update_query_results_table();        
     end
 
