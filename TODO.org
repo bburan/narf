@@ -1,14 +1,18 @@
 * ROADMAP
-  1. [ ] Start using queue system for starting model training files
-  2. [ ] POTENTIAL SOURCE OF BUGS: 
+  1. [ ] Model viewer 
+  2. [ ] Start using queue system for starting model training files
+  3. [ ] POTENTIAL SOURCE OF BUGS: 
 	 Not all files have a META.batch property (for 240 and 242)
-  3. [ ] Across-file NPNL logic goals: 
+	 I think rather than storing modelfiles with the long 'trained on' suffix, we should use the 'batch number' as a suffix. 
+	 However, this necessitates some discipline from Stephen in not changing a batch once defined, or erasing ALL in the batch before changing. 
+	 OR, it needs a 'verification'/'DB_updater' function which resyncs disk and DB values.
+  4. [ ] Across-file NPNL logic goals: 
 	 FIR filter trained on everything (Despite the fact that this is probably the wrong thing to do)
 	 NPNL floats on each training set file, (which is given a '_est' suffix)
 	 Stored NPNL for each training set is applied to corresponding test set (given a '_val' suffix)
 	 Extra logic in 'correlation' can go through 
-  4. [ ] Cleaning, bugfixes, and user interface changes that have accumulated
-  5. [ ] Address question: Does variation in neural fuction in A1 follow a continuum, or are there visible clusters?
+  5. [ ] Cleaning, bugfixes, and user interface changes that have accumulated
+  6. [ ] Address question: Does variation in neural fuction in A1 follow a continuum, or are there visible clusters?
 
 * WORKFLOW CHANGES
   Some unmet needs are becoming clearer:
