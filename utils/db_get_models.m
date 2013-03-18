@@ -17,7 +17,7 @@ if exist('batch', 'var')
     constraints{end+1} = ['batch=' num2str(batch)];
 end
 
-if exist('cellid', 'var')
+if exist('cellid', 'var') && ~isempty(cellid)
     constraints{end+1} = ['cellid="' cellid '"'];
 end
 

@@ -561,3 +561,49 @@ See the TODO.org file in NARF's main directory.
 %%   5. Why is it 'stimpath' and 'stimfile' but 'path' and 'respfile'. it should be 'resppath'?
 %%   7. Why is loadspikeraster the only thing that cares about the 'options' struct?
 %%   8. Where should the line be drawn between analysis in the DB, partitionining things for your search within the DB, holding out data, etc?
+
+
+  1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
+	 Auto-initialization of model params is done by allowing modules to update their design based on the data by calling the optional 'auto_init' method.
+	 Arg 1 is the STACK, not including the model itself. 
+	 Arg 2 is the XXX data input, not including the model's output data itself. 
+  2. [X] How can jack-knifing be integrated in to the optimization routine to prevent over-fitting?
+	 Split the big long RESP and STIM vectors in fit_with_lsqcurvefit into 10 chunks
+	 Take groups of 9 of those chunks, run lsqcurvefit, then test on remaining chunk
+	 Take weighted average of all jackknifed solutions, weighting each by inverse variance? Or just mean, if we assume they all have same variance?
+	 Return weighted average.
+  3. [X] How should optimization constraints be incorporated in the design?
+	 Probably the easiest way is to define a structure which may be used by pack/unpack to create upper and lower bounds, which are then passed to the optimization routine
+	 opt_hints = struct('alpha', [-1 3], 'beta', [0 inf]); % Constrain alpha from -1 to 3 and beta from 0 to infinity. 
+  4. [X] How should models be automatically generated in a quick and scriptable way?
+	 See analysis/test_likely_candidates.m
+  5. [X] How can design internal degrees of freedom be detected and corrected during optimization?
+	 (Probably they cannot!)
+  6. [X] There needs to be a place to store information about a whole model. 
+	 For example, 'model name' and 'fitter' are two examples of fields that don't really belong in a module.
+  7. [X] There is no best fitting routine, only fitting routines which work better for different cells. Allow them all a chance to run by making them module parameters.
+  8. [X] Can jackknifing or the equivalent be applied to ANY fitting routine as a higher level function
+	 If we only have one data file, how can we hold out some fraction of the stimuli so that we can do training/test on a single data file?
+	 Solution:
+	 - Fit routines use a 'score'
+	 - The stack gives the score
+	 - The score needs to be calculated from a jackknife
+	 - How can data be jackknifed without modifying the stack?
+	 - Immediately after the loading, zero a chunk of the stim and respavg (save the original, of course)
+	 - Do a fit with whatever routine you want
+  9. [X] N-step fitter (train FIR in common, train NL across each separately)
+	 Surprisingly difficult to make several models need to be fit all on the same data. yet ALSO need to run on different behavioral states. 
+         1. Violates my implicit expectation of 1 fitter -> 1 model. Now I have 1 fitter-> many models.
+	 2. Now that training_set{} may be edited, it shouldn't really be copied from one XXX{1} to XXX{2} and so on.
+	 Solution ideas: 
+	 - Quick hack: five new fitters added
+	   NL1, trains on all, but only trains NL on 1st
+	   NL2, trains FIR on all, but only trains NL on 
+  4. [X] Nonparametric Nonlinearity (NPNL) linearizes anything. 
+	 It is very much data-driven, which is great. 
+	 On the other hand, it fits itself to linearize almost anything, so we somehow learn less than a simple, parameter-driven model. 
+	 How can we balance complexity in the FIR or complexity in the NL?
+	 ANSWER: Sparseness needs to be modeled on the FIR side, Smoothness on the NL side. 
+  5. [X] How can LSQ curve fit use sparseness and smoothness metrics?
+	 You can cheat and destroy the module system by looking later in the STACK for the MSE element. 
+	 If the MSE module exists and has nonzero weights, add a bogus zero element the LSQ target vector, and a bogus LSQ prediction vector element with a value of the sqrt(smoothness_penalty).	  
