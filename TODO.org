@@ -130,6 +130,7 @@
          META.fitter = ...;  % Fitting tools are not specific to a single module, but are actually more global
 	 META.scorer = ...;  % Performance metrics are likewise not really modules
 	 Why: It would allow mutation of multiple parts of the stack, simultaneously. 
+	 Why: Fitters need to have their own arbitrary string to describe their actions, and this is OUTSIDE of the normal module keyword system
   5. [ ] Bayesian Performance Metrics
 	 Why: Noise model entropy is a metric of performance. (If best-fit noise distribution has low entropy, we know _more_ about the system) 
 	 Why: Likelihood is probably a better metric than MSE since large outliers may not affect it as much?

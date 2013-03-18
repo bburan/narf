@@ -212,6 +212,8 @@ for ii = 1:length(group_names)
             mm = {MODULES.passthru};
         case {'npnl'}
             mm = {MODULES.nonparm_nonlinearity};
+        case {'npnlx'}
+            mm = {MODULES.nonparm_nonlinearity_x};
         case {'npfnl'}
             mm = {MODULES.nonparm_filter_nonlinearity};
         case {'npfnl3'}

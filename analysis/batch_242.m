@@ -1,7 +1,7 @@
-function batch_240_skeleton()
+function batch_242()
 
-batch = 240;
-analysis_prefix = 'a240';
+batch = 242;
+analysis_prefix = 'a242';
 baphy_set_path;
 narf_set_path; 
 
@@ -35,7 +35,7 @@ end
 % for ii = 1:length(cells)
 %     % Plot the top 10 models
 %     models = db_get_models(batch, cells{ii}.cellid);
-%     compare_models(cellstr(char(models(1:min(length(models), 10)).modelpath)));
+%     compare_models(cellstr(char(models(max(length(models)-10,1):end).modelpath)));
 %     % TODO: Scatter plots
 % end
 
