@@ -1,62 +1,27 @@
-* ROADMAP
-  1. [ ] Model viewer additions
-	 1) Modelpane Viewer
-	 2) Compare selected models
-	 3) Scatter plot test/train
-	 4) Heat Map the results
-  2. [ ] Start using queue system for starting model training files
-  3. [ ] POTENTIAL SOURCE OF BUGS: 
-	 Not all files have a META.batch property (for 240 and 242)
-	 I think rather than storing modelfiles with the long 'trained on' suffix, we should use the 'batch number' as a suffix. 
-	 However, this necessitates some discipline from Stephen in not changing a batch once defined, or erasing ALL in the batch before changing. 
-	 OR, it needs a 'verification'/'DB_updater' function which resyncs disk and DB values.
-  4. [ ] Across-file NPNL logic goals: 
+* WORK
+** IMMEDIATE
+  1. [ ] Check '_est' and '_val' data sets on 241
+  2. [ ] Simple Across-file NPNL logic goals: 
 	 FIR filter trained on everything (Despite the fact that this is probably the wrong thing to do)
 	 NPNL floats on each training set file, (which is given a '_est' suffix)
 	 Stored NPNL for each training set is applied to corresponding test set (given a '_val' suffix)
-	 Extra logic in 'correlation' can go through 
-  5. [ ] Cleaning, bugfixes, and user interface changes that have accumulated
-  6. [ ] Address question: Does variation in neural fuction in A1 follow a continuum, or are there visible clusters?
+  3. [ ] Complex across-file NPNL logic:
+	 Train the FIR filter on everything
+  4. [ ] FIX POTENTIAL SOURCE OF BUGS: Not all files have a META.batch property (for 240 and 242)
 
-* WORKFLOW CHANGES
-  Some unmet needs are becoming clearer:
-  - [X] Need for a GUI summary browser (by cellid), with a link to launch the model stack, and a filter to pick only certain models (for viewing/comparison)
-  - [X] Need to cache performance, git hash, modelfile, etc in mysql database or in a local ACID type database
-  - [X] Need to generate reports sorting each model by some criteria 
-  - [X] Need for comparing two models visually at the same time. 
-  - [X] Need for different model combos to be tried on different batches (don't tie them together)
-  - [X] Need to try things that aren't pure flat model combinations (Depression, but NOT with other things)
-  - [X] Need to cache PNG images from each model's stack rather than rebuild every time
-  - [ ] Need a way of marking a particular 'block' of modules so that particular 'plots' can be extracted despite positional differences which may occur
-  - [ ] Need to compare between models trained on different subsets (SPN vs TSP), and support for BAPHY to express this concisely.
-  - [ ] Have a display of the Pareto front (Dominating models with better r^2 or whatever)
-  These needs could be met by:
-  1. Using Baphy (OR flat file directories with tiny MAT files) to cache:
-     - information
-     - model file link
-     - png file links
-  2. Writing a cellid report browser which:
-     - Has filtering fields: cellid, training_set1, training_set2, training_set3
-     - Displays a scatter plot of the r^2 test/train performance of each displayed model
-     - Lists matches from baphy, sorted by r^2, with (all?) stack plot PNGs, and a button to launch the stack viewer
-  3. Updated stack viewer
-     - Displays name, training set, test set, and other important info at top of window
-     - Standardized colors for plots
-  4. Putting an abstraction between Baphy for cellid selection and create a simpler batch structure
-     - Batches now are just lists of cellids paired with training sets and test sets, and a model-perturbation tree of keyworded functions.
-     - I'm going to disallow 'fitting' routines which mix and match data sets. If you want this, do it by hand!
-  5. Replacing 'model groups' abstraction with a list of arbitrary nested perturbing functions (with associated keywords)
-
-* WORK
-** NEXT
-   1. [ ] REFACTOR STUFF:
-      - [ ] Write a pushing function which pushes a model into the database (not overwriting if it already exists)
-      - [ ] Push existing files into the database
-      - [ ] fit_models should use a combinator and fit_single_model() to avoid code duplication 
-      - [ ] change fit_models() code to do a database push 
-      - [ ] Fix the damn bug with NaNs in sparsebayes fitter!?
-   2. [ ] Partition code into fitting and plotting sections
-   3. [ ] Fix EM conditioning error and get gmm4 started again (Not sure how to fix!)
+** FEATURES
+  1. [ ] NARF Modelpane Improvements
+         - [ ] Displays name, training set, test set, and other important info at top of window
+	 - [ ] Standardized colors for plots
+  2. [ ] NARF Browser Improvements
+         1) [ ] Scatter plot test/train button
+         2) [ ] Heat Map current display button
+  3. [ ] Cleaning, bugfixes, and user interface changes that have accumulated
+  4. [ ] Push all existing files into the database
+  5. [ ] Address question: Does variation in neural fuction in A1 follow a continuum, or are there visible clusters?
+  6. [ ] Fix the damn bug with NaNs in sparsebayes fitter!?
+  7. [ ] Partition code into fitting and plotting sections
+  8. [ ] Fix EM conditioning error and get gmm4 started again (Not sure how to fix!)
 
 ** MINOR ADDITIONS
   1. [ ] If empty test set is given for a cellid, what should we do? Hold 1 out cross validation? 
@@ -112,6 +77,8 @@
   5. [ ] Automatic Smoothness Determination (ASD)
   6. [ ] Use a single wavelet transform in place of downsampling + FIR filter (Hard and slow to fit, but extremely general)
   7. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
+  8. [ ] Are neurons clusterable according to which models describe them well?
+	 Are they really different populations of neurons, or just points along a continuum?
 
 ** MODULES:
   1. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
@@ -142,79 +109,36 @@
   11. [ ] IRRITATION: Why can't I edit a module type in the middle of the stack via the GUI?
   12. [ ] Write a crash course guide on using NARF
   13. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  
-* DESIGN QUESTIONS TO BRAINSTORM:
-  1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
-	 Auto-initialization of model params is done by allowing modules to update their design based on the data by calling the optional 'auto_init' method.
-	 Arg 1 is the STACK, not including the model itself. 
-	 Arg 2 is the XXX data input, not including the model's output data itself. 
-  2. [X] How can jack-knifing be integrated in to the optimization routine to prevent over-fitting?
-	 Split the big long RESP and STIM vectors in fit_with_lsqcurvefit into 10 chunks
-	 Take groups of 9 of those chunks, run lsqcurvefit, then test on remaining chunk
-	 Take weighted average of all jackknifed solutions, weighting each by inverse variance? Or just mean, if we assume they all have same variance?
-	 Return weighted average.
-  3. [X] How should optimization constraints be incorporated in the design?
-	 Probably the easiest way is to define a structure which may be used by pack/unpack to create upper and lower bounds, which are then passed to the optimization routine
-	 opt_hints = struct('alpha', [-1 3], 'beta', [0 inf]); % Constrain alpha from -1 to 3 and beta from 0 to infinity. 
-  4. [X] How should models be automatically generated in a quick and scriptable way?
-	 See analysis/test_likely_candidates.m
-  5. [X] How can design internal degrees of freedom be detected and corrected during optimization?
-	 (Probably they cannot!)
-  6. [X] There needs to be a place to store information about a whole model. 
-	 For example, 'model name' and 'fitter' are two examples of fields that don't really belong in a module.
-  7. [X] There is no best fitting routine, only fitting routines which work better for different cells. Allow them all a chance to run by making them module parameters.
-  8. [X] Can jackknifing or the equivalent be applied to ANY fitting routine as a higher level function
-	 If we only have one data file, how can we hold out some fraction of the stimuli so that we can do training/test on a single data file?
-	 Solution:
-	 - Fit routines use a 'score'
-	 - The stack gives the score
-	 - The score needs to be calculated from a jackknife
-	 - How can data be jackknifed without modifying the stack?
-	 - Immediately after the loading, zero a chunk of the stim and respavg (save the original, of course)
-	 - Do a fit with whatever routine you want
-  9. [X] N-step fitter (train FIR in common, train NL across each separately)
-	 Surprisingly difficult to make several models need to be fit all on the same data. yet ALSO need to run on different behavioral states. 
-         1. Violates my implicit expectation of 1 fitter -> 1 model. Now I have 1 fitter-> many models.
-	 2. Now that training_set{} may be edited, it shouldn't really be copied from one XXX{1} to XXX{2} and so on.
-	 Solution ideas: 
-	 - Quick hack: five new fitters added
-	   NL1, trains on all, but only trains NL on 1st
-	   NL2, trains FIR on all, but only trains NL on 
-  10. [ ] Right now, it's very convenient to be able to have the 'fitter' and 'score' quantity to be in modules
-	  I can plug in all the module groups and let the fitter run. I can compare different fit routines automatically.
-	  However, a fitter is not really part of a module, it's part of a whole model.
-	  Therefore, in the future, the fitter and score quantity should be stored in the model META structure.
-	  On the other hand, I need to justify this: Why should this be done instead of leaving it in the STACK? What we have right now works and is convenient.
-	  (Because we may want to try multiple fit routines, and pick the model with the best training score?)
-	  (Because I expect that model specific fitters are necessary? That isn't a reason!)
-	  ANSWER: A better way to achieve this type of thing would be to have mutating functions which mutate a default copy of the stack. (Kind of like how calculus of variations work)
-	  By picking and choosing and intercombining these mutating functions, you could come up with many different variations.
-	  They also would not be restricted to the somewhat arbitrary groupings which I came up with, and would let multiple parts of stack be mutated simultaneously.
-  11. [ ] Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?	  
+  14. [ ] Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?	  
 	  To do this, instead of a _global_ STACK and XXX, they would be closed-over by the GUI object.
 	  Then, there would need to be a 'update-gui' function which can use those closed over variables.
 	  That fn could be called whenever you want to programmatically update it. 	  	  	 
-  12. [ ] It is awkward in non-parametric non-linearity module to recalc the phi every time you need it for graphing. Some place to cache it would be good without risking cache staleness.
-  13. [X] Nonparametric Nonlinearity (NPNL) linearizes anything. 
-	  It is very much data-driven, which is great. 
-	  On the other hand, it fits itself to linearize almost anything, so we somehow learn less than a simple, parameter-driven model. 
-	  How can we balance complexity in the FIR or complexity in the NL?
-	  ANSWER: Sparseness needs to be modeled on the FIR side, Smoothness on the NL side. 
-  14. [X] How can LSQ curve fit use sparseness and smoothness metrics?
-	  You can cheat and destroy the module system by looking later in the STACK for the MSE element. 
-	  If the MSE module exists and has nonzero weights, add a bogus zero element the LSQ target vector, and a bogus LSQ prediction vector element with a value of the sqrt(smoothness_penalty).	  
-  15. [ ] Are neurons clusterable according to which models describe them well?
-	  Are they really different populations of neurons, or just points along a continuum?
-  16. [ ] Even auto-generated models should have their own 'summarize' function which plots relevant data?
-  17. [ ] ENDGAME: 
-	  Is the end goal of this system something that:
-	  - Spans the input space of nonlinearities?
-	  - Spans the input space of depression?
-	  - Has an inhibition and excitation filter?
-	  - Has a NPNL for inhibition, and a NPNL for excitation?
-	  - Uses ARD to eliminate all unimportant dimensions?
-	  - Reports the best model?
 
+* Architectual Improvements 
+  1. [ ]  Queueing system operational
+	  Why: Strong need to distribute computation of many model files
+  2. [ ] Modelfiles should include batch# instead of a list of files it was trained on
+	 Why: It is unlikely that different batches will share the same modelfile structure
+	 Why: Modelfilenames are getting pretty long and cumbersome
+	 Why: It puts the batch# information somewhere in the modelfile, which doesn't happen currently.
+  3. [ ] Models need associated 'summarize' methods in META
+	 Why: Need to extract comparable info despite STACK positional differences in model structure.
+	 Why: Need a general interface to plot model summaries for wildly different models
+	 Difficulty: Auto-generated models will need some intelligence as to how to generate summarize methods for themselves
+  4. [ ] Replace 'model groups' abstraction with a list of arbitrary nested model-perturbing functions and associated keywords
+	 Why: In the future, more information should be stored in the META structure:
+         META.fitter = ...;  % Fitting tools are not specific to a single module, but are actually more global
+	 META.scorer = ...;  % Performance metrics are likewise not really modules
+	 Why: It would allow mutation of multiple parts of the stack, simultaneously. 
+  5. [ ] Bayesian Performance Metrics
+	 Why: Noise model entropy is a metric of performance. (If best-fit noise distribution has low entropy, we know _more_ about the system) 
+	 Why: Likelihood is probably a better metric than MSE since large outliers may not affect it as much?
+  6. [ ] DB Bug Catcher which verifies that every model file in /auto/data/code is in the DB, and correct
+	 Why: Somebody could easily put the DB and filesystem out of sync.
+	 Why: image files could get deleted
+	 Why: DB table could get corrupted
+	 Why: Also, we need to periodically re-run the analysis/batch_240.m type scripts to make sure they are all generated and current
+ 
 *  UNESSENTIAL TODO ITEMS
   - [ ] Make gui plot functions response have two dropdowns to pick out colorbar thresholds for easier visualization?
   - [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
@@ -226,7 +150,7 @@
   - [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound
   - [ ] FITTER: Crop N% out fitter:
 	  1) quickfits FIR
-	  2) then quickfits NL, 
+	  2) then quickfits NL
 	  3) measures distance from NL line, marks the N worst points
 	  4) Looks them up by original indexes (before the sort and row averaging)
 	  5) Inverts nonlinearity numerically to find input
@@ -246,3 +170,4 @@
   - [ ] A check of NL homoskedasticity (How much is the variance changing along the abscissa)	     
   - [ ] FITTER: SWARM. Hybrid fit routine which takes the top N% of models, scales all FIR powers to be the same, then shrinks them.
   - [ ] Get a histogram of the error of the NL. (Is it Gaussian or something else?)
+  - Have a display of the Pareto front (Dominating models with better r^2 or whatever)

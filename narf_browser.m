@@ -53,7 +53,8 @@ panax = axes('Units','normal', 'Position', [0 0 1 1],...
         r = a.getSelectedRows();
         res = db_results(r+1);
         selected = res; 
-        [I,map] = imread(char(res.figurefile),'png');        
+        [I,map] = imread(char(res.figurefile),'png');  
+        I = imresize(I, (ih/size(I,2)));      
         axes(panax);
         imshow(I, map);
     end
@@ -86,7 +87,8 @@ uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
     function view_image_in_new_window(~,~,~)
         if ~isempty(selected)
             figure('Menubar', 'none');
-            [I,map] = imread(char(selected.figurefile),'png');        
+            [I,map] = imread(char(selected.figurefile),'png');  
+            I = imresize(I, 0.666); % ...the number of the beast! Rowr!
             imshow(I, map);
         end
     end
@@ -96,7 +98,7 @@ uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
     'Units','pixels', 'Position', [0 rh+50 mw 25], ...
     'Callback', @view_strf_button_callback);
 
-    function view_strf_button_callback(hObject, eventdata, handles)
+    function view_strf_button_callback(~, ~, ~)
         if isempty(selected)
             return
         end
@@ -120,7 +122,15 @@ uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
     
     function launch_celldb_in_browser(~,~,~)
         if ~isempty(selected.cellid)
-            web('http://hyrax.ohsu.edu/celldb/celllist.php');
+            % If you want to try launching firefox directly, you will need
+            % to set the environment variables and create symlinks to
+            % libstdc++, and it's a pain.
+            %setenv('LD_LIBRARY_PATH', [getenv('LD_LIBRARY_PATH'), ':/usr/lib/firefox'])
+            %setenv('LD_LIBRARY_PATH', [getenv('LD_LIBRARY_PATH'), ':/usr/lib/x86_64-linux-gnu'])
+            % etc...
+            
+            web(['http://hyrax.ohsu.edu/celldb/peninfo.php?penname=' ...
+                 selected.cellid(1:6) '#' selected.cellid(1:7)]);
         end
     end
 

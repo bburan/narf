@@ -45,7 +45,7 @@ handles.container_panel = uipanel('Parent',parent_handle, ...
 
 % Create the scroll bar
 handles.container_slider = uicontrol('Parent',parent_handle, ...
-    'Style','slider', 'Enable','off', ...
+    'Style','slider', 'Enable','off', 'SliderStep',[0.2 1.0], ...
     'Units','pixels', 'Position', [w-20 0 20 h], ...
     'Min', 0-eps, 'Max', 0, 'Value', 0, ...
     'Callback', @(h,evts,hds) update_panel_positions());
@@ -532,19 +532,8 @@ end
 rebuild_gui_from_stack();
 
 % Make the scroll bar dynamically update whenever it is being dragged
-%hJScrollBar = findjobj(handles.container_slider);
-%hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions();
-
-% COMMENT:
-% I would love to make mouse wheel scrolling work with the cursor over the
-% entire panel.
-% Unfortunately findjobj() cannot return a  java object for a panel 
-% because...MATLAB doesn't use Java swing panels! 
-% Therefore, the closest we could do would be to make mouse wheel scrolling
-% work just for the scrollbar, although that isn't nearly as much fun.
-% hJ = findjobj(handles.container_slider);
-% hJ.MouseWheelMovedCallback = @(ch, evt, z) disp(get(evt, 'wheelRotation'));
-% TODO: 
+hJScrollBar = findjobj(handles.container_slider);
+hJScrollBar.AdjustmentValueChangedCallback = @(h, e, v) update_panel_positions();
 
 % Define a close window callback which will remove all GUI hooks from the
 % STACK. Useful if you close the GUI and want to open it up again without
