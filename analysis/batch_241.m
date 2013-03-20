@@ -37,7 +37,8 @@ for ii = 1:length(cells)
     end
 end
 
-% auto-generate some unique keys which do per-file training
+% Automatically generate unique keys which mask off certain parts of the
+% training data set.
 
 % Shift all module groups down one, making space for a new module group in
 % the second token position
@@ -49,7 +50,6 @@ function ret = query_stephen_about_name(batch, cellid, trainingfile)
     ret = blah{1}{1};
 end
 
-
 % Enqueue special models which are trained per-file
 for ii = 1:length(cells)
     for jj = 1:length(cells{ii}.training_set)
@@ -60,6 +60,10 @@ for ii = 1:length(cells)
         s = [];
         s.(k) = {MODULES.file_masker.mdl(struct('only_indexes', [jj]))}; 
         
+        % Insert that new key and module into the 2nd position of mm
+        mm{2} = s;
+        
+        % Then rebuild the combinations and enqueue as before
         modulekeys = module_block_combos(mm);
         
         for kk = 1:length(modulekeys)
