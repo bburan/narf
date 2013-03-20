@@ -48,6 +48,10 @@ mm(1) = mm(2);
 function ret = query_stephen_about_name(batch, cellid, trainingfile)
     blah = regexp(k, '(\d\d)_', 'tokens');
     ret = blah{1}{1};
+    
+    
+    % request_celldb_batch(batch);
+    
 end
 
 % Enqueue special models which are trained per-file
