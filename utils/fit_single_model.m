@@ -91,6 +91,7 @@ else
     META.fit_time = toc;
     META.batch = batch;
     
+    verify_model_polarity(); % invert the model    
     save_model(META.modelpath, STACK, XXX, META);
     db_insert_model();
 end

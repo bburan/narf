@@ -30,4 +30,4 @@ plot(x, y);
 xlabel(ordinate, 'Interpreter', 'none');
 ylabel(['Cumulative fraction of models with ' ordinate ' > value'], 'Interpreter', 'none')
 legend(tokens, 'Interpreter', 'none');
-title(num2str(length(models)));
+title(['Performance of Tokens (# Models: ' num2str(numel(x)) ')']);
