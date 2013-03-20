@@ -19,9 +19,10 @@ That should take care of everything.   It just occurred to me that it might be e
 ** IMMEDIATE
   1. [ ] Add button to NARF_browser which plots cumulative distributions of all non-fixed token queries	 
   2. [ ] Per-file fit masking module and auto-generated token names
-  3. [ ] Make an NPFNLX implementation
-  4. [ ] Regularized boosting fitter
-  5. [ ] FIX POTENTIAL SOURCE OF BUGS: Not all files have a META.batch property (for 240 and 242)
+  3. [ ] Modules
+  4. [ ] Make an NPFNLX implementation
+  5. [ ] Regularized boosting fitter
+  6. [ ] FIX POTENTIAL SOURCE OF BUGS: Not all files have a META.batch property (for 240 and 242)
 
 ** FEATURES
   1. [ ] NARF Modelpane Improvements

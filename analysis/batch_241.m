@@ -31,6 +31,40 @@ for ii = 1:length(cells)
         % fit_single_model(modulekeys{jj}, batch, cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
         
         % Uncomment next line to enqueue on machine pool
-        enqueue_single_model(modulekeys{jj},  batch, cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
+        enqueue_single_model(modulekeys{jj},  batch, ...
+            cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
+           
+    end
+end
+
+% auto-generate some unique keys which do per-file training
+
+% Shift all module groups down one, making space for a new module group in
+% the second token position
+mm(2:end+1) = mm(1:end);
+mm(1) = mm(2);
+
+function ret = query_stephen_about_name(batch, cellid, trainingfile)
+    blah = regexp(k, '(\d\d)_', 'tokens');
+    ret = blah{1}{1};
+end
+
+
+% Enqueue special models which are trained per-file
+for ii = 1:length(cells)
+    for jj = 1:length(cells{ii}.training_set)
+        % Generate a unique keyname k
+        k = ['fm-' query_stephen_about_name(batch,...
+                                            cells{ii}.cellid, ...
+                                            cells{ii}.training_set{jj})];
+        s = [];
+        s.(k) = {MODULES.file_masker.mdl(struct('only_indexes', [jj]))}; 
+        
+        modulekeys = module_block_combos(mm);
+        
+        for kk = 1:length(modulekeys)
+            enqueue_single_model(modulekeys{kk},  batch, ...
+                cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
+        end
     end
 end
