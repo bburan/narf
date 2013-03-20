@@ -36,6 +36,7 @@ for nn = 1:length(rundata)
 
     train_set={};
     test_set={};
+    file_code={};
     
     if rundata(nn).batch==241,
         cellfiledata=dbgetscellfile('cellid',cellid,'runclassid',[42 8 103]);
@@ -73,32 +74,53 @@ for nn = 1:length(rundata)
             poststimsilence(ii)=parms.Ref_PostStimSilence;
             poststimsilence(ii)=0; % force to zero below
         end
-        firstactiveidx=max(find(activefile));  % use last
-                                               % activefile!
+        
+        
+        
+        firstactiveidx=max(find(activefile));  % use last activefile!
         if isempty(firstactiveidx),
             error('no active TSP data for this cell');
         end
         printmatch=double(sum(abs(stimprint-repmat(stimprint(firstactiveidx,:),filecount,1)),2)==0);
-        
         useidx=find(printmatch);
+        acounter=1;
+        pcounter=0;
         for ii=1:length(useidx),
             train_set{ii}=[cellfiledata(useidx(ii)).stimfile,'_est'];
             test_set{ii}=[cellfiledata(useidx(ii)).stimfile,'_val'];
+            if activefile(useidx(ii)),
+                file_code{ii}=['A',num2str(acounter)];
+                acounter=acounter+1;
+                pcounter=0;
+            elseif ~pcounter,
+                file_code{ii}=['P',num2str(acounter)];
+                pcounter=1;
+            else
+                file_code{ii}=['P',num2str(acounter),char('a'-1+pcounter)];
+                pcounter=pcounter+1;
+            end
+                
+                
+                
         end
         
     else
         % figure out what files to use for what stage of the analysis
         [cellfiledata, times, params] = cellfiletimes(cellid, rundata(nn).batch);
-        
-        for ii=1:length(times(1).fileidx),
-            if times(1).stop(ii)>times(1).start(ii),
-                train_set{end+1}=basename(params.stimfiles{times(1).fileidx(ii)});
+        if length(cellfiledata)==1,
+            train_set{1}=[cellfiledata.stimfile,'_est'];
+            test_set{1}=[cellfiledata.stimfile,'_val'];
+        else
+            for ii=1:length(times(1).fileidx),
+                if times(1).stop(ii)>times(1).start(ii),
+                    train_set{end+1}=basename(params.stimfiles{times(1).fileidx(ii)});
+                end
             end
-        end
-        
-        for ii=1:length(times(3).fileidx),
-            if times(3).stop(ii)>times(3).start(ii),
-                test_set{end+1}=basename(params.stimfiles{times(3).fileidx(ii)});
+            
+            for ii=1:length(times(3).fileidx),
+                if times(3).stop(ii)>times(3).start(ii),
+                    test_set{end+1}=basename(params.stimfiles{times(3).fileidx(ii)});
+                end
             end
         end
     end
@@ -107,6 +129,6 @@ for nn = 1:length(rundata)
     ret{nn}.cellid = cellid;
     ret{nn}.training_set = train_set;
     ret{nn}.test_set = test_set;
-    
+    ret{nn}.filecode = file_code;
 end
 
