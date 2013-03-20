@@ -134,6 +134,49 @@ uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
         end
     end
 
+uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
+    'String', 'Plot Cumulative Curves', ...
+    'Units','pixels', 'Position', [0 rh+100 mw 25], ...
+    'Callback', @plot_cumulative_curves);
+    
+    function plot_cumulative_curves(~,~,~)
+        
+        sel_batch  = popup2str(condition_handles(1));
+        if strcmp(sel_batch, '*'),
+            return
+        end
+        
+        sel_cellid = popup2str(condition_handles(2));
+        if strcmp(sel_cellid, '*'),
+            sel_cellid = '';
+        end
+        
+        
+        inner_sql = sql_query_builder(); 
+        ret = mysql(['SELECT DISTINCT modelname FROM (' inner_sql ') AS sq']);
+        ret = cellstr(char(ret(:).modelname));
+        ret2 = sprintf('%s_', ret{:}); % Big long string
+        toks = tokenize_modelname(ret2); % Break it up into tokens
+        toks = unique([toks{:}]); % Only unique tokens
+            
+        % Display only tokens not common across all modelfiles
+        disptoks = {};
+        for tt = 1:length(toks)
+            t = toks{tt};
+            
+            if any(cellfun(@(x) isempty(strfind(x, t)), ret))
+                % If any are empty, add it
+                disptoks{end+1} = t;
+            end
+        end
+                
+        plot_cumulative_performance(sel_batch, ...
+            sel_cellid, ...
+            disptoks, ...
+            popup2str(condition_handles(8)));
+        
+    end
+
 % TODO: Scatter plot button
 % TODO: Heat map button
 
@@ -199,19 +242,19 @@ make_condition_widget(9, 'Direction:');
         end
         
         if ~isequal(sel_token1, '*')
-            sql = [sql whereand() 'modelname LIKE "%' sel_token1 '%"'];
+            sql = [sql whereand() 'modelname REGEXP "(^|[^[:alnum:]])' sel_token1 '([^[:alnum:]]|$)"'];
         end    
                 
         if ~isequal(sel_token2, '*')
-            sql = [sql whereand() 'modelname LIKE "%' sel_token2 '%"'];
+            sql = [sql whereand() 'modelname REGEXP "(^|[^[:alnum:]])' sel_token2 '([^[:alnum:]]|$)"'];
         end    
         
         if ~isequal(sel_token3, '*')
-            sql = [sql whereand() 'modelname LIKE "%' sel_token3 '%"'];
+            sql = [sql whereand() 'modelname REGEXP "(^|[^[:alnum:]])' sel_token3 '([^[:alnum:]]|$)"'];
         end    
         
         if ~isequal(sel_token4, '*')
-            sql = [sql whereand() 'modelname LIKE "%' sel_token4 '%"'];
+            sql = [sql whereand() 'modelname REGEXP "(^|[^[:alnum:]])' sel_token4 '([^[:alnum:]]|$)"'];
         end
     end
 
@@ -286,6 +329,8 @@ make_condition_widget(9, 'Direction:');
         dbopen; 
         db_results = mysql([sql_query_builder() ' ORDER BY ' sortby ' ' sortdir ' LIMIT 0, 1000']);
         update_query_results_table();        
+        selected = [];
+        axes(panax); cla;
     end
 
 % Call the callback once to get things running

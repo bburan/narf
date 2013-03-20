@@ -23,7 +23,9 @@ end
 
 if exist('matching_tokens', 'var') && ~isempty(matching_tokens)
     for ii = 1 :length(matching_tokens)
-        constraints{end+1} = ['modelname like "' matching_tokens{ii} '"'];
+        constraints{end+1} = ['modelname REGEXP "(^|[^[:alnum:]])' ...
+                                matching_tokens{ii}  ...
+                                '([^[:alnum:]]|$)"'];
     end
 end
 
@@ -43,4 +45,4 @@ end
 % Add the sort order
 sql = [sql ' ORDER BY ' sort_field];
 
-models=mysql(sql);
+models = mysql(sql);

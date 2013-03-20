@@ -33,7 +33,6 @@ for ii = 1:length(cells)
         % Uncomment next line to enqueue on machine pool
         enqueue_single_model(modulekeys{jj},  batch, ...
             cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
-           
     end
 end
 
@@ -45,22 +44,11 @@ end
 mm(2:end+1) = mm(1:end);
 mm(1) = mm(2);
 
-function ret = query_stephen_about_name(batch, cellid, trainingfile)
-    blah = regexp(k, '(\d\d)_', 'tokens');
-    ret = blah{1}{1};
-    
-    
-    % request_celldb_batch(batch);
-    
-end
-
 % Enqueue special models which are trained per-file
 for ii = 1:length(cells)
     for jj = 1:length(cells{ii}.training_set)
         % Generate a unique keyname k
-        k = ['fm-' query_stephen_about_name(batch,...
-                                            cells{ii}.cellid, ...
-                                            cells{ii}.training_set{jj})];
+        k = ['fm-' cells{ii}.filecode{jj}];
         s = [];
         s.(k) = {MODULES.file_masker.mdl(struct('only_indexes', [jj]))}; 
         
