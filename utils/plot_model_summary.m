@@ -38,6 +38,7 @@ if strcmp(STACK{nlidx}.name, 'nonlinearity') | ...
         strcmp(STACK{nlidx}.name, 'sparse_empirical_nonlinearity') | ...
         strcmp(STACK{nlidx}.name, 'gmm_nonlinearity') | ...
         strcmp(STACK{nlidx}.name, 'nonparm_filter_nonlinearity') | ...
+        strcmp(STACK{nlidx}.name, 'nonparm_nonlinearity_x') | ...
         strcmp(STACK{nlidx}.name, 'nonparm_nonlinearity')
     STACK{nlidx}.plot_fns{1}.fn(STACK(1:nlidx), XXX(1:nlidx+1));
 end
@@ -51,7 +52,7 @@ end
 
 % TEXT AT TOP
 if ~isfield(META, 'batch')
-    META.batch = 240;
+    META.batch = 0;
 end
 
 % This is the right way to do it, but MATLAB is buggy with PNG exports when

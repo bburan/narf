@@ -1,4 +1,4 @@
-function fit_single_model(modulekeys, batch, cellid, training_set, test_set)
+function success = fit_single_model(modulekeys, batch, cellid, training_set, test_set)
 % TODO: Documentation
 % fit_single_model() is used by the queuing system to train a single model
 % as a job which may be run on any machine. 
@@ -11,8 +11,8 @@ function fit_single_model(modulekeys, batch, cellid, training_set, test_set)
 %    training_set
 %    test_set
 %
-% RETURNS: Nothing.
-%   
+% RETURNS: 
+%    success        True iff everything was fine
 
 global STACK XXX META MODULES...
     NARF_MODULES_PATH ...
@@ -26,6 +26,7 @@ if ~exist([NARF_SAVED_MODELS_PATH filesep cellid], 'dir')
     mkdir([NARF_SAVED_MODELS_PATH filesep cellid]);
 end
 
+success = false;
 STACK = {};
 XXX = {};
 XXX{1}.cellid = cellid;
@@ -82,10 +83,6 @@ elseif length(db_results) > 1
 elseif ~isempty(db_results) && ~modelfile_exists
     error('Model found in DB but no modelfile exists for batch %d, cellid: %s, modelfile: %s', batch, cellid, modelname);
 else
-    
-    % FIXME: return for now and don't do anything
-    return
-    
     % There must not be an existing modelfile or DB entry if we reach here. 
     fprintf('Training model, since modelfile not found\n');
     
@@ -105,5 +102,7 @@ else
     save_model(META.modelpath, STACK, XXX, META);
     db_insert_model();
 end
+
+success = true;
 
 end

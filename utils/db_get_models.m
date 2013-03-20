@@ -23,7 +23,7 @@ end
 
 if exist('matching_tokens', 'var') && ~isempty(matching_tokens)
     for ii = 1 :length(matching_tokens)
-        constraints{end+1} = ['modelname like "%' matching_tokens{ii} '%"'];
+        constraints{end+1} = ['modelname like "' matching_tokens{ii} '"'];
     end
 end
 

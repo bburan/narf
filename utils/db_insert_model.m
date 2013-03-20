@@ -4,7 +4,7 @@ function db_insert_model()
 global STACK XXX META;
 
 if ~isfield(META,'batch')
-    META.batch = 242;
+    META.batch = 0;
 end
 
 if ~isfield(META,'git_commit')
