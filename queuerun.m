@@ -76,6 +76,12 @@ if isempty(findstr(lower(host),'seil.umd.edu')),
    print('-f3','-djpeg',sprintf('%s/%d.3.jpg',QUEUEOUTPATH,BATQUEUEID));
 end
 
+global DB_SERVER BAPHY_LAB
+if strcmpi(BAPHY_LAB,'lbhb'),
+    DB_SERVER='hyrax.ohsu.edu';
+    dbopen(1);
+end
+
 dbsetqueue(BATQUEUEID,1000,1);
 
 

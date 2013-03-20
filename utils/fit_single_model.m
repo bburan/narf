@@ -69,19 +69,11 @@ sql=['SELECT * FROM NarfResults WHERE modelname="' modelname '"'...
 dbopen;
 db_results=mysql(sql);
 
-if length(db_results) == 1 && modelfile_exists
-    fprintf('Skipping because in DB and modelfile exists.\n');
-    return;
-elseif length(db_results) < 1 && modelfile_exists
-    fprintf('Modelfile exists but not in DB...loading it.\n');
-    load_model(META.modelpath);
-    recalc_xxx(1);
-    db_insert_model();
-    return;
-elseif length(db_results) > 1
+% SVD: Removed checking for existence of model file and
+% NarfResults.  Job management now taken care of at a higher
+% level. and fit_single_model should just fit no matter what.
+if length(db_results) > 1
     error('Multiple DB hits for batch:%d, cellid: %s, modelfile: %s', batch, cellid, modelname);
-elseif ~isempty(db_results) && ~modelfile_exists
-    error('Model found in DB but no modelfile exists for batch %d, cellid: %s, modelfile: %s', batch, cellid, modelname);
 else
     % There must not be an existing modelfile or DB entry if we reach here. 
     fprintf('Training model, since modelfile not found\n');
@@ -91,7 +83,7 @@ else
         fprintf('Auto-initalizing module [%d/%d]\n', jj, length(model));
         append_module(model{jj}); % Calls auto_init for each
     end
-   
+    
     % Fit the model using whatever optimization routine it has
     cormod = find_module(STACK, 'correlation');
     META.exit_code = cormod.fitter();
