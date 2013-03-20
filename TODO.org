@@ -1,13 +1,28 @@
+* Notes on Hyrax
+
+1. If the scheduler crashes (indicated by new jobs not starting and or a last tick warning at the bottom of the queue status screen):
+  log in to hyrax
+  run matlab
+  >> baphy_set_path
+  >> narf_set_path    % assuming you've pulled the latest narf as of this evening
+  >> dbqueuemaster
+  enter your password when prompted to permit sudo. 
+That should take care of everything.   It just occurred to me that it might be easiest in general to run the scheduler in a window on the actual hyrax machine so that anyone interested can take a look to see what it's up to.
+
+2. Monitor queue from home via reverse tunnel through umd.edu:
+  - open firewall back door by surfing here:  http://kamzik.org/rr22307.php
+  - enter user "lbhb" password "feartheferret"  This will open the back door to the IP of your current computer for a month.
+  - surf to http://bhangra.isr.umd.edu:19888   -- this is equivalent to http://hyrax.ohsu.edu/
+
 * WORK
+
 ** IMMEDIATE
-  1. [ ] Check '_est' and '_val' data sets on 241
-  2. [ ] Simple Across-file NPNL logic goals: 
-	 FIR filter trained on everything (Despite the fact that this is probably the wrong thing to do)
-	 NPNL floats on each training set file, (which is given a '_est' suffix)
-	 Stored NPNL for each training set is applied to corresponding test set (given a '_val' suffix)
-  3. [ ] Complex across-file NPNL logic:
-	 Train the FIR filter on everything
-  4. [ ] FIX POTENTIAL SOURCE OF BUGS: Not all files have a META.batch property (for 240 and 242)
+  1. [ ] Add button to NARF_browser which plots cumulative distributions of all non-fixed token queries	 
+  2. [ ] Per-file fit masking module and auto-generated token names
+  3. [ ] Modules
+  4. [ ] Make an NPFNLX implementation
+  5. [ ] Regularized boosting fitter
+  6. [ ] FIX POTENTIAL SOURCE OF BUGS: Not all files have a META.batch property (for 240 and 242)
 
 ** FEATURES
   1. [ ] NARF Modelpane Improvements
@@ -18,10 +33,11 @@
          2) [ ] Heat Map current display button
   3. [ ] Cleaning, bugfixes, and user interface changes that have accumulated
   4. [ ] Push all existing files into the database
-  5. [ ] Address question: Does variation in neural fuction in A1 follow a continuum, or are there visible clusters?
-  6. [ ] Fix the damn bug with NaNs in sparsebayes fitter!?
-  7. [ ] Partition code into fitting and plotting sections
-  8. [ ] Fix EM conditioning error and get gmm4 started again (Not sure how to fix!)
+  5. [ ] Fix the damn bug with NaNs in sparsebayes fitter!?
+  6. [ ] Partition code into fitting and plotting sections
+  7. [ ] Fix EM conditioning error and get gmm4 started again (Not sure how to fix!)
+  8. [ ] Address question: Does variation in neural fuction in A1 follow a continuum, or are there visible clusters?
+  9. [ ] Experiments: 1/r^2 is probably a much more nonlinear thing to minimize than 1-abs(r). Try 
 
 ** MINOR ADDITIONS
   1. [ ] If empty test set is given for a cellid, what should we do? Hold 1 out cross validation? 

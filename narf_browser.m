@@ -217,7 +217,7 @@ make_condition_widget(9, 'Direction:');
 
     function rebuild_condition_options()
         % Query DB with current settings
-        inner_sql = sql_query_builder();
+        inner_sql = sql_query_builder();        
 
         % Record current positions of selected things
         sel_batch  = popup2str(condition_handles(1));
@@ -283,6 +283,7 @@ make_condition_widget(9, 'Direction:');
 
     function any_condition_changed_callback(~,~,~)
         rebuild_condition_options();
+        dbopen; 
         db_results = mysql([sql_query_builder() ' ORDER BY ' sortby ' ' sortdir ' LIMIT 0, 1000']);
         update_query_results_table();        
     end

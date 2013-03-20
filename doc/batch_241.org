@@ -1,0 +1,13 @@
+* Candidates with clear differential behavior
+  | Cellid        |    r | Notes         |
+  |---------------+------+---------------|
+  | por018b-c1    | .217 |               |
+  | por018c-c1    | .158 |               |
+  | por019b-a1    |      | Weak effect   |
+  | por022a-a1    | .393 |               |
+  | por022a-c1    | .288 |               |
+  | por023b-b1    | .432 |               |
+  | por027a-a1    | .358 |               |
+  | por027b-b2    |      | Weak effect   |
+  | por027b-c1    | .180 |               |
+  | por053a-06-01 | .181 |               |
