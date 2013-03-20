@@ -41,8 +41,12 @@
 % 6/24/04 SVD - switched from rsh to ssh connection
 %
 
+baphy_set_path
+
 % unix command for running on remote machine via ssh:
 SSHCMD=['ssh -q -x -o StrictHostKeyChecking=no',...
+        ' -o PasswordAuthentication=no '];
+SSHCMD=['sudo su %s -c ''ssh -q -x -o StrictHostKeyChecking=no',...
         ' -o PasswordAuthentication=no '];
 
 % directory containing shell scripts executed by dbqueuemaster.m
@@ -68,6 +72,7 @@ dblog('HOST=%s',getenv('MYHOST'));
 dblog('BINPATH=%s',BINPATH);
 dblog('');
 
+lastsudomin=-1;
 lastreporthour=-1;
 lastfairkillmin=minute(now)-10;
 
@@ -75,6 +80,12 @@ lastfairkillmin=minute(now)-10;
 
 % the only way to leave the loop is ctrl-c or killing the matlab process
 while 1,
+   
+   % periodically make sure sudo is validated
+   if minute(now)~=lastsudomin,
+       !sudo ls
+       lastsudomin=minute(now);
+   end
    
    %
    % check to see if any jobs need to be killed on night-only machines 
@@ -149,18 +160,27 @@ while 1,
    if length(queuedata)>0,
       
       % kill first job in list
-      disp([SSHCMD,queuedata(1).user,'@',queuedata(1).machinename,...
+      cmd=sprintf([SSHCMD,queuedata(1).machinename,...
             ' "',BINPATH,'childrenof ',num2str(queuedata(1).pid),...
-            ' | xargs kill"']);
-      [s,w]=unix([SSHCMD,queuedata(1).user,'@',queuedata(1).machinename,...
-                  ' "',BINPATH,'childrenof ',num2str(queuedata(1).pid),...
-                  ' | xargs kill" > /dev/null &']);
+            ' | xargs kill"'''],queuedata(1).user);
+      %cmd=[SSHCMD,queuedata(1).user,'@',queuedata(1).machinename,...
+      %           ' "',BINPATH,'childrenof ',num2str(queuedata(1).pid),...
+      %            ' | xargs kill" > /dev/null &'];
+      disp(cmd);
+      [s,w]=unix(cmd);
+      %[s,w]=unix([SSHCMD,queuedata(1).user,'@',queuedata(1).machinename,...
+      %           ' "',BINPATH,'childrenof ',num2str(queuedata(1).pid),...
+      %            ' | xargs kill" > /dev/null &']);
       
       % clean up temp directory on the machine where the job was killed
-      disp([SSHCMD,queuedata(1).user,'@',queuedata(1).machinename,...
-            ' "\rm -R /tmp/',num2str(queuedata(1).id),'" > /dev/null &']);
-      [s,w]=unix([SSHCMD,queuedata(1).user,'@',queuedata(1).machinename,...
-              ' "\rm -R /tmp/',num2str(queuedata(1).id),'" > /dev/null &']);
+      cmd=sprintf([SSHCMD,queuedata(1).machinename,...
+                   ' "\rm -R /tmp/',num2str(queuedata(1).id),...
+                   '" > /dev/null &'''],...
+                  queuedata(1).user);
+      %cmd=[SSHCMD,queuedata(1).user,'@',queuedata(1).machinename,...
+      %        ' "\rm -R /tmp/',num2str(queuedata(1).id),'" > /dev/null &']
+      disp(cmd);
+      [s,w]=unix(cmd);
       
       tq=dbgetqueue(queuedata(1).id);
       
@@ -194,50 +214,51 @@ while 1,
       tq=dbgetqueue(queuedata(ii).id);
       if length(tq)>0 & tq.complete==-1 & tq.secago>90+rand*20,
          
-         [s,w]=unix([SSHCMD,'svd@',tq.machinename,...
-                     ' ps h -p ',num2str(tq.pid)]);
-         
-         % recheck status to make sure that the job didn't JUST
-         % complete (which happens, esp on a dbkillqueue(-1)
-         tq=dbgetqueue(tq.id);
-         
-         if s==255,
-            
-            % ssh failed... mark computer as dead
-            dblog('host=%s: ssh check failed, removing from cluster',...
-                  tq.machinename);
-            dbset('tComputer',tq.computerid,'dead',1);
-            dbsetqueue(tq.id,0,0,tq.machinename);
-            dbevent(7,tq.id,tq.machinename);
-            dbevent(5,tq.id,tq.machinename,tq.pid);
-            
-         elseif tq.complete==-1 & length(w)<3,
-            % empty w means that no process with id pid exists
-            % record as dead in db
-            
-            dblog('qid=%d: Proc %d is gone from %s! Setting complete=2.',...
-                  tq.id,tq.pid,tq.machinename);
-            dbsetqueue(tq.id,tq.progress,2,tq.machinename);
-            dbevent(4,tq.id,tq.machinename,tq.pid);
-            
-            % e-mail notice that job died
-            % (if email address is set)
-            sql=['SELECT * FROM gUserPrefs WHERE userid="',tq.user,'"'];
-            userdata=mysql(sql);
-            
-            if ~isempty(userdata) & ~isempty(userdata(1).email),
-               cmd=['[s,w]=unix(''tail -20 ',LOGPATH,num2str(tq.id),'.out'')'];
-               sub=sprintf('Dead job: qid %d (%s) on %s',...
+          CMD=sprintf([SSHCMD,tq.machinename,...
+                       ' ps h -p ',num2str(tq.pid),''''],'svd');
+          [s,w]=unix(CMD);
+          
+          % recheck status to make sure that the job didn't JUST
+          % complete (which happens, esp on a dbkillqueue(-1)
+          tq=dbgetqueue(tq.id);
+          
+          if s==255,
+              
+              % ssh failed... mark computer as dead
+              dblog('host=%s: ssh check failed, removing from cluster',...
+                    tq.machinename);
+              dbset('tComputer',tq.computerid,'dead',1);
+              dbsetqueue(tq.id,0,0,tq.machinename);
+              dbevent(7,tq.id,tq.machinename);
+              dbevent(5,tq.id,tq.machinename,tq.pid);
+              
+          elseif tq.complete==-1 & length(w)<3,
+              % empty w means that no process with id pid exists
+              % record as dead in db
+              
+              dblog('qid=%d: Proc %d is gone from %s! Setting complete=2.',...
+                    tq.id,tq.pid,tq.machinename);
+              dbsetqueue(tq.id,tq.progress,2,tq.machinename);
+              dbevent(4,tq.id,tq.machinename,tq.pid);
+              
+              % e-mail notice that job died
+              % (if email address is set)
+              sql=['SELECT * FROM gUserPrefs WHERE userid="',tq.user,'"'];
+              userdata=mysql(sql);
+              
+              if ~isempty(userdata) & ~isempty(userdata(1).email),
+                  cmd=['[s,w]=unix(''tail -20 ',LOGPATH,num2str(tq.id),'.out'')'];
+                  sub=sprintf('Dead job: qid %d (%s) on %s',...
                            tq.id,tq.note,tq.machinename);
-               disp('skipping email');
-               %emailres(userdata(1).email,cmd,sub);
-            end
-         else
+                  disp('skipping email');
+                  %emailres(userdata(1).email,cmd,sub);
+              end
+          else
             dbupdateload(tq.machinename,tq.user);
             fprintf('queueid=%d: Process %d on %s still alive!\n',...
                     queuedata(ii).id,queuedata(ii).pid,tq.machinename);
             dbset('tQueue',tq.id,'progress',tq.progress+1);
-         end
+          end
       end
    end
 
@@ -424,14 +445,14 @@ while 1,
                   shhostname=strsep(hostname,'.');
                   shhostname=shhostname{1};
                   % start the job on hostname via ssh
-                  [SSHCMD,' -f ',queuedata.user,'@',shhostname,...
+                  cmd=sprintf([SSHCMD,' -f ',queuedata.user,'@',shhostname,...
                               ' "',BINPATH,'runqueue ',...
                               num2str(queuedata.id),...
-                              ' ''', queuedata.progname,'''"']
-                  [s,w]=unix([SSHCMD,' -f ',queuedata.user,'@',shhostname,...
-                              ' "',BINPATH,'runqueue ',...
-                              num2str(queuedata.id),...
-                              ' ''', queuedata.progname,'''"']);
+                              ' ', queuedata.progname,'"'''],...
+                              queuedata.user);
+                  
+                  disp(cmd);
+                  [s,w]=unix(cmd);
                   
                   % check to make sure it started correctly.
                   if s>0,
@@ -478,11 +499,16 @@ while 1,
            ' GROUP BY user ',...
            ' ORDER BY runningjobs DESC'];
       jobdata=mysql(sql);
-      totaljobs=sum([cat(1,jobdata.runningjobs);0]);
       
+      actjobs=zeros(size(jobdata));
+      pendjobs=actjobs;
+      for jj=1:length(jobdata),
+          actjobs(jj)=str2num(jobdata(jj).runningjobs);
+          pendjobs(jj)=str2num(jobdata(jj).pendingdjobs);
+      end
+      totaljobs=sum([actjobs;0]);
       idealjobs=ceil(totaljobs./length(jobdata));
-      actjobs=cat(1,jobdata.runningjobs);
-      pendjobs=cat(1,jobdata.pendingdjobs);
+
       cheatedusers=sum(pendjobs & actjobs<idealjobs);
       maxuser=min(find(actjobs==max(actjobs)));
       if actjobs(maxuser)>idealjobs+1 & cheatedusers>0,

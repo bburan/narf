@@ -17,9 +17,12 @@ sql=['SELECT * FROM NarfResults WHERE modelname="' META.modelname '"'...
     ' AND cellid="' XXX{1}.cellid '"'];
 r=mysql(sql);
 if length(r) == 1
-    return
+    fprintf('NOTE: Deleting old NarfResults entry for %s/%d/%s\n',...
+            XXX{1}.cellid,META.batch,META.modelname);
+    sql=['DELETE FROM NarfResults WHERE id=',num2str(r(1).id)];
+    mysql(sql);
 elseif length(r) > 1
-    error('Duplicate values in DB found!');
+    warning('Duplicate values in DB found!');
     keyboard;
 end
 
