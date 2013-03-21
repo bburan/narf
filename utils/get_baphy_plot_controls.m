@@ -11,7 +11,7 @@ function [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack)
         stim_idx = popup2num(baphy_mod.plot_gui.selected_stim_idx_popup);
         chan_idx = popup2num(baphy_mod.plot_gui.selected_stim_chan_popup);
     else
-        sf = XXX{1}.training_set{1};
+        sf = XXX{end}.training_set{1};
         stim_idx = 1;
         chan_idx = 1;
     end
