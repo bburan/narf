@@ -26,6 +26,7 @@ function basis = build_basis(phi)
     % Get the default prediction from where you are    
     recalc_xxx(start_depth);
     pred_default = flatten_field(XXX{end}.dat, XXX{1}.training_set, pred_field);
+    pred_default = excise(pred_default);
     
     % BASIS: NxM. Would be the prediction of each FIR coef (M coefs)?
     %        Each column is a basis vector
@@ -44,7 +45,8 @@ function basis = build_basis(phi)
         unpack_fittables(newphi);
         recalc_xxx(start_depth);
         pred = flatten_field(XXX{end}.dat, XXX{1}.training_set, pred_field);
-        pred(isnan(pred)) = 0;
+        pred = excise(pred);
+        pred(isnan(target)) = 0;
         basis(:, jj) = pred - pred_default;
     end
     
@@ -52,12 +54,13 @@ end
 
 fprintf('Fitting %d variables with SparseBayes()\n', length(phi_init));
 N_iterations = 200;    
-%t = [];
-%b = [];
+% t = [];
+% b = [];
 for ii = 1:N_iterations
     fprintf('SparseBayes Iteration %d/%d\n', ii, N_iterations);
     phi = pack_fittables(STACK);
     basis = build_basis(phi);
+    target(isnan(target)) = 0;
     [P, H, D] = SparseBayes('Gaussian', basis, target);
     phi_delta = zeros(size(phi));
     phi_delta(P.Relevant) = P.Value;    
@@ -68,8 +71,8 @@ for ii = 1:N_iterations
     %b(ii) = XXX{end}.score_test_corr;
 end
 
-%figure;
-%plot(t,b);
+% figure;
+% plot(t,b);
 
 termcond = NaN;
 
