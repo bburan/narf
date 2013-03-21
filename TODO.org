@@ -17,12 +17,11 @@ That should take care of everything.   It just occurred to me that it might be e
 * WORK
 
 ** IMMEDIATE
-  1. [X] Invert the FIR sign if the NPNL has a negative slope
-  2. [ ] Per-file fit masking module and auto-generated token names
-  3. [ ] Modules
-  4. [ ] Make an NPFNLX implementation?
-  5. [ ] Regularized boosting fitter
-  6. [ ] FIX POTENTIAL SOURCE OF BUGS: Not all files have a META.batch property (for 240 and 242)
+  1. [X] Per-file fit masking module and auto-generated token names (start with zz)
+  2. [ ] 
+  3. [ ] Make an NPFNLX implementation?
+  4. [ ] Regularized boosting fitter
+  5. [ ] FIX POTENTIAL SOURCE OF BUGS: Not all files have a META.batch property (for 240 and 242)
 
 ** FEATURES
   1. [ ] NARF Modelpane Improvements

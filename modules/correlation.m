@@ -65,7 +65,7 @@ function x = do_correlation(stack, xxx)
         x.(mdl.output) = NaN;
     else
         x.(mdl.train_score) = R(2,1);
-        x.(mdl.output) = 1/R(2,1)^2;
+        x.(mdl.output) = 1 - R(2,1);
     end
     
     %---------------

@@ -32,12 +32,13 @@ for ii = 1:length(cells)
         
         % Uncomment next line to enqueue on machine pool
         enqueue_single_model(modulekeys{jj},  batch, ...
-            cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
+            cells{ii}.cellid, cells{ii}.training_set, ...
+            cells{ii}.test_set, cells{ii}.filecode);
     end
 end
 
 % Automatically generate unique keys which mask off certain parts of the
-% training data set.
+% training data set:
 
 % Shift all module groups down one, making space for a new module group in
 % the second token position
@@ -48,7 +49,7 @@ mm(1) = mm(2);
 for ii = 1:length(cells)
     for jj = 1:length(cells{ii}.training_set)
         % Generate a unique keyname k
-        k = ['fm-' cells{ii}.filecode{jj}];
+        k = ['zz' cells{ii}.filecode{jj}];
         s = [];
         s.(k) = {MODULES.file_masker.mdl(struct('only_indexes', [jj]))}; 
         
@@ -60,7 +61,8 @@ for ii = 1:length(cells)
         
         for kk = 1:length(modulekeys)
             enqueue_single_model(modulekeys{kk},  batch, ...
-                cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
+                cells{ii}.cellid, cells{ii}.training_set, ...
+                cells{ii}.test_set, cells{ii}.filecode);
         end
     end
 end

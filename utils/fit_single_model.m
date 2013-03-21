@@ -1,4 +1,4 @@
-function success = fit_single_model(modulekeys, batch, cellid, training_set, test_set)
+function success = fit_single_model(modulekeys, batch, cellid, training_set, test_set, filecodes)
 % TODO: Documentation
 % fit_single_model() is used by the queuing system to train a single model
 % as a job which may be run on any machine. 
@@ -32,6 +32,7 @@ XXX = {};
 XXX{1}.cellid = cellid;
 XXX{1}.training_set = training_set;
 XXX{1}.test_set = test_set;
+XXX{1}.filecodes = filecodes;
 
 tic;
 

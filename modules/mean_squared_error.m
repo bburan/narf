@@ -59,8 +59,8 @@ function x = do_mean_squared_error(stack, xxx)
 %         end
 %     end
 %     
-    p = flatten_field(x.dat, xxx{1}.training_set, mdl.input1);
-    q = flatten_field(x.dat, xxx{1}.training_set, mdl.input2); 
+    p = flatten_field(x.dat, x.training_set, mdl.input1);
+    q = flatten_field(x.dat, x.training_set, mdl.input2); 
     train_score = nanmean((p - q).^2);
     
     % Compute the mean squared error of the test set
@@ -75,8 +75,8 @@ function x = do_mean_squared_error(stack, xxx)
 %         end
 %     end
 
-    ptest = flatten_field(x.dat, xxx{1}.test_set, mdl.input1);
-    qtest = flatten_field(x.dat, xxx{1}.test_set, mdl.input2); 
+    ptest = flatten_field(x.dat, x.test_set, mdl.input1);
+    qtest = flatten_field(x.dat, x.test_set, mdl.input2); 
 
     test_score = nanmean((ptest - qtest).^2);
     
