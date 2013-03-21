@@ -26,6 +26,10 @@ if ~exist([NARF_SAVED_MODELS_PATH filesep cellid], 'dir')
     mkdir([NARF_SAVED_MODELS_PATH filesep cellid]);
 end
 
+if ~exist('filecodes','var'),
+    filecodes={};
+end
+
 success = false;
 STACK = {};
 XXX = {};
