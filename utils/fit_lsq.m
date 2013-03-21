@@ -59,8 +59,8 @@ function error = my_obj_fn(phi, start_depth)
     recalc_xxx(start_depth);
     
     % Concatenate training set prediction and reality into a long vector
-    pred    = flatten_field(XXX{end}.dat, XXX{1}.training_set, field1);
-    respavg = flatten_field(XXX{end}.dat, XXX{1}.training_set, field2);       
+    pred    = flatten_field(XXX{end}.dat, XXX{end}.training_set, field1);
+    respavg = flatten_field(XXX{end}.dat, XXX{end}.training_set, field2);       
     
     % Set error to zero where there is a NaN in respavg 
     % I would have preferred to just excise the NaNs, but lsqcurvefit
@@ -100,7 +100,7 @@ UB = [];
 
 fprintf('Fitting %d variables with lsqcurvefit()\n', length(phi_init));
 
-len = length(flatten_field(XXX{end}.dat, XXX{1}.training_set, 'respavg'));
+len = length(flatten_field(XXX{end}.dat, XXX{end}.training_set, 'respavg'));
 start_depth = find_fit_start_depth(STACK);
 if append_penalty
     fprintf('Appending penalty!');

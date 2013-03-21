@@ -40,7 +40,7 @@ end
 
 fprintf('Fitting %d variables with fminunc()\n', length(phi_init));
 
-len = length(flatten_field(XXX{end}.dat, XXX{1}.training_set, 'respavg'));
+len = length(flatten_field(XXX{end}.dat, XXX{end}.training_set, 'respavg'));
 
 [phi_best, ~, termcond] = fminunc(@my_obj_fn, phi_init, options);
                                 

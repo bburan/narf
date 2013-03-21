@@ -11,7 +11,7 @@ end
 
 start_depth = find_fit_start_depth(STACK);
 phi_init = pack_fittables(STACK);
-target = flatten_field(XXX{end}.dat, XXX{1}.training_set, target_field);
+target = flatten_field(XXX{end}.dat, XXX{end}.training_set, target_field);
 
 if isempty(phi_init)
     fprintf('Skipping because there are no parameters to fit.\n');
@@ -25,7 +25,7 @@ function basis = build_basis(phi)
        
     % Get the default prediction from where you are    
     recalc_xxx(start_depth);
-    pred_default = flatten_field(XXX{end}.dat, XXX{1}.training_set, pred_field);
+    pred_default = flatten_field(XXX{end}.dat, XXX{end}.training_set, pred_field);
     pred_default = excise(pred_default);
     
     % BASIS: NxM. Would be the prediction of each FIR coef (M coefs)?
@@ -44,7 +44,7 @@ function basis = build_basis(phi)
         newphi(jj) = phi(jj) + delta;
         unpack_fittables(newphi);
         recalc_xxx(start_depth);
-        pred = flatten_field(XXX{end}.dat, XXX{1}.training_set, pred_field);
+        pred = flatten_field(XXX{end}.dat, XXX{end}.training_set, pred_field);
         pred = excise(pred);
         pred(isnan(target)) = 0;
         basis(:, jj) = pred - pred_default;
