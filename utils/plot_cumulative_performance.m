@@ -1,13 +1,15 @@
-function plot_cumulative_performance (batch, cellid, tokens, ordinate)
+function plot_cumulative_performance (batch, cellid, holdtokens, freetokens, ordinate)
 
 n_pts = 200;
-token_count = length(tokens);
+token_count = length(freetokens);
 x = zeros(n_pts, token_count);
 y = zeros(n_pts, token_count);
+mdlcount = 0;
 
-for token_idx = 1:length(tokens)
+for token_idx = 1:length(freetokens)
     
-    models = db_get_models(batch, cellid, {tokens{token_idx}});
+    models = db_get_models(batch, cellid, cat(2, holdtokens, freetokens{token_idx}));
+    mdlcount = mdlcount + length(models);
     
     vals = [models(:).(ordinate)];
     
@@ -26,8 +28,12 @@ for token_idx = 1:length(tokens)
 end
 
 figure;
+
+set(gca, 'ColorOrder', [0 0 1; 0 1 0; 1 0 0; 0 1 1; 1 0 1; 1 1 0;], ...
+         'LineStyleOrder',{'-','--',':'},'NextPlot','ReplaceChildren');
+
 plot(x, y);
 xlabel(ordinate, 'Interpreter', 'none');
 ylabel(['Cumulative fraction of models with ' ordinate ' > value'], 'Interpreter', 'none')
-legend(tokens, 'Interpreter', 'none');
-title(['Performance of Tokens (# Models: ' num2str(numel(x)) ')']);
+legend(freetokens, 'Interpreter', 'none');
+title(['Performance of Tokens (# Models: ' num2str(mdlcount) ')']);
