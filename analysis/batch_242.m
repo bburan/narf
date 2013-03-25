@@ -11,10 +11,18 @@ MODULES = scan_directory_for_modules();
 cells = request_celldb_batch(batch);
 
 mm = {};
+
+% mm{1} = module_groups('env100');
+% mm{2} = module_groups('log2b'); 
+% mm{3} = module_groups('firn');  
+% mm{4} = module_groups('npnl', 'senl', 'senl3', 'npfnl');  
+% mm{5} = module_groups('sb', 'fminlsq', 'boost', 'fmin');
+% mm{6} = module_groups('mse', 'mses2', 'mses3', 'mses4', 'mses5', 'mses6'); 
+
 mm{1} = module_groups('env100');
 mm{2} = module_groups('log2b'); 
 mm{3} = module_groups('firn');  
-mm{4} = module_groups('npnl', 'senl', 'senl3', 'npfnl', 'npfnl3');  
+mm{4} = module_groups('npfnl');  
 mm{5} = module_groups('sb', 'fminlsq', 'boost', 'fmin');
 mm{6} = module_groups('mse', 'mses2', 'mses3', 'mses4', 'mses5', 'mses6'); 
 
@@ -27,7 +35,7 @@ for ii = 1:length(cells)
         %fit_single_model(modulekeys{jj}, batch, cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
         % TODO: Enqueue into job system instead of doing fit_single_model
         % here to allow work to be distributed everywhere.
-        enqueue_single_model(modulekeys{jj},  batch, cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
+        enqueue_single_model(modulekeys{jj},  batch, cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set, true);
         
     end
 end

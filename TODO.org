@@ -91,8 +91,7 @@ That should take care of everything.   It just occurred to me that it might be e
   4. [ ] Automatic Relevancy Determination (ARD)
   5. [ ] Automatic Smoothness Determination (ASD)
   6. [ ] Use a single wavelet transform in place of downsampling + FIR filter (Hard and slow to fit, but extremely general)
-  7. [ ] Roll model summary caches and select_summaries into Stephen's BAPHY, since in the end all I did was reinvent yet another crappy RDBMS
-  8. [ ] Are neurons clusterable according to which models describe them well?
+  7. [ ] Are neurons clusterable according to which models describe them well?
 	 Are they really different populations of neurons, or just points along a continuum?
 
 ** MODULES:
