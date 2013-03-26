@@ -54,10 +54,16 @@ cells = request_celldb_batch(batch);
 mm = {};
 mm{1} = module_groups('env100');
 mm{2} = module_groups('log2b'); 
-mm{3} = module_groups('firn');  
-mm{4} = module_groups('npfnl');   % 'npnl', 'senl', 'senl3',
-mm{5} = module_groups('sb', 'fminlsq', 'boost', 'fmin');
-mm{6} = module_groups('mse', 'mses2', 'mses3', 'mses4', 'mses5', 'mses6'); 
+% mm{3} = module_groups('firn');  
+% mm{4} = module_groups('npfnl');   % 'npnl', 'senl', 'senl3',
+% mm{5} = module_groups('sb', 'fminlsq', 'boost', 'fmin');
+% mm{6} = module_groups('mse', 'mses2', 'mses3', 'mses4', 'mses5', 'mses6'); 
+
+mm{3} = module_groups('depn');  
+mm{4} = module_groups('npfnl');  
+mm{5} = module_groups('boost');
+mm{6} = module_groups('mses0', 'mses1', 'mses2', 'mses3', 'mses4', 'mses5'); 
+force = false;
 
 modulekeys = module_block_combos(mm);
 

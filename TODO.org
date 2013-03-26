@@ -1,140 +1,26 @@
-* Notes on Hyrax
-
-1. If the scheduler crashes (indicated by new jobs not starting and or a last tick warning at the bottom of the queue status screen):
-  log in to hyrax
-  run matlab
-  >> baphy_set_path
-  >> narf_set_path    % assuming you've pulled the latest narf as of this evening
-  >> dbqueuemaster
-  enter your password when prompted to permit sudo. 
-That should take care of everything.   It just occurred to me that it might be easiest in general to run the scheduler in a window on the actual hyrax machine so that anyone interested can take a look to see what it's up to.
-
-2. Monitor queue from home via reverse tunnel through umd.edu:
-  - open firewall back door by surfing here:  http://kamzik.org/rr22307.php
-  - enter user "lbhb" password "feartheferret"  This will open the back door to the IP of your current computer for a month.
-  - surf to http://bhangra.isr.umd.edu:19888   -- this is equivalent to http://hyrax.ohsu.edu/
-
-* WORK
-
-** IMMEDIATE
-  1. [X] Per-file fit masking module and auto-generated token names (start with zz)
-  2. [ ] 
-  3. [ ] Make an NPFNLX implementation?
-  4. [ ] Regularized boosting fitter
-  5. [ ] FIX POTENTIAL SOURCE OF BUGS: Not all files have a META.batch property (for 240 and 242)
-
-** FEATURES
-  1. [ ] NARF Modelpane Improvements
-         - [ ] Displays name, training set, test set, and other important info at top of window
-	 - [ ] Standardized colors for plots
-  2. [ ] NARF Browser Improvements
-         1) [ ] Scatter plot test/train button
-         2) [ ] Heat Map current display button
-  3. [ ] Cleaning, bugfixes, and user interface changes that have accumulated
-  4. [ ] Push all existing files into the database
-  5. [ ] Fix the damn bug with NaNs in sparsebayes fitter!?
-  6. [ ] Partition code into fitting and plotting sections
-  7. [ ] Fix EM conditioning error and get gmm4 started again (Not sure how to fix!)
-  8. [ ] Address question: Does variation in neural fuction in A1 follow a continuum, or are there visible clusters?
-  9. [ ] Experiments: 1/r^2 is probably a much more nonlinear thing to minimize than 1-abs(r). Try 
-
-** MINOR ADDITIONS
-  1. [ ] If empty test set is given for a cellid, what should we do? Hold 1 out cross validation? 
-  2. [ ] A 2D sparse bayes approach. Make a 2D matrix with constant shape (elliptical, based on local deviation of N nearest points) to make representative gaussians, then flatten to 1D to make basis vectors fed through SB.
-  3. [ ] Alternatively, try doing 1D sparse bayesian trick once on each dimension separately, and then combining the two dimensions together. 
-  4. [ ] Add a keyword with a log compressor as an extra channel
-  5. [ ] More concise summary of a cellid's models. HTML data table output?
-  6. [ ] Plot both test and training data for smooth scatter plots.
-  7. [ ] Standardize colors for plot lines. 
-  8. [ ] A histogram heat map of model performance for each cell so you can see distribution of model performance
-  9. [ ] A way to compare nonlinearities for multiple data sets.  
-  10. [ ] Can I hide windows when plotting on them so they don't pop up and ruin my day when coding?
-  11. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things later in scripts)
-
-** CLEANING AND BUGFIXES:
-  1. [ ] Ooops, the git commit is not really being saved! It should go in META, not just in the cache
-  2. [ ] CLEAN: Compare_models needs to sort based on training score if test_score doesn't exist.
-  3. [ ] CLEAN: sf=sf{1}; should be eliminated IN EVERY SINGLE FILE!
-  4. [ ] CLEAN: 'unused' should become ~ IN EVERY FILE
-  5. [ ] CLEAN: Fix fit_sparsebayes() so that it won't ever have positive definite problems. eg, positivedefinite = all(eig(basis) > 0) OR use the 2nd return value of chol() when running the decomposition in sparse bayes
-  6. [ ] REFACTOR: Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  7. [ ] REFACTOR: the Fitters because they are all pretty much the same damn thing over and over again
-  8. [ ] Replace my nargin checks with "if ~exist('BLAH','var'),"
-  9. [ ] Grep for TODO's, FIXME's, etc in existing files
-  10. [ ] Search for obviously dead code and bury it in the graveyard
-  11. [ ] Search for repeated blocks of code and refactor
-  12. [ ] Put proper docstrings on every function in util/
-  13. [ ] Check paths again, grep for NARF_PATH and correct (also: replace / with filesep when possible)
-  14. [ ] Names probably could use some rethinking as well, especially defaults (like using 'stim' default even in the fitting algorithms, for example)
-  15. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function
-  16. [ ] In retrospect, 'gui' and 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures...move it be in a 3rd structure?
-  17. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-  18. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought.
-  19. [ ] Create a module methods directory for shared methods
-  20. [ ] Create a module keywords directory for helping with combinatoric name management instead of 'module groups'? 
-  21. [ ] make anything named 'do_' into a method for use with modules?
-  22. [ ] make anything named 'update_' into a function used purely for its side effects?
-  23. [ ] Delete the GUI objects whenever you 'apply' since they may need to be recreated?
-  24. [ ] Make sure that fitters return specific codes indicating how they terminated
-
-** FITTERS:
-  1. [ ] FITTER: ARD + ASD
-  2. [ ] FITTER: A stronger shrinkage fitter (Shrink by as much as you want).
-  3. [ ] FITTER: Log Likelihood because MSE is biased towards gaussian noise models, and for real-life data sets the probability tails are always heavier than a gaussian. 
-  4. [ ] FITTER: Three-step fitter (First FIR, then NL, then both together).
-  5. [ ] FITTER: Multi-step sparseness fitters (Fit, sparseify, fit, sparsify, etc). Waste of time?
-
-** LARGER WORK
-  1. [ ] Generalize N-step fitter to let a particular module or set of modules float. 
-  2. [ ] inter_spike_intervals 
-  3. [ ] bayesian_likelihood() perf metric
-  4. [ ] Automatic Relevancy Determination (ARD)
-  5. [ ] Automatic Smoothness Determination (ASD)
-  6. [ ] Use a single wavelet transform in place of downsampling + FIR filter (Hard and slow to fit, but extremely general)
-  7. [ ] Are neurons clusterable according to which models describe them well?
-	 Are they really different populations of neurons, or just points along a continuum?
-
-** MODULES:
-  1. [ ] MODULE FN: Provide functions to cover the input space logarithmically with filters
-  2. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
-  3. [ ] MODULE: Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  4. [ ] MODULE: Standardized single/multi channel gammatone filter
-  5. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  6. [ ] MODULE INIT: Make a module which has a complex init process
-	 1) Creates a spanning filterbank of gammatones
-	 2) Trains the FIR filter on that spanning filterbank
-	 3) Picks the top N (Usually 1, 2 or 3) filters based on their power
-	 4) Crops all other filters
-  7. [ ] MODULE FN: Provide an auto-init for the filters which cover the input space, train filters on that, and picks the channel with the most power. It does this once wide, then once narrow.
-  8. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  9. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-
-** END USER CONVENIENCES
-  1. [ ] Why isn't auto recalc the default?
-  2. [ ] Make logging work for the GUI by including the log space in narf_modelpane?
-  3. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
-  4. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
-  5. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
-  6. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
-  7. [ ] IRRITATION: Why isn't there an 'undo' function?
-  8. [ ] IRRITATION: Why can't I resize windows?
-  9. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
-  10. [ ] IRRITATION: Why are the editable text boxes so damn small?
-  11. [ ] IRRITATION: Why can't I edit a module type in the middle of the stack via the GUI?
-  12. [ ] Write a crash course guide on using NARF
-  13. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  14. [ ] Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?	  
-	  To do this, instead of a _global_ STACK and XXX, they would be closed-over by the GUI object.
-	  Then, there would need to be a 'update-gui' function which can use those closed over variables.
-	  That fn could be called whenever you want to programmatically update it. 	  	  	 
+* Notes on discussion with Stephen
+  1. Add a plotme_at_level(n) property to modules which inserts them at a particular vertical spacing 
+     Goal would be to plot 4-5 FIR filters above 4-5 NPNLs
+  2. Make a FIR# module
+     One FIR coef set per data file
+  3. Make a NPNL# module
+     One NPNL per FIR output
+  4. Try to make as many modules as possible work on cell arrays of vectors
+     That way, you can compare multiple data sets easily. 
+  5. Make a 2D NPNL heightmap nonlinearity
+     Input X is the exitation
+     Input Y is the inhibition
+     Returns Z, the height of the map
+     Data will probably NOT be scattered uniformly around the map.
 
 * Architectual Improvements 
-  1. [ ]  Queueing system operational
-	  Why: Strong need to distribute computation of many model files
-  2. [ ] Modelfiles should include batch# instead of a list of files it was trained on
+  1. [ ] Modelfiles should include batch# instead of a list of files it was trained on
 	 Why: It is unlikely that different batches will share the same modelfile structure
 	 Why: Modelfilenames are getting pretty long and cumbersome
 	 Why: It puts the batch# information somewhere in the modelfile, which doesn't happen currently.
+  2. [ ] Fitters should be able to have their own database-searchable string
+	 Some fitters may be really weird
+	 I am not a module, yet I want to try to make 'best fitting' things just like anybody else, and save my results	
   3. [ ] Models need associated 'summarize' methods in META
 	 Why: Need to extract comparable info despite STACK positional differences in model structure.
 	 Why: Need a general interface to plot model summaries for wildly different models
@@ -153,36 +39,142 @@ That should take care of everything.   It just occurred to me that it might be e
 	 Why: image files could get deleted
 	 Why: DB table could get corrupted
 	 Why: Also, we need to periodically re-run the analysis/batch_240.m type scripts to make sure they are all generated and current
- 
-*  UNESSENTIAL TODO ITEMS
-  - [ ] Make gui plot functions response have two dropdowns to pick out colorbar thresholds for easier visualization?
-  - [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
-  - [ ] MODULE: Add a filter that processess phase information from a stimulus, not just the magnitude
-  - [ ] Write a function which swaps out the STACK into the BACKGROUND so you can 'hold' a model as a reference and play around with other settings, and see the results graphically by switching back and forth.
-  - [ ] Try adding informative color to histograms and scatter plots
-  - [ ] Try improving contrast of various intensity plots
-  - [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
-  - [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound
-  - [ ] FITTER: Crop N% out fitter:
-	  1) quickfits FIR
-	  2) then quickfits NL
-	  3) measures distance from NL line, marks the N worst points
-	  4) Looks them up by original indexes (before the sort and row averaging)
-	  5) Inverts nonlinearity numerically to find input
-	  6) Deconvolves FIR to find the spike that was bad
-	  7) Deletes that bad spike from the data
-	  8) Starts again with a shrinkage fitter that fits both together
-  - [ ] Expressing NL smoothness regularizer as a matrix
-	  A Tikhonov matrix for regression: 
-	  diagonals are variance of each coef.
-	  2nd diagonals would add some correlation from one FIR coef to the next (smoothness?).
-  - [ ] Sparsity check:
-	 For each model,
-            for 1:num coefs
-             Prune the least important coef
-              plot performance
-            Make a plot of the #coefs vs performance
-  - [ ] A check of NL homoskedasticity (How much is the variance changing along the abscissa)	     
-  - [ ] FITTER: SWARM. Hybrid fit routine which takes the top N% of models, scales all FIR powers to be the same, then shrinks them.
-  - [ ] Get a histogram of the error of the NL. (Is it Gaussian or something else?)
-  - Have a display of the Pareto front (Dominating models with better r^2 or whatever)
+  7. [X] Why doesn't SB fitter seem to respect smoothness penalties?
+	 Because it steps in the direction which best describes the data, which may have nothing to do with sparsity
+
+* SMALL CORRECTIONS AUDIT LIST
+  1. [ ] Make auto-recalc the default
+  2. [ ] Make narf_browser the width of my screen
+  3. [ ] 
+  4. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
+  5. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
+  6. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
+  7. [ ] IRRITATION: Why are the editable text boxes so damn small?
+  8. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  9. [ ] Create a module methods directory for shared methods
+  10. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
+  11. [ ] Replace my nargin checks with "if ~exist('BLAH','var'),"
+  12. [ ] sf=sf{1}; should be eliminated IN EVERY SINGLE FILE!
+  13. [ ] unused' should become ~ IN EVERY FILE
+  14. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
+  15. [ ] Make sure that fitters return specific codes indicating how they terminated
+  16. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
+  17. [ ] Search for obviously dead code and bury it in the graveyard
+  18. [ ] Search for repeated blocks of code and refactor
+  19. [ ] Put proper docstrings on every function in util/
+  20. [ ] Check paths again, grep for NARF_PATH and correct (also: replace / with filesep when possible)
+  21. [ ] Make sure that 1-abs(r) is the score to be minimized, not 1/r^2
+  22. [ ] Repair NarfModelpane
+          - [ ] Displays model name, training set, test set, and other important info at top of window
+	  - [ ] Standardized colors for all module plots
+  23. [ ] NARF Browser Improvements
+          - [ ] Scatter plot test/train button
+          - [ ] Heat Map current display button	
+  24. [ ] Antialiasing problem when saving images
+  25. [ ] Clean up distribution of code before a modelfit
+	  - [ ] Function which distributes GIT to workers before enqueing models
+	  - [ ] Checks local repository is clean
+  26. [ ] Repair git commit logging
+  27. [ ] MODULE: Standardized single/multi channel gammatone filter
+  28. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  29. [ ] FN: Searches for unattached model and image files and deletes them
+  30. [ ] Plot both test and training data for smooth scatter plots.
+  31. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things more easily in scripts)
+  32. [ ] Add a precompressor keyword which concats log compressor as an extra channel
+  33. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  34. [ ] Provide functions to cover an input space logarithmically with filters
+  35. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
+  36. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+  37. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
+  38. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  39. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  40. [ ] IRRITATION: Why can't I resize windows?
+
+* TECHNICALLY HARDER CHUNKS OF WORK
+  1. [ ] Depression model fits for 240, 242
+  2. [ ] Inhibition/Excitiation model
+  3. [ ] Correct the way module groups key names are converted into STACK	 
+  4. [ ] 2D Nonparametric Gaussian Mixture Model:
+	 For each point, take K nearest neighbors. 
+	 Compute 2D gaussian for that point. 
+	 Flatten that 2D gaussian and push into SENL's 1D input
+  5. [ ] Log Likelihood Fitter: (Any noise model, not just gaussian)
+	 MSE is biased towards gaussian noise models, and for real-life data sets the probability tails are always heavier than a gaussian.
+	 Subcomponents:
+	 - [ ] inter_spike_intervals computation module
+         - [ ] bayesian_likelihood() perf metric module
+  6. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
+  7. [ ] Use a single wavelet transform in place of downsampling + FIR filter
+  8. [ ] Write a crash course guide on using NARF
+
+* Name Replacing Proposal
+  1. [ ] XXX -> 
+  2. [ ] STACK -> 
+  3. [ ] META -> ModelInfo
+  4. [ ] MODULES
+  5. [ ] GUI -> 'gui' and 'plot_gui' stuff probably shouldn't be stored in the XXX or STACK structures??
+  6. [ ] Make a list of every function used purely for side effects, and rename it with a ! at the end
+
+
+* DISCARDED WORK
+  1. [ ] Push all existing files into the database
+  2. [ ] MODULE INIT: Make a module which has a complex init process
+	 1) Creates a spanning filterbank of gammatones
+	 2) Trains the FIR filter on that spanning filterbank
+	 3) Picks the top N (Usually 1, 2 or 3) filters based on their power
+	 4) Crops all other filters
+  3. [ ] FIX POTENTIAL SOURCE OF BUGS: Not all files have a META.batch property (for 240 and 242)
+  4. [ ] A histogram heat map of model performance for each cell so you can see distribution of model performance (not needed now that I have cumulative dist plotter)
+  5. [ ] If empty test set is given for a cellid, what should we do? Hold 1 out cross validation? 
+  6. [ ] Fix EM conditioning error and get gmm4 started again (Not sure how to fix!)
+  7. [ ] Address question: Does variation in neural fuction in A1 follow a continuum, or are there visible clusters?
+  8. [ ] A 2D sparse bayes approach. Make a 2D matrix with constant shape (elliptical, based on local deviation of N nearest points) to make representative gaussians, then flatten to 1D to make basis vectors fed through SB.
+  9. [ ] CLEAN: Compare_models needs to sort based on training score if test_score doesn't exist.
+  10. [ ] FITTER: Regularized boosting fitter
+  11. [ ] FITTER: Automatic Relevancy Determination (ARD) + Automatic Smoothness Determination (ASD)
+  12. [ ] FITTER: A stronger shrinkage fitter (Shrink by as much as you want).
+  13. [ ] FITTER: Three-step fitter (First FIR, then NL, then both together).
+  14. [ ] FITTER: Multi-step sparseness fitters (Fit, sparseify, fit, sparsify, etc). Waste of time
+  15. [ ] MODULE: Make a faster IIR filter with asymmetric response properties 
+  16. [ ] Make logging work for the GUI by including the log space in narf_modelpane?
+  17. [ ] IRRITATION: Why doesn't 'nonlinearity' module default to a sigmoid with reasonable parameters?
+  18. [ ] IRRITATION: Why isn't there progress in the GUI when fitting?
+  19. [ ] IRRITATION: Why isn't there an 'undo' function?
+  20. [ ] IRRITATION: Why can't I edit a module type in the middle of the stack via the GUI?
+  21. [ ] Right now, you can only instantiate a single GUI at a time. Could this be avoided and the design made more general?	  
+	  To do this, instead of a _global_ STACK and XXX, they would be closed-over by the GUI object.
+	  Then, there would need to be a 'update-gui' function which can use those closed over variables.
+	  That fn could be called whenever you want to programmatically update it. 	  	  	 
+  22. [ ] Make gui plot functions response have two dropdowns to pick out colorbar thresholds for easier visualization?
+  23. [ ] Make it so baphy can be run _twice_, so that raw_stim_fs can be two different values (load envelope and wav data simultaneously)
+  24. [ ] MODULE: Add a filter that processess phase information from a stimulus, not just the magnitude
+  25. [ ] Write a function which swaps out the STACK into the BACKGROUND so you can 'hold' a model as a reference and play around with other settings, and see the results graphically by switching back and forth.
+  26. [ ] Try adding informative color to histograms and scatter plots
+  27. [ ] Try improving contrast of various intensity plots
+  28. [ ] Put a Button on the performance metric that launches an external figure if more plot space is needed.
+  29. [ ] Add a GUI button to load_stim_from_baphy to play the stimulus as a sound
+  30. [ ] FITTER: Crop N% out fitter:
+	    1) quickfits FIR
+	    2) then quickfits NL
+	    3) measures distance from NL line, marks the N worst points
+	    4) Looks them up by original indexes (before the sort and row averaging)
+	    5) Inverts nonlinearity numerically to find input
+	    6) Deconvolves FIR to find the spike that was bad
+	    7) Deletes that bad spike from the data
+	    8) Starts again with a shrinkage fitter that fits both together
+  31. [ ] Expressing NL smoothness regularizer as a matrix
+	    A Tikhonov matrix for regression: 
+	    diagonals are variance of each coef.
+	    2nd diagonals would add some correlation from one FIR coef to the next (smoothness?).
+  32. [ ] Sparsity check:
+	   For each model,
+              for 1:num coefs
+               Prune the least important coef
+		plot performance
+              Make a plot of the #coefs vs performance
+  33. [ ] A check of NL homoskedasticity (How much is the variance changing along the abscissa)	     
+  34. [ ] FITTER: SWARM. Hybrid fit routine which takes the top N% of models, scales all FIR powers to be the same, then shrinks them.
+  35. [ ] Get a histogram of the error of the NL. (Is it Gaussian or something else?)
+  36. [ ] Have a display of the Pareto front (Dominating models with better r^2 or whatever)
+
+
