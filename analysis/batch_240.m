@@ -66,22 +66,9 @@ force = false;
 % Enqueue every model
 for ii = 1:length(cells)
     for jj = 1:length(modulekeys)
-        %fprintf('Fitting model [%d/%d]\n', jj, length(modulekeys)); 
         %fit_single_model(modulekeys{jj}, batch, cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
-        % TODO: Enqueue into job system instead of doing fit_single_model
-        % here to allow work to be distributed everywhere.
-        force = true;
-        
         enqueue_single_model(modulekeys{jj},  batch, cells{ii}.cellid, ...
             cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, force);
      end
 end
-
-% Generate "top 10" plots for each cellid
-% for ii = 1:length(cells)
-%     % Plot the top 10 models
-%     models = db_get_models(batch, cells{ii}.cellid);
-%     compare_models(cellstr(char(models(1:min(length(models), 10)).modelpath)));
-%     % TODO: Scatter plots
-% end
 

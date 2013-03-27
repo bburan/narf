@@ -1,3 +1,8 @@
+* Refactoring Verification Program:
+  1. Check that all modules work independently?
+  2. Check that all keywords still work?
+  3. Check that all functions return expected values as before?
+
 * Notes on discussion with Stephen
   1. Add a plotme_at_level(n) property to modules which inserts them at a particular vertical spacing 
      Goal would be to plot 4-5 FIR filters above 4-5 NPNLs

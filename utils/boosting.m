@@ -8,21 +8,28 @@ function [x_bst, s_bst, n] = boosting(objfn, x_0, termfn, stepsize, stepscale)
 % ARGUMENTS: 
 %    objfn     Objective function. Must accept vector x and return a scalar
 %              which is to be minimized.
+%
 %    x_0       Starting point for the optimization of vector x.
+%
 %    termfn    Termination function which accepts 4 arguments:
 %                     n    Step number of this iteration.
 %                     x    The present x being considered.
 %                     s    Stepsize taken in this past step
 %                     d    Score improvement (delta) vs previous point
 %              The loop terminates when this returns a true.                
+%
 %    stepsize  Initial size of steps to take when optimizing x.
+%              Default is 1. 
+%
 %    stepscale When no better steps are found, stepsize is scaled by:
 %                stepsize = stepsize / stepscale.
-%              Setting stepscale=2 results in classic "binary search"
+%              Default is stepscale=2, the classic "binary search"
 % 
 % RETURNS:
 %    x_bst     The best vector x found so far.
+%
 %    s_bst     The score of that vector, as evaluated by objfn.
+%
 %    n         The number of boosting steps taken.
 %
 % DETAILS:
@@ -47,7 +54,7 @@ if ~exist('stepsize','var'),
 end
 
 if ~exist('stepscale','var'),    
-    stepscale = 10;
+    stepscale = 2;
 end
     
 if (stepsize <= 0) 
