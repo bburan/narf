@@ -117,7 +117,11 @@
   1. Fit combo: revcorr->boost (what we do now)
   2. Fit combo: revcorr->boost->sparsify->boost   (Force sparsity and re-boost)
   3. Fit combo: prior->boost
-  4. Fit combo: zero->boost 
+  4. Fit combo: revcorr->boost_with_increasing_sparsity_penalty
+  5. Fit combo: revcorr->boost_with_decreasing_sparsity_penalty
+  6. Fit combo: zero->boost 
+  7. Fit combo: Fit at 100hz, then use that to init a fit at 200Hz, then again at 400Hz.
+  8. 
 
 * Stephen's boosting verification
   1. A Shrinking step size is stupid simple. Is there a better way?
