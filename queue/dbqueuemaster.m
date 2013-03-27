@@ -268,10 +268,10 @@ while 1,
    %
    
    % first update computer load
-   fprintf('ldchk: <');
+   %fprintf('ldchk: <');
    %dbgetload([],1);
    dbgetload([],1,20,1);
-   fprintf('>');
+   %fprintf('>');
    
    % count active jobs in tQueue and update numproc in tComputer if
    % it's wrong
@@ -333,7 +333,7 @@ while 1,
    compdata=mysql(sql);
    
    if length(compdata)==0,
-      disp('no computers available, pausing');
+       %disp('no computers available, pausing');
       pause(1);
    end
    nextid=0;  % flag 0 to avoid "not at capacity" message
@@ -533,14 +533,14 @@ while 1,
               ' GROUP BY user ',...
               ' ORDER BY newjobs DESC'];
          newjobdata=mysql(sql);
-      
+         
          newjobs=sum([cat(1,newjobdata.newjobs);0]);
          
          if totaljobs-jobdata(1).runningjobs<length(newjobs),
             
             % should kill a job so that everyone has at least one
             % running
-            disp('should kill a job');
+            %disp('should kill a job');
          end
       end
    end

@@ -141,6 +141,21 @@ if isfield(params,'specialbatch'),
         cellfileids=cellfileids(keepidx);
         cellfiledata=cellfiledata(keepidx);
         cellids=keepcellids;
+      case 'behavior',
+        % spn / left-right same spectral features batch
+        keepfiles=zeros(size(cellfiledata));
+        keepcellids={};
+        for ii=1:length(cellfiledata),
+            if strcmpi(cellfiledata(ii).behavior,'active'),
+                keepfiles(ii)=1;
+                keepcellids=union(keepcellids,cellfiledata(ii).cellid);
+            end
+        end
+        keepidx=find(keepfiles);
+        cellfileids=cellfileids(keepidx);
+        cellfiledata=cellfiledata(keepidx);
+        cellids=keepcellids;
+        
     end
     
 end

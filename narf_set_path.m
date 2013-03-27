@@ -17,4 +17,8 @@ function narf_set_path()
             [NARF_PATH filesep 'svd/cellxc'], ...
             [NARF_PATH filesep 'svd/gen'], ...
             [NARF_PATH filesep 'utils']);
+    
+    if ~exist('dbgetscellfile','file'),
+        baphy_set_path
+    end
 end

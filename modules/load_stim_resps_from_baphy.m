@@ -163,14 +163,22 @@ function x = do_load_from_baphy(stack, xxx)
         fprintf('Loading response: %s\n', respfile);
         if loadbytrial,
             options.tag_masks={'SPECIAL-TRIAL'};
-            [resp, tags] = loadspikeraster(respfile, options);
+            [resp, tags,trialset] = loadspikeraster(respfile, options);
             resp=permute(resp,[1 3 2]);
+            
+            % only keep correct trials
+            stim=stim(:,trialset,:);
+            
+            % mask out responses that aren't in valid stimulus
+            % range (ie, responses during & after targets)
+            for trialidx=1:size(stim,2),
+                gg=find(~isnan(stim(:,trialidx,1)));
+                resp((gg(end)+1):end,1,trialidx)=nan;
+            end
         else
             options.tag_masks={'Reference'};
             [resp, tags] = loadspikeraster(respfile, options);
         end
-        
-
         
         % SVD pad response with nan's in case reference responses
         % were truncated because of target overlap during behavior.
