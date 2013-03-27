@@ -1,12 +1,12 @@
 function m = correlation(args)
 % A function to linearly correlate two signals. 
 % 
-% The signals are assumed to be two dimensional matrices at this point.
+% The signals are assumed to be two dimensional matrices:
 %  Dimension 1 is time
 %  Dimension 2 is the stimuli #
 %
 % Returns a function module 'm' which implements the MODULE interface.
-% See documentation for more information on how modules are typically used.
+% See docs/modules.org for more information.
 
 % Module fields that must ALWAYS be defined
 m = [];
@@ -48,8 +48,6 @@ function x = do_correlation(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-
     % -------------
     % Compute the training set correlation, ignoring nans
     V1 = [];
@@ -90,24 +88,20 @@ function do_plot_inputs(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    [sf, stim_idx, unused] = get_baphy_plot_controls(stack);
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
     dat = x.dat.(sf);  
+        
+    plot(dat.(mdl.time), dat.(mdl.input1)(:, stim_idx), 'b-', ...
+         dat.(mdl.time), dat.(mdl.input2)(:, stim_idx), 'g-');
     
-    % removed normalization -- SVD 1/9/13
-    %s1 = 1/mean(dat.(mdl.input1)(:, stim_idx));
-    %s2 = 1/mean(dat.(mdl.input2)(:, stim_idx));
-    s1=1;
-    s2=1;
-    
-    plot(dat.(mdl.time), s1.*dat.(mdl.input1)(:, stim_idx), 'b-', ...
-         dat.(mdl.time), s2.*dat.(mdl.input2)(:, stim_idx), 'g-');
     axis tight;
     legend(mdl.input1, mdl.input2);
     
     % Plot the score in the upper left
-    themax = max([max(s1.*dat.(mdl.input1)(:, stim_idx)), ...
-                  max(s2.*dat.(mdl.input2)(:, stim_idx))]);
-    text(0, themax , sprintf(' Train r: %f\n Test r : %f', x.(mdl.train_score), x.(mdl.test_score)), ...
+    themax = max([max(dat.(mdl.input1)(:, stim_idx)), ...
+                  max(dat.(mdl.input2)(:, stim_idx))]);
+    text(0, themax , sprintf(' Train r: %f\n Test r : %f', ...
+        x.(mdl.train_score), x.(mdl.test_score)), ...
         'VerticalAlignment','top',...
         'HorizontalAlignment','left');
 

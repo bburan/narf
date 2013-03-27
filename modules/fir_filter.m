@@ -30,6 +30,7 @@ m.init_fit_sig = 'respavg'; % For initializing coefficients only
 
 % Optional fields
 m.auto_init = @auto_init_fir_filter;
+m.default_plot = @do_plot_fir_coefs_as_heatmap;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_fir_coefs_as_heatmap;
 m.plot_fns{1}.pretty_name = 'FIR Coefficients (Heat map)';

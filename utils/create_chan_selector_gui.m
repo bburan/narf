@@ -1,4 +1,24 @@
-function hs = create_chan_selector_gui(parent_handle, stack, xxx, field)
+function hs = create_chan_selector_gui(parent_handle, stack, xxx, chanfield)
+% hs = create_chan_selector_gui(parent_handle, stack, xxx, chanfield)
+%
+% Creates a UICONTROL popup menu in parent_handle under the fieldname
+% 'selected_chan_popup'. This can then be used by default methods like
+% do_plot_channel_vs_time() so that the amount of boilerplate
+% copy-and-paste code for a module can be reduced since they share the same
+% implementation. 
+%
+% ARGUMENTS:
+%   parent_handle       The panel handle in which the popup will be placed
+%
+%   stack               Local copy of STACK
+%   xxx                 Local copy of XXX
+%   chanfield           The field whose channels we want to be able to select
+%
+% RETURNS:
+%   hs                  A structure with one fieldname:
+%                          'selected_chan_popup', 
+%                       which contains a handle to the UI control popup
+
     pos = get(parent_handle, 'Position');
     w = pos(3) - 10;
     h = pos(4) - 10;
@@ -9,8 +29,8 @@ function hs = create_chan_selector_gui(parent_handle, stack, xxx, field)
     x = xxx{end};
 
     % If field wasn't defined, use 'output' as the default
-    if nargin < 4
-        field = m.output;
+    if ~exist('chanfield', 'vars'),
+        chanfield = m.output;
     end
     
     % Create a channel selector
@@ -27,8 +47,8 @@ function hs = create_chan_selector_gui(parent_handle, stack, xxx, field)
         sf = popup2str(find_module_gui_control(stack, 'selected_stimfile_popup'));
         
         if isfield(x.dat, sf)
-            [T, S, C] = size(x.dat.(sf).(field));
-            d = {};
+            [~, ~, C] = size(x.dat.(sf).(chanfield));
+            d = cell(1,C);
             for ii = 1:C
                 d{ii} = sprintf('%d',ii);
             end

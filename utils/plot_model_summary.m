@@ -1,9 +1,19 @@
 function plotpath = plot_model_summary()
-% Plots the model currently loaded into global memory. 
-% Saves the plot to the appropriate path.
-% Returns the path of the saved plot.
-% Does NOT do anything else, so make sure your model is completely ready.
-% Usually that means load_model(), recalc_xxx(1), and then this function.
+% plotpath = plot_model_summary()
+% 
+% Plots the model currently loaded in NARF and saves a PNG image at the
+% appropriate path. Does NOT do anything else, so make sure your model is
+% ready to be plotted.
+%
+% ARGUMENTS: none
+%  
+% RETURNS:
+%    plotpath    The path to the PNG file that was just generated.
+%
+% Example:
+%   load_model('/path/to/mymodel.mat');
+%   recalc_xxx(1);
+%   plot_model_summary();
 
 global META XXX STACK NARF_SAVED_IMAGES_PATH;
 
