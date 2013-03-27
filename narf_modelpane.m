@@ -373,24 +373,16 @@ end
 
 % Callback for deleting a module block
 function del_mod_block()
-    n_fns = length(STACK);
+    idx = length(STACK);
     
-    if n_fns == 0
+    if idx == 0
         return;
     end
     
-    % Remove GUI handles explicitly since I don't trust matlab to
-    % garbage collect everything properly
-    delete(STACK{n_fns}.gh.plot_axes);
-    delete(STACK{n_fns}.gh.plot_popup);
-    delete(STACK{n_fns}.gh.plot_panel);
-    delete(STACK{n_fns}.gh.fn_apply);
-    delete(STACK{n_fns}.gh.fn_table);
-    delete(STACK{n_fns}.gh.fn_popup);
-    delete(STACK{n_fns}.gh.fn_panel);
+    delete_module_gui(idx)
     
     % Update the stack, the remaining module positions, and the view
-    STACK = STACK(1:n_fns-1);
+    STACK = STACK(1:idx-1);
     update_scrollbar_size();
     update_panel_positions();    
     

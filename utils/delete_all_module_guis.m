@@ -1,22 +1,16 @@
 function delete_all_module_guis()
+% delete_all_module_guis()
+%
+% Deletes any gui handles, widgets, etc from STACK. This is important to do
+% whenever the STACK is about to be destroyed, because otherwise you can
+% lose access to the GUI handles and they will persist even when you want
+% to create newer, replacement GUI widgets later.
+%
+% No arguments or return values. Use purely for side effects. 
+
 global STACK;
-    for ii = 1:length(STACK)
-        if isfield(STACK{ii}, 'gh')
-            try
-                delete(STACK{ii}.gh.plot_axes);
-                delete(STACK{ii}.gh.plot_popup);
-                delete(STACK{ii}.gh.plot_panel);
-                delete(STACK{ii}.gh.fn_apply);
-                delete(STACK{ii}.gh.fn_table);
-                delete(STACK{ii}.gh.fn_popup);
-                delete(STACK{ii}.gh.fn_panel);
-            catch
-                % Do nothing if a delete failed
-            end
-            STACK{ii} = rmfield(STACK{ii}, 'gh');
-        end
-        if isfield(STACK{ii}, 'plot_gui')
-            STACK{ii} = rmfield(STACK{ii}, 'plot_gui');
-        end
-    end
+
+for ii = 1:length(STACK)
+    delete_module_guis(ii);
 end
+
