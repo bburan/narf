@@ -623,3 +623,122 @@ That should take care of everything.   It just occurred to me that it might be e
   - open firewall back door by surfing here:  http://kamzik.org/rr22307.php
   - enter user "lbhb" password "feartheferret"  This will open the back door to the IP of your current computer for a month.
   - surf to http://bhangra.isr.umd.edu:19888   -- this is equivalent to http://hyrax.ohsu.edu/
+Hi Stephen,
+
+The data from batches 240 and 242 are in. Unfortunately, batches 233 and 241 had problems and haven't been run through fully yet. First, I noted a few weird things in the batch files, which may be my fault:
+
+1. In batch 240, the following cellid's had identical training and test sets: por023a-c2, por031a-09-1, por31a-19-1
+2. In batch 240, relative to the data I took last time, por028d-b1 was removed (despite it being an excellent cell), and por028d-c1 was not removed (despite it being a crap cell). I think that was probably done backwards.
+3. In batch 242, the following cellid's had identical training and test sets: por025a-c1, por025a-d1, por026a-d1, por026b-a2, por026b-b2, por026b-c2.
+
+In this experiment, I varied:
+- Including a prestim silence or not.
+- Adding a penalty for smooth FIR coefficients or not. 
+- Using the nonparametric nonlinearity or a sparse empirical nonlinearity (essentially a gaussian mixture model)
+- Using boosting or a fminsearch + lsqcurvefit, the best two search methods on average so far. 
+
+The questions I was trying to answer were:
+
+1. Does the prestim silence improve the average quality of the fits generated?   
+   Yes. Only 9 of the 38 neurons had fits that were improved by removing the prestim silence. Interestingly, every single time the fit was improved by removing the prestim silence, the nonlinear saturation was low, as the following data table shows. Rows are sorted by sorted by nonlinearity saturation level. 
+     | CELLID       | Init? | COMP  | NL   | BEST FITTER | R^2 | STRF      | Saturation | NOTE            |
+     |--------------+-------+-------+------+-------------+-----+-----------+------------+-----------------|
+     | por028d-d1   | yes   | l2    | npnl | fminlsq     | .24 | 1-Crap    | High       |                 |
+     | por025a-c1   | yes   | log2b | npnl | boost       | .32 | 5-Perfect | High       |                 |
+     | por028b-d1   | yes   | log2b | senl | boost       | .33 | 5-Perfect | High       |                 |
+     | por031a-09-1 | yes   | l2    | npnl | fminlsq     | .06 | 2-Noisy   | Linear     |                 |
+     | por026c-c1   | yes   | log2b | npnl | boost       | .52 | 5-Perfect | Linear     |                 |
+     | por023a-b1   | yes   | log2b | npnl | boost       | .56 | 5-Perfect | Linear     |                 |
+     | por026a-d1   | yes   | log2b | npnl | boost       | .15 | 3-OK      | Linear     | Late resp.      |
+     | por027a-b1   | yes   | log2b | senl | fminlsq     | .28 | 3-OK      | Linear     | Late resp.      |
+     | por027b-b1   | yes   | l2    | npnl | boost       | .21 | 3-OK      | Linear     |                 |
+     | por025a-c2   | no    | log2b | senl | fminlsq     | .10 | 1-Crap    | Low        |                 |
+     | por026a-b1   | yes   | log2b | senl | fminlsq     | .36 | 2-Noisy   | Low        |                 |
+     | por026c-a1   | no    | l2    | senl | fminlsq     | .35 | 3-OK      | Low        |                 |
+     | por026b-b2   | yes   | log2b | senl | fminlsq     | .53 | 3-OK      | Low        |                 |
+     | por026c-d2   | yes   | l2    | npnl | boost       | .11 | 4-Clean   | Low        |                 |
+     | por026b-b1   | yes   | log2b | senl | fminlsq     | .38 | 4-Clean   | Low        |                 |
+     | por025a-d1   | yes   | log2b | npnl | fminlsq     | .50 | 4-Clean   | Low        |                 |
+     | por025a-b1   | yes   | log2b | senl | fminlsq     | .54 | 4-Clean   | Low        |                 |
+     | por024a-b1   | yes   | log2b | npnl | fminlsq     | .47 | 5-Perfect | Low        |                 |
+     | por023a-c2   | no    | l2    | senl | boost       | .16 | 4-Clean   | Low        | Late resp.      |
+     | por027b-b1   | yes   | l2    | npnl | boost       | .17 | 4-Clean   | Low        | Late resp.      |
+     | por028d-a2   | no    | log2b | npnl | boost       | .21 | 4-Clean   | Low        | Late resp.      |
+     | por026b-a2   | no    | log2b | senl | boost       | .30 | 4-Clean   | Low        | Late resp.      |
+     | por026b-d1   | no    | log2b | senl | boost       | .28 | 5-Perfect | Low        | Late resp.      |
+     | por024b-b1   | no    | l2    | senl | boost       | .30 | 2-Noisy   | Low        |                 |
+     | por026c-a1   | yes   | log2b | senl | boost       | .67 | 5-Perfect | Low        | Exceptional.    |
+     | por028d-a2   | no    | l2    | npnl | fminlsq     | .32 | 2-Noisy   | Low        |                 |
+     | por028b-d1   | yes   | l2    | npnl | boost       | .36 | 3-OK      | Notch      | Late resp.      |
+     | por028d-d1   | yes   | log2b | npnl | boost       | .32 | 3-Clean   | Notch      |                 |
+     | por024a-c1   | no    | l2    | senl | fminlsq     | .12 | 2-Noisy   | Sigmoid    |                 |
+     | por024a-a1   | yes   | log2b | npnl | fminlsq     | .31 | 3-OK      | Sigmoid    |                 |
+     | por027a-a1   | yes   | l2    | npnl | fminlsq     | .13 | 4-Clean   | Sigmoid    |                 |
+     | por028b-c1   | yes   | log2b | senl | boost       | .21 | 5-Perfect | Sigmoid    |                 |
+     | por026b-a1   | yes   | l2    | senl | boost       | .56 | 5-Perfect | Sigmoid    |                 |
+     | por026b-c1   | yes   | log2b | npnl | boost       | .20 | 4-Clean   | Sigmoid    | Late resp.      |
+     | por024b-c1   | yes   | l2    | npnl | fminlsq     | .49 | 4-Clean   | Sigmoid    | Late resp.      |
+     | por026c-d1   | yes   | l2    | senl | boost       | .18 | 4-Clean   | Sigmoid    | Unusually late. |
+     | por026c-b1   | yes   | log2b | npnl | fminlsq     | .34 | 3-OK      | U          |                 |
+     | por028b-b1   | yes   | log2b | senl | boost       | .19 | 4-Clean   | U          |                 |
+ 
+2. Does smoothness seem to help our fits, on average?
+   Only in certain cases. Although 15/38 cells had best models which had been smoothed, only 5 of those smoothed results were clearly better than the best unsmoothed model.
+   The method by which I tested this was to smooth the average response with FIR filter with coefficients: [1 4 1]. This is a weak low-pass filter or smoothing kernel. It was only applied to the training set, so that smooth FIR coeficients would naturally occur. The training set was left untouched, so that it would still be a fair comparison with non-smoothed results. 
+   The following table, sorted by R^2 value, shows that smooth results tended to help more for the poorly correlating results, presumably because it reduced overfitting. Although I expected it to also be more important to smooth coefficients found via FMINLSQ than boosting, this doesn't appear to be the case. Boosting can apparently also generate fits which benefit from some mild smoothing.
+     | CELLID       | Init? | COMP  | NL   | BEST FITTER | R^2 | STRF      | Saturation | NOTE            |
+     |--------------+-------+-------+------+-------------+-----+-----------+------------+-----------------|
+     | por026c-a1   | yes   | log2b | senl | boost       | .67 | 5-Perfect | Low        | Exceptional.    |
+     | por026b-a1   | yes   | l2    | senl | boost       | .56 | 5-Perfect | Sigmoid    |                 |
+     | por023a-b1   | yes   | log2b | npnl | boost       | .56 | 5-Perfect | Linear     |                 |
+     | por025a-b1   | yes   | log2b | senl | fminlsq     | .54 | 4-Clean   | Low        |                 |
+     | por026b-b2   | yes   | log2b | senl | fminlsq     | .53 | 3-OK      | Low        |                 |
+     | por026c-c1   | yes   | log2b | npnl | boost       | .52 | 5-Perfect | Linear     |                 |
+     | por025a-d1   | yes   | log2b | npnl | fminlsq     | .50 | 4-Clean   | Low        |                 |
+     | por024b-c1   | yes   | l2    | npnl | fminlsq     | .49 | 4-Clean   | Sigmoid    | Late resp.      |
+     | por024a-b1   | yes   | log2b | npnl | fminlsq     | .47 | 5-Perfect | Low        |                 |
+     | por026b-b1   | yes   | log2b | senl | fminlsq     | .38 | 4-Clean   | Low        |                 |
+     | por028b-d1   | yes   | l2    | npnl | boost       | .36 | 3-OK      | Notch      | Late resp.      |
+     | por026a-b1   | yes   | log2b | senl | fminlsq     | .36 | 2-Noisy   | Low        |                 |
+     | por026c-a1   | no    | l2    | senl | fminlsq     | .35 | 3-OK      | Low        |                 |
+     | por026c-b1   | yes   | log2b | npnl | fminlsq     | .34 | 3-OK      | U          |                 |
+     | por028b-d1   | yes   | log2b | senl | boost       | .33 | 5-Perfect | High       |                 |
+     | por028d-a2   | no    | l2    | npnl | fminlsq     | .32 | 2-Noisy   | Low        |                 |
+     | por025a-c1   | yes   | log2b | npnl | boost       | .32 | 5-Perfect | High       |                 |
+     | por028d-d1   | yes   | log2b | npnl | boost       | .32 | 3-Clean   | Notch      |                 |
+     | por024a-a1   | yes   | log2b | npnl | fminlsq     | .31 | 3-OK      | Sigmoid    |                 |
+     | por024b-b1   | no    | l2    | senl | boost       | .30 | 2-Noisy   | Low        |                 |
+     | por026b-a2   | no    | log2b | senl | boost       | .30 | 4-Clean   | Low        | Late resp.      |
+     | por026b-d1   | no    | log2b | senl | boost       | .28 | 5-Perfect | Low        | Late resp.      |
+     | por027a-b1   | yes   | log2b | senl | fminlsq     | .28 | 3-OK      | Linear     | Late resp.      |
+     | por028d-d1   | yes   | l2    | npnl | fminlsq     | .24 | 1-Crap    | High       |                 |
+     | por027b-b1   | yes   | l2    | npnl | boost       | .21 | 3-OK      | Linear     |                 |
+     | por028d-a2   | no    | log2b | npnl | boost       | .21 | 4-Clean   | Low        | Late resp.      |
+     | por028b-c1   | yes   | log2b | senl | boost       | .21 | 5-Perfect | Sigmoid    |                 |
+     | por026b-c1   | yes   | log2b | npnl | boost       | .20 | 4-Clean   | Sigmoid    | Late resp.      |
+     | por028b-b1   | yes   | log2b | senl | boost       | .19 | 4-Clean   | U          |                 |
+     | por026c-d1   | yes   | l2    | senl | boost       | .18 | 4-Clean   | Sigmoid    | Unusually late. |
+     | por027b-b1   | yes   | l2    | npnl | boost       | .17 | 4-Clean   | Low        | Late resp.      |
+     | por023a-c2   | no    | l2    | senl | boost       | .16 | 4-Clean   | Low        | Late resp.      |
+     | por026a-d1   | yes   | log2b | npnl | boost       | .15 | 3-OK      | Linear     | Late resp.      |
+     | por027a-a1   | yes   | l2    | npnl | fminlsq     | .13 | 4-Clean   | Sigmoid    |                 |
+     | por024a-c1   | no    | l2    | senl | fminlsq     | .12 | 2-Noisy   | Sigmoid    |                 |
+     | por026c-d2   | yes   | l2    | npnl | boost       | .11 | 4-Clean   | Low        |                 |
+     | por025a-c2   | no    | log2b | senl | fminlsq     | .10 | 1-Crap    | Low        |                 |
+     | por031a-09-1 | yes   | l2    | npnl | fminlsq     | .06 | 2-Noisy   | Linear     |                 |
+
+3. Does the sparse nonlinearity work better than the nonparametric nonlinearity?
+   In some cases, yes. The key difference, when there is one, seems to be in how well the nonlinearity extrapolates beyond the bounds of the training set data. 
+   A little more work here could really pay big dividends, I believe. 
+
+4. Which is more important, sparsity or smoothness?
+   Sparsity is probably more fundamental and could probably achieve many of the same effects as smoothness. But that's just intuition and I haven't quantified it yet.   
+
+Unless you have something pressing or an intuition you want to try, I'm going to concentrate on finding better nonparametric nonlinearities, especially in regards to how to extrapolate better beyond the edges of our data. That can have a pretty big effect on FIR coefficient cleanliness, as well as the correlation performance. 
+
+After that is nailed down, I think the next approach would be to concentrate only on sparse fitters and stronger shrinkage methods. If we solidify the model structure as having a parameter-free compressor and nonparametric nonlinearity, we can just concentrate on the STRF and start running experiments to see just how sparse the FIR filter can become before performance significantly degrades. Studying this too much before the nonlinearity is better optimized could yield premature conclusions.
+
+One other thought I had: should we also be considering a nonparametric compressor of some sort, or none at all? A log compressor makes sense biologically, but does it have any real effect given the nonparametric nonlinearity's ability to account for nearly any smooth nonlinearity, mathematically speaking?
+
+
+Ivar
