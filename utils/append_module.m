@@ -1,8 +1,14 @@
 function append_module(module)
-% Append module to the current STACK, and ask the module to use XXX data
-% to initialize itself automatically. Good for script-writing when
-% you don't want to keep track of the index number of a particular module,
-% but want to build a model automatically.
+% APPEND_MODULE(module)
+%
+% Append module to the current global cell array STACK, then call the
+% module's auto_init() method if it exists so that it automatically
+% initializes itself. 
+%
+% Intended to be used when:
+%   1. You don't care about module index numbers
+%   2. A module needs to determine the size of an array (for example,
+%   number of FIR coefficient channels) to match prior things.
 
 global STACK XXX;
 
