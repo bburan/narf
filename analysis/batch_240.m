@@ -27,6 +27,7 @@ function batch_240()
 %        fmin: Basic line search built in to matlab
 %        lsq: Basic lsqcurvefit() built into matlab.
 %        fminlsq: First fmin, then lsq
+%        senl: (Warning, may crash every few hundred models)
 %
 % mm{6}: OBJECTIVE FUNCTION  Measures performance, applies penalties, 
 %        mse  : Performance metric is mean squared error, with no smoothness or sparseness penalty.
@@ -37,10 +38,6 @@ function batch_240()
 %        mses5: Same as MSE, but a sparseness penalty of 10^-5. 
 %        mses6: Same as MSE, but a sparseness penalty of 10^-6. Weak sparseness penalty  
 
-% CAVEATS:
-%   'sb' fitter and 'senl' nonlinearities crash about once every few
-%   hundred models because of numerical instabilities. They work really
-%   well when they work, though.
 batch = 240;
 analysis_prefix = 'a240';
 baphy_set_path;
@@ -54,14 +51,11 @@ cells = request_celldb_batch(batch);
 mm = {};
 mm{1} = module_groups('env100');
 mm{2} = module_groups('log2b'); 
-% mm{3} = module_groups('firn');  
-% mm{4} = module_groups('npfnl');   % 'npnl', 'senl', 'senl3',
-% mm{5} = module_groups('sb', 'fminlsq', 'boost', 'fmin');
-% mm{6} = module_groups('mse', 'mses2', 'mses3', 'mses4', 'mses5', 'mses6'); 
+mm{3} = module_groups('firn', 'depn');  
+mm{4} = module_groups('npfnl');   % 'npnl', 'senl', 'senl3',
+mm{5} = module_groups('sb', 'fminlsq', 'boost', 'fmin');
+mm{6} = module_groups('mse', 'mses2', 'mses3', 'mses4', 'mses5', 'mses6'); 
 
-mm{3} = module_groups('depn');  
-mm{4} = module_groups('npfnl');  
-mm{5} = module_groups('boost');
 mm{6} = module_groups('mses0', 'mses1', 'mses2', 'mses3', 'mses4', 'mses5'); 
 force = false;
 
@@ -92,11 +86,4 @@ end
 %     compare_models(cellstr(char(models(1:min(length(models), 10)).modelpath)));
 %     % TODO: Scatter plots
 % end
-
-% TODO: Generate heat map plots (Buggy right now due to caching problem)
-
-
-% Write a function which makes an SQL query
-% Look at db_get_models() for an example
-%
 
