@@ -43,7 +43,7 @@ function x = do_depression_filter(stack, xxx)
     % Exotic way to loop over field names using ' and {1}...
     for sf = fieldnames(x.dat)', sf = sf{1};
         [T, S, N] = size(x.dat.(sf).(mdl.input));
-        ret = zeros(T, S, N*m.num_channels);
+        ret = zeros(T, S, N*mdl.num_channels);
         for s = 1:S
             stim_in=squeeze(x.dat.(sf).(mdl.input)(:,s,:))';
             depresp=depression_bank(stim_in,(1./stimmax(:))*mdl.strength,...

@@ -41,11 +41,19 @@
 	 Why: Also, we need to periodically re-run the analysis/batch_240.m type scripts to make sure they are all generated and current
   7. [X] Why doesn't SB fitter seem to respect smoothness penalties?
 	 Because it steps in the direction which best describes the data, which may have nothing to do with sparsity
+  8. [ ] Batching should work like this: 
+	 1. When work is enqueued, it goes into the NARF table, which has a 'complete?' flag
+	 2. Any number of PCs query the DB, try to get 'incomplete' flagged models. DB is atomic, handles conflicts and negates need for server.
+	 3. They compute those models, then return values.
+	 4. If desired, a local 'manager' on each PC can watch processes, handle timeouts, etc
+	 5. Negates need for SSH credentials everywhere, too.
 
 * SMALL CORRECTIONS AUDIT LIST
   1. [ ] Make auto-recalc the default
   2. [ ] Make narf_browser the width of my screen
-  3. [ ] 
+  3. [ ] When you click save, it should bring up a 'trainerstring' name so you can customize how the model is saved.
+	 Models are currently built using modelnames...but it's plausible that SOME modelnames aren't built that way. They could still come from the GUI or by script.
+	 Therefore, there needs to be detection/verification at savetime which checks that the model has the same structure as when it was built.
   4. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
   5. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
   6. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
@@ -89,6 +97,7 @@
   38. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
   39. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
   40. [ ] IRRITATION: Why can't I resize windows?
+  41. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to nonlinearity
 
 * TECHNICALLY HARDER CHUNKS OF WORK
   1. [ ] Depression model fits for 240, 242
