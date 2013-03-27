@@ -97,35 +97,17 @@ end
 
 function x = do_fir_filtering(stack, xxx)
     mdl = stack{end};
-    x = xxx{end};   % Unfortunately, this doesn't seem to copy deeply
+    x = xxx{end};
+    
+    % Have a space allocated for computing initial filter conditions
+    init_data_space = ones(size(mdl.coefs, 2) * 2, 1);
     
     % Apply the FIR filter across every stimfile
-    for sf = fieldnames(x.dat)', sf=sf{1};
-
-        % ---------------------------
-        % TODO: PLACEHOLDER FOR ARBITRARY DIMENSION FILTERING         
-%         % Build up the input matrix
-%         M = x.dat.(sf).(mdl.input);
-%         M_selcols = x.dat.(sf).([mdl.input '_selcols']);
-%         
-%         chan_idx = 1;
-%         
-%         % The fir filter acts on every channel
-%         for chan_idx = 1:mdl.num_dims
-%             cols = M_selcols('chan', chan_idx);
-%             X = M(:, cols);
-%             [T, N] = size(X);
-%             tmp = zeros(T, N); 
-%             % Apply the filter to every other column, one at a time
-%             for d = 1:N,
-%                 tmp(:, d) = filter(mdl.coefs(:, chan_idx), [1], X(:, d));
-%             end
-%             % Store the results back in the data structure.
-%             x.dat.(sf).(mdl.output)(:, cols) = tmp; 
-%         end
-%        % ------------------------
-        
-        % Compute the size of the filter
+    fns = fieldnames(x.dat);
+    for ii = 1:length(fns)
+         sf=fns{ii};
+         
+         % Compute the size of the filter
          [T, S, C] = size(x.dat.(sf).(mdl.input));
          
          if ~isequal(C, mdl.num_dims)
@@ -133,17 +115,20 @@ function x = do_fir_filtering(stack, xxx)
          end
 
          tmp = zeros(T, S, C);        
+         
+         % Old way of filtering, slower because of for loops.
          for s = 1:S
              for c = 1:C,
                  % Find proper initial conditions for the filter
                  [~, Zf] = filter(mdl.coefs(c,:)', [1], ...
-                                  ones(length(mdl.coefs(c,:)') * 2, 1) .* x.dat.(sf).(mdl.input)(1, s, c));
-                              
+                     init_data_space .* x.dat.(sf).(mdl.input)(1, s, c));
+                 
                  tmp(:, s, c) = filter(mdl.coefs(c,:)', [1], ...
-                                       x.dat.(sf).(mdl.input)(:, s, c), ...
-                                       Zf);
+                     x.dat.(sf).(mdl.input)(:, s, c), ...
+                     Zf);
              end
          end
+         
          % The output is the sum of the filtered channels
          x.dat.(sf).(mdl.output) = squeeze(sum(tmp, 3)) + mdl.baseline; 
     end
@@ -155,7 +140,7 @@ function do_plot_all_filtered_channels(stack, xxx)
     x = xxx{end};
     
     % Find the GUI controls
-    [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack);
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
     
     [T, S, C] = size(xold.dat.(sf).(mdl.input));
     
@@ -179,7 +164,7 @@ function do_plot_single_filtered_channel(stack, xxx)
     x = xxx{end};
     
     % Find the GUI controls
-    [sf, stim_idx, baphy_chan_idx] = get_baphy_plot_controls(stack);
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
     chan_idx = popup2num(mdl.plot_gui.selected_chan_popup);
     dat = x.dat.(sf);
 
