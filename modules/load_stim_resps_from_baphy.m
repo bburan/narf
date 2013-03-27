@@ -100,19 +100,39 @@ function x = do_load_from_baphy(stack, xxx)
         if idx == 0 
             error('Not found in cfd: %s\n', fname); 
         end
-          
+        
+        % special case kludge to deal with messed up TSP files
+        loadbytrial=0;
+        a=regexp(fname,'por(\d*).*TSP.*$','tokens');
+        if ~isempty(a),
+            a=str2num(a{1}{1});
+            if a>=31 && a<=65,
+                loadbytrial=1;
+            end
+        end
+        
         % Load the raw_stim part of the data structure
         stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
         fprintf('Loading stimulus: %s\n', stimfile);
-        [stim,stimparam] = loadstimfrombaphy(stimfile, [], [], mdl.stimulus_format, ...
-                              mdl.raw_stim_fs, mdl.stimulus_channel_count, ...
-                              0, mdl.include_prestim);
+        if loadbytrial,
+            options=[];
+            options.filtfmt=mdl.stimulus_format;
+            options.fsout=mdl.raw_stim_fs;
+            options.chancount=mdl.stimulus_channel_count;
+            [stim,stimparam] = loadstimbytrial(stimfile,options);
+        else
+            [stim,stimparam] = loadstimfrombaphy(stimfile, [], [], ...
+                  mdl.stimulus_format, mdl.raw_stim_fs, ...
+                  mdl.stimulus_channel_count, 0, mdl.include_prestim);
+        end
+        
         stim = permute(stim, [2 3 1]);
         
-        % TODO: Right now the envelope returned by baphy is not positive
-        % semidefinite, and when run through a square root compressor
-        % results in complex numbers being developed. This should be fixed
-        % on the baphy side, but for now let's just add a workaround here. 
+        % TODO: Right now the envelope returned by baphy is not necessarily
+        % positive semidefinite, and when run through a square root
+        % compressor results in complex numbers being developed. This
+        % should be fixed on the baphy side, but for now let's just
+        % add a workaround here.
         if strcmp(mdl.stimulus_format, 'envelope')
             stim = abs(stim);
         end
@@ -139,22 +159,26 @@ function x = do_load_from_baphy(stack, xxx)
         options.unit = cfd(idx).unit;
         options.channel  = cfd(idx).channum;
         options.rasterfs = mdl.raw_resp_fs;
-        options.tag_masks={'Reference'};
         respfile = [cfd(idx).path, cfd(idx).respfile];
         fprintf('Loading response: %s\n', respfile);
-        [resp, tags] = loadspikeraster(respfile, options);
+        if loadbytrial,
+            options.tag_masks={'SPECIAL-TRIAL'};
+            [resp, tags] = loadspikeraster(respfile, options);
+            resp=permute(resp,[1 3 2]);
+        else
+            options.tag_masks={'Reference'};
+            [resp, tags] = loadspikeraster(respfile, options);
+        end
+        
+
         
         % SVD pad response with nan's in case reference responses
         % were truncated because of target overlap during behavior.
         % this is a kludge that may be fixed some day in loadspikeraster
         if size(resp,1)<size(stim,1),
             resp((end+1):size(stim,1),:,:)=nan;
-        end
-        
-        if 0 && size(resp,1)>325,
-            disp('KLUDGE ALERT: TRUNCATING LONG SPN STIMULI!!!');
-            resp=resp(1:325,:,:);
-            stim=stim(1:325,:,:);
+        elseif size(resp,1)>size(stim,1),
+            resp=resp(1:size(stim,1),:,:);
         end
         
         % SVD 2013-03-08 - if specified, pull out either estimation (fit) or
@@ -165,7 +189,8 @@ function x = do_load_from_baphy(stack, xxx)
                 validx=min(find(repcount==max(repcount)));
             else
                 [ff,ii]=sort(repcount,'descend');
-                validx=ii(1:2);
+                ff=cumsum(ff)./sum(ff);
+                validx=ii(1:min(find(ff>=1/15)));
             end
             if datasubset==2
                 keepidx=validx;

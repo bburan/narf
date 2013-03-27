@@ -77,7 +77,7 @@ for nn = 1:length(rundata)
         
         
         
-        firstactiveidx=max(find(activefile));  % use last activefile!
+        firstactiveidx=min(find(activefile));  % use last activefile!
         if isempty(firstactiveidx),
             error('no active TSP data for this cell');
         end

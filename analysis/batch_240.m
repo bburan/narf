@@ -68,7 +68,7 @@ for ii = 1:length(cells)
         %fit_single_model(modulekeys{jj}, batch, cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
         % TODO: Enqueue into job system instead of doing fit_single_model
         % here to allow work to be distributed everywhere.
-        enqueue_single_model(modulekeys{jj},  batch, cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set);
+        enqueue_single_model(modulekeys{jj},  batch, cells{ii}.cellid, cells{ii}.training_set, cells{ii}.test_set,1);
         
     end
 end
