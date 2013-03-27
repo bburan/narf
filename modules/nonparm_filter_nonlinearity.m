@@ -8,16 +8,22 @@ m.mdl = @nonparm_filter_nonlinearity;
 m.name = 'nonparm_filter_nonlinearity';
 m.fn = @do_npfnl;
 m.pretty_name = 'Nonparametric Filter Nonlinearity';
-m.editable_fields = {'gwinval', 'input_stim', 'input_resp', 'time', 'output'};
+m.editable_fields = {'gwinval', 'leftzero', 'edgesize', 'input_stim', 'input_resp', 'time', 'output'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.gwinval = 5;  % Good values probably between 3 and 6. Determines gaussian filter window size relative to total number of data point samples.
+m.gwinval = 4;  % Good values probably between 3 and 6. 
+                % Determines gaussian filter window size relative to total number of data point samples.
+m.leftzero = false;
+m.edgesize = 20; % Arbitrary number. Usually about 20 is good.
 m.input_stim = 'stim';
 m.input_resp = 'respavg';
 m.time = 'stim_time';
 m.output = 'stim';
-
+    
+% TODO: These are magic numbers! 20 points and 80 points just seemed to
+% work pretty well, but its' really ad-hoc!
+    
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_smooth_scatter_npfnl; 
@@ -62,10 +68,19 @@ function npfnl = calc_npfnl(stack, xxx)
     D = sortrows([pred(idxs) resp(idxs)]); 
     S = iconv(D(:, 1), gf);
     R = iconv(D(:, 2), gf);
+
+    rs = mdl.edgesize; 
+    ls = mdl.edgesize * 4; 
+    right_slope = (mean(R(end-rs:end)) - mean(R(end-ls:end-rs))) / ...
+                  (mean(S(end-rs:end)) - mean(S(end-ls:end-rs)));
     
-    right_slope = (R(end) - R(end-1)) / (S(end) - S(end-1));
+    left_slope = (mean(R(1:rs)) - mean(R(rs+1:ls))) / ...
+                  (mean(S(1:rs)) - mean(S(rs+1:ls)));
+	if mdl.leftzero
+        left_slope = 0;
+    end
+              
     right_interp = @(x) R(end) + right_slope * (x-S(end));
-    left_slope = (R(2) - R(1)) / (S(2) - S(1));
     left_interp = @(x) R(1) - left_slope * (S(1)-x);
     
     % Return a function that can interpolate arbitrary values

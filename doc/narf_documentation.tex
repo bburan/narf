@@ -607,3 +607,19 @@ See the TODO.org file in NARF's main directory.
   5. [X] How can LSQ curve fit use sparseness and smoothness metrics?
 	 You can cheat and destroy the module system by looking later in the STACK for the MSE element. 
 	 If the MSE module exists and has nonzero weights, add a bogus zero element the LSQ target vector, and a bogus LSQ prediction vector element with a value of the sqrt(smoothness_penalty).	  
+
+* Notes on Hyrax
+
+1. If the scheduler crashes (indicated by new jobs not starting and or a last tick warning at the bottom of the queue status screen):
+  log in to hyrax
+  run matlab
+  >> baphy_set_path
+  >> narf_set_path    % assuming you've pulled the latest narf as of this evening
+  >> dbqueuemaster
+  enter your password when prompted to permit sudo. 
+That should take care of everything.   It just occurred to me that it might be easiest in general to run the scheduler in a window on the actual hyrax machine so that anyone interested can take a look to see what it's up to.
+
+2. Monitor queue from home via reverse tunnel through umd.edu:
+  - open firewall back door by surfing here:  http://kamzik.org/rr22307.php
+  - enter user "lbhb" password "feartheferret"  This will open the back door to the IP of your current computer for a month.
+  - surf to http://bhangra.isr.umd.edu:19888   -- this is equivalent to http://hyrax.ohsu.edu/

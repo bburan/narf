@@ -230,6 +230,8 @@ for ii = 1:length(group_names)
             mm = {MODULES.nonparm_filter_nonlinearity.mdl(struct('gwinval', 3))};
         case {'npfnl4'}
             mm = {MODULES.nonparm_filter_nonlinearity.mdl(struct('gwinval', 4))};
+        case {'npfnl5'}
+            mm = {MODULES.nonparm_filter_nonlinearity.mdl(struct('gwinval', 5))};
         case {'senl'}
             mm = {MODULES.sparse_empirical_nonlinearity};
         case {'se2d'}
@@ -274,6 +276,9 @@ for ii = 1:length(group_names)
         case {'msereg'}
             mm = {MODULES.mean_squared_error.mdl(struct('output', 'score', ...
                                                         'smoothness_weight', 10^-6))};
+        case {'mses0'}
+            mm = {MODULES.mean_squared_error.mdl(struct('output', 'score', ...
+                                                        'sparseness_weight', 10^0))};
         case {'mses1'}
             mm = {MODULES.mean_squared_error.mdl(struct('output', 'score', ...
                                                         'sparseness_weight', 10^-1))};
