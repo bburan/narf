@@ -29,7 +29,7 @@ function hs = create_chan_selector_gui(parent_handle, stack, xxx, chanfield)
     x = xxx{end};
 
     % If field wasn't defined, use 'output' as the default
-    if ~exist('chanfield', 'vars'),
+    if ~exist('chanfield', 'var'),
         chanfield = m.output;
     end
     

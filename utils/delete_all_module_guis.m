@@ -11,6 +11,6 @@ function delete_all_module_guis()
 global STACK;
 
 for ii = 1:length(STACK)
-    delete_module_guis(ii);
+    delete_module_gui(ii);
 end
 
