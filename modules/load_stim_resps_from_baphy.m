@@ -175,6 +175,32 @@ function x = do_load_from_baphy(stack, xxx)
                 gg=find(~isnan(stim(:,trialidx,1)));
                 resp((gg(end)+1):end,1,trialidx)=nan;
             end
+            
+            % find identical trials and call them repeats
+            CC=zeros(size(stim,2));
+            for dd=1:size(stim,3),
+                ts=stim(:,:,dd);
+                ts(isnan(ts))=0;
+                CC=CC+corrcoef(ts)./size(stim,3);
+            end
+            CC=CC-triu(CC);
+            [t2,t1]=find(CC==1);
+            keepidx=1:size(stim,2);
+            for ii=unique(t1)',
+                mm=t2(find(t1==ii & t2>0));
+                tr=squeeze(resp(:,1,mm));
+                repcount=size(tr,2)+1;
+                if repcount>size(resp,2),
+                    resp=cat(2,resp,nan*ones(size(resp,1),...
+                             repcount-size(resp,2),size(resp,3)));
+                end
+                resp(:,2:repcount,ii)=tr;
+                keepidx=setdiff(keepidx,mm);
+                t2(ismember(t2,mm))=0;
+            end
+            resp=resp(:,:,keepidx);
+            stim=stim(:,keepidx,:);
+            
         else
             options.tag_masks={'Reference'};
             [resp, tags] = loadspikeraster(respfile, options);
@@ -193,13 +219,14 @@ function x = do_load_from_baphy(stack, xxx)
         % validation (test) subset of the data
         if datasubset,
             repcount=squeeze(sum(~isnan(resp(1,:,:)),2));
-            if max(repcount)>2,
-                validx=min(find(repcount==max(repcount)));
-            else
+            %if max(repcount)>2,
+            %    validx=min(find(repcount==max(repcount)));
+            %else
                 [ff,ii]=sort(repcount,'descend');
                 ff=cumsum(ff)./sum(ff);
                 validx=ii(1:min(find(ff>=1/15)));
-            end
+            %end
+            %keyboard
             if datasubset==2
                 keepidx=validx;
             else

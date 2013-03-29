@@ -17,6 +17,9 @@ end
 
 % Save to disk
 xxx = xxx{1};
+if exist(filename,'file'),
+    delete(filename);
+end
 save(filename, 'stack', 'xxx', 'meta');
 
 % Change the file to be read-only so you don't accidentally alter it later

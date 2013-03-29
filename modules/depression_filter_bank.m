@@ -39,7 +39,7 @@ function x = do_depression_filter(stack, xxx)
     
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
     stimmax=x.stimminmax(2,:);
-    %keyboard
+    
     % Exotic way to loop over field names using ' and {1}...
     for sf = fieldnames(x.dat)', sf = sf{1};
         [T, S, N] = size(x.dat.(sf).(mdl.input));

@@ -18,6 +18,7 @@ if ~isequal(size(dat.(field1)), size(dat.(field2)))
 end
 % Sort and average them by groups of 100
 D = [dat.(field1)(:) dat.(field2)(:)]; 
+D=D(~isnan(D(:,1))&~isnan(D(:,2)),:);
 D = sortrows(D);
 D = conv_fn(D, 1, @nanmean, ceil(size(D, 1)/100), 0);
 

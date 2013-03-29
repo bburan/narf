@@ -171,9 +171,13 @@ function do_plot_smooth_scatter_and_nonlinearity_x(stack, xxx)
     for ii = 1:length(x.training_set)
         errorbar(ppp{ii}, rrr{ii}, outbinserr{ii}, pickcolor(ii));
     end
-    h = legend(sf, x.training_set{:});
-    set(h,'Interpreter','none')
+    h = legend(sf, x.training_set{:},'Location','EastOutside');
+    set(h,'Interpreter','none');
     hold off
+    minrange=cat(1,rrr{:})-cat(1,outbinserr{:})*2;
+    maxrange=cat(1,rrr{:})+cat(1,outbinserr{:})*2;
+    aa=axis;
+    axis([aa(1:2) min(minrange) max(maxrange)]);
 end
 
 end

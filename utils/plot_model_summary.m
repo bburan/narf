@@ -88,6 +88,8 @@ set(gcf,'PaperPositionMode','auto');
 set(gcf,'InvertHardcopy','off');
 set(0,'defaultTextFontName', 'Arial');
 print(fig, pngfile, '-dpng');
-close(fig);
+
+% SVD- Don't close figure so that it gets saved by queuerun.m as well
+%close(fig);
 
 plotpath = pngfile;

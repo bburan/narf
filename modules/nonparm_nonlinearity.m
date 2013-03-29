@@ -157,6 +157,10 @@ function do_plot_smooth_scatter_and_nonlinearity(stack, xxx)
     [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx(1:end-1));
     errorbar(phi{1},phi{2},outbinserr);
     hold off
+    minrange=phi{2}-outbinserr.*2;
+    maxrange=phi{2}+outbinserr.*2;
+    aa=axis;
+    axis([aa(1:2) min(minrange) max(maxrange)]);
 end
 
 end

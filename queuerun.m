@@ -65,15 +65,13 @@ eval(char(queuedata.parmstring));
 BATQUEUEID=str2num(getenv('QUEUEID'));
 
 if isempty(findstr(lower(host),'seil.umd.edu')),
-   figure(1);
-   fullpage portrait
-   print('-f1','-djpeg',sprintf('%s/%d.1.jpg',QUEUEOUTPATH,BATQUEUEID));
-   figure(2);
-   fullpage portrait
-   print('-f2','-djpeg',sprintf('%s/%d.2.jpg',QUEUEOUTPATH,BATQUEUEID));
-   figure(3);
-   fullpage portrait
-   print('-f3','-djpeg',sprintf('%s/%d.3.jpg',QUEUEOUTPATH,BATQUEUEID));
+    s=get(0,'Children');
+    s=s(s<=3);
+    for ii=s(:)',
+        figure(ii);
+        fullpage portrait
+        print(['-f' num2str(ii)],'-djpeg','-r75',sprintf('%s/%d.%d.jpg',QUEUEOUTPATH,BATQUEUEID,ii));
+    end
 end
 
 global DB_SERVER BAPHY_LAB

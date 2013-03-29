@@ -50,7 +50,7 @@ mm = {};
 for ii = 1:length(modulekeys)
     mm{ii} = module_groups(modulekeys{ii});
 end
-    
+
 % Build the model 
 opts = cellfun(@fieldnames, mm, 'UniformOutput', false);
 opt_names = cellfun(@(m) m{1}, opts, 'UniformOutput', false);
@@ -81,7 +81,7 @@ if length(db_results) > 1
     error('Multiple DB hits for batch:%d, cellid: %s, modelfile: %s', batch, cellid, modelname);
 else
     % There must not be an existing modelfile or DB entry if we reach here. 
-    fprintf('Training model, since modelfile not found\n');
+    fprintf('Training model...\n');
     
     % Append modules from each block one at a time
     for jj = 1:length(model),

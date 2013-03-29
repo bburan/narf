@@ -81,16 +81,16 @@ while (stepsize > 10^-9) && ~termfn(n,x,s)
     s = s_next;
     
     % If the search point has not changed, step size is too big.
-    % Decrease the step size by 10x
+    % Decrease the step size by sqrt(10x)
      if all(x_pre == x)
-         stepsize = stepsize * 0.1;
+         stepsize = stepsize * sqrt(0.1);
          fprintf('Stepsize decreased to %d\n', stepsize);
      else
         % Print the improvement after stepping
         fprintf('Scored: %d\n', s);
      end
-    
-    n = n + 1;
+     
+     n = n + 1;
 end
 
 % Return the best value found so far

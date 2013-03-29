@@ -35,6 +35,35 @@ end
 function x = do_normalize_channels(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
+    
+    % Find mean and RMS for all channels
+    tstim=[];
+    for sf  = fieldnames(x.dat)', sf=sf{1};
+        [T, S, C] = size(x.dat.(sf).(mdl.input));
+        tstim  = cat(1,tstim,reshape(x.dat.(sf).(mdl.input),T*S,C));
+    end
+    if mdl.force_positive
+        mm = nanmin(tstim);
+    else
+        mm = nanmean(tstim);
+    end
+    rms=nanstd(tstim);
+    
+    % For every channel, remove DC offset and scale by RMS^-1
+    for sf = fieldnames(x.dat)', sf=sf{1};        
+        [T, S, C] = size(x.dat.(sf).(mdl.input));
+        out = zeros(size(x.dat.(sf).(mdl.input)));
+        for c = 1:C,
+            tmp = x.dat.(sf).(mdl.input)(:,:,c);
+            out(:,:,c) = (1/rms(c)) .* (-mm(c) + x.dat.(sf).(mdl.input)(:,:,c));
+        end
+        x.dat.(sf).(mdl.output) = out;
+    end
+end
+
+function x = do_normalize_channels_old(stack, xxx)
+    mdl = stack{end};
+    x = xxx{end};
 
     % For every channel, remove DC offset and scale by RMS^-1
     for sf = fieldnames(x.dat)', sf=sf{1};        

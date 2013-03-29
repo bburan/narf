@@ -2,6 +2,7 @@ function handles = narf_browser(parent_handle)
 
 global STACK XXX META NARF_PATH NARF_SAVED_MODELS_PATH MODULES;
 
+narf_set_path
 dbopen;
 MODULES = scan_directory_for_modules();   
 
@@ -184,8 +185,59 @@ uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
             popup2str(condition_handles(8)));
         
     end
+    
+% SVD: First hack at scatter plot button
+uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
+    'String', 'Scatter Plot', ...
+    'Units','pixels', 'Position', [0 rh+100 mw 25], ...
+    'Callback', @plot_scatter);
+    
+    function plot_scatter(~,~,~)
+        
+        sel_batch  = popup2str(condition_handles(1));
+        if strcmp(sel_batch, '*'),
+            return
+        end
+        
+        sel_cellid = popup2str(condition_handles(2));
+        if strcmp(sel_cellid, '*'),
+            sel_cellid = '';
+        end
+        
+        inner_sql = sql_query_builder(); 
+        ret = mysql(['SELECT DISTINCT modelname FROM (' inner_sql ') AS sq']);
+        ret = cellstr(char(ret(:).modelname));
+        ret2 = sprintf('%s_', ret{:}); % Big long string
+        toks = tokenize_modelname(ret2); % Break it up into tokens
+        toks = unique([toks{:}]); % Only unique tokens
+            
+        % Display only tokens not common across all modelfiles
+        disptoks = {};
+        for tt = 1:length(toks)
+            t = toks{tt};
+            
+            if any(cellfun(@(x) isempty(strfind(x, t)), ret))
+                % If any are empty, add it
+                disptoks{end+1} = t;
+            end
+        end
+                
+        holdtoks = {popup2str(condition_handles(3)), ...
+                    popup2str(condition_handles(4)), ...
+                    popup2str(condition_handles(5)), ...
+                    popup2str(condition_handles(6))};
+                
+        star_cells = cellfun(@(x)strcmp('*', x) , holdtoks);
+        holdtoks(star_cells) = []; % Remove *'d cells
+        
+        plot_performance_scatter(sel_batch, ...
+            sel_cellid, ...
+            holdtoks, ...
+            disptoks, ...
+            popup2str(condition_handles(8)));
+        
+    end
 
-% TODO: Scatter plot button
 % TODO: Heat map button
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
