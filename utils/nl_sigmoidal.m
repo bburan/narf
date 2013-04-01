@@ -1,4 +1,4 @@
-function ret = sigmoidal(phi, z)
+function ret = nl_sigmoid(phi, z)
     mu = phi(1);
     sigma = phi(2);
     amp = phi(3);
