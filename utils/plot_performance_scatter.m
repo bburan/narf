@@ -1,5 +1,11 @@
 function plot_performance_scatter (batch, cellid, holdtokens, freetokens, ordinate)
 
+if ~ismember(ordinate,{'r_test','r_fit','sparsity'})
+    errordlg(['Invalid ordinate: ',ordinate]);
+    return
+end
+
+    
 n_pts = 200;
 token_count = length(freetokens);
 x = zeros(n_pts, token_count);
