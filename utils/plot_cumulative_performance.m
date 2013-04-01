@@ -5,7 +5,7 @@ token_count = length(freetokens);
 x = zeros(n_pts, token_count);
 y = zeros(n_pts, token_count);
 mdlcount = 0;
-keyboard
+
 for token_idx = 1:length(freetokens)
     
     models = db_get_models(batch, cellid, cat(2, holdtokens, freetokens{token_idx}));
