@@ -3,6 +3,9 @@ function [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack)
 % 
 % Returns the state of the plot controls from the first
 % 'load_stim_resps_from_baphy' module. Used when determining what to plot.
+% If a plot_gui cannot be found, it returns a safe default in case we want
+% to use one of STACK's plot function from a script (ie, when there is
+% no narf_modelpane gui connected so the model is headless).
 %
 % ARGUMENTS:
 %    stack     A reference to the global STACK
@@ -17,9 +20,6 @@ global XXX;
 
 [baphy_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy', true);
 
-% If we can't find the plot_gui, just return a default in case we want
-% to use one of STACK's plot function from a script (ie, when there is
-% no narf_modelpane gui connected so the model is headless)
 if isfield(baphy_mod, 'plot_gui')
     sf = popup2str(baphy_mod.plot_gui.selected_stimfile_popup);
     stim_idx = popup2num(baphy_mod.plot_gui.selected_stim_idx_popup);
