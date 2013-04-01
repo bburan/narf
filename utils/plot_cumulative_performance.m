@@ -1,4 +1,16 @@
 function plot_cumulative_performance (batch, cellid, holdtokens, freetokens, ordinate)
+% plot_cumulative_performance (batch, cellid, holdtokens, freetokens, ordinate)
+%
+% Plots cumulative performance curves for all 
+%
+% ARGUMENTS:
+%    batch       Number of the batch
+%    cellid      Cellid
+%    holdtokens  
+%    freetokens  
+%    ordinate    
+%
+% RETURNS: Nothing
 
 n_pts = 200;
 token_count = length(freetokens);

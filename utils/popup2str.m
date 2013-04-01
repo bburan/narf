@@ -1,5 +1,7 @@
 function str = popup2str(handle)
-% Returns the value of the integer selected in a popup box gui object.
-    c = cellstr(get(handle, 'String'));
-    str = c{get(handle, 'Value')};
-end
+% str = popup2str(popup_handle)
+%
+% Returns the string currently selected in a popup box gui object.
+%
+c = cellstr(get(popup_handle, 'String'));
+str = c{get(popup_handle, 'Value')};
