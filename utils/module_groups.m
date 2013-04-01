@@ -105,16 +105,16 @@ for ii = 1:length(group_names)
             mm = {MODULES.passthru};
     
         case {'root2'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [2], 'nlfn', @rootcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [2], 'nlfn', @nl_root))};
         case {'root3'} 
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [3], 'nlfn', @rootcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [3], 'nlfn', @nl_root))};
         case {'root4'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [4], 'nlfn', @rootcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [4], 'nlfn', @nl_root))};
         case {'root5'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [5], 'nlfn', @rootcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [5], 'nlfn', @nl_root))};
         case {'rootfit'}
             mm = {MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
-                                                  'phi', [2], 'nlfn', @rootcompressor))};
+                                                  'phi', [2], 'nlfn', @nl_root))};
                                              
         case {'log1'}
             mm = {MODULES.nonlinearity.mdl(struct('phi', [-1], 'nlfn', @nl_log))};
