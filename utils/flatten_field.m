@@ -1,10 +1,20 @@
 function v = flatten_field(dat, sfs, field)
-% Flattens matrices under 'dat.(sf).(field)' into a single long vector. 
+% v = flatten_field(dat, sfs, field)
 %
-% Uses the default order of fields according to matlab (first indexes by
-% the row, then by the column, then on to the higher dimensions).
+% Concatenates each matricies found under 'dat.(sf).(field)', where sf is
+% each of the elements of cell array sfs. Returns a single long vector.
+% Intended to be used for quickly creating a 'resp' or 'stim' type vector.
 %
-% Works on any size matrix
+% ARGUMENTS:
+%    dat    A structure
+%    sfs    Structure fieldnames to be used
+%    field  The field to be extracted
+%
+% RETURNS:
+%    v      A single long vector containing all the values
+%
+% NOTE: Relies on the default order of fields in each matrix being
+% organized such that the first dimenson is time. 
 
 % Count number of elements for each 'field' entry
 lens = zeros(length(sfs), 1);

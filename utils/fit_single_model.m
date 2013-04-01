@@ -2,6 +2,9 @@ function success = fit_single_model(modulekeys, batch, cellid, training_set, tes
 % TODO: Documentation
 % fit_single_model() is used by the queuing system to train a single model
 % as a job which may be run on any machine. 
+% SVD: Removed checking for existence of model file and
+% NarfResults.  Job management now taken care of at a higher
+% level. and fit_single_model should just fit no matter what.
 %
 % ARGUMENTS:
 %    modulekeys     Cell array of keys to be deciphered by module_groups
@@ -67,20 +70,15 @@ META.modelfile = [cellid '_' modelname '_' strcat(training_set{:}) '.mat'];
 META.modelpath = [NARF_SAVED_MODELS_PATH filesep cellid filesep META.modelfile];
 
 % Verification of DB and modelfile synchronization
-modelfile_exists = (exist(META.modelpath, 'file') == 2);
 sql=['SELECT * FROM NarfResults WHERE modelname="' modelname '"'...
     ' AND batch=' num2str(batch) ...
     ' AND cellid="' cellid '"'];
 dbopen;
 db_results=mysql(sql);
 
-% SVD: Removed checking for existence of model file and
-% NarfResults.  Job management now taken care of at a higher
-% level. and fit_single_model should just fit no matter what.
 if length(db_results) > 1
     error('Multiple DB hits for batch:%d, cellid: %s, modelfile: %s', batch, cellid, modelname);
 else
-    % There must not be an existing modelfile or DB entry if we reach here. 
     fprintf('Training model...\n');
     
     % Append modules from each block one at a time
