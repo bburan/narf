@@ -32,8 +32,8 @@ end
 
 [M, xl, yl] = select_summaries(summaries, ...
                 @(c) 100*getfield(c, 'score_test_corr'), ...
-                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))), ...
-                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));
+                @(cc) sprintf('%.9f', nanmean(cell2mat(getfieldforcellarray(cc, 'score_test_corr')))), ...
+                @(cc) sprintf('%.9f', nanmean(cell2mat(getfieldforcellarray(cc, 'score_test_corr')))));
 fh = phm(M, xl, yl, 'Test Set r^2, Value-Sorted Abscissa and Ordinate');
 saveit(fh, 'heat0.png');
 
@@ -52,7 +52,7 @@ saveit(fh, 'heat1.png');
 [M, xl, yl] = select_summaries(summaries, ...
                 @(c) 100*getfield(c, 'score_test_corr'), ...
                 @(cc) rotate_tokens(cc{1}.modelname, 2), ...
-                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));
+                @(cc) sprintf('%.9f', nanmean(cell2mat(getfieldforcellarray(cc, 'score_test_corr')))));
 fh = phm(M, xl, yl, 'Test Set r^2, Abscissa Sorted by 2nd Token, Value-Sorted Ordinate');
 saveit(fh, 'heat2.png');
 
@@ -61,7 +61,7 @@ saveit(fh, 'heat2.png');
 [M, xl, yl] = select_summaries(summaries, ...
                 @(c) 100*getfield(c, 'score_test_corr'), ...
                 @(cc) rotate_tokens(cc{1}.modelname, 3), ...
-                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));
+                @(cc) sprintf('%.9f', nanmean(cell2mat(getfieldforcellarray(cc, 'score_test_corr')))));
 fh = phm(M, xl, yl, 'Test Set r^2, Abscissa Sorted by 3rd Token, Value-Sorted Ordinate');
 saveit(fh, 'heat2.png');
 
@@ -70,7 +70,7 @@ saveit(fh, 'heat2.png');
 [M, xl, yl] = select_summaries(summaries, ...
                 @(c) 100*getfield(c, 'score_test_corr'), ...
                 @(cc) rotate_tokens(cc{1}.modelname, 4), ...
-                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));
+                @(cc) sprintf('%.9f', nanmean(cell2mat(getfieldforcellarray(cc, 'score_test_corr')))));
 fh = phm(M, xl, yl, 'Test Set r^2, Abscissa Sorted by 4th Token, Value-Sorted Ordinate');
 saveit(fh, 'heat3.png');
 
@@ -79,7 +79,7 @@ saveit(fh, 'heat3.png');
 [M, xl, yl] = select_summaries(summaries, ...
                 @(c) 100*getfield(c, 'score_test_corr'), ...
                 @(cc) rotate_tokens(cc{1}.modelname, 5), ...
-                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));
+                @(cc) sprintf('%.9f', nanmean(cell2mat(getfieldforcellarray(cc, 'score_test_corr')))));
 fh = phm(M, xl, yl, 'Test Set r^2, Abscissa Sorted by 5th Token, Value-Sorted Ordinate');
 saveit(fh, 'heat4.png');
 
@@ -87,7 +87,7 @@ saveit(fh, 'heat4.png');
 % Sorted by Fitting time
 [M, xl, yl] = select_summaries(summaries, ...
                 @(c) getfield(c, 'fit_time'), ...
-                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'fit_time')))));
+                @(cc) sprintf('%.9f', nanmean(cell2mat(getfieldforcellarray(cc, 'fit_time')))));
 fh = phm(M, xl, yl, 'Fitting Time, Value-Sorted Abscissa');
 saveit(fh, 'heat_time.png');
 
@@ -95,16 +95,16 @@ saveit(fh, 'heat_time.png');
 % Exit code heatmap
 [M, xl, yl] = select_summaries(summaries, ...
                 @(c) getfield(c, 'exit_code'), ...
-                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))), ...
-                @(cc) sprintf('%.9f', nanmean(cell2mat(extract_field(cc, 'score_test_corr')))));            
+                @(cc) sprintf('%.9f', nanmean(cell2mat(getfieldforcellarray(cc, 'score_test_corr')))), ...
+                @(cc) sprintf('%.9f', nanmean(cell2mat(getfieldforcellarray(cc, 'score_test_corr')))));            
 fh = phm(M, xl, yl, 'Exit Code, Sorted Time-Sorted Abscissa');
 saveit(fh, 'heat_exit.png');
 
 % ------------------------------------------------------------------------
 % Labeled scatter plot?
 
-test_scores = cell2mat(extract_field(summaries, 'score_test_corr'));
-train_scores = cell2mat(extract_field(summaries, 'score_train_corr'));
+test_scores = cell2mat(getfieldforcellarray(summaries, 'score_test_corr'));
+train_scores = cell2mat(getfieldforcellarray(summaries, 'score_train_corr'));
 fh = figure;
 plot(train_scores, test_scores, 'k.');
 xlabel('Training Set r^2');

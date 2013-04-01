@@ -59,7 +59,7 @@ if isempty(best),
         end
     end
 end
-filepaths = extract_field(best, 'modelpath');
+filepaths = getfieldforcellarray(best, 'modelpath');
 fh = compare_models(filepaths);
 append_or_save(fh, sprintf('%s_best%d', cellid, n));
 % ------------------------------------------------------------------------
