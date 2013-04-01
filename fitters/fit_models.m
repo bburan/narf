@@ -10,7 +10,7 @@ function fit_models(mm, batch, cellid, training_set, test_set, skipexisting)
 %               MM{1}.env = {module for baphy that loads envelopes}     
 %               MM{2}.log = {log module}
 %               MM{2}.sqrt = {sqrt module}
-%               MM{3}.sig = {FIR + sigmoidal nonlinearity }
+%               MM{3}.sig = {FIR + sigmoid nonlinearity }
 %               MM{3}.exp = {FIR + exponential nonlinearity }
 %           For the above MM, 4 models would be fit:
 %               log+sig, log+exp, sqrt+sig, sqrt+exp 
