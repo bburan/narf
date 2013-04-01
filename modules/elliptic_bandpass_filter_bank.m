@@ -89,7 +89,7 @@ function do_plot_filtered_spectrogram(stack, xxx)
     x = xxx{end};
     
     [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack);
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
+    [baphy_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy', true);
     dat = x.dat.(sf);
     
     logfsgram(dat.(mdl.output)(:, stim_idx, chan_idx)', 4048, baphy_mod.raw_stim_fs, [], [], 500, 12); 

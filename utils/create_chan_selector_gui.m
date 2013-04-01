@@ -43,8 +43,8 @@ function hs = create_chan_selector_gui(parent_handle, stack, xxx, chanfield)
         'Callback', @(a,b,c) selected_chan_popup_callback());
 
     function update_channel_popup(stack)
-        % Find the baphy module's selected stimfile
-        sf = popup2str(find_module_gui_control(stack, 'selected_stimfile_popup'));
+        
+        [sf, ~, ~] = get_baphy_plot_controls(stack);
         
         if isfield(x.dat, sf)
             [~, ~, C] = size(x.dat.(sf).(chanfield));

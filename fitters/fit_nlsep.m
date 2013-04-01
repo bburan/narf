@@ -4,8 +4,8 @@ function termcond = fit_nlsep(nl_index)
 
     global STACK XXX;
     % Rewire the model so the FIR filter connects directly to the output
-    [tempfirmod, firidx] = find_module(STACK, 'fir_filter');
-    [tempcorrmod, corridx] = find_module(STACK, 'correlation');
+    [tempfirmod, firidx] = find_modules(STACK, 'fir_filter', true);
+    [tempcorrmod, corridx] = find_modules(STACK, 'correlation', true);
     STACK{firidx}.output = 'fittertempstim';
     STACK{corridx}.input1 = 'fittertempstim';
     % Cache the phi values, and remove any fits after the fir filter

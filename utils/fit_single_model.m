@@ -90,7 +90,7 @@ else
     end
     
     % Fit the model using whatever optimization routine it has
-    cormod = find_module(STACK, 'correlation');
+    [cormod, ~] = find_modules(STACK, 'correlation', true);
     META.exit_code = cormod.fitter();
     META.fitter = func2str(cormod.fitter);
     META.fit_time = toc;

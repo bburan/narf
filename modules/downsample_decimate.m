@@ -35,7 +35,7 @@ function x = do_downsampling(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
+    [baphy_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy', true);
     
     scale = floor(baphy_mod.raw_stim_fs / mdl.downsampled_freq);
 

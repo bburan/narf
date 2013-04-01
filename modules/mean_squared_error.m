@@ -81,7 +81,7 @@ function x = do_mean_squared_error(stack, xxx)
     test_score = nanmean((ptest - qtest).^2);
     
     % Add a penalty related to the non-smoothness of the FIR coefs
-    firmod = find_module(stack, 'fir_filter');
+    [firmod, ~] = find_modules(stack, 'fir_filter', true);
 
     x.(mdl.train_score) = train_score;
     x.(mdl.test_score) = test_score;
@@ -113,7 +113,7 @@ function do_plot_inputs_and_mse(stack, xxx)
     axis tight;
     legend(mdl.input1, mdl.input2); %, mdl.error);
     
-    firmod = find_module(stack, 'fir_filter');
+    [firmod, ~] = find_modules(stack, 'fir_filter', true);
     sparsepenalty = mdl.sparseness_weight * sparsity_metric(firmod.coefs);
     
     % Plot the score in the upper left

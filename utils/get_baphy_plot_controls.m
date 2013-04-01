@@ -1,7 +1,7 @@
 function [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack)
     global XXX; % TODO: Make get_baphy_plot_Controls take XXX as an argument
 
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
+    [baphy_mod, ~] = find_modules(STACK, 'load_stim_resps_from_baphy', true);
     
     % If we can't find the plot_gui, just return a default in case we want
     % to use one of STACK's plot function from a script (ie, when there is

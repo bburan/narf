@@ -6,7 +6,7 @@ function verify_model_polarity()
 
 global STACK XXX META;
 
-[firmod, firmod_idx] = find_module(STACK, 'fir_filter');
+[firmod, firmod_idx] = find_modules(STACK, 'fir_filter', true);
 
 firmod.plot_fns{1}.fn(STACK(1:firmod_idx), XXX(1:firmod_idx+1));
 

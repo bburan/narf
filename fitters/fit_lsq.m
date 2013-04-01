@@ -34,7 +34,7 @@ end
 % If so, append a bogus element to the objective target vector and 
 % prediction vector in order to mimic the effect of a sparseness penalty.
 
-idxes = find_module_indexes(STACK, 'mean_squared_error');
+[~, idxes] = find_modules(STACK, 'mean_squared_error');
 if ~isempty(idxes) && STACK{idxes(1)}.sparseness_weight ~= 0
     append_penalty = true;
     sparseness_weight = STACK{idxes(1)}.sparseness_weight;

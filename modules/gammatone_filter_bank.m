@@ -46,7 +46,7 @@ function x = do_gammatone_filter(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
+    [baphy_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy', true);
     
     % Exotic way to loop over field names using ' and {1}...
     for sf = fieldnames(x.dat)', sf = sf{1};
@@ -69,13 +69,8 @@ end
 function do_plot_filtered_stim(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
-    
-    % Find the GUI controls
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    
-    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
-    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
+         
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
     dat = x.dat.(sf);
     filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
     
@@ -89,12 +84,7 @@ function do_plot_filtered_spectrogram(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    % Find the GUI controls
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    
-    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
-    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
     dat = x.dat.(sf);
     
     filt_idx = get(mdl.plot_gui.selected_filter_popup, 'Value');
@@ -106,7 +96,7 @@ end
 function do_plot_frequency_response(stack, xxx)   
     mdl = stack{end};
     
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
+    [baphy_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy', true);
     
     % Stupid approximation using white noise
     sr=baphy_mod.raw_stim_fs;   % Sample rate

@@ -41,24 +41,9 @@ function x = do_depression_filter(stack, xxx)
         mdl.pedestal=0;
     end
     
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    %stimmax=x.stimminmax(2,:);
-    %keyboard
-    
-    % calculate global mean level of each channel for scaling dep
-    stimmax=[];
-    T=0;
-    for sf = fieldnames(x.dat)', sf = sf{1};
-        if T==0,
-            stimmax=nansum(nansum(x.dat.(sf).(mdl.input),1),2);
-        else
-            stimmax=stimmax+nansum(nansum(x.dat.(sf).(mdl.input),1),2);
-        end
+    [baphy_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy', true);
         
-        T=T+sum(sum(~isnan(x.dat.(sf).(mdl.input)(:,:,1)),1),2);
-    end
-    stimmax=stimmax./T;
-    
+    % Exotic way to loop over field names using ' and {1}...
     for sf = fieldnames(x.dat)', sf = sf{1};
         [T, S, N] = size(x.dat.(sf).(mdl.input));
         ret = zeros(T, S, N*mdl.num_channels);
@@ -87,21 +72,6 @@ function x = do_depression_filter(stack, xxx)
         
         x.dat.(sf).(mdl.output) = ret; 
     end
-    
-% $$$     % Exotic way to loop over field names using ' and {1}...
-% $$$     for sf = fieldnames(x.dat)', sf = sf{1};
-% $$$         [T, S, N] = size(x.dat.(sf).(mdl.input));
-% $$$         ret = zeros(T, S, N*mdl.num_channels);
-% $$$         for s = 1:S
-% $$$             stim_in=squeeze(x.dat.(sf).(mdl.input)(:,s,:))';
-% $$$             depresp=depression_bank(stim_in,(1./stimmax(:))*mdl.strength,...
-% $$$                                     mdl.tau.*baphy_mod.raw_stim_fs./1000,1)';
-% $$$             depresp=permute(depresp,[1 3 2]);
-% $$$             ret(:,s,:) = depresp;
-% $$$         end
-% $$$         
-% $$$         x.dat.(sf).(mdl.output) = ret; 
-% $$$     end
 end
 
 % Plot the filter responses
@@ -110,10 +80,7 @@ function do_plot_filtered_stim(stack, xxx)
     x = xxx{end};
 
     % Find the GUI controls
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
-    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
     chan_idx = get(baphy_mod.plot_gui.selected_stim_chan_popup, 'Value');
     dat = x.dat.(sf);
     stepsize=baphy_mod.stimulus_channel_count;
@@ -128,11 +95,8 @@ function do_plot_filtered_stim_heatmap(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-   % Find the GUI controls
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
-    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
+   % Find the GUI controls   
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
     dat = x.dat.(sf);
     chancount=size(dat.(mdl.output),4);
     imagesc(dat.(mdl.time),1:chancount, ...

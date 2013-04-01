@@ -34,7 +34,7 @@ fig = figure('Menubar', 'figure', 'Resize','off', 'Visible', 'off', ...
 
 % FIR FILTER PLOT
 ax_fir = axes('Parent', fig, 'Units','pixels', 'Position', [lb 2*ph+bb w-lb*2 ph-bb]);
-[firmod, firmod_idx] = find_module(STACK, 'fir_filter');
+[firmod, firmod_idx] = find_modules(STACK, 'fir_filter', true);
 sparsity = NaN;
 if ~isempty(firmod) 
     sparsity = sparsity_metric(firmod.coefs);
@@ -55,7 +55,7 @@ end
 
 % PREDICTION/REALITY
 ax_pred = axes('Parent', fig, 'Units','pixels', 'Position', [lb bb w-lb*2 ph-bb]);
-[corrmod, corrmod_idx] = find_module(STACK, 'correlation');
+[corrmod, corrmod_idx] = find_modules(STACK, 'correlation', true);
 if ~isempty(corrmod) 
     corrmod.plot_fns{1}.fn(STACK(1:corrmod_idx), XXX(1:corrmod_idx+1));
 end
