@@ -116,13 +116,53 @@ function update_available_plots(mod_idx)
     set(m.gh.plot_popup, 'String', char(plot_fns{:}));
 end
 
+% A method for updating a simple fieldname/value uitable
+function update_uitable(mytable, mystruct, myfields)
+    l = length(myfields);
+    c = cell(l,2);
+    for i = 1:l
+        if ~isfield(mystruct, myfields{i})
+            log_err('Could not find field: %s', myfields{i});
+        end
+        c{i,1} = myfields{i};
+        c{i,2} = repl_write(mystruct.(myfields{i})); % Ensure data becomes a str
+    end
+    set(mytable, 'Data', c);
+    drawnow;
+end
+
+% A method for abstractly updating a data table in a module
+function update_checkbox_uitable(mytable, mystruct, myfields)
+    l = length(myfields);
+    c = cell(l,3);
+    for i = 1:l
+        if ~isfield(mystruct, myfields{i})
+            error('Could not find field: %s', myfields{i});
+        end
+        if isfield(mystruct, 'fit_fields')
+            c{i,1} = any(strcmp(myfields{i}, mystruct.fit_fields));
+        else
+            c{i,1} = false;
+        end
+        c{i,2} = myfields{i};
+        c{i,3} = repl_write(mystruct.(myfields{i})); % Ensure data becomes a str
+    end
+    set(mytable, 'ColumnName', {'Fit?', 'Field', 'Value'});
+    set(mytable, 'ColumnEditable', [true false true]);
+    set(mytable, 'ColumnWidth', {25 150 100});
+    set(mytable, 'RowName', {});
+    set(mytable, 'Data', c);
+    
+    drawnow;
+end
+
 function module_selected_callback(mod_idx)
     % Which module was selected?
     m = STACK{mod_idx};
     c = cellstr(get(m.gh.fn_popup,'String'));
     pretty_name = c{get(m.gh.fn_popup,'Value')};
     
-    % TODO: When my revolution comes, I will destroy languages with for loops and
+    % When my revolution comes, I will destroy languages with for loops and
     % repopulate the earth with higher level functional idioms
     f = [];
     fns = fieldnames(MODULES);
@@ -151,7 +191,7 @@ function module_selected_callback(mod_idx)
     XXX = XXX(1:mod_idx);
     
     % Update the data table values
-    generic_checkbox_data_table(m.gh.fn_table, m, m.editable_fields); 
+    update_checkbox_uitable(m.gh.fn_table, m, m.editable_fields); 
     
     % Update the plotting popup menu, but leave it disabled
     update_available_plots(mod_idx);
@@ -243,7 +283,7 @@ function module_data_table_callback(mod_idx)
     
     % If there was an error extracting the fields, reset the GUI
     if isempty(s)
-        generic_checkbox_data_table(STACK{mod_idx}.gh.fn_table, ...
+        update_checkbox_uitable(STACK{mod_idx}.gh.fn_table, ...
                                     STACK{mod_idx}, ...
                                     STACK{mod_idx}.editable_fields);
         return;
@@ -439,7 +479,7 @@ function update_any_changed_tables_and_recalc()
     for ii = 1:length(STACK)
         if isfield(STACK{ii}, 'fit_fields')
             first_fit_depth = min(first_fit_depth, ii);
-            generic_checkbox_data_table(STACK{ii}.gh.fn_table, ...
+            update_checkbox_uitable(STACK{ii}.gh.fn_table, ...
                 STACK{ii}, ...
                 STACK{ii}.editable_fields);
         end
@@ -481,7 +521,7 @@ function rebuild_gui_from_stack()
         % Set the popup to display the selected model type
         % TODO: Also make it display 'Select Module' so it's not locked in
         set(STACK{ii}.gh.fn_popup, 'String', STACK{ii}.pretty_name, 'Value', 1);
-        generic_checkbox_data_table(STACK{ii}.gh.fn_table, STACK{ii}, ...
+        update_checkbox_uitable(STACK{ii}.gh.fn_table, STACK{ii}, ...
                                     STACK{ii}.editable_fields); 
         update_available_plots(ii);                         
     end

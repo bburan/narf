@@ -117,44 +117,44 @@ for ii = 1:length(group_names)
                                                   'phi', [2], 'nlfn', @rootcompressor))};
                                              
         case {'log1'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [-1], 'nlfn', @logcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [-1], 'nlfn', @nl_log))};
         case {'log2'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [-2], 'nlfn', @logcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [-2], 'nlfn', @nl_log))};
         case {'log3'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [-3], 'nlfn', @logcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [-3], 'nlfn', @nl_log))};
         case {'log4'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [-4], 'nlfn', @logcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [-4], 'nlfn', @nl_log))};
         case {'log5'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [-5], 'nlfn', @logcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [-5], 'nlfn', @nl_log))};
         case {'logfit'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [-5], 'nlfn', @logcompressor, ...
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [-5], 'nlfn', @nl_log, ...
                                                   'fit_fields', {{'phi'}}))};
         case {'log1b'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [-1 -log(0+10^-1)], 'nlfn', @logcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [-1 -log(0+10^-1)], 'nlfn', @nl_log))};
         case {'log2b'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [-2 -log(0+10^-2)], 'nlfn', @logcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [-2 -log(0+10^-2)], 'nlfn', @nl_log))};
         case {'log3b'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [-3 -log(0+10^-3)], 'nlfn', @logcompressor))};          
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [-3 -log(0+10^-3)], 'nlfn', @nl_log))};          
         case {'log4b'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [-4 -log(0+10^-4)], 'nlfn', @logcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [-4 -log(0+10^-4)], 'nlfn', @nl_log))};
         case {'log5b'}
-            mm = {MODULES.nonlinearity.mdl(struct('phi', [-5 -log(0+10^-5)], 'nlfn', @logcompressor))};
+            mm = {MODULES.nonlinearity.mdl(struct('phi', [-5 -log(0+10^-5)], 'nlfn', @nl_log))};
 
         case {'l1'}
             mm = {MODULES.smooth_respavg, ...
-                  MODULES.nonlinearity.mdl(struct('phi', [-1 -log(0+10^-1)], 'nlfn', @logcompressor))};
+                  MODULES.nonlinearity.mdl(struct('phi', [-1 -log(0+10^-1)], 'nlfn', @nl_log))};
         case {'l2'}
             mm = {MODULES.smooth_respavg, ...
-                  MODULES.nonlinearity.mdl(struct('phi', [-2 -log(0+10^-2)], 'nlfn', @logcompressor))};
+                  MODULES.nonlinearity.mdl(struct('phi', [-2 -log(0+10^-2)], 'nlfn', @nl_log))};
         case {'l3'}
             mm = {MODULES.smooth_respavg, ...
-                  MODULES.nonlinearity.mdl(struct('phi', [-3 -log(0+10^-3)], 'nlfn', @logcompressor))};          
+                  MODULES.nonlinearity.mdl(struct('phi', [-3 -log(0+10^-3)], 'nlfn', @nl_log))};          
         case {'l4'}
             mm = {MODULES.smooth_respavg, ...
-                  MODULES.nonlinearity.mdl(struct('phi', [-4 -log(0+10^-4)], 'nlfn', @logcompressor))};
+                  MODULES.nonlinearity.mdl(struct('phi', [-4 -log(0+10^-4)], 'nlfn', @nl_log))};
         case {'l5'}
             mm = {MODULES.smooth_respavg, ...
-                  MODULES.nonlinearity.mdl(struct('phi', [-5 -log(0+10^-5)], 'nlfn', @logcompressor))};
+                  MODULES.nonlinearity.mdl(struct('phi', [-5 -log(0+10^-5)], 'nlfn', @nl_log))};
 
         case {'fir'} 
             mm = {MODULES.normalize_channels, ...
