@@ -1,7 +1,19 @@
 * Refactoring Verification Program:
   1. Check that all modules work independently?
   2. Check that all keywords still work?
-  3. Check that all functions return expected values as before?
+     1. For each of the keywords in THE BIG LIST
+     2. set a default XXX structure
+     3. recalc_xxx(1)
+     4. check the outputs match 
+
+* Enqueuing Manager
+  1. Do an SQL query to NarfResults to see what exists
+  2. Display models to be trained, already trained
+  3. Allow deletions of existing models
+  4. Display keyword selectors for models at the top
+  5. Display keyword selectors for fitters at the top
+  6. Display selectors for which cellids can be trained
+  7. Checkbox management so that only certain models can be enqueued
 
 * Notes on discussion with Stephen
   1. Add a plotme_at_level(n) property to modules which inserts them at a particular vertical spacing 
