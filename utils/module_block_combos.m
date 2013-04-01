@@ -1,9 +1,14 @@
 function modulekeys = module_block_combos(mm)
+% modulekeys = module_block_combos(mm)
+% 
+% Returns a cell array of cell arrays of module block combination names 
+% suitable for use with fit_single_model(). 
+%
 % ARGUMENTS:
-%   MM   A module blocks structure like the first argument of fit_models()
+%   MM           A module grouping structure. See documentation.
 %
 % RETURNS:
-%   MODULEKEYS        A cell array of modulekeys
+%   MODULEKEYS   A cell array of modulekeys
 
 opts = cellfun(@fieldnames, mm, 'UniformOutput', false);
 N_opts = cellfun(@(m) length(fieldnames(m)), mm);
