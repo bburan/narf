@@ -38,9 +38,23 @@ function x = do_depression_filter(stack, xxx)
     x = xxx{end};
     
     baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    stimmax=x.stimminmax(2,:);
+    %stimmax=x.stimminmax(2,:);
+    %keyboard
     
-    % Exotic way to loop over field names using ' and {1}...
+    % calculate global mean level of each channel for scaling dep
+    stimmax=[];
+    T=0;
+    for sf = fieldnames(x.dat)', sf = sf{1};
+        if T==0,
+            stimmax=nansum(nansum(x.dat.(sf).(mdl.input),1),2);
+        else
+            stimmax=stimmax+nansum(nansum(x.dat.(sf).(mdl.input),1),2);
+        end
+        
+        T=T+sum(sum(~isnan(x.dat.(sf).(mdl.input)(:,:,1)),1),2);
+    end
+    stimmax=stimmax./T;
+    
     for sf = fieldnames(x.dat)', sf = sf{1};
         [T, S, N] = size(x.dat.(sf).(mdl.input));
         ret = zeros(T, S, N*mdl.num_channels);
@@ -54,6 +68,21 @@ function x = do_depression_filter(stack, xxx)
         
         x.dat.(sf).(mdl.output) = ret; 
     end
+    
+% $$$     % Exotic way to loop over field names using ' and {1}...
+% $$$     for sf = fieldnames(x.dat)', sf = sf{1};
+% $$$         [T, S, N] = size(x.dat.(sf).(mdl.input));
+% $$$         ret = zeros(T, S, N*mdl.num_channels);
+% $$$         for s = 1:S
+% $$$             stim_in=squeeze(x.dat.(sf).(mdl.input)(:,s,:))';
+% $$$             depresp=depression_bank(stim_in,(1./stimmax(:))*mdl.strength,...
+% $$$                                     mdl.tau.*baphy_mod.raw_stim_fs./1000,1)';
+% $$$             depresp=permute(depresp,[1 3 2]);
+% $$$             ret(:,s,:) = depresp;
+% $$$         end
+% $$$         
+% $$$         x.dat.(sf).(mdl.output) = ret; 
+% $$$     end
 end
 
 % Plot the filter responses

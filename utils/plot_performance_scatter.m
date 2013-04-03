@@ -1,8 +1,8 @@
 function plot_performance_scatter (batch, cellid, holdtokens, freetokens, ordinate)
 
 if ~ismember(ordinate,{'r_test','r_fit','sparsity'})
-    errordlg(['Invalid ordinate: ',ordinate]);
-    return
+    warning('invalid ordinate specified, using r_test instead');
+    ordinate='r_test';
 end
 
     
@@ -56,22 +56,23 @@ for pidx=1:length(p1set),
             %fprintf('%s %.3f - %.2f\n',cellids{p1}{jj},vals(end,:));
         end
     end
-    
-    subplot(rowcount,colcount,pidx);
-    plot([-0.2 1.0],[-0.2 1.0],'k--');
-    hold on
-    plot(vals(:,1),vals(:,2),'k.');
-    hold off
-    xlabel(sprintf('%s (mean %.3f)',freetokens{p1},mean(vals(:,1))), 'Interpreter', 'none');
-    ylabel(sprintf('%s (mean %.3f)',freetokens{p2},mean(vals(:,2))), 'Interpreter', 'none');
-    tstr=[ordinate ' ('];
-    for ii=1:length(holdtokens),
-        tstr=[tstr holdtokens{ii} ,','];
+    if ~isempty(vals),
+        subplot(rowcount,colcount,pidx);
+        plot([-0.2 1.0],[-0.2 1.0],'k--');
+        hold on
+        plot(vals(:,1),vals(:,2),'k.');
+        hold off
+        xlabel(sprintf('%s (mean %.3f)',freetokens{p1},mean(vals(:,1))), 'Interpreter', 'none');
+        ylabel(sprintf('%s (mean %.3f)',freetokens{p2},mean(vals(:,2))), 'Interpreter', 'none');
+        tstr=[ordinate ' ('];
+        for ii=1:length(holdtokens),
+            tstr=[tstr holdtokens{ii} ,','];
+        end
+        tstr(end)=')';
+        
+        title(tstr, 'Interpreter', 'none');
+        axis tight square
     end
-    tstr(end)=')';
-    
-    title(tstr, 'Interpreter', 'none');
-    axis tight square
 end
 
 
