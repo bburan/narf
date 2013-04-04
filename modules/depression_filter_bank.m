@@ -63,11 +63,25 @@ function x = do_depression_filter(stack, xxx)
         [T, S, N] = size(x.dat.(sf).(mdl.input));
         ret = zeros(T, S, N*mdl.num_channels);
         for s = 1:S
-            stim_in=squeeze(x.dat.(sf).(mdl.input)(:,s,:))' + ...
-                    repmat(mdl.pedestal./stimmax(:),[1,T]);
+            stim_in=squeeze(x.dat.(sf).(mdl.input)(:,s,:))';
+            
+            if mdl.pedestal>0,
+                thresh=mdl.pedestal./stimmax(:);
+                for n=1:N,
+                    stim_in(n,stim_in(n,:)<thresh(n))=thresh(n);
+                end
+                extrabins=round(baphy_mod.raw_stim_fs*0.5);
+                stim_in=cat(2,repmat(thresh,[1 extrabins]),stim_in);
+            end
+            
             depresp=depression_bank(stim_in,(1./stimmax(:))*mdl.strength,...
                                     mdl.tau.*baphy_mod.raw_stim_fs./1000,1)';
             depresp=permute(depresp,[1 3 2]);
+            
+            if mdl.pedestal>0,
+                depresp=depresp((extrabins+1):end,:,:);
+            end
+            
             ret(:,s,:) = depresp;
         end
         
