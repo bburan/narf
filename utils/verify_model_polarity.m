@@ -1,8 +1,11 @@
 function verify_model_polarity()
-% No arguments. 
+% verify_model_polarity()
+%
 % Flips the sign of every element in the FIR filter iff the corresponding
 % NPNL, NPNLX, NPFNL, SENL, or GMM nonlinearity output has a negative slope
 % and the NL module is two modules after the FIR filter
+%
+% No arguments or return values.
 
 global STACK XXX META;
 
