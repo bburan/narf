@@ -95,6 +95,7 @@ end
 H=zeros(spacecount,diff(params.maxlag)+1,params.sfscount,...
         respcount,params.resampcount);
 
+
 % force old algorithm
 %expstim=stim0;
 %expspacecount=spacecount;
@@ -147,6 +148,18 @@ for respidx=1:respcount,
    predsofar=zeros(size(tresp));
    fprintf('\nrespidx=%d\n',respidx);
    
+   if isfield(params,'H0') && ~isempty(params.H0),
+       H(:,:,1,respidx,:)=repmat(params.H0,[1 1 1 1 params.resampcount]);
+       strf=struct;
+       strf.h=params.H0;
+       strf.zerobin=1;
+       strf.architecture='linear';
+       strf.outnl='none';
+
+       predsofar=repmat(strfpredict(strf,stim0),[1 params.resampcount]);
+       tresp=tresp-predsofar;
+       %keyboard
+   end
    if respidx>1,
       disp('restricting fit to subspace fit by attidx==1');
       %keyboard
@@ -172,6 +185,7 @@ for respidx=1:respcount,
          ttmse=zeros(expspacecount,diff(params.maxlag)+1,2,...
                       params.resampcount);
          USECC=1;
+         bwcount=0;
          for rridx=1:params.resampcount,
             tr=tresp(:,rridx);
             tr(rstartidx(rridx):rendidx(rridx),:)=nan;
@@ -379,16 +393,22 @@ for respidx=1:respcount,
             fprintf('sfs=%d: xx=%d tt=%d step=%0.3f mse=%.4f -> %.4f\n',...
                     sfsidx,xx,tt,coeff,lasterror(rridx),newerror);
             if newerror>lasterror(rridx),
-               disp('backwards??');
+               disp('Error increasing');
+               bwcount=bwcount+1;
                %keyboard;
             end
             
             lasterror(rridx)=newerror;
          end
+         
+         if bwcount>params.resampcount/5,
+             fprintf('Error increasing in multiple resamples, using smaller steps (%.6f->%.6f)\n',...
+                     coeffsize(1),coeffsize(1)./2);
+             coeffsize=coeffsize./2;
+         end
       end
    end
 end
-
 H=cumsum(H,3);
 
 % don't do this since now reping for all respcounts
