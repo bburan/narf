@@ -132,7 +132,7 @@ function update_uitable(mytable, mystruct, myfields)
             log_err('Could not find field: %s', myfields{i});
         end
         c{i,1} = myfields{i};
-        c{i,2} = repl_write(mystruct.(myfields{i})); % Ensure data becomes a str
+        c{i,2} = write_readably(mystruct.(myfields{i})); % Ensure data becomes a str
     end
     set(mytable, 'Data', c);
     drawnow;
@@ -152,7 +152,7 @@ function update_checkbox_uitable(mytable, mystruct, myfields)
             c{i,1} = false;
         end
         c{i,2} = myfields{i};
-        c{i,3} = repl_write(mystruct.(myfields{i})); % Ensure data becomes a str
+        c{i,3} = write_readably(mystruct.(myfields{i})); % Ensure data becomes a str
     end
     set(mytable, 'ColumnName', {'Fit?', 'Field', 'Value'});
     set(mytable, 'ColumnEditable', [true false true]);
