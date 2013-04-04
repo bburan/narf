@@ -1,18 +1,21 @@
-function ret = request_celldb_batch(batch,cellid)
-% Exploiting all the code written by Stephen, find the cellids, training,
-% and test sets that correspond with a particular batch number. Returns a
-% cell array of structs with three fields per struct:
+function ret = request_celldb_batch(batch, cellid)
+% ret = request_celldb_batch(batch, cellid)
+% 
+% Returns a cell array of structs containing the cellids, training sets,
+% and test set that correspond with a particular batch number. Each struct
+% has the following fields:
 %      .cellid
 %      .training_set
 %      .test_set
-% SVD -- added cellid parameter to make this run faster if you only
-%        information for one known cell (2013-02-13)
+%      .filecode
 %
+% If the 'cellid' parameter is provided, then the cell array will contain
+% only one struct corresponding to the matching cellid. 
+
 ret = {};
 
-if ~exist('batch'),
-   disp('syntax error: request_celldb_batch(batch) parameters required');
-   return
+if ~exist('batch', 'var'),
+   error('syntax error: request_celldb_batch(batch) parameters required');
 end
 
 dbopen;
@@ -43,8 +46,8 @@ for nn = 1:length(rundata)
         filecount=length(cellfiledata);
         
         % special case, find only matching behavior sets
-        runclassid=cat(2,cellfiledata.runclassid);
-        stimspeedid=cat(2,cellfiledata.stimspeedid);
+        %runclassid=cat(2,cellfiledata.runclassid);
+        %stimspeedid=cat(2,cellfiledata.stimspeedid);
         activefile=zeros(1,length(cellfiledata));
         stimprint=zeros(filecount,5);
         prestimsilence=zeros(filecount,1);
@@ -53,14 +56,14 @@ for nn = 1:length(rundata)
         tarband=zeros(filecount,1);
         ForcePreStimSilence=0.25;
         for ii=1:length(cellfiledata),
-            [parms,perf]=dbReadData(cellfiledata(ii).rawid);
+            [parms, ~]=dbReadData(cellfiledata(ii).rawid);
             
             if strcmpi(cellfiledata(ii).behavior,'active'),
                 activefile(ii)=1;
             end
             if isfield(parms,'Trial_TargetIdxFreq'),
                 tif=parms.Trial_TargetIdxFreq;
-                tarband(ii)=min(find(tif==max(tif)));
+                tarband(ii) = find(tif==max(tif), 1);
             end
             
             % "fingerprint" is subset and frequency range.  Need to match
@@ -77,7 +80,7 @@ for nn = 1:length(rundata)
         
         
         
-        firstactiveidx=min(find(activefile));  % use last activefile!
+        firstactiveidx=find(activefile, 1);  % use last activefile!
         if isempty(firstactiveidx),
             error('no active TSP data for this cell');
         end
@@ -98,10 +101,7 @@ for nn = 1:length(rundata)
             else
                 file_code{ii}=['P',num2str(acounter),char('a'-1+pcounter)];
                 pcounter=pcounter+1;
-            end
-                
-                
-                
+            end                                             
         end
         
     else

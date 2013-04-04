@@ -177,7 +177,7 @@ uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
         ret = mysql(['SELECT DISTINCT modelname FROM (' inner_sql ') AS sq']);
         ret = cellstr(char(ret(:).modelname));
         ret2 = sprintf('%s_', ret{:}); % Big long string
-        toks = tokenize_modelname(ret2); % Break it up into tokens
+        toks = tokenize_string(ret2); % Break it up into tokens
         toks = unique([toks{:}]); % Only unique tokens
             
         % Display only tokens not common across all modelfiles
@@ -229,7 +229,7 @@ uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
         ret = mysql(['SELECT DISTINCT modelname FROM (' inner_sql ') AS sq']);
         ret = cellstr(char(ret(:).modelname));
         ret2 = sprintf('%s_', ret{:}); % Big long string
-        toks = tokenize_modelname(ret2); % Break it up into tokens
+        toks = tokenize_string(ret2); % Break it up into tokens
         toks = unique([toks{:}]); % Only unique tokens
             
         % Display only tokens not common across all modelfiles
@@ -364,7 +364,7 @@ make_condition_widget(9, 'Direction:');
         ret = mysql(['SELECT DISTINCT modelname FROM (' inner_sql ') AS sq']);
         ret = cellstr(char(ret(:).modelname));
         ret = sprintf('%s_', ret{:}); % Big long string
-        toks = tokenize_modelname(ret); % Break it up into chunks
+        toks = tokenize_string(ret); % Break it up into chunks
         toks = cat(2, {'*'}, unique([toks{:}])); % Create unique options
         
         set(condition_handles(3), 'String', toks);

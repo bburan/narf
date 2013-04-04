@@ -40,7 +40,7 @@ for ii = 1:length(cellids),
 %     % Group models by second tokens
 %     for jj = 1:length(m_all)
 %         m = m_all(jj);
-%         toks = tokenize_modelname(char(m.modelname));
+%         toks = tokenize_string(char(m.modelname));
 %         tok = toks{2}{1};
 %         if isfield(M, tok)
 %             M.(tok) = cat(1, M.(tok), m.r_test);
