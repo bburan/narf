@@ -1,5 +1,8 @@
-function success = fit_single_model(modulekeys, batch, cellid, training_set, test_set, filecodes)
-% TODO: Documentation
+function success = fit_single_model(batch, cellid, modulekeys, fitterkeys, training_set, test_set, strict_git_logging)
+% success = fit_single_model(batch, cellid, modulekeys, fitterkeys, training_set, test_set, strict_git_logging)
+%
+% Fits a single model described by modul
+% 
 % fit_single_model() is used by the queuing system to train a single model
 % as a job which may be run on any machine. 
 % SVD: Removed checking for existence of model file and
@@ -9,10 +12,10 @@ function success = fit_single_model(modulekeys, batch, cellid, training_set, tes
 % ARGUMENTS:
 %    modulekeys     Cell array of keys to be deciphered by module_groups
 %                   and converted into an MM struct.
-%    batch
-%    cellid
-%    training_set
-%    test_set
+%    batch          Batch number.
+%    cellid         Cell ID.
+%    training_set   A cell array of respfiles to fit the model on.
+%    test_set       A cell array of respfiles to verify predictive performance.
 %
 % RETURNS: 
 %    success        True iff everything was fine
@@ -29,17 +32,40 @@ if ~exist([NARF_SAVED_MODELS_PATH filesep cellid], 'dir')
     mkdir([NARF_SAVED_MODELS_PATH filesep cellid]);
 end
 
-if ~exist('filecodes','var'),
-    filecodes={};
+if ~exist('strict_git_logging','var'),
+    strict_git_logging = false; % TODO: Change this to true when development stable
 end
 
 success = false;
+META = [];
 STACK = {};
 XXX = {};
 XXX{1}.cellid = cellid;
 XXX{1}.training_set = training_set;
 XXX{1}.test_set = test_set;
 XXX{1}.filecodes = filecodes;
+
+git = ['git --git-dir=' NARF_PATH '/.git --work-tree=' NARF_PATH ' '];
+
+if strict_git_logging
+    % Complain and throw an error if GIT detects outstanding changes.
+    [unix_ret_value, ~] = unix([git 'diff-files --quiet']);
+    
+    if unix_ret_value ~= 0
+        fprintf('CMD:%s\n', [git 'diff-files --quiet']);
+        error(['\n\n--------------------------------------------------\n' ...
+            'ERROR: Unstaged or uncommited changes to NARF detected! \n' ...
+            'This is not allowed! We need to store the git commit hash\n' ...
+            'to properly mark when a model was fit, and in what exact manner.\n' ...
+            'Please commit your changes and try again. Local commits are fine.\n' ...
+            '(There is no need to commit your changes to the public repository yet.)\n' ...
+            '--------------------------------------------------\n']);
+    end
+end
+
+cmd = [git 'rev-parse HEAD'];
+[~, unix_string] = unix(cmd);
+META.git_commit  = regexprep(unix_string, '\n', '');
 
 tic;
 
@@ -84,7 +110,7 @@ else
     % Append modules from each block one at a time
     for jj = 1:length(model),
         fprintf('Auto-initalizing module [%d/%d]\n', jj, length(model));
-        append_module(model{jj}); % Calls auto_init for each
+        append_module(model{jj}); % Calls auto_init for each module
     end
     
     % Fit the model using whatever optimization routine it has
@@ -93,7 +119,7 @@ else
     META.fitter = func2str(cormod.fitter);
     META.fit_time = toc;
     META.batch = batch;
-    
+   
     verify_model_polarity(); % invert the model    
     save_model(META.modelpath, STACK, XXX, META);
     db_insert_model();

@@ -4,6 +4,8 @@ function db_insert_model()
 % Forcibly inserts the loaded model to the database table 'NarfResults',
 % deleting any previous model that existed there. 
 %
+% Also creates a model plot using plot_model_summary().
+%
 % No arguments or return values.
 
 global XXX META;

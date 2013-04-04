@@ -338,7 +338,7 @@ function do_plot_response_rastered(stack, xxx)
         plot(dat.(mdl.output_resp_time)(xs), r*dat.(mdl.output_resp)(xs,stim,r), 'k.');
 	end
     axis([0 dat.(mdl.output_resp_time)(end) 0 R+1]);
-    % setAxisLabelCallback(gca, @(y)(y), 'Y');
+    % setAxisLabelCallback('Y', @(y)(y));
     hold off;
 end
 

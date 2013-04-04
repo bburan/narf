@@ -1,6 +1,6 @@
-function enqueue_single_model(batch, modulekeys, fitterkeys, cellid,...
+function enqueue_single_model(batch, cellid, modulekeys, fitterkeys,...
                               training_set, test_set, force_rerun)
-% function enqueue_single_model(batch, modulekeys, fitterkeys, cellid,...
+% function enqueue_single_model(batch, cellid, modulekeys, fitterkeys,...
 %                             training_set, test_set, force_rerun)
 %
 % Enqueues a single model onto the distributed job queueing system so that
@@ -8,9 +8,9 @@ function enqueue_single_model(batch, modulekeys, fitterkeys, cellid,...
 %
 % ARGUMENTS:
 %    batch  
+%    cellid
 %    modulekeys     {'env100', 'log2', 'etc'}
 %    fitterkeys     {'prior34', 'lsq'}
-%    cellid
 %    training_set
 %    test_set
 %    force_rerun    When true, jobs are added to queue even if a matching

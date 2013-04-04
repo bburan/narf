@@ -106,7 +106,7 @@ function do_plot_elliptic_bandpass_filter_bank_frq_resp(stack, xxx)
         ww = 0:(pi/1000):pi;
         H = freqz(mdl.coefs{filt_idx}{1}, mdl.coefs{filt_idx}{2}, ww);
         loglog(ww, abs(H), pickcolor(filt_idx));
-        setAxisLabelCallback(gca, @(f) (f*mdl.sampfs/(3.14*2)), 'X');
+        setAxisLabelCallback('X', @(f) (f*mdl.sampfs/(3.14*2)));
         axis tight;
     end 
     hold off;

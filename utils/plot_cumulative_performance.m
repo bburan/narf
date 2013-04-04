@@ -1,16 +1,24 @@
-function plot_cumulative_performance (batch, cellid, holdtokens, freetokens, ordinate)
+function fh = plot_cumulative_performance (batch, cellid, holdtokens, freetokens, ordinate)
 % plot_cumulative_performance (batch, cellid, holdtokens, freetokens, ordinate)
 %
-% Plots cumulative performance curves for all 
+% Plots cumulative performance curves for all models found whose batch and
+% cellid matches the arguments to this function. If cellid is an empty
+% string, all cellids will match it. 
+%
+% The abscissa (x) will be the range of values taken by the ordinate. The
+% ordinate (y) will be the fraction of the models with values larger than
+% the value on the abcissa at that point. 
 %
 % ARGUMENTS:
 %    batch       Number of the batch
 %    cellid      Cellid
-%    holdtokens  
-%    freetokens  
-%    ordinate    
+%    holdtokens  Which tokens to use common across all model queries. 
+%    freetokens  Which tokens to use one-at-a-time for model queries. 
+%    ordinate    Which value to plot along the ordinate axis. 
 %
-% RETURNS: Nothing
+% RETURNS: 
+%    fh          A newly created figure handle showing the cumulative
+%                performance of the models.
 
 n_pts = 200;
 token_count = length(freetokens);
@@ -39,7 +47,7 @@ for token_idx = 1:length(freetokens)
     end
 end
 
-figure;
+fh = figure;
 
 set(gca, 'ColorOrder', [0 0 1; 0 1 0; 1 0 0; 0 1 1; 1 0 1; 1 1 0;], ...
          'LineStyleOrder',{'-','--',':'},'NextPlot','ReplaceChildren');
