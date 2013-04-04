@@ -83,14 +83,15 @@ function mm = auto_init_fir_filter(stack, xxx)
         %[Tx,Sx] = size(resp);
         %stim=reshape(permute(stim, [1 3 2]), Tx, numel(stim) / Tx);
         params = [];
-        params.altcore     = 'xccorefet';  % Either 'cdcore' or 'xccorefet'
+        params.altcore     = 'cdcore';  % Either 'cdcore' or 'xccorefet'
         params.maxlag      = mm.num_coefs - 1;
-        params.resampcount = 12;
-        params.sfscount    = 10;
+        params.resampcount = 10;
+        params.sfscount    = 5;
         params.sfsstep     = 3;
         strf = cellxcdataloaded(stim, resp, params);
         mm.coefs = strf(1).h;
         mm.num_dims = size(mm.coefs, 1); 
+        
     end
 end
 

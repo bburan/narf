@@ -39,7 +39,11 @@ s = objfn(x);
 l = length(x_0);
 n = 1;  % Step number
 
-while (stepsize > 10^-9) && ~termfn(n,x,s)
+% intial extreme values
+min_s_pct_change=1e-7;
+s_pct_change=1;
+
+while (stepsize > 10^-9) && s_pct_change>min_s_pct_change && ~termfn(n,x,s)
     x_pre = x;   % The state before taking any steps
     x_next = x;  % The best direction to step in so far
     s_next = s;
@@ -78,16 +82,28 @@ while (stepsize > 10^-9) && ~termfn(n,x,s)
     
     % Take a step in the best direction
     x = x_next; 
+    s_prev=s;
     s = s_next;
+    
+    s_pct_change=(s_prev-s)./s_prev;
     
     % If the search point has not changed, step size is too big.
     % Decrease the step size by sqrt(10x)
      if all(x_pre == x)
          stepsize = stepsize * sqrt(0.1);
-         fprintf('Stepsize decreased to %d\n', stepsize);
+         fprintf('No improvement. Stepsize decreased to %d\n', stepsize);
+         s_pct_change=1;
      else
         % Print the improvement after stepping
-        fprintf('Scored: %d\n', s);
+        fprintf('Scored: %d (change %.8f%%)\n', s, s_pct_change);
+        if s_pct_change<min_s_pct_change,
+            fprintf('Below minimum required improvement: %.8f%%\n',min_s_pct_change);
+        end
+        % set stop threshold based on size of first improvement
+        if min_s_pct_change==1e-7 || s_pct_change./1e04>min_s_pct_change,
+            min_s_pct_change=s_pct_change./1e04;
+            fprintf('Adjusting minimum required improvement: %.8f%%\n',min_s_pct_change);
+        end
      end
      
      n = n + 1;
