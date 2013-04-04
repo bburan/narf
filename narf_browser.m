@@ -7,7 +7,7 @@ dbopen;
 MODULES = scan_directory_for_modules();   
 
 h = 1000;  % Total window height
-w = 1800; % Total window width
+w = 1900; % Total window width
 rh = 550; % Results height
 rw = 800; % Results width
 mw = 190; % Menu width

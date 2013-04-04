@@ -36,7 +36,7 @@ if strcmp(STACK{nlidx}.name, 'nonlinearity') | ...
     D = [V1(:) V2(:)]; 
     D = sortrows(D);
     P = polyfit(D(:,1),D(:,2), 1);
-    % R = corrcoef(excise([V1 V2]));
+    
     if (P(1) < 0)
         STACK{firmod_idx}.coefs = - STACK{firmod_idx}.coefs;
     end

@@ -56,29 +56,28 @@
 	 Why: image files could get deleted
 	 Why: DB table could get corrupted
 	 Why: Also, we need to periodically re-run the analysis/batch_240.m type scripts to make sure they are all generated and current
-  7. [X] Why doesn't SB fitter seem to respect smoothness penalties?
-	 Because it steps in the direction which best describes the data, which may have nothing to do with sparsity
-  8. [ ] Batching should work like this: 
+  7. [ ] Batching should work like this: 
 	 1. Batch model scripts can share structure. right now all the batches have pretty much identical scripts!
 	 2. When work is enqueued, it goes into the NARF table, which has a 'complete?' flag
 	 3. Any number of PCs query the DB, try to get 'incomplete' flagged models. DB is atomic, handles conflicts and negates need for server.
 	 4. They compute those models, then return values.
 	 5. If desired, a local 'manager' on each PC can watch processes, handle timeouts, etc
 	 6. Negates need for SSH credentials everywhere, too.
-  9. [ ] Fitters need to be composable
+  8. [ ] Fitters need to be composable
 	 1. Fit the FIR coefs with reverse correlation first
 	 2. Then fit the FIR coefs with Boosting
 	 3. Then fit the NL part with fminlsq
 	 4. Then have a loop where you do one boosting step and one lsq step.
 
 * SMALL CORRECTIONS AUDIT LIST
-  1. [ ] Make auto-recalc the default
-  2. [ ] Create a 'lib' directory, move all methods not by me there, update paths
-  3. [ ] Create a 'methods' directory, move methods common to modules there.
-  4. [ ] Make narf_browser the width of my screen
+  1. [X] Make auto-recalc the default
+  2. [X] Create a 'lib' directory, move all methods not by me there, update paths
+  3. [X] Create a 'methods' directory, move methods common to modules there.
+  4. [X] Make narf_browser the width of my screen
   5. [ ] When you click save, it should bring up a 'trainerstring' name so you can customize how the model is saved.
 	 Models are currently built using modelnames...but it's plausible that SOME modelnames aren't built that way. They could still come from the GUI or by script.
 	 Therefore, there needs to be detection/verification at savetime which checks that the model has the same structure as when it was built.
+	 It also needs to insert the NEW model into the database!
   6. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
   7. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
   8. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
@@ -101,8 +100,8 @@
   25. [ ] Repair NarfModelpane
           - [ ] Displays model name, training set, test set, and other important info at top of window
 	  - [ ] Standardized colors for all module plots
-  26. [ ] NARF Browser Improvements
-          - [ ] Scatter plot test/train button
+  26. [-] NARF Browser Improvements
+          - [X] Scatter plot test/train button
           - [ ] Heat Map current display button	
   27. [ ] Antialiasing problem when saving images
   28. [ ] Make the model run faster by only adding the 'test_set' data at the very end of the fitting process
