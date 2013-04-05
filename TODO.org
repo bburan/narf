@@ -1,7 +1,7 @@
-* New Filename System
-  Batch_cellid_modelkeys__fitterkeys.mat
-
 * SMALL CORRECTIONS AUDIT LIST
+  1. [ ] Filename standardization
+	 cellid/batch_cellid_modelname.mat
+	 As long as you don't mess with the batch, things will be fine!
   1. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
   2. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
   3. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
