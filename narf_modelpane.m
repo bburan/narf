@@ -34,6 +34,11 @@ global STACK XXX META NARF_PATH NARF_SAVED_MODELS_PATH MODULES;
 
 MODULES = scan_directory_for_modules();
 
+if ~exist('parent_handle','var')
+    parent_handle = figure('Menubar','figure', 'Resize','off', 'MenuBar', 'none', ...
+             'Units','pixels', 'Position', [20 50 1300 max(600, min(170*length(STACK)+40, 1100))]);
+end
+
 pos = get(parent_handle, 'Position');
 w = pos(3); % Width of the parent panel
 h = pos(4); % Height of the parent panel
@@ -41,11 +46,6 @@ h = pos(4); % Height of the parent panel
 bh = 35;   % Add/del function block button height, +5 pixel padding per side
 ph = 170;  % The height of all module panels
 
-if ~exist('parent_handle','var')
-    parent_handle = figure('Menubar','figure', 'Resize','off', 'MenuBar', 'none', ...
-             'Units','pixels', 'Position', [20 50 1300 max(600, min(170*length(STACK)+40, 1100))]);
-end
- 
 % Create a panel inside it which will slide
 handles.container_panel = uipanel('Parent',parent_handle, ...
     'Units','pixels', 'Position', [0 0 w-20 h]);

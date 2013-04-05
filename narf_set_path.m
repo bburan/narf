@@ -1,8 +1,10 @@
 function narf_set_path()
     global NARF_PATH NARF_MODULES_PATH NARF_SAVED_MODELS_PATH ...
-           NARF_SAVED_ANALYSIS_PATH NARF_SAVED_IMAGES_PATH;
+           NARF_SAVED_ANALYSIS_PATH NARF_SAVED_IMAGES_PATH ...
+           NARF_KEYWORDS_PATH;
     NARF_PATH = fileparts(which('narf_set_path')); 
     NARF_MODULES_PATH = [NARF_PATH filesep 'modules'];
+    NARF_KEYWORDS_PATH = [NARF_PATH filesep 'keywords'];
     NARF_SAVED_MODELS_PATH   = '/auto/data/code/saved_models';
     NARF_SAVED_IMAGES_PATH   = '/auto/data/code/saved_images';
     NARF_SAVED_ANALYSIS_PATH = '/auto/data/code/saved_analysis';
