@@ -107,11 +107,7 @@ while ~termfn(n, x, stepsize, s_delta)
             fprintf('.');
         end
     end
-    
-    % Take a step in the best direction
-    x = x_next; 
-    s = s_next;
-    
+        
     % If the search point has not changed, step size is too big.
      if all(x == x_next)
          stepsize = stepsize / stepscale;
@@ -123,8 +119,7 @@ while ~termfn(n, x, stepsize, s_delta)
         % Compute the direction of the step;
         dirs = 1:l;
         dir = dirs(x ~= x_next);
-        
-        
+                
         % Take a step in the best direction
         x = x_next; 
         s = s_next;
