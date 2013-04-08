@@ -14,17 +14,16 @@ m.mdl = @correlation;
 m.name = 'correlation';
 m.fn = @do_correlation;
 m.pretty_name = 'Correlation';
-m.editable_fields = {'input1', 'input2', 'time', 'fitter', 'train_score', 'test_score'};
+m.editable_fields = {'input1', 'input2', 'time', 'train_score', 'test_score'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.input1 = 'stim';
 m.input2 = 'respavg';
 m.time   = 'stim_time';
-m.fitter = @fit_fminlsq;
 m.train_score = 'score_train_corr';
 m.test_score = 'score_test_corr';
-m.output = 'corr_score';  % A score must be minimizeable, use '1/r^2'
+m.output = 'corr_score';  
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -41,8 +40,6 @@ m.plot_fns{2}.pretty_name = 'Correlation Scatter Plot';
 
 m.plot_fns{3}.fn = @(stack, xxx) do_plot_avg_scatter(stack, xxx, stack{end}.input1, stack{end}.input2);
 m.plot_fns{3}.pretty_name = 'Smoothed Scatter';
-
-% m.plot_gui_create_fn = @create_chan_selector_gui;
 
 function x = do_correlation(stack, xxx)
     mdl = stack{end};
