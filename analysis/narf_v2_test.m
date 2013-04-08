@@ -22,7 +22,7 @@ for ii = 1:length(cells)
         fprintf('Fitting cell [%d/%d] model [%d/%d]\n', ...
             ii, length(cells),  jj, length(modulekeys)); 
         
-        % Does it every time
+        % For local testing, use fit_single_model
         fit_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
             cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
         
