@@ -8,18 +8,15 @@ global MODULES;
 MODULES = scan_directory_for_modules();   
 
 batch = 242;
-
-cells = request_celldb_batch(batch, 'por024b-b1');
-
 mm = {'env100', ...
       'log2b', ...
       {{'firn', 'npfnl'}, {'depn', 'npnl'}, 'inex'}, ...
       {'mse', 'mses5'}, ...
       'boost'};
-
+  
+cells = request_celldb_batch(batch, 'por024b-b1');
 modulekeys = keyword_combos(mm);
 
-% Enqueue every model
 for ii = 1:length(cells)
     for jj = 1:length(modulekeys)
         fprintf('Fitting cell [%d/%d] model [%d/%d]\n', ...

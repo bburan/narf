@@ -744,3 +744,15 @@ One other thought I had: should we also be considering a nonparametric compresso
 Ivar
   7. [X] Why doesn't SB fitter seem to respect smoothness penalties?
 	 Because it steps in the direction which best describes the data, which may have nothing to do with sparsity
+
+  5. [ ] Replace 'model groups' abstraction with a list of arbitrary nested model-perturbing functions and associated keywords
+	 Why: In the future, more information should be stored in the META structure:
+         META.fitter = ...;  % Fitting tools are not specific to a single module, but are actually more global
+	 META.scorer = ...;  % Performance metrics are likewise not really modules
+	 Why: It would allow mutation of multiple parts of the stack, simultaneously. 
+	 Why: Fitters need to have their own arbitrary string to describe their actions, and this is OUTSIDE of the normal module keyword system
+  8. [ ] Fitters need to be composable
+	 1. Fit the FIR coefs with reverse correlation first
+	 2. Then fit the FIR coefs with Boosting
+	 3. Then fit the NL part with fminlsq
+	 4. Then have a loop where you do one boosting step and one lsq step.

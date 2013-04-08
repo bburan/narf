@@ -1,109 +1,72 @@
 * BEFORE TRAINING STARTS AGAIN
   1. [ ] Verify model polarity needs to start working if there are multiple FIRs
   2. [ ] Sparsity/smoothness calculations need to work IN the FIR module (since there could be multiple ones)
-  3. 
+  3. [ ] Generic nonlinearity should accomodate scatter plots of multi-input things
+  4. [ ] Plot both test and training data for smooth scatter plots.
+  5. [ ] Make the fits run faster by removing then re-adding the 'test_set' data after fitting process
+  6. [ ] Put a line in fit_single_model that pulls the latest GIT code before fitting?
+  7. [ ] When you click save, it should bring up a 'trainerstring' name so you can customize how the model is saved.
+	 Models are currently built using modelnames...but it's plausible that SOME modelnames aren't built that way. They could still come from the GUI or by script.
+	 Therefore, there needs to be detection/verification at savetime which checks that the model has the same structure as when it was built.
+	 It also needs to insert the NEW model into the database!
+  8. [ ] Plot_model() should scan model to look for plotabble fns
+	 Call any modules with property plotme_during_summary, do that.
+	 If there are multiple functions in plotme_during_summary, print them horizontal to each other
+  9. [ ] FIR module should have multiple sets of COEFS so it can do per-file filtering
+  10. [ ] NPNL module should have multiple sets of NLs allowed to float on each
+
 
 * KEYWORDS
   1. [ ] Init FIR to rcorr
   2. [ ] Init FIR to zero
-  3. [ ] 
-
-* SMALL CORRECTIONS AUDIT LIST
-  1. [X] Put proper docstrings on every function in util/
-  2. [X] Search for obviously dead code and bury it in the graveyard
-  3. [X] Make sure that 1-r is the score to be minimized, not 1/r^2
-  4. [X] Repair git commit logging
-  5. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
-  6. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
-  7. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
-  8. [ ] Generic nonlinearity should do smooth scatter plots of multi-input things!
-  9. [ ] IRRITATION: Why are the editable text boxes so damn small?
-  10. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  11. [ ] Replace my nargin checks with "if ~exist('BLAH','var'),"
-  12. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
-  13. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  14. [ ] Make sure that fitters return specific codes indicating how they terminated
-  15. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
-  16. [ ] Repair NarfModelpane
-          - [ ] Displays model name, training set, test set, and other important info at top of window
-	  - [ ] Standardized colors for all module plots
-  17. [-] NARF Browser Improvements
-          - [X] Scatter plot test/train button
-          - [ ] Heat Map current display button	
-  18. [ ] Antialiasing problem when saving images
-  19. [ ] Make the model run faster by only adding the 'test_set' data at the very end of the fitting process
-  20. [ ] Clean up distribution of code before a modelfit
-	  - [ ] Function which distributes GIT to workers before enqueing models
-	  - [ ] Checks local repository is clean
-  21. [ ] MODULE: Standardized single/multi channel gammatone filter
-  22. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  23. [ ] Plot both test and training data for smooth scatter plots.
-  24. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things more easily in scripts)
-  25. [ ] Add a precompressor keyword which concats log compressor as an extra channel
-  26. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  27. [ ] Provide functions to cover an input space logarithmically with filters
-  28. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
-  29. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-  30. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
-  31. [ ] When you click save, it should bring up a 'trainerstring' name so you can customize how the model is saved.
-	  Models are currently built using modelnames...but it's plausible that SOME modelnames aren't built that way. They could still come from the GUI or by script.
-	  Therefore, there needs to be detection/verification at savetime which checks that the model has the same structure as when it was built.
-	  It also needs to insert the NEW model into the database!
-  32. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  33. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  34. [ ] IRRITATION: Why can't I resize windows?
-  35. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to 
-  36. [ ] sf=sf{1}; should be eliminated IN EVERY SINGLE FILE!
-  37. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
-
+  3. [ ] Init FIR to some prior
+ 
 * Architectual Improvements
-  1. [ ] FIR module should have multiple sets of COEFS so it can do per-file filtering
-  2. [ ] NPNL module should have multiple sets of NLs allowed to float on each
-  3. [ ] Plot_model() should scan model to look for plotabble fns
-	 Call any modules with property plotme_during_summary, do that.
-	 If there are multiple functions in plotme_during_summary, print them horizontal to each other
-  4. [ ] Modelfiles should include batch# instead of a list of files it was trained on
-	 Why: It is unlikely that different batches will share the same modelfile structure
-	 Why: Modelfilenames are getting pretty long and cumbersome
-	 Why: It puts the batch# information somewhere in the modelfile, which doesn't happen currently.
-  5. [ ] Fitters should be able to have their own database-searchable string
-	 Some fitters may be really weird
-	 I am not a module, yet I want to try to make 'best fitting' things just like anybody else, and save my results	
-  6. [ ] Models need associated 'summarize' methods in META
-	 Why: Need to extract comparable info despite STACK positional differences in model structure.
-	 Why: Need a general interface to plot model summaries for wildly different models
-	 Difficulty: Auto-generated models will need some intelligence as to how to generate summarize methods for themselves
-  7. [ ] Replace 'model groups' abstraction with a list of arbitrary nested model-perturbing functions and associated keywords
-	 Why: In the future, more information should be stored in the META structure:
-         META.fitter = ...;  % Fitting tools are not specific to a single module, but are actually more global
-	 META.scorer = ...;  % Performance metrics are likewise not really modules
-	 Why: It would allow mutation of multiple parts of the stack, simultaneously. 
-	 Why: Fitters need to have their own arbitrary string to describe their actions, and this is OUTSIDE of the normal module keyword system
-  8. [ ] Make a 2D NPNL heightmap nonlinearity
+  5. [ ] Make a 2D NPNL heightmap nonlinearity
 	 Input X is the exitation
 	 Input Y is the inhibition
 	 Returns Z, the height of the map
 	 Data will probably NOT be scattered uniformly around the map.
-  9. [ ] Bayesian Performance Metrics
+  6. [ ] Bayesian Performance Metrics
 	 Why: Noise model entropy is a metric of performance. (If best-fit noise distribution has low entropy, we know _more_ about the system) 
 	 Why: Likelihood is probably a better metric than MSE since large outliers may not affect it as much?
-  10. [ ] DB Bug Catcher which verifies that every model file in /auto/data/code is in the DB, and correct
-	  Why: Somebody could easily put the DB and filesystem out of sync.
-	  Why: image files could get deleted
-	  Why: DB table could get corrupted
-	  Why: Also, we need to periodically re-run the analysis/batch_240.m type scripts to make sure they are all generated and current
-  11. [ ] Batching should work like this: 
-	  1. Batch model scripts can share structure. right now all the batches have pretty much identical scripts!
-	  2. When work is enqueued, it goes into the NARF table, which has a 'complete?' flag
-	  3. Any number of PCs query the DB, try to get 'incomplete' flagged models. DB is atomic, handles conflicts and negates need for server.
-	  4. They compute those models, then return values.
-	  5. If desired, a local 'manager' on each PC can watch processes, handle timeouts, etc
-	  6. Negates need for SSH credentials everywhere, too.
-  12. [ ] Fitters need to be composable
-	  1. Fit the FIR coefs with reverse correlation first
-	  2. Then fit the FIR coefs with Boosting
-	  3. Then fit the NL part with fminlsq
-	  4. Then have a loop where you do one boosting step and one lsq step.
+ 
+* SMALL CORRECTIONS AUDIT LIST
+  1. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
+  2. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
+  3. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
+  4. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
+  5. [ ] IRRITATION: Why are the editable text boxes so damn small?
+  6. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  7. [ ] Replace my nargin checks with "if ~exist('BLAH','var'),"
+  8. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
+  9. [ ] Make sure that fitters return specific codes indicating how they terminated
+  10. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
+  11. [ ] Repair NarfModelpane
+          - [ ] Displays model name, training set, test set, and other important info at top of window
+	  - [ ] Standardized colors for all module plots
+  12. [-] NARF Browser Improvements
+          - [X] Scatter plot test/train button
+          - [ ] Heat Map current display button	
+  13. [-] Clean up distribution of code before a modelfit
+	  - [ ] Function which distributes GIT to workers before enqueing models
+	  - [X] Checks local repository is clean
+  14. [ ] Antialiasing problem when saving images
+  15. [ ] MODULE: Standardized single/multi channel gammatone filter
+  16. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  17. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things more easily in scripts)
+  18. [ ] Add a precompressor keyword which concats log compressor as an extra channel
+  19. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  20. [ ] Provide functions to cover an input space logarithmically with filters
+  21. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
+  22. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+  23. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
+  24. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  25. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  26. [ ] IRRITATION: Why can't I resize windows?
+  27. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to 
+  28. [ ] sf=sf{1}; should be eliminated IN EVERY SINGLE FILE!
+  29. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
 
 * Fitting Routines
   1. Fit combo: revcorr->boost (what we do now)
@@ -115,13 +78,22 @@
   7. Fit combo: Fit at 100hz, then use that to init a fit at 200Hz, then again at 400Hz.
 
 * ENQUEUING MANAGER PROGRAM:
-  1. Do an SQL query to NarfResults to see what exists
-  2. Display models to be trained, already trained
-  3. Allow deletions of existing models
-  4. Display keyword selectors for models at the top
-  5. Display keyword selectors for fitters at the top
-  6. Display selectors for which cellids can be trained
-  7. Checkbox management so that only certain models can be enqueued
+  1. Should Batching should work like this?
+     + Batch model scripts can share structure. right now all the batches have pretty much identical scripts!
+     + When work is enqueued, it goes into the NARF table, which has a 'complete?' flag
+     + Any number of PCs query the DB, try to get 'incomplete' flagged models. DB is atomic, handles conflicts and negates need for server.
+     + They compute those models, then return values.
+     + If desired, a local 'manager' on each PC can watch processes, handle timeouts, etc
+     + Negates need for SSH credentials everywhere, too.
+  2. Or like this?
+     + Do an SQL query to NarfResults to see what exists
+     + Display models to be trained, already trained
+     + Allow deletions of existing models
+     + Display keyword selectors for models at the top
+     + Display keyword selectors for fitters at the top
+     + Display selectors for which cellids can be trained
+     + Checkbox management so that only certain models can be enqueued
+
 
 * SAFETY VERIFICATION PROGRAM:
   1. Create a test/ directory with many test functions in it
@@ -130,8 +102,8 @@
      - Puts a single module on the stack
      - Recomputes XXX(1)
      - Checks output vs predetermined values
-     
   2. Check that all modules work independently as expected
+  3. Checks that DB and modelfiles still sync up
 
 * THE GREAT NAME REPLACING PROPOSAL
   1. [ ] XXX -> 
@@ -142,14 +114,14 @@
   6. [ ] MODULES
   8. [ ] Make a list of every function used purely for side effects, and rename it with a ! at the end
   9. [ ] "training set" -> "estimation set"
-  10. [ ] "test set" -> Verification set
+  10. [ ] "test set" -> "Validation set"
   11. [ ] Name convention of STACK vs stack, XXX vs xxx and the difficulty in understanding which one we are looking at! 
 	  Lots of hidden assumptions here which are a problem.
 
 * TECHNICALLY HARDER CHUNKS OF WORK
   1. [ ] Depression model fits for 240, 242
   2. [ ] Inhibition/Excitiation model
-  4. [ ] 2D Nonparametric Gaussian Mixture Model:
+  4. [ ] GMM without slow EM step:
 	 For each point, take K nearest neighbors. 
 	 Compute 2D gaussian for that point. 
 	 Flatten that 2D gaussian and push into SENL's 1D input
@@ -229,3 +201,12 @@
   35. [ ] Get a histogram of the error of the NL. (Is it Gaussian or something else?)
   36. [ ] Have a display of the Pareto front (Dominating models with better r^2 or whatever)
   37. [ ] FN: Searches for unattached model and image files and deletes them
+  38. [ ] Models need associated 'summarize' methods in META
+	  Why: Need to extract comparable info despite STACK positional differences in model structure.
+	  Why: Need a general interface to plot model summaries for wildly different models
+	  Difficulty: Auto-generated models will need some intelligence as to how to generate summarize methods for themselves
+  8. [ ] DB Bug Catcher which verifies that every model file in /auto/data/code is in the DB, and correct
+	 Why: Somebody could easily put the DB and filesystem out of sync.
+	 Why: image files could get deleted
+	 Why: DB table could get corrupted
+	 Why: Also, we need to periodically re-run the analysis/batch_240.m type scripts to make sure they are all generated and current
