@@ -8,7 +8,7 @@ function do_plot_avg_scatter(stack, xxx, field1, field2)
 
 x = xxx{end};
 
-[sf, stim_idx, unused] = get_baphy_plot_controls(stack);
+[sf, ~, ~] = get_baphy_plot_controls(stack);
 dat = x.dat.(sf);  
 
 if ~isequal(size(dat.(field1)), size(dat.(field2)))

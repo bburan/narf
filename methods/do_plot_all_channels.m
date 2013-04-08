@@ -3,7 +3,7 @@ function do_plot_all_channels(stack, xxx, xfield, yfield)
     x = xxx{end};
     
     % Find the GUI controls
-    [sf, stim_idx, unused] = get_baphy_plot_controls(stack);
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
     dat = x.dat.(sf);
     
     [T, S, C] = size(x.dat.(sf).(yfield));

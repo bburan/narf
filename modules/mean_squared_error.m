@@ -104,7 +104,7 @@ function do_plot_inputs_and_mse(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
     
-    [sf, stim_idx, unused] = get_baphy_plot_controls(stack);
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
     dat = x.dat.(sf);  
     
     plot(dat.(mdl.time), dat.(mdl.input1)(:, stim_idx), 'b-', ...

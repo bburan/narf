@@ -1,26 +1,29 @@
+* BEFORE TRAINING STARTS AGAIN
+  1. [ ] Verify model polarity needs to start working if there are multiple FIRs
+  2. [ ] 
+
 * SMALL CORRECTIONS AUDIT LIST
-  1. [ ] Filename standardization
+  1. [X] Create a module methods directory for shared methods
+  2. [X] Filename standardization
 	 cellid/batch_cellid_modelname.mat
 	 As long as you don't mess with the batch, things will be fine!
-  1. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
-  2. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
-  3. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
-  4. [ ] Generic nonlinearity should do smooth scatter plots of multi-input things!
-  5. [ ] IRRITATION: Why are the editable text boxes so damn small?
-  6. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  7. [ ] Create a module methods directory for shared methods
-  8. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
-  9. [ ] Replace my nargin checks with "if ~exist('BLAH','var'),"
-  10. [ ] sf=sf{1}; should be eliminated IN EVERY SINGLE FILE!
-  11. [ ] unused' should become ~ IN EVERY FILE
-  12. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
-  13. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  14. [ ] Make sure that fitters return specific codes indicating how they terminated
-  15. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
-  16. [ ] Search for obviously dead code and bury it in the graveyard
-  17. [ ] Search for repeated blocks of code and refactor
-  18. [ ] Put proper docstrings on every function in util/
-  19. [ ] Check paths again, grep for NARF_PATH and correct (also: replace / with filesep when possible)
+  3. [X] unused should become ~ IN EVERY FILE
+  4. [X] Check paths again, grep for NARF_PATH and correct (also: replace / with filesep when possible)
+  5. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
+  6. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
+  7. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
+  8. [ ] Generic nonlinearity should do smooth scatter plots of multi-input things!
+  9. [ ] IRRITATION: Why are the editable text boxes so damn small?
+  10. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  11. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
+  12. [ ] Replace my nargin checks with "if ~exist('BLAH','var'),"
+  13. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
+  14. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
+  15. [ ] Make sure that fitters return specific codes indicating how they terminated
+  16. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
+  17. [ ] Search for obviously dead code and bury it in the graveyard
+  18. [ ] Search for repeated blocks of code and refactor
+  19. [ ] Put proper docstrings on every function in util/
   20. [ ] Make sure that 1-abs(r) is the score to be minimized, not 1/r^2
   21. [ ] Repair NarfModelpane
           - [ ] Displays model name, training set, test set, and other important info at top of window
@@ -53,6 +56,7 @@
   40. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
   41. [ ] IRRITATION: Why can't I resize windows?
   42. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to 
+  43. [ ] sf=sf{1}; should be eliminated IN EVERY SINGLE FILE!
 
 * Architectual Improvements
   1. [ ] FIR module should have multiple sets of COEFS so it can do per-file filtering
@@ -226,5 +230,3 @@
   34. [ ] FITTER: SWARM. Hybrid fit routine which takes the top N% of models, scales all FIR powers to be the same, then shrinks them.
   35. [ ] Get a histogram of the error of the NL. (Is it Gaussian or something else?)
   36. [ ] Have a display of the Pareto front (Dominating models with better r^2 or whatever)
-
-
