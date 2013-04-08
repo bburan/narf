@@ -436,7 +436,7 @@ function del_mod_block()
 end
 
 function save_model_callback (a, b, c)
-    [filename, pathname] = uiputfile({[NARF_SAVED_MODELS_PATH filesep '*.mat']}, ...
+    [filename, pathname] = uiputfile({'*.mat'}, ...
                                      'Save Model Stack As', ...
                                      META.modelpath);
     if isequal(filename,0) || isequal(pathname,0) 
@@ -448,8 +448,14 @@ function save_model_callback (a, b, c)
 end
 
 function load_model_callback (a, b, c)
-    [filename, pathname] = uigetfile({[NARF_SAVED_MODELS_PATH filesep '*.mat']}, ...
+    if isfield(META, 'modelpath')
+        [filename, pathname] = uigetfile('*.mat', ...
+                                     'Select Model Stack', META.modelpath);    
+    else
+        [filename, pathname] = uigetfile('*.mat', ...
                                      'Select Model Stack');
+    end
+    
 	if isequal(filename,0) || isequal(pathname,0) 
         % Canceled
     else
