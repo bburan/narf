@@ -1,6 +1,6 @@
 function handles = narf_browser(parent_handle)
 
-global STACK XXX META NARF_PATH NARF_SAVED_MODELS_PATH MODULES;
+global STACK XXX META MODULES;
 
 narf_set_path
 dbopen;

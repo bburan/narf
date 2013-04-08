@@ -13,23 +13,25 @@ cells = request_celldb_batch(batch);
 
 mm = {'env100', ...
       'log2b', ...
-      'firn', ...
-      'npfnl', ...
+      {{'firn', 'npfnl'}, {'depn', 'npnl'}, 'inex'}, ...
       {'mse', 'mses5'}, ...
       'boost'};
 
-modulekeys = module_block_combos(mm);
+modulekeys = keyword_combos(mm);
 
 % Enqueue every model
 for ii = 1:length(cells)
     for jj = 1:length(modulekeys)
-        fprintf('Fitting model [%d/%d]\n', jj, length(modulekeys)); 
+        fprintf('Fitting cell [%d/%d] model [%d/%d]\n', ...
+            ii, length(cells),  jj, length(modulekeys)); 
         
+        % Does it every time
         fit_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
-            cells{ii}.training_set, cells{ii}.test_set,  force);
+            cells{ii}.training_set, cells{ii}.test_set);
         
+        % Smart enough to only enqueue if new work needs to be done
 %        enqueue_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
-%            cells{ii}.training_set, cells{ii}.test_set,  force);
+%            cells{ii}.training_set, cells{ii}.test_set);
         
     end
 end

@@ -30,7 +30,7 @@ function refresh_modelpane = narf_modelpane(parent_handle)
 % everything then has to be shifted around in the positive spaces as the
 % number of module blocks changes.
 
-global STACK XXX META NARF_PATH NARF_SAVED_MODELS_PATH MODULES;
+global STACK XXX META NARF_SAVED_MODELS_PATH MODULES;
 
 MODULES = scan_directory_for_modules();
 
@@ -436,7 +436,7 @@ function del_mod_block()
 end
 
 function save_model_callback (a, b, c)
-    [filename, pathname] = uiputfile({[NARF_SAVED_MODELS_PATH '/*.mat']}, ...
+    [filename, pathname] = uiputfile({[NARF_SAVED_MODELS_PATH filesep '*.mat']}, ...
                                      'Save Model Stack As');
 	if ~isempty(filename)                                 
         save_model([pathname filesep filename], STACK, XXX, META);
@@ -444,7 +444,7 @@ function save_model_callback (a, b, c)
 end
 
 function load_model_callback (a, b, c)
-    [filename, pathname] = uigetfile({[NARF_SAVED_MODELS_PATH '/*.mat']}, ...
+    [filename, pathname] = uigetfile({[NARF_SAVED_MODELS_PATH filesep '*.mat']}, ...
                                      'Select Model Stack');
 	if ~isequal(filename, 0)
         delete_all_module_guis();
