@@ -8,4 +8,6 @@ function run_keyword(keyword)
 %
 global NARF_KEYWORDS_PATH;
 
-run([NARF_KEYWORDS_PATH filesep keyword]); 
+warning off MATLAB:dispatcher:nameConflict;
+run([NARF_KEYWORDS_PATH filesep keyword]);
+warning on MATLAB:dispatcher:nameConflict;

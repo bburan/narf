@@ -1,62 +1,60 @@
 * BEFORE TRAINING STARTS AGAIN
   1. [ ] Verify model polarity needs to start working if there are multiple FIRs
-  2. [ ] 
+  2. [ ] Sparsity/smoothness calculations need to work IN the FIR module (since there could be multiple ones)
+  3. 
+
+* KEYWORDS
+  1. [ ] Init FIR to rcorr
+  2. [ ] Init FIR to zero
+  3. [ ] 
 
 * SMALL CORRECTIONS AUDIT LIST
-  1. [X] Create a module methods directory for shared methods
-  2. [X] Filename standardization
-	 cellid/batch_cellid_modelname.mat
-	 As long as you don't mess with the batch, things will be fine!
-  3. [X] unused should become ~ IN EVERY FILE
-  4. [X] Check paths again, grep for NARF_PATH and correct (also: replace / with filesep when possible)
+  1. [X] Put proper docstrings on every function in util/
+  2. [X] Search for obviously dead code and bury it in the graveyard
+  3. [X] Make sure that 1-r is the score to be minimized, not 1/r^2
+  4. [X] Repair git commit logging
   5. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
   6. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
   7. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
   8. [ ] Generic nonlinearity should do smooth scatter plots of multi-input things!
   9. [ ] IRRITATION: Why are the editable text boxes so damn small?
   10. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  11. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
-  12. [ ] Replace my nargin checks with "if ~exist('BLAH','var'),"
-  13. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
-  14. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  15. [ ] Make sure that fitters return specific codes indicating how they terminated
-  16. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
-  17. [ ] Search for obviously dead code and bury it in the graveyard
-  18. [ ] Search for repeated blocks of code and refactor
-  19. [ ] Put proper docstrings on every function in util/
-  20. [ ] Make sure that 1-abs(r) is the score to be minimized, not 1/r^2
-  21. [ ] Repair NarfModelpane
+  11. [ ] Replace my nargin checks with "if ~exist('BLAH','var'),"
+  12. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
+  13. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
+  14. [ ] Make sure that fitters return specific codes indicating how they terminated
+  15. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
+  16. [ ] Repair NarfModelpane
           - [ ] Displays model name, training set, test set, and other important info at top of window
 	  - [ ] Standardized colors for all module plots
-  22. [-] NARF Browser Improvements
+  17. [-] NARF Browser Improvements
           - [X] Scatter plot test/train button
           - [ ] Heat Map current display button	
-  23. [ ] Antialiasing problem when saving images
-  24. [ ] Make the model run faster by only adding the 'test_set' data at the very end of the fitting process
-  25. [ ] Clean up distribution of code before a modelfit
+  18. [ ] Antialiasing problem when saving images
+  19. [ ] Make the model run faster by only adding the 'test_set' data at the very end of the fitting process
+  20. [ ] Clean up distribution of code before a modelfit
 	  - [ ] Function which distributes GIT to workers before enqueing models
 	  - [ ] Checks local repository is clean
-  26. [ ] Repair git commit logging
-  27. [ ] MODULE: Standardized single/multi channel gammatone filter
-  28. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  29. [ ] FN: Searches for unattached model and image files and deletes them
-  30. [ ] Plot both test and training data for smooth scatter plots.
-  31. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things more easily in scripts)
-  32. [ ] Add a precompressor keyword which concats log compressor as an extra channel
-  33. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  34. [ ] Provide functions to cover an input space logarithmically with filters
-  35. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
-  36. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-  37. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
-  38. [ ] When you click save, it should bring up a 'trainerstring' name so you can customize how the model is saved.
+  21. [ ] MODULE: Standardized single/multi channel gammatone filter
+  22. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  23. [ ] Plot both test and training data for smooth scatter plots.
+  24. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things more easily in scripts)
+  25. [ ] Add a precompressor keyword which concats log compressor as an extra channel
+  26. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  27. [ ] Provide functions to cover an input space logarithmically with filters
+  28. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
+  29. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+  30. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
+  31. [ ] When you click save, it should bring up a 'trainerstring' name so you can customize how the model is saved.
 	  Models are currently built using modelnames...but it's plausible that SOME modelnames aren't built that way. They could still come from the GUI or by script.
 	  Therefore, there needs to be detection/verification at savetime which checks that the model has the same structure as when it was built.
 	  It also needs to insert the NEW model into the database!
-  39. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  40. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  41. [ ] IRRITATION: Why can't I resize windows?
-  42. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to 
-  43. [ ] sf=sf{1}; should be eliminated IN EVERY SINGLE FILE!
+  32. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  33. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  34. [ ] IRRITATION: Why can't I resize windows?
+  35. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to 
+  36. [ ] sf=sf{1}; should be eliminated IN EVERY SINGLE FILE!
+  37. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
 
 * Architectual Improvements
   1. [ ] FIR module should have multiple sets of COEFS so it can do per-file filtering
@@ -230,3 +228,4 @@
   34. [ ] FITTER: SWARM. Hybrid fit routine which takes the top N% of models, scales all FIR powers to be the same, then shrinks them.
   35. [ ] Get a histogram of the error of the NL. (Is it Gaussian or something else?)
   36. [ ] Have a display of the Pareto front (Dominating models with better r^2 or whatever)
+  37. [ ] FN: Searches for unattached model and image files and deletes them

@@ -1,7 +1,7 @@
 function enqueue_single_model(batch, cellid, modulekeys, ...
-                              training_set, test_set, force_rerun)
+                              training_set, test_set, filecodes, force_rerun)
 % function enqueue_single_model(batch, cellid, modulekeys, ...
-%                             training_set, test_set, force_rerun)
+%                             training_set, test_set, filecodes, force_rerun)
 %
 % Enqueues a single model onto the distributed job queueing system so that
 % a model can be processed on a bunch of machines.
@@ -35,12 +35,11 @@ tmp = cellfun(@(n) sprintf('%s_', n), modulekeys, 'UniformOutput', false);
 modelname = strcat(tmp{:});
 modelname = modelname(1:end-1); % Remove trailing underscore
 
-note = sprintf('%s/%d/%s/%s',cellid,batch,modelname, fittername);
+note = sprintf('%s/%d/%s',cellid,batch,modelname);
 
 sql = ['SELECT * FROM NarfResults WHERE cellid="',cellid,'"',...
     ' AND batch=',num2str(batch),...
-    ' AND modelname="',modelname,'"', ...
-    ' AND fittername="',fittername,'"'];
+    ' AND modelname="',modelname,'"'];
 rdata = mysql(sql);
 
 if ~isempty(rdata) && ~force_rerun,

@@ -9,7 +9,7 @@ MODULES = scan_directory_for_modules();
 
 batch = 242;
 
-cells = request_celldb_batch(batch);
+cells = request_celldb_batch(batch, 'por024b-b1');
 
 mm = {'env100', ...
       'log2b', ...
@@ -27,11 +27,11 @@ for ii = 1:length(cells)
         
         % Does it every time
         fit_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
-            cells{ii}.training_set, cells{ii}.test_set);
+            cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
         
         % Smart enough to only enqueue if new work needs to be done
 %        enqueue_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
-%            cells{ii}.training_set, cells{ii}.test_set);
+%            cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
         
     end
 end

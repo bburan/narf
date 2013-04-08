@@ -1,5 +1,5 @@
-function success = fit_single_model(batch, cellid, modulekeys, training_set, test_set, strict_git_logging)
-% success = fit_single_model(batch, cellid, modulekeys, training_set, test_set, strict_git_logging)
+function success = fit_single_model(batch, cellid, modulekeys, training_set, test_set, filecodes, strict_git_logging)
+% success = fit_single_model(batch, cellid, modulekeys, training_set, test_set, filecodes, strict_git_logging)
 %
 % Fits a single model described by modulekeys
 % 
@@ -21,7 +21,7 @@ function success = fit_single_model(batch, cellid, modulekeys, training_set, tes
 % RETURNS: 
 %    success        True iff everything was fine
 
-global STACK XXX META MODULES...
+global STACK XXX NARF_PATH META MODULES...
     NARF_MODULES_PATH ...
     NARF_SAVED_MODELS_PATH;
 
