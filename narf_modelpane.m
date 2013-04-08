@@ -437,16 +437,22 @@ end
 
 function save_model_callback (a, b, c)
     [filename, pathname] = uiputfile({[NARF_SAVED_MODELS_PATH filesep '*.mat']}, ...
-                                     'Save Model Stack As');
-	if ~isempty(filename)                                 
+                                     'Save Model Stack As', ...
+                                     META.modelpath);
+    if isequal(filename,0) || isequal(pathname,0) 
+        % Canceled
+    else
         save_model([pathname filesep filename], STACK, XXX, META);
+        db_insert_model();
     end
 end
 
 function load_model_callback (a, b, c)
     [filename, pathname] = uigetfile({[NARF_SAVED_MODELS_PATH filesep '*.mat']}, ...
                                      'Select Model Stack');
-	if ~isequal(filename, 0)
+	if isequal(filename,0) || isequal(pathname,0) 
+        % Canceled
+    else
         delete_all_module_guis();
         load_model([pathname filesep filename]);
         recalc_xxx(1);
