@@ -5,7 +5,7 @@ function combos = keyword_combos(mm)
 % fit_single_model(). 
 %
 % ARGUMENTS:
-%   MM       A nested cell array, up to depth level 8. Example:
+%   MM       A nested cell array. Example:
 %            {'env100', 'log2b', {'firn', 'depn'}, {{'npnl', 'mse3'},
 %                                                   {'npfnl', 'mse5'}}}
 %
@@ -16,60 +16,33 @@ function combos = keyword_combos(mm)
 %             {'env100', 'log2b', 'depn', 'npnl', 'mse3'}, ...
 %             {'env100', 'log2b', 'depn', 'npfnl', 'mse5'}}
 
-% Single element case
-if ischar(mm)
-    combos = mm;
-    return
-end
+paths = {};
 
-if iscell(mm) 
-    len = zeros(size(mm));
-    val = cell(1, length(mm));
+function traverse (tree, path)
+    %fprintf('traverse(%s,\n\t %s)\n\n', write_readably(tree), write_readably(path));
     
-    for ii = 1:length(mm)
-        e = mm{ii};
-        ret = keyword_combos(e);
-        if ~iscell(ret)
-            val{ii} = ret;
+    if isempty(tree)    % On a leaf
+        paths{end+1} = path;   
+        
+    elseif iscell(tree) % On an intermediate node        
+        head = tree{1};
+        tail = tree(2:end);
+        if ischar(head)
+            traverse(tail, cat(2, path, head));
+        elseif iscell(head)
+            for ii = 1:length(head)
+                traverse(tail, cat(2, path, head{ii}));
+            end
         else
-            val{ii} = ret{:};
-        end 
-        
-        len(ii) = length(val{ii});
-    end
-    
-    fprintf('mm=%s => ', write_readably(mm));
-    fprintf('val=%s\n', write_readably(val));
-    
-    n = prod(len);
-    
-    combos = cell(1, n);
-    
-    for kk = 1:n
-        combos{kk} = {};
-        inds = [];
-        [inds(1), inds(2), inds(3), inds(4), ...
-         inds(5), inds(6), inds(7), inds(8)] = ind2sub(len, kk);
-        
-        for ii = 1:length(mm)
-            vi = inds(ii);
-            vs = val{ii};
-                        
-            if ~iscell(vs)
-                v = vs;
-            else                
-                v = vs(vi);
-            end
-            
-            if ~iscell(v)
-                combos{kk}{end+1} = v;
-            else
-                combos{kk} = cat(2, combos{kk}, v{:});
-            end
+            error('Neither a string nor a cell array: %s', write_readably(tree));
         end
+    else
+        error('Neither a string nor a cell array: %s', write_readably(tree));    
     end
-    
-    return
 end
 
-error('Argument mm was neither a string nor a cell array!');
+traverse(mm, {});
+
+combos = paths;
+
+end
