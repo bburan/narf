@@ -93,14 +93,8 @@ function do_plot_inputs(stack, xxx)
     
     axis tight;
     legend(mdl.input1, mdl.input2);
-    
-    % Plot the score in the upper left
-    themax = max([max(dat.(mdl.input1)(:, stim_idx)), ...
-                  max(dat.(mdl.input2)(:, stim_idx))]);
-    text(0, themax , sprintf(' Train r: %f\n Test r : %f', ...
-        x.(mdl.train_score), x.(mdl.test_score)), ...
-        'VerticalAlignment','top',...
-        'HorizontalAlignment','left');
+    textLoc(sprintf(' Train r: %f\n Test r : %f', ...
+        x.(mdl.train_score), x.(mdl.test_score)), 'NorthWest');
 
 end
 
