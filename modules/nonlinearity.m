@@ -12,6 +12,8 @@ function m = nonlinearity(args)
 %    
 % Good choices for NLFN are 
 %    polyval         (See matlab documentation)
+%    nl_log          (See utils/ directory)
+%    nl_root         (See utils/ directory)
 %    nl_sigmoid      (See utils/ directory)
 %    nl_exponential  (See utils/ directory)
 %    nl_zerothresh   (See utils/ directory)

@@ -29,8 +29,8 @@ m.output = 'stim';
 m.init_fit_sig = 'respavg'; % For initializing coefficients only
 
 % Optional fields
+m.auto_plot = @do_plot_fir_coefs_as_heatmap;
 m.auto_init = @auto_init_fir_filter;
-m.default_plot = @do_plot_fir_coefs_as_heatmap;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_fir_coefs_as_heatmap;
 m.plot_fns{1}.pretty_name = 'FIR Coefficients (Heat map)';
@@ -202,6 +202,10 @@ function do_plot_fir_coefs_as_heatmap(stack, xxx)
     lim = max(abs(ca));
     caxis([-lim, +lim]);
     axis tight;
+    textLoc(sprintf('Sparsity: %f\nSmoothness: %f', ...
+        sparsity_metric(mdl.coefs), smoothness_metric(mdl.coefs)), 'NorthWest');
+    
+    
 end
 
 end

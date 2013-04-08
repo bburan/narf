@@ -25,6 +25,7 @@ m.output = 'stim';
 % work pretty well, but its' really ad-hoc!
     
 % Optional fields
+m.auto_plot = @do_plot_smooth_scatter_npfnl;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_smooth_scatter_npfnl; 
 m.plot_fns{1}.pretty_name = 'Stim/Resp Smooth Scatter';
