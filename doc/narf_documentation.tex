@@ -756,3 +756,76 @@ Ivar
 	 2. Then fit the FIR coefs with Boosting
 	 3. Then fit the NL part with fminlsq
 	 4. Then have a loop where you do one boosting step and one lsq step.
+* Discussion with Stephen
+
+** Solved problem: How to initialize complex models in complex ways
+   No other way around it; defining a new keyword function is the only truly flexible way to do this. 
+   Some complex keywords can even add and initialize a model in the same step.
+   Our never-ending task is to isolate the functionality of each keyword in the most logical and recombinable manner.
+   But that's not a hard problem, since we can always refactor functionality we find ourselves cut-and-pasting.
+
+** Unsolved problem: How should we accomodate our need to be able to study a model
+   Although right now we are just looking at FIR and NPNL and how they vary when trained on one/multiple files.
+   We can't just train five models, because we want the REST of the model to use all the same data.
+   We can anticipate that we will be doing this all/individual separation of data for almost every computational module.
+   
+*** Option 1: Use wiring to connect many simple modules which use inputs that are all- or per- file
+    Pros: 
+    + Using 'wiring' to solve the problem can be done algorithmically, and doesn't change the modules.
+    + A module which 'splits' a signal by respfile channel 
+    + No change to existing modules
+    Cons:
+    - Makes comparison graphing more difficult
+    - Confuses the idea of a 'model structure' with the 'experimental structure' 
+    - Increased number of modules
+    - Tree navigation required to some extent.
+    - Looks like a bookkeeping nightmare having to name all those signals programmatically
+
+*** Option 2: Make the all-/per- file analysis local to each module.
+    Pros:
+    + Fewer modules are created, improving fitting/plotting speed
+    + The all-/per-file comparison is so much easier because the data is local
+    + No changes to gui code
+    + You can graph all or per simultaneously
+    Cons:
+    - Changes to EVERY SINGLE module that wants to implement this.      
+    - Data structures become more complex
+
+*** Discussion
+    It has to be Option 2: change every single module to accomodate this all/per file experimental thing. 
+    This is the only option because it would be very bad to confuse the experimental structure with the model structure. 
+    Our experiment may bei asking how a module's parameters look in various behavior states, but that's not the same thing as having branches in a model.
+    We also have a real need to train part of the model on everything, and another part only on specific respfiles.
+    Keeping track of if we are looking at the Inhibition or Excitation FIR filter when you have 8 Respfiles would be too confusing...that's 16 FIR filters, plus splitters/joiners!
+
+*** Proposed Solution:
+    What we really need is a uniform abstraction that can be applied to any module.
+
+    1. Manage module fields for both all-file or per-file cases
+    2. Manage module plotting for all- or per- cases
+    3. Align training/test set pairs when using a particular parameter set grouping
+    4. Remains customizable in the event that we need to create different groupings (say, active1 vs active2 vs passive behaviors) 
+
+    The way to achieve this uniform abstraction is to change the functional interface of each module:
+
+    1. Every module function interface now accepts:
+       - the module parameter set to use
+       - the respfiles/data to act upon
+       - previous STACK
+       - previous XXX
+
+    2. Modules now have an optional flag
+       - When true, arguments to functions are given
+       - The respfile cell array is specified by some 'experimental respfile selector function'
+
+    3. The default function of a modules no longer works on ALL data, but only on the respfile argument.
+
+    4. Plot functions of modules no longer works on ALL data, but only on the respfile cell array argument.
+       Modules no longer plot directly to their output
+       Instead, they accept an argument of where to plot, 
+       They also receive the module fields to use when plotting
+
+** PROBLEM: Each model structure will have a different way of defining sparsity
+     Some models have 1 FIR filter, some have per-file filters, some have IN/EX filters
+  Therefore, don't build it in to the MSE module...it is instead part of a fitter.
+  
