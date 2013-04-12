@@ -16,14 +16,14 @@ function [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack)
 %    chan_idx  The selected channel index number to plot.
 %
 
-global XXX; 
+global XXX NARFGUI; 
 
-[baphy_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy', true);
+[~, baphy_idx] = find_modules(stack, 'load_stim_resps_from_baphy', true);
 
-if isfield(baphy_mod, 'plot_gui')
-    sf = popup2str(baphy_mod.plot_gui.selected_stimfile_popup);
-    stim_idx = popup2num(baphy_mod.plot_gui.selected_stim_idx_popup);
-    chan_idx = popup2num(baphy_mod.plot_gui.selected_stim_chan_popup);
+if isfield(NARFGUI{baphy_idx}, 'plot_gui')
+    sf = popup2str(NARFGUI{baphy_idx}.selected_stimfile_popup);
+    stim_idx = popup2num(NARFGUI{baphy_idx}.selected_stim_idx_popup);
+    chan_idx = popup2num(NARFGUI{baphy_idx}.selected_stim_chan_popup);
 else
     sf = XXX{1}.training_set{1};
     stim_idx = 1;

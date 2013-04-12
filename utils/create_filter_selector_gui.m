@@ -17,7 +17,10 @@ function hs = create_filter_selector_gui(parent_handle, stack, xxx, n_filts)
 %   hs                  A structure with one fieldname:
 %                          'selected_filter_popup', 
 %                       which contains a handle to the UI control popup
-%
+
+
+    global NARFGUI;
+
     pos = get(parent_handle, 'Position');
     w = pos(3) - 10;
     h = pos(4) - 10;
@@ -46,7 +49,7 @@ function hs = create_filter_selector_gui(parent_handle, stack, xxx, n_filts)
     
     function selected_filter_popup_callback()
         % Call the plot function again via a sneaky, undocumented callback
-        hgfeval(get(mdl.gh.plot_popup,'Callback'), mod_idx, []);
+        hgfeval(get(NARFGUI{mod_idx}.plot_popup,'Callback'), mod_idx, []);
         drawnow;
     end
 end

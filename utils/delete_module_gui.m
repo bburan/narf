@@ -1,27 +1,27 @@
 function delete_module_gui(idx)
 % delete_module_gui()
 %
-% Deletes any gui handles, widgets, etc from the module at STACK index
+% Deletes any gui handles, widgets, etc from the module at NARFGUI index
 % number idx. 
 %
 % No arguments or return values. Use purely for side effects. 
 
-global STACK;
+global NARFGUI;
 
-if isfield(STACK{idx}, 'gh')
+if isfield(NARFGUI{idx}, 'gh')
     try
-        delete(STACK{idx}.gh.plot_axes);
-        delete(STACK{idx}.gh.plot_popup);
-        delete(STACK{idx}.gh.plot_panel);
-        delete(STACK{idx}.gh.fn_apply);
-        delete(STACK{idx}.gh.fn_table);
-        delete(STACK{idx}.gh.fn_popup);
-        delete(STACK{idx}.gh.fn_panel);
+        delete(NARFGUI{idx}.plot_axes);
+        delete(NARFGUI{idx}.plot_popup);
+        delete(NARFGUI{idx}.plot_panel);
+        delete(NARFGUI{idx}.fn_apply);
+        delete(NARFGUI{idx}.fn_table);
+        delete(NARFGUI{idx}.fn_popup);
+        delete(NARFGUI{idx}.fn_panel);
     catch
         % Do nothing if a delete failed
     end
-    STACK{idx} = rmfield(STACK{idx}, 'gh');
+    NARFGUI{idx} = rmfield(NARFGUI{idx}, 'gh');
 end
-if isfield(STACK{idx}, 'plot_gui')
-    STACK{idx} = rmfield(STACK{idx}, 'plot_gui');
+if isfield(NARFGUI{idx}, 'plot_gui')
+    NARFGUI{idx} = rmfield(NARFGUI{idx}, 'plot_gui');
 end

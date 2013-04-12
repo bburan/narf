@@ -12,12 +12,18 @@ function [mods, mod_idxs] = find_modules(stack, mod_name, first_only)
 % RETURNS:
 %    mods          A cell array of modules whose names matched mod_name
 %    mod_idxs      A cell array of module indexes whose names matched
-%
+
 mods = {};
 mod_idxs = {};
 
 for idx = 1:length(stack)
-    if isequal(stack{idx}.name, mod_name)
+    if iscell(stack{idx})
+        m = stack{idx}{1};
+    else
+        m = stack{idx};
+    end
+    
+    if isequal(m.name, mod_name)
         if first_only
             mods = stack{idx};
             mod_idxs = idx;

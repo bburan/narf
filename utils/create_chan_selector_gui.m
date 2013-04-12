@@ -19,6 +19,8 @@ function hs = create_chan_selector_gui(parent_handle, stack, xxx, chanfield)
 %                          'selected_chan_popup', 
 %                       which contains a handle to the UI control popup
 
+    global NARFGUI;
+
     pos = get(parent_handle, 'Position');
     w = pos(3) - 10;
     h = pos(4) - 10;
@@ -61,7 +63,7 @@ function hs = create_chan_selector_gui(parent_handle, stack, xxx, chanfield)
     
     function selected_chan_popup_callback()
         % Call the plot function again via the plot_popup 
-        hgfeval(get(m.gh.plot_popup, 'Callback'), mod_idx, []);
+        hgfeval(get(NARFGUI{mod_idx}.plot_popup, 'Callback'), mod_idx, []);
         drawnow;
     end
 

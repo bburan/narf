@@ -16,7 +16,11 @@ global STACK XXX;
 for kk = 1:length(firmod_idxs)
     idx = firmod_idxs(kk);   
     
-    firmod = STACK{idx};
+    if iscell(STACK{idx})            
+        firmod = STACK{idx}{1};
+    else
+        firmod = STACK{idx};
+    end
     x = XXX{idx+1};
         
     % Flip the sign of the coefs if there is a negative slope
@@ -25,14 +29,16 @@ for kk = 1:length(firmod_idxs)
     for ii = 1:length(x.training_set),
         sf = x.training_set{ii};
         V1 = cat(1, V1, x.dat.(sf).(firmod.output)(:));
-        V2 = cat(1, V2, x.dat.(sf).(firmod.init_fit_sig)(:));
+        V2 = cat(1, V2, x.dat.(sf).respavg(:));
     end
     D = [V1(:) V2(:)]; 
     D = sortrows(D);
     P = polyfit(D(:,1),D(:,2), 1);
     
     if (P(1) < 0)
-        STACK{idx}.coefs = - STACK{idx}.coefs;
+        for aa = 1:length(STACK{idx})
+            STACK{idx}{aa}.coefs = - STACK{idx}{aa}.coefs;
+        end
     end
     recalc_xxx(idx); 
     

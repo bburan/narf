@@ -493,14 +493,16 @@ function hs = create_gui(parent_handle, stack, xxx)
     end
     
     function selected_stim_idx_popup_callback()
-        % Call the plot function again via the plot_popup 
-        hgfeval(get(m.gh.plot_popup,'Callback'), mod_idx, []);
+        global NARFGUI;
+        % Call the plot function again via the plot_popup        
+        hgfeval(get(NARFGUI{mod_idx}.plot_popup,'Callback'), mod_idx, []);
         drawnow;
     end
     
     function selected_stim_chan_popup_callback()
+        global NARFGUI;
         % Call the plot function again via the plot_popup 
-        hgfeval(get(m.gh.plot_popup,'Callback'), mod_idx, []);
+        hgfeval(get(NARFGUI{mod_idx}.plot_popup,'Callback'), mod_idx, []);
         drawnow;
     end
 end

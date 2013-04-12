@@ -30,7 +30,13 @@ hspace = 0.05;
 % Scan through the STACK looking for things to .auto_plot
 ap = [];
 for ii = 1:length(STACK)
-    if isfield(STACK{ii}, 'auto_plot')
+    if iscell(STACK{ii})
+        m = STACK{ii}{1};
+    else
+        m = STACK{ii};
+    end
+    
+    if isfield(Sm, 'auto_plot')
         ap(end+1) = ii;
     end
 end       
@@ -43,13 +49,31 @@ fig = figure('Menubar', 'figure', 'Resize','off', 'Visible', 'on', ...
 
 % Call the auto-plot functions
 for ii = 1:nplots
-    idx = ap(ii);
-    plotfn = STACK{idx}.auto_plot;
-
-    ax = axes('Parent', fig, 'Units', 'pixels', ...
-        'Position', [lb (nplots-ii)*ph+bb w-lb*2 ph-bb]);
+    idx = ap(ii);  
+    mm = STACK{idx};
+    if iscell(mm)    
+        lm = length(mm);
+        for jj = 1:lm,
+            m = mm{jj};
+        
+            plotfn = m.auto_plot;
     
-    plotfn(STACK(1:idx), XXX(1:idx+1));
+            aw = (w-lb*2) / lm;
+            ax = axes('Parent', fig, 'Units', 'pixels', ...
+                 'Position', [lb+(aw*(jj-1)) (nplots-ii)*ph+bb aw-lb ph-bb]);
+    
+            plotfn(STACK(1:idx), XXX(1:idx+1));          
+        end
+    else
+        m = mm;
+        
+        plotfn = m.auto_plot;
+    
+        ax = axes('Parent', fig, 'Units', 'pixels', ...
+            'Position', [lb (nplots-ii)*ph+bb w-lb*2 ph-bb]);
+    
+        plotfn(STACK(1:idx), XXX(1:idx+1));
+    end
 end
 
 % TEXT AT TOP
