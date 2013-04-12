@@ -6,7 +6,7 @@
    Our never-ending task is to isolate the functionality of each keyword in the most logical and recombinable manner.
    But that's not a hard problem, since we can always refactor functionality we find ourselves cut-and-pasting.
 
-** Unsolved problem: How should we accomodate our need to be able to study a model
+** Unsolved problem: How should we accomodate our need to be able to study how a model varies for different data sets?
    Although right now we are just looking at FIR and NPNL and how they vary when trained on one/multiple files.
    We can't just train five models, because we want the REST of the model to use all the same data.
    We can anticipate that we will be doing this all/individual separation of data for almost every computational module.
@@ -36,7 +36,7 @@
 *** Discussion
     It has to be Option 2: change every single module to accomodate this all/per file experimental thing. 
     This is the only option because it would be very bad to confuse the experimental structure with the model structure. 
-    Our experiment may bei asking how a module's parameters look in various behavior states, but that's not the same thing as having branches in a model.
+    Our experiment may be asking how a module's parameters look in various behavior states, but that's not the same thing as having branches in a model.
     We also have a real need to train part of the model on everything, and another part only on specific respfiles.
     Keeping track of if we are looking at the Inhibition or Excitation FIR filter when you have 8 Respfiles would be too confusing...that's 16 FIR filters, plus splitters/joiners!
 
@@ -51,8 +51,8 @@
     The way to achieve this uniform abstraction is to change the functional interface of each module:
 
     1. Every module function interface now accepts:
-       - the module parameter set to use
-       - the respfiles/data to act upon
+       - the module parameter set to use (mdl)
+       - the respfiles/data to act upon (dat)
        - previous STACK
        - previous XXX
 
@@ -67,10 +67,133 @@
        Instead, they accept an argument of where to plot, 
        They also receive the module fields to use when plotting
 
-* Function in META
-  - Modules get a function
-    That function determines how respfiles and parameters are hashed out to them
-  - Extra 'for' loop which does per or all- file parameter management.
+* UNRESOLVED PROBLEM:
+  how on earth are the plot functions going to work?
+  They need to know the parameter set. (that can be passed by the expfn)
+  They need to know where to plot (that can be passed by the expfn)
+  They need to be OVERWRITABLE by the expfn (Say, if you want to plot ALL FIR filters, etc)
+  The only way I see this working is to update the GUI:
+  1. Instead of just an axes object, put it in a PANE
+  2. Pack N different axes objects into that PANE
+  3. Before the plot function is called, the expfn gets that axes
+     That axis is passed to the plot fn
+  4. Alternatively, the expfn can 
+
+* Data structure discussion
+** Option 0: Make copies of the entire STACK!
+   PROS: 
+     + Lets you perturb multiple areas at the same time (Although I can't think when you actually do this)
+     - Jackknifing just becomes a keyword like any other?
+   CONS:
+     - A fair amount of redundant duplication
+  
+** Option 1: Modify the STACK data structure so that it can form a depth-2 tree
+   PROS:
+     + data splitting and jackknifing essentially just become insertions of models
+     + Obvious place to store data is in XXX in the same way
+     + Packing/unpacking functions just get a little smarter without having to be per-module specific
+   CONS:
+     - Nede a function to 'reintegrate' multiple data outputs, unless I am branching the ENTIRE fricking tree
+     - I'm actually 
+** Option 2: For each module, define in the implementation how fields can be stored when doing data splits
+   PROS:
+     + Data is kept local to a singel module
+     + Implementation is module specific
+   CONS:
+     - Hard to reuse functionality, because there is no common interface
+
+* PROBLEMS:
+  1. [ ] How can later modules look back at previous modules to extract data?
+	 (ANSWER: They DON'T do that directly -- they use a getter fn which is multi-instance aware)
+	 (That getter function always returns a cell array of results)
+	 It is then your responsibility to interpret that cell array properly:
+	 EXAMPLE: You will get back a bunch of FIR filters when computing sparsity. Average their sparsity values.
+	 EXAMPLE: 
+
+
+* SUMMARY OF CHANGES:
+  1) Jackknifing is a generic FITTER function keyword and requires no special work.
+     - Besides, we need to do jackknifing even on split models.
+  2) Peeking at another module's data without using EXTRACT_MODULE_PARAMS() is now STRICTLY FORBIDDEN
+     - You provide the index number, which you found previously with find_modules()
+  3) STACK is now a 2x deep cell array. XXX has no change.
+  4) Modules all have a 'splitter' fn and a 'unifier' fn
+     - The splitter accounts for data conditions
+       {[mdl1, dat1], [mdl2, dat2]} = splitter(STACK, XXX)
+     - The unifier brings back multiple data conditions
+       XXX{N+1} = unifier(x1{n+1), x2{n+1});
+  5) recalc_XXX now 
+     1. calls mdl.fn() on each split parameter set
+     2. calls mdl.unify() on the XXX results of all of those
+  6) Whatever calls plot hooks in narf_modelpane now
+     1. calls splitter() to get the group parameter sets
+     2. Creates a pack of axes()
+     3. Calls the selected plot function on each one
+  7) Pack and unpack_fittables now understand split parameters
+
+
+* FUNCTIONS TO IMPLEMENT:
+  - {cellarrayofparams} = Extract_module_params(module_index, param) 
+  - Generic splitters
+    1. per-respfile
+    2. Per-filecode category
+    3. all-files
+  - And a generic unifier
+    1. Per-respfile merger
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+* Bayesian perspective
+  You have a model structure (STACK)
+  You have several model parameter sets (Sideways sets of parameters in STACK)
+  Each of those has a likelihood/data chain (XXX)
+  Now that we can have multiple parameter sets, we can even have ENSEMBLE models
+    (Use a gaussian random splitter, and a mean unifier or one that discards outliers)
+
+* EXPFN
+  Get a list of dat files to split
+  Nan things
+  For 
+     Do the fn
+  end
+  Merge the data
+
+* EXP PLOTFN  
+  Get a list of dat files to split
+  Make a few axes
+  For
+     Do the plot on AXIS using DATA
+  end
+  
+* Places to correct
+  - [ ] narf_modelpane.m:        XXX{mod_idx+1} = m.fn(STACK(1:mod_idx), XXX); 
+  - [ ] narf_modelpane.m:        m.plot_fns{idx}.fn(STACK(1:mod_idx), XXX(1:mod_idx+1));
+  - [ ] narf_modelpane.m:            XXX{ii+1} = m.fn(STACK(1:ii), XXX); 
+  - [ ] utils/append_module.m:XXX{l+2} = STACK{l+1}.fn(STACK(1:l+1), XXX(1:l+1));
+  - [ ] utils/recalc_xxx.m:    XXX{ii+1} = STACK{ii}.fn(STACK(1:ii), XXX(1:ii));
 
 * SOLUTION FOR THESE TYPES OF PROBLEMS:
   However, for fitting, the situation is more complex:
@@ -80,11 +203,6 @@
   - [ ] ...Does pack/unpack need to now call via the getter/setter?
   - [ ] ...Or do we just keep the coefs as a matrix, and use the getter/setter to access subsections of it?
   - [ ] ...Averaging the sparsity values seems easiest
-
-* KEYWORDS
-   - [ ] Init FIR to rcorr
-   - [ ] Init FIR to zero
-   - [ ] Init FIR to some prior
 
 * Architectual Improvements
   1. [ ] Make the fits run faster by removing then re-adding the 'test_set' data after fitting process
@@ -101,39 +219,39 @@
 
 * SMALL CORRECTIONS AUDIT LIST
   1. [ ] Smooth scatter plots do testing / training simultaneously
-  1. [-] Clean up distribution of code before a modelfit
+  2. [-] Clean up distribution of code before a modelfit
 	 - [ ] Function which distributes GIT to workers before enqueing models
 	 - [X] Checks local repository is clean
-  2. [-] NARF Browser Improvements
+  3. [-] NARF Browser Improvements
          - [X] Scatter plot test/train button
          - [ ] Heat Map current display button	
-  3. [ ] Repair NarfModelpane
+  4. [ ] Repair NarfModelpane
          - [ ] Displays model name, training set, test set, and other important info at bottom of window
          - [ ] Provide a dropdown to pick more fitters
 	 - [ ] Standardized colors for all module plots
-  4. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  5. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
-  6. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
-  7. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
-  8. [ ] IRRITATION: Why are the editable text boxes so damn small?
-  9. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
-  10. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  11. [ ] Make sure that fitters return specific codes indicating how they terminated
-  12. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
-  13. [ ] Antialiasing problem when saving images
-  14. [ ] MODULE: Standardized single/multi channel gammatone filter
-  15. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  16. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things more easily in scripts)
-  17. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  18. [ ] FN: Cover an input space logarithmically with filters
-  19. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
-  20. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-  21. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
-  22. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  23. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  24. [ ] IRRITATION: Why can't I resize windows?
-  25. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to 
-  26. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
+  5. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
+  6. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
+  7. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
+  8. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
+  9. [ ] IRRITATION: Why are the editable text boxes so damn small?
+  10. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
+  11. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  12. [ ] Make sure that fitters return specific codes indicating how they terminated
+  13. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
+  14. [ ] Antialiasing problem when saving images
+  15. [ ] MODULE: Standardized single/multi channel gammatone filter
+  16. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  17. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things more easily in scripts)
+  18. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  19. [ ] FN: Cover an input space logarithmically with filters
+  20. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
+  21. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+  22. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
+  23. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  24. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  25. [ ] IRRITATION: Why can't I resize windows?
+  26. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to 
+  27. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
 
 * ENQUEUING MANAGER PROGRAM:
   1. Should Batching should work like this?
@@ -278,3 +396,11 @@
   47. Fit combo: Fit at 100hz, then use that to init a fit at 200Hz, then again at 400Hz.
   48. Replace my nargin checks with "if ~exist('BLAH','var'),"
   48. sf=sf{1}; should be eliminated IN EVERY SINGLE FILE! 
+
+* Crazyboost
+  How's this for a fitter?
+  Boosting works well, and tries every possible step before taking a new one.
+  That's good and deterministic, but maybe we could speed things up by randomly sorting the steps (so as not to be biased towards early values)
+  Then just take a step _any_ time it improves the score
+  It would take many more steps each iteration.
+  No guarantee it would converge, but maybe we could do it a few times.
