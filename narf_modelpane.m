@@ -217,7 +217,8 @@ function module_apply_callback(mod_idx)
     % upstream part of the stack, leaving this function actually invalid
     if m.isready_pred(STACK(1:mod_idx), XXX)
         % Apply the function
-        XXX{mod_idx+1} = m.fn(STACK(1:mod_idx), XXX); 
+        recalc_xxx(mod_idx, mod_idx+1);
+        % Was: XXX{mod_idx+1} = m.fn(STACK(1:mom.fnd_idx), XXX); 
         % Enable graphing
         set(m.gh.plot_popup, 'Enable', 'on');
         % Build the plot panel, now that we know XXX{mod_idx+1}
@@ -556,7 +557,8 @@ function rebuild_gui_from_stack()
         
         % Recompute the data 
         if length(XXX) <= ii
-            XXX{ii+1} = m.fn(STACK(1:ii), XXX); 
+            recalc_xxx(ii, ii+1);
+            %was: XXX{ii+1} = m.fn(STACK(1:ii), XXX); 
         end
     
         % Delete any existing plot guis 

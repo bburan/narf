@@ -829,3 +829,24 @@ Ivar
      Some models have 1 FIR filter, some have per-file filters, some have IN/EX filters
   Therefore, don't build it in to the MSE module...it is instead part of a fitter.
   
+* SPLIT PARAMETER SETS
+ SUMMARY OF CHANGES:
+  1) [ ] Jackknifing is a generic FITTER function keyword and requires no special work.
+         - Besides, we need to do jackknifing even on split models.
+  2) [ ] Peeking at another module's data without using EXTRACT_MODULE_PARAMS() is now STRICTLY FORBIDDEN
+         - You provide the index number, which you found previously with find_modules()
+  3) [ ] STACK is now a 2x deep cell array. XXX has no change.
+  4) [ ] Modules all have a 'splitter' fn and a 'unifier' fn
+	 - The splitter function is called when append_module() is done
+	 - The splitter accounts for data conditions
+	   {[mdl1, dat1], [mdl2, dat2]} = splitter(STACK, XXX)
+	 - The unifier brings back multiple data conditions
+	   XXX{N+1} = unifier(x1{n+1), x2{n+1});
+  5) [ ] recalc_XXX now 
+	   1. calls mdl.fn() on each split parameter set
+	   2. calls mdl.unify() on the XXX results of all of those
+  6) [ ] Whatever calls plot hooks in narf_modelpane now
+	   1. calls splitter() to get the group parameter sets
+	   2. Creates a pack of axes()
+	   3. Calls the selected plot function on each one
+  7) [ ] Pack and unpack_fittables now understand split parameters

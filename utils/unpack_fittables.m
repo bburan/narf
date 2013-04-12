@@ -12,15 +12,33 @@ function unpack_fittables(w)
 
 global STACK;
 
-kk = 1;
-for ii = 1:length(STACK)
-    if isfield(STACK{ii}, 'fit_fields')
-        for jj = 1:length(STACK{ii}.fit_fields),
-            p = STACK{ii}.fit_fields{jj};
-            n = numel(STACK{ii}.(p));
-            tmp = w(kk:kk+n-1);
-            STACK{ii}.(p) = reshape(tmp, size(STACK{ii}.(p)));
-            kk = kk + n;
+rr = 1;
+for ii = 1:length(STACK)    
+    mm = STACK{ii};
+    
+    if iscell(mm)        
+        for kk = 1:length(mm)
+            m = mm{kk};
+            if isfield(m, 'fit_fields')
+                for jj = 1:length(m.fit_fields),
+                    p = m.fit_fields{jj};
+                    n = numel(m.(p));
+                    tmp = w(rr:rr+n-1);
+                    STACK{ii}{kk}.(p) = reshape(tmp, size(m.(p)));
+                    rr = rr + n;
+                end
+            end
+        end
+    else
+        m = mm;
+        if isfield(m, 'fit_fields')
+            for jj = 1:length(m.fit_fields),
+                p = m.fit_fields{jj};
+                n = numel(m.(p));
+                tmp = w(rr:rr+n-1);
+                STACK{ii}.(p) = reshape(tmp, size(m.(p)));
+                rr = rr + n;
+            end
         end
     end
 end

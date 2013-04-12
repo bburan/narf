@@ -33,13 +33,10 @@ m.isready_pred = @isready_always;
 m.num_coefs = 20;
 m.num_dims = 2;
 m.baseline = 0;
-m.fircoefs = [];
-m.get_coefs = @(mdl, ~) mdl.fircoefs;
-m.set_coefs = @(mdl, newcoefs) mdl.mdl('fircoefs', newcoefs);
+m.coefs = zeros(m.num_dims, m.num_coefs);
 m.input =  'stim';
 m.time =   'stim_time';
 m.output = 'stim';
-m.init_fit_sig = 'respavg'; % For initializing coefficients only
 
 % Optional fields
 m.auto_plot = @do_plot_fir_coefs_as_heatmap;
@@ -90,15 +87,35 @@ function mm = auto_init_fir_filter(stack, xxx)
     % them to get_coefs() and monitor how many elements there are in that
     % set?
     
-    % TODO: How should this be done?
+    % TODO: Init the fircoefs to be the right dimensionality
     
-    % TODO: Init the fircoefs to be the right size
+    % TODO: Make all other fields 'match' the previous module output
     
 end
 
 function x = do_fir_filtering(stack, xxx)
     mdl = stack{end};
     x = xxx{end};
+    
+    fns = fieldnames(x.dat);
+    for ii = 1:length(fns)
+        sf=fns{ii};
+        
+        % Figure out the particular parameter set to use
+        params = mdl.get_parameter_set(sf);
+        mmm = mdl.mdl(params);
+        
+        
+        % Now use mmm instead of mdl to compute crap
+        
+        
+        % 
+        
+        
+    end       
+    
+    % Old way below the line
+    % -----------------------------------------------
     
     % Apply the FIR filter across every stimfile
     fns = fieldnames(x.dat);
@@ -215,7 +232,7 @@ function do_plot_fir_coefs_as_heatmap(stack, xxx)
     axis tight;
     textLoc(sprintf('Sparsity: %f\nSmoothness: %f', ...
         sparsity_metric(coefs), smoothness_metric(coefs)), 'NorthWest');
-        
+    
 end
 
 function do_plot_all_fir_coefs_as_heatmap(stack, xxx)
