@@ -57,7 +57,7 @@ for ii = start_depth:end_depth;
             if ~m{jj}.isready_pred(tmpstack, splitXXX(jj));
                 error('Stack was not fully ready at depth %d idx %d', ii, jj);
             end
-            ret{end+1} = m{jj}.fn(tmpstack, splitXXX(jj));
+            ret{end+1} = m{jj}.fn(m, splitxxx{jj}{ii}, tmpstack, splitxxx(jj));
         end
         
         % Unify the returned values 
@@ -67,6 +67,6 @@ for ii = start_depth:end_depth;
         if ~STACK{ii}.isready_pred(STACK(1:ii), XXX(1:ii));
             error('Stack was not fully ready at depth %d', ii);
         end
-        XXX{ii+1} = m.fn(STACK(1:ii), XXX(1:ii));
+        XXX{ii+1} = m.fn(m, XXX{ii}, STACK(1:ii), XXX(1:ii));
     end
 end

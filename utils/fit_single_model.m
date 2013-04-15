@@ -79,7 +79,7 @@ modelname = modelname(1:end-1); % Remove trailing underscore
 META.batch = batch;
 META.modelname = modelname;
 META.modelfile = [num2str(batch) '_' cellid '_' modelname '.mat'];
-META.modelpath = [NARF_SAVED_MODELS_PATH filesep batch ...
+META.modelpath = [NARF_SAVED_MODELS_PATH filesep num2str(batch) ...
                   filesep cellid filesep META.modelfile];
 
 % Verification of DB and modelfile synchronization

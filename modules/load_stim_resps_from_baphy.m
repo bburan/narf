@@ -36,7 +36,7 @@ end
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @(xxx, stack) do_plot_all_channels(xxx, stack, m.output_stim_time, m.output_stim); 
+m.plot_fns{1}.fn = @do_plot_stim;
 m.plot_fns{1}.pretty_name = 'All Stim Channels';
 % m.plot_fns{2}.fn = @do_plot_stim;
 % m.plot_fns{2}.pretty_name = 'Single Stim Channel';
@@ -256,13 +256,20 @@ end
 
 function do_plot_stim(sel, stack, xxx)       
 
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = do_calc_paramsets(stack, xxx); 
     
     [xs, ys, mdlnames] = ...
         do_plot_prep(xouts, sel.stimfile, sel.stim_idx, 1:sel.chan_idx, ...
                      mdls{1}.output_stim_time, mdls{1}.output_stim);
     
-    do_plot(xs, ys, mdlnames, 'Time', 'Stimulus Volume');
+    if strcmp(mdls{1}.stimulus_format, 'envelope')
+        ylab = 'Envelope Magnitude [-]';
+    elseif strcmp(mdls{1}.stimulus_format, 'wav')
+        ylab = 'Volume [?]';
+    else
+        ylab = 'Unknown';
+    end
+    do_plot(xs, ys, mdlnames, 'Time [s]', ylab);
     
 end
 

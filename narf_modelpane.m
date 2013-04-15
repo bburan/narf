@@ -67,7 +67,7 @@ function update_panel_positions()
         p = get(NARFGUI{yi}.fn_panel, 'Position');
         set(NARFGUI{yi}.fn_panel, 'Position', [0 (top-ph*yi-offset) p(3) p(4)]);
         p = get(NARFGUI{yi}.plot_axes, 'Position');
-        set(NARFGUI{yi}.plot_axes, 'Position', [520 (top-ph*yi+20-offset) p(3) p(4)]);
+        set(NARFGUI{yi}.plot_axes, 'Position', [550 (top-ph*yi+20-offset) p(3) p(4)]);
     end
     drawnow;
 end
@@ -249,7 +249,8 @@ function module_plot_callback(mod_idx)
         % Set the axes, clear it, and run the plot function
         axes(NARFGUI{mod_idx}.plot_axes);
         cla;
-        m.plot_fns{idx}.fn(STACK(1:mod_idx), XXX(1:mod_idx+1));
+        sel = narfgui_widget_selected_values(NARFGUI(1:mod_idx));        
+        m.plot_fns{idx}.fn(sel, STACK(1:mod_idx), XXX(1:mod_idx+1));
         replot_from_depth(mod_idx+1);
     end 
 end
@@ -532,7 +533,7 @@ function rebuild_gui_from_stack()
         
     % Create GUIs for any modules that already exist in STACK
     for ii = 1:length(STACK)
-        STACK{ii}.gh = create_mod_block_panel(parent_handle, ii);
+        NARFGUI{ii} = create_mod_block_panel(parent_handle, ii);
         % Set the popup to display the selected model type
         % TODO: Also make it display 'Select Module' so it's not locked in
         set(NARFGUI{ii}.fn_popup, 'String', STACK{ii}.pretty_name, 'Value', 1);

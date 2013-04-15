@@ -215,6 +215,7 @@
   4. [ ] META -> ModelInfo
   5. [ ] FITTER
   6. [ ] MODULES
+  7. [ ] recalc_xxx -> calc_xxx
   8. [ ] Make a list of every function used purely for side effects, and rename it with a ! at the end
   9. [ ] "training set" -> "estimation set"
   10. [ ] "test set" -> "Validation set"

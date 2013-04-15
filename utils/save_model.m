@@ -31,9 +31,14 @@ end
 
 % Save to disk
 xxx = xxx{1};
-if exist(filepath,'file'),
+if exist(filepath, 'file'),
     delete(filepath);
 end
+
+% Make sure the directory exists
+narf_modelpane;
+keyboard;
+
 save(filepath, 'stack', 'xxx', 'meta');
 
 % Change the file to be read-only so you don't accidentally alter it later
