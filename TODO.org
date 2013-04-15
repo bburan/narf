@@ -15,28 +15,27 @@
   6) [X] recalc_XXX now 
 	   1. calls mdl.fn() on each split parameter set
 	   2. calls mdl.unifier() on the XXX results of all of those
-  7) [ ] There are three splitter implementations available:
+  7) [X] Whatever calls plot hooks in narf_modelpane now
+  8) [X] Substantial work in utils/
+	 All the functions which use STACK should now be more or less workable!	  
+  9) [X] There are three splitter implementations available:
 	 1. per-respfile
 	 2. per-filecode category
-	 3. all-files
-  8) [ ] There is one generic unifier
-         1. Per-respfile merger
-  9) [-] STACK{}.gh is now its own structure: NARFGUI
-	 - [X] Ensure no more *.gh things exist
-	 - [ ] Ensure that all the plot_gui's now are in NARFGUI
-	 - [ ] get_baphy_plot_controls
-	 - [ ] Substantial work in narf_modelpane
-  10) [X] Substantial work in utils/
-	  All the functions which use STACK should now be more or less workable!
-  11) [ ] Substantial work in pretty much every module which touches STACK naively
+	 3. all-files (No splitter provided)
+  10) [ ] There is one generic unifier
+          1. Per-respfile merger
+  11) [-] STACK{}.gh is now its own structure: NARFGUI
+	  - [X] Ensure no more *.gh things exist
+	  - [ ] Ensure that all the plot_gui's now are in NARFGUI
+	  - [ ] get_baphy_plot_controls
+	  - [ ] Substantial work in narf_modelpane
+  12) [ ] Substantial work in pretty much every module which touches STACK naively
 	  - [ ] 
-  12) [ ] Substantial work in narf_modelpane
-	  Pretty much every time you use STACK{...} you need to check!
-	  This is a pain, but does it occur anywhere else?
-  13) [ ] Whatever calls plot hooks in narf_modelpane now
-	    1. calls mdl.splitter() to get the number of parameter sets to do
-	    2. Creates a corresponding number of axes() 
-	    3. Calls the selected plot function on each one
+  13) [ ] Substantial work in narf_modelpane
+           1. calls mdl.splitter() to get the number of parameter sets to do
+	   2. Creates a corresponding number of axes() 
+	   3. Calls the selected plot function on each one
+	  Pretty much every time you use STACK{...} you need to check!	
 
 * Bayesian perspective
   You have a model structure (STACK)
@@ -120,7 +119,6 @@
      + Display selectors for which cellids can be trained
      + Checkbox management so that only certain models can be enqueued
 
-
 * SAFETY VERIFICATION PROGRAM:
   1. Create a test/ directory with many test functions in it
      Each test function:
@@ -136,7 +134,7 @@
   2. [ ] STACK -> 
   3. [ ] STACK.gh -> NARFGUI
   4. [ ] META -> ModelInfo
-  5. [ ] FITTER?
+  5. [ ] FITTER
   6. [ ] MODULES
   8. [ ] Make a list of every function used purely for side effects, and rename it with a ! at the end
   9. [ ] "training set" -> "estimation set"
