@@ -22,7 +22,7 @@
 	 1. per-respfile
 	 2. per-filecode category
 	 3. all-files (No splitter provided)
-  10) [ ] There is one generic unifier
+  10) [X] There is one generic unifier
           1. Per-respfile merger
   11) [-] STACK{}.gh is now its own structure: NARFGUI
 	  - [X] Ensure no more *.gh things exist
