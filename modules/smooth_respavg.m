@@ -35,7 +35,7 @@ function x = do_smooth_respavg(stack, xxx)
     x.training_set;
     
     % Build the gaussian smoothing filter   
-    %gf = gausswin(mdl.window_size);
+    % gf = gausswin(mdl.window_size);
     gf = mdl.window;
     gf = gf / sum(gf);    
     
@@ -66,7 +66,7 @@ function do_plot_respavg(stack, xxx)
          xold.dat.(sf).(mdl.input)(:, stim_idx, chan_idx), 'k-', ...
          xold.dat.(sf).(mdl.time), ...
          xnew.dat.(sf).(mdl.output)(:, stim_idx, chan_idx), 'r-');
-    
+     
 end
 
 end

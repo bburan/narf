@@ -850,3 +850,12 @@ Ivar
 	   2. Creates a pack of axes()
 	   3. Calls the selected plot function on each one
   7) [ ] Pack and unpack_fittables now understand split parameters
+
+* Should I put selected GUI info  in the XXX data struct?
+    Pros:
+    + No extra argument    
+    Cons:
+    - Confuses GUI state and XXX data
+    - Need to go through XXX data  
+    - Could accidentally overwrite XXX data
+    BAD IDEA!

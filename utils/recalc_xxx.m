@@ -52,7 +52,8 @@ for ii = start_depth:end_depth;
         % Iterate through each parameter set
         for jj = 1:length(m)
             tmpstack = STACK(1:ii-1);
-            tmpstack{end+1} = m{jj};            
+            tmpstack{end+1} = m{jj};         
+
             if ~m{jj}.isready_pred(tmpstack, splitXXX(jj));
                 error('Stack was not fully ready at depth %d idx %d', ii, jj);
             end

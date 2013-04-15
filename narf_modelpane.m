@@ -15,9 +15,6 @@ function refresh_modelpane = narf_modelpane(parent_handle)
 %
 % Once created, the GUI will be able to communicate with other processes by
 % modifying global values STACK and XXX.
-%
-% Any 'gui handles' created here are placed at the right index of the STACK
-% data structure under field 'gh'.
 % 
 % Whenever you modify STACK or XXX without using this GUI, please call
 % refresh_modelpane() to update this GUI or weird things may occur.
@@ -30,7 +27,7 @@ function refresh_modelpane = narf_modelpane(parent_handle)
 % everything then has to be shifted around in the positive spaces as the
 % number of module blocks changes.
 
-global STACK XXX META NARF_SAVED_MODELS_PATH MODULES;
+global STACK XXX META NARFGUI MODULES;
 
 MODULES = scan_directory_for_modules();
 
@@ -67,10 +64,10 @@ function update_panel_positions()
     N = length(STACK);
     top = (N)*ph + bh;
     for yi = 1:N
-        p = get(STACK{yi}.gh.fn_panel, 'Position');
-        set(STACK{yi}.gh.fn_panel, 'Position', [0 (top-ph*yi-offset) p(3) p(4)]);
-        p = get(STACK{yi}.gh.plot_axes, 'Position');
-        set(STACK{yi}.gh.plot_axes, 'Position', [520 (top-ph*yi+20-offset) p(3) p(4)]);
+        p = get(NARFGUI{yi}.fn_panel, 'Position');
+        set(NARFGUI{yi}.fn_panel, 'Position', [0 (top-ph*yi-offset) p(3) p(4)]);
+        p = get(NARFGUI{yi}.plot_axes, 'Position');
+        set(NARFGUI{yi}.plot_axes, 'Position', [520 (top-ph*yi+20-offset) p(3) p(4)]);
     end
     drawnow;
 end
@@ -107,8 +104,7 @@ function update_ready_modules(mod_idx)
     end
     
     % TODO: Select the first option? Or leave it as previously initialized?
-    m = STACK{mod_idx};
-    set(m.gh.fn_popup, 'String', char(ready_mods{:}));
+    set(NARFGUI{mod_idx}.fn_popup, 'String', char(ready_mods{:}));
 end
 
 % Given a module panel handle and selected module name, update the module
@@ -119,8 +115,7 @@ function update_available_plots(mod_idx)
     for idx = 1:length(pfns);
         plot_fns{idx} = pfns{idx}.pretty_name;
     end
-    m = STACK{mod_idx};
-    set(m.gh.plot_popup, 'String', char(plot_fns{:}));
+    set(NARFGUI{mod_idx}.plot_popup, 'String', char(plot_fns{:}));
 end
 
 % A method for updating a simple fieldname/value uitable
@@ -166,8 +161,8 @@ end
 function module_selected_callback(mod_idx)
     % Which module was selected?
     m = STACK{mod_idx};
-    c = cellstr(get(m.gh.fn_popup,'String'));
-    pretty_name = c{get(m.gh.fn_popup,'Value')};
+    c = cellstr(get(NARFGUI{mod_idx}.fn_popup,'String'));
+    pretty_name = c{get(NARFGUI{mod_idx}.fn_popup,'Value')};
     
     % When my revolution comes, I will destroy languages with for loops and
     % repopulate the earth with higher level functional idioms
@@ -198,11 +193,11 @@ function module_selected_callback(mod_idx)
     XXX = XXX(1:mod_idx);
     
     % Update the data table values
-    update_checkbox_uitable(m.gh.fn_table, m, m.editable_fields); 
+    update_checkbox_uitable(NARFGUI{mod_idx}.fn_table, m, m.editable_fields); 
     
     % Update the plotting popup menu, but leave it disabled
     update_available_plots(mod_idx);
-    set(m.gh.plot_popup, 'Enable', 'off');
+    set(NARFGUI{mod_idx}.plot_popup, 'Enable', 'off');
     
 end
 
@@ -220,18 +215,18 @@ function module_apply_callback(mod_idx)
         recalc_xxx(mod_idx, mod_idx+1);
         % Was: XXX{mod_idx+1} = m.fn(STACK(1:mom.fnd_idx), XXX); 
         % Enable graphing
-        set(m.gh.plot_popup, 'Enable', 'on');
+        set(NARFGUI{mod_idx}.plot_popup, 'Enable', 'on');
         % Build the plot panel, now that we know XXX{mod_idx+1}
-        if isfield(m, 'plot_gui_create_fn') && ~isfield(m, 'plot_gui')
-            STACK{mod_idx}.plot_gui = m.plot_gui_create_fn(m.gh.plot_panel, STACK(1:mod_idx), XXX);
+        if isfield(m, 'plot_gui_create_fn') && ~isfield(NARFGUI{mod_idx}, 'plot_gui')
+            NARFGUI{mod_idx}.plot_gui = m.plot_gui_create_fn(NARFGUI{mod_idx}.plot_panel, STACK(1:mod_idx), XXX);
         end
         % Trigger a redraw of the gui
-        hgfeval(get(m.gh.plot_popup,'Callback'), mod_idx, []);
+        hgfeval(get(NARFGUI{mod_idx}.plot_popup,'Callback'), mod_idx, []);
         drawnow;
 
          % If auto-recalc of the NEXT fn is checked, go down the stack
         if length(STACK) > mod_idx + 1 && ...
-           isequal(true, get(STACK{mod_idx+1}.gh.fn_recalc, 'Value'))
+           isequal(true, get(NARFGUI{mod_idx+1}.fn_recalc, 'Value'))
            module_apply_callback(mod_idx+1);
         end
     else
@@ -246,13 +241,13 @@ function module_plot_callback(mod_idx)
     m = STACK{mod_idx};
 
     % Get the selected plot function
-    idx = get(m.gh.plot_popup, 'Value');    
+    idx = get(NARFGUI{mod_idx}.plot_popup, 'Value');    
     
     % If the the index is a valid one and the function has been run (which
     % would make XXX(mod_idx+1) useful to us), we can plot.
     if (idx > 0 && idx <= length(m.plot_fns) && length(XXX) >= mod_idx + 1)
         % Set the axes, clear it, and run the plot function
-        axes(m.gh.plot_axes);
+        axes(NARFGUI{mod_idx}.plot_axes);
         cla;
         m.plot_fns{idx}.fn(STACK(1:mod_idx), XXX(1:mod_idx+1));
         replot_from_depth(mod_idx+1);
@@ -264,7 +259,7 @@ function recalc_from_depth(mod_idx)
     % Try to rebuild XXX, starting at stack depth mod_idx
     % Unlike recalc_xxx(), it stops when a module's autoapply isn't checked
     for ii = mod_idx:length(STACK);
-        if isfield(STACK{ii}, 'gh') && get(STACK{ii}.gh.fn_recalc, 'Value')
+        if isfield(NARFGUI{ii}, 'fn_recalc') && get(NARFGUI{ii}.fn_recalc, 'Value')
             module_apply_callback(ii);
         else
             return
@@ -278,7 +273,7 @@ function replot_from_depth(mod_idx)
     if mod_idx > length(STACK)
         return
     end
-    if isfield(STACK{mod_idx}, 'gh') && get(STACK{mod_idx}.gh.fn_replot, 'Value')
+    if isfield(NARFGUI{mod_idx}, 'fn_replot') && get(NARFGUI{mod_idx}.fn_replot, 'Value')
         module_plot_callback(mod_idx); % Recurses
     end
 end
@@ -287,11 +282,11 @@ end
 function module_data_table_callback(mod_idx)
     
     % Extract the structure of the field
-    s = extract_field_val_pairs(STACK{mod_idx}.gh.fn_table, 2, 3);
+    s = extract_field_val_pairs(NARFGUI{mod_idx}.fn_table, 2, 3);
     
     % If there was an error extracting the fields, reset the GUI
     if isempty(s)
-        update_checkbox_uitable(STACK{mod_idx}.gh.fn_table, ...
+        update_checkbox_uitable(NARFGUI{mod_idx}.fn_table, ...
                                     STACK{mod_idx}, ...
                                     STACK{mod_idx}.editable_fields);
         return;
@@ -303,7 +298,7 @@ function module_data_table_callback(mod_idx)
     end
     
     % Update the selected fields
-    STACK{mod_idx}.fit_fields = extract_checked_fields(STACK{mod_idx}.gh.fn_table, 1, 2);
+    STACK{mod_idx}.fit_fields = extract_checked_fields(NARFGUI{mod_idx}.fn_table, 1, 2);
     
     % Give the module a chance to run its own code
     STACK{mod_idx} = STACK{mod_idx}.mdl(STACK{mod_idx});  
@@ -411,9 +406,9 @@ end
 function add_mod_block()
     % Add a new model block, update the stack, and finally the view
     idx = (length(STACK)+1);
-    STACK{idx}.gh = create_mod_block_panel(parent_handle, idx);
+    NARFGUI{idx} = create_mod_block_panel(parent_handle, idx);
     % Trigger the popup callback to initialize it
-    hgfeval(get(STACK{idx}.gh.fn_popup, 'Callback'), idx, []);
+    hgfeval(get(NARFGUI{idx}.fn_popup, 'Callback'), idx, []);
     % Update the view
     update_scrollbar_size();
     update_panel_positions();    
@@ -499,7 +494,7 @@ function update_any_changed_tables_and_recalc()
     for ii = 1:length(STACK)
         if isfield(STACK{ii}, 'fit_fields')
             first_fit_depth = min(first_fit_depth, ii);
-            update_checkbox_uitable(STACK{ii}.gh.fn_table, ...
+            update_checkbox_uitable(NARFGUI{ii}.fn_table, ...
                 STACK{ii}, ...
                 STACK{ii}.editable_fields);
         end
@@ -540,8 +535,8 @@ function rebuild_gui_from_stack()
         STACK{ii}.gh = create_mod_block_panel(parent_handle, ii);
         % Set the popup to display the selected model type
         % TODO: Also make it display 'Select Module' so it's not locked in
-        set(STACK{ii}.gh.fn_popup, 'String', STACK{ii}.pretty_name, 'Value', 1);
-        update_checkbox_uitable(STACK{ii}.gh.fn_table, STACK{ii}, ...
+        set(NARFGUI{ii}.fn_popup, 'String', STACK{ii}.pretty_name, 'Value', 1);
+        update_checkbox_uitable(NARFGUI{ii}.fn_table, STACK{ii}, ...
                                     STACK{ii}.editable_fields); 
         update_available_plots(ii);                         
     end
@@ -562,13 +557,13 @@ function rebuild_gui_from_stack()
         end
     
         % Delete any existing plot guis 
-        if isfield(STACK{ii}, 'plot_gui')
-             rmfield(STACK{ii}, 'plot_gui');
+        if isfield(NARFGUI{ii}, 'plot_gui')
+             rmfield(NARFGUI{ii}, 'plot_gui');
         end
     
         % Now everything is ready to rebuild the GUI if there is one
         if isfield(STACK{ii}, 'plot_gui_create_fn')
-            STACK{ii}.plot_gui = STACK{ii}.plot_gui_create_fn(STACK{ii}.gh.plot_panel, STACK(1:ii), XXX(1:ii+1));
+            NARFGUI{ii}.plot_gui = STACK{ii}.plot_gui_create_fn(NARFGUI{ii}.plot_panel, STACK(1:ii), XXX(1:ii+1));
         end
     end
     
