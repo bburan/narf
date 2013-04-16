@@ -36,7 +36,7 @@ for ii = 1:length(STACK)
         m = STACK{ii};
     end
     
-    if isfield(Sm, 'auto_plot')
+    if isfield(m, 'auto_plot')
         ap(end+1) = ii;
     end
 end       
