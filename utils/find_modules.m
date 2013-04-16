@@ -16,12 +16,12 @@ function [mods, mod_idxs] = find_modules(stack, mod_name, first_only)
 mods = {};
 mod_idxs = {};
 
+if ~exist('first_only', 'var')
+    first_only = false;
+end
+
 for idx = 1:length(stack)
-    if iscell(stack{idx})
-        m = stack{idx}{1};
-    else
-        m = stack{idx};
-    end
+    m = stack{idx}{1};
     
     if isequal(m.name, mod_name)
         if first_only

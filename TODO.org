@@ -24,19 +24,25 @@
 	 3. all-files (No splitter provided)
   10) [X] There is one generic unifier
           1. Per-respfile merger
-  11) [-] STACK{}.gh is now its own structure: NARFGUI
+  11) [X] STACK{}.gh is now its own structure: NARFGUI
 	  - [X] Ensure no more *.gh things exist
 	  - [X] Ensure that all the plot_gui's now are in NARFGUI
-	  - [ ] get_baphy_plot_controls
-	  - [ ] Substantial work in narf_modelpane
-  12) [ ] Substantial work in pretty much every module which touches STACK naively
-	  - [ ] 
+	  - [X] get_baphy_plot_controls should become irrelevant now
+  12) [-] Substantial work in pretty much every module which touches STACK naively
+	  - [X] load-stim-from-baphy
+	  - [X] normalizer
+	  - [ ] FIR
+	  - [ ] NPNL
+	  - [ ] NPFNL
+	  - [ ] Other?
   13) [ ] Substantial work in narf_modelpane
 	  Any search through the stack now has this possibility of multiple parameter sets!	 
            1. calls mdl.splitter() to get the number of parameter sets to do
 	   2. Creates a corresponding number of axes() 
 	   3. Calls the selected plot function on each one
 	  Pretty much every time you use STACK{...} you need to check!	
+  14) [ ] Instead of having STACK be EITHER a singleton OR a cell-array, 
+	  ....make EVERYTHING a cell array of parameter sets.
 
 * UNDUN
     sel.stimfile = popup2str(mdl.plot_gui.selected_stimfile_popup);
@@ -83,7 +89,6 @@
 
   - For encapsulation at some point, we may want to remove global defaults:
     1. We should pass a handle to the plot axes to the plot functions
-
 
 * PLOTTING
   - [ ] Plot all output channels with different colors    (SHAREABLE METHOD) 
@@ -158,24 +163,24 @@
          - [ ] Repair the add/delete module button functionality
          - [ ] Provide a dropdown to pick more fitters
   5. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  10. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
-  11. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  12. [ ] Make sure that fitters return specific codes indicating how they terminated
-  13. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
-  14. [ ] Antialiasing problem when saving images
-  15. [ ] MODULE: Standardized single/multi channel gammatone filter
-  16. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  17. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things more easily in scripts)
-  18. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  19. [ ] FN: Cover an input space logarithmically with filters
-  20. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
-  21. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-  22. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
-  23. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  24. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  25. [ ] IRRITATION: Why can't I resize windows?
-  26. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to 
-  27. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
+  6. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
+  7. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  8. [ ] Make sure that fitters return meaningful, specific codes indicating how they terminated
+  9. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
+  10. [ ] Antialiasing problem when saving images
+  11. [ ] MODULE: Standardized single/multi channel gammatone filter
+  12. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  13. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things more easily in scripts)
+  14. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  15. [ ] FN: Cover an input space logarithmically with filters
+  16. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
+  17. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+  18. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
+  19. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  20. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  21. [ ] IRRITATION: Why can't I resize windows?
+  22. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to 
+  23. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
 
 * ENQUEUING MANAGER PROGRAM:
   1. Should Batching should work like this?
@@ -208,7 +213,7 @@
   1. [ ] XXX -> 
   2. [ ] STACK -> 
   3. [X] STACK.gh -> NARFGUI
-  4. [ ] META -> ModelInfo
+  4. [ ] META -> MODELINFO
   5. [ ] FITTER
   6. [ ] MODULES
   7. [ ] recalc_xxx -> calc_xxx

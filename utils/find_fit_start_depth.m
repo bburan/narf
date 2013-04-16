@@ -7,11 +7,7 @@ function d = find_fit_start_depth(stack)
 % actually fit. 
 % 
 for d = 1:length(stack)
-    if iscell(stack{d})
-        m = stack{d}{1};
-    else
-        m = stack{d};
-    end
+    m = stack{d}{1};
     
     if isfield(m, 'fit_fields') && ~isempty(m.fit_fields)
         return;

@@ -1,18 +1,8 @@
 function m = fir_filter(args)
 % A Single N-dimensional FIR that spans the input space. 
 %
-% Updates for version 2:
-%     - You are expected to initialize the FIR coefficients with a fitter.
-%     - Don't access the coefs structure yourself, please!
-%     - Instead, use these methods to read or write them
-%          .get_coefs(respfile)
-%          .set_coefs(respfile)
-%     - By defining the above two methods as desired, you can implement more
-%       sophisticated partitioning. For example, you could use one FIR for
-%       all the respfiles, one FIR for each type of respfile, or one FIR
-%       for each different respfile.
-%     - The default setter and getter use one FIR for all respfiles.
-%         
+% DOCUMENTATION TODO
+%
 % The total number of filter coefficients = num_coefs * num_dims * the
 % number of groupings of respfiles
 % 
@@ -25,8 +15,8 @@ m.mdl = @fir_filter;
 m.name = 'fir_filter';
 m.fn = @do_fir_filtering;
 m.pretty_name = 'FIR Filter';
-m.editable_fields = {'num_coefs', 'num_dims', 'baseline', ...
-                     'input', 'time', 'output'};
+m.editable_fields = {'coefs', 'num_coefs', 'num_dims', 'baseline', ...
+                     'input', 'filtered_input', 'time', 'output'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
@@ -35,26 +25,25 @@ m.num_dims = 2;
 m.baseline = 0;
 m.coefs = zeros(m.num_dims, m.num_coefs);
 m.input =  'stim';
+m.filtered_input = 'stim_filtered';
 m.time =   'stim_time';
 m.output = 'stim';
 
 % Optional fields
+%m.plot_gui_create_fn = @(hh, stack, xxx) create_chan_selector_gui(hh, stack, xxx(1:end-1), m.input);
 m.auto_plot = @do_plot_fir_coefs_as_heatmap;
 m.auto_init = @auto_init_fir_filter;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_fir_coefs_as_heatmap;
-m.plot_fns{1}.pretty_name = 'FIR Coefficients (Heat map)';
-m.plot_fns{1}.fn = @do_plot_all_fir_coefs_as_heatmap;
-m.plot_fns{1}.pretty_name = 'All FIR Coefficients (Heat map)';
-m.plot_fns{2}.fn = @(stack, xxx) do_plot_signal(stack, xxx, m.time, m.output);
-m.plot_fns{2}.pretty_name = 'FIR Response vs Time';
+m.plot_fns{1}.pretty_name = 'FIR Coefs (Heat map)';
+m.plot_fns{2}.fn = @do_plot_fir_coefs;
+m.plot_fns{2}.pretty_name = 'FIR Coefficients (Stem)';
 m.plot_fns{3}.fn = @do_plot_all_filtered_channels;
-m.plot_fns{3}.pretty_name = 'All Filtered Channels';
+m.plot_fns{3}.pretty_name = 'FIR Filtered Channels (All)';
 m.plot_fns{4}.fn = @do_plot_single_filtered_channel;
-m.plot_fns{4}.pretty_name = 'Single Filtered Channel';
-m.plot_fns{5}.fn = @do_plot_fir_coefs;
-m.plot_fns{5}.pretty_name = 'FIR Coefficients (Stem)';
-m.plot_gui_create_fn = @(hh, stack, xxx) create_chan_selector_gui(hh, stack, xxx(1:end-1), m.input);
+m.plot_fns{4}.pretty_name = 'FIR Filtered Channels (Single)';
+m.plot_fns{5}.fn = @do_plot_filter_output;
+m.plot_fns{5}.pretty_name = 'FIR Output';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -62,67 +51,39 @@ if nargin > 0
 end
 
 % Reset the FIR filter coefficients if its size doesn't match num_coefs
-if ~isequal([m.num_dims m.num_coefs], size(m.fircoefs))
-    m.fircoefs = zeros(m.num_dims, m.num_coefs);
+if ~isequal([m.num_dims m.num_coefs], size(m.coefs))
+    m.coefs = zeros(m.num_dims, m.num_coefs);
 end
 
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
-function mm = auto_init_fir_filter(stack, xxx)
+function mdl = auto_init_fir_filter(stack, xxx)
     % NOTE: Unlike most plot functions, auto_init functions get a 
     % STACK and XXX which do not yet have this module or module's data
-    % added to them. 
-    mm = m;
-    
-    if ~isfield(mm, 'fit_fields') 
+    % added to them.    
+    if ~isfield(m, 'fit_fields') 
         return
     end
     
-    % Count the number of elements in the training set
-    sfs = fieldnames(xxx{end}.dat);
-    n_sfs = length(sfs);
+    % Init the coefs to have the right dimensionality
+    mdl = m;
+    x = xxx{end};
+    fns = fieldnames(x.dat);
+    sf = fns{1};
+    [T, S, C] = size(x.dat.(sf).(mdl.input));               
     
-    % TODO: Loop through the XXX data structure RESPFILES, passing each of
-    % them to get_coefs() and monitor how many elements there are in that
-    % set?
-    
-    % TODO: Init the fircoefs to be the right dimensionality
-    
-    % TODO: Make all other fields 'match' the previous module output
-    
+    mdl.num_dims = C; 
+    mdl.coefs = zeros(mdl.num_dims, mdl.num_coefs);
 end
 
-function x = do_fir_filtering(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-    fns = fieldnames(x.dat);
-    for ii = 1:length(fns)
-        sf=fns{ii};
-        
-        % Figure out the particular parameter set to use
-        params = mdl.get_parameter_set(sf);
-        mmm = mdl.mdl(params);
-        
-        
-        % Now use mmm instead of mdl to compute crap
-        
-        
-        % 
-        
-        
-    end       
-    
-    % Old way below the line
-    % -----------------------------------------------
-    
+function x = do_fir_filtering(mdl, x, stack, xxx)   
     % Apply the FIR filter across every stimfile
     fns = fieldnames(x.dat);
     for ii = 1:length(fns)
          sf=fns{ii};
          
-         coefs = mdl.get_coefs(mdl, sf);
+         coefs = mdl.coefs;
     
          % Have a space allocated for computing initial filter conditions
          init_data_space = ones(size(coefs, 2) * 2, 1);
@@ -149,106 +110,89 @@ function x = do_fir_filtering(stack, xxx)
              end
          end
          
+         % Now the input has been filtered.
+         x.dat.(sf).(mdl.filtered_input) = tmp;
+         
          % The output is the sum of the filtered channels
          x.dat.(sf).(mdl.output) = squeeze(sum(tmp, 3)) + mdl.baseline; 
     end
 end
 
-function do_plot_all_filtered_channels(stack, xxx)
-    mdl = stack{end};
-    xold = xxx{end-1}; % To print the inputs, you need to go up one
-    x = xxx{end};
-    
-    % Find the GUI controls
-    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
-    
-    [T, S, C] = size(xold.dat.(sf).(mdl.input));
-    
-    coefs = mdl.get_coefs(mdl, sf);
-    
-    hold on;
-    for c = 1:C       
-        [~, Zf] = filter(coefs(c,:)', [1], ...
-                         ones(length(coefs(c,:)') * 2, 1) .* xold.dat.(sf).(mdl.input)(1, stim_idx, c));
-                              
-        plot(xold.dat.(sf).(mdl.time), ...
-             filter(coefs(c, :), [1], ...
-                    xold.dat.(sf).(mdl.input)(:, stim_idx, c), Zf), ...
-             pickcolor(c));
+% ------------------------------------------------------------------------
+% Plot methods
+
+function do_plot_fir_coefs_as_heatmap(sel, stack, xxx)
+    mdls = stack{end};
+
+    % Find the min and max values so colors are scaled appropriately
+    c_max = 0;
+    for ii = 1:length(mdls)
+        c_max = max(c_max, max(abs(mdls{ii}.coefs(:))));
     end
-    axis tight;
-    hold off;
-end
-
-function do_plot_single_filtered_channel(stack, xxx)
-    mdl = stack{end};
-    xold = xxx{end-1}; % To print the inputs, you need to go up one
-    x = xxx{end};
     
-    % Find the GUI controls
-    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
-    chan_idx = popup2num(mdl.plot_gui.selected_chan_popup);
-    dat = x.dat.(sf);
-
-    coefs = mdl.get_coefs(mdl, sf);
-
-    [~, Zf] = filter(coefs(chan_idx,:)', [1], ...
-                     ones(length(coefs(chan_idx,:)') * 2, 1) .* xold.dat.(sf).(mdl.input)(1, stim_idx, chan_idx));
-
-    plot(xold.dat.(sf).(mdl.time), ...
-         filter(coefs(chan_idx, :), [1], ...
-                    xold.dat.(sf).(mdl.input)(:, stim_idx, chan_idx), Zf), ...
-          pickcolor(chan_idx));
-    axis tight;
-end
-
-function do_plot_fir_coefs(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
+    % Plot all parameter sets' coefficients. Separate them by white pixels.
+    xpos = 1;
     hold on;
-    [sf, ~, ~] = get_baphy_plot_controls(stack);
-    coefs = mdl.get_coefs(mdl, sf);
-    for c = 1:(mdl.num_dims)
-        stem(1:mdl.num_coefs, coefs(c, :), pickcolor(c));
+    for ii = 1:length(mdls)
+        coefs = mdls{ii}.coefs;
+        [w, h] = size(coefs);
+        imagesc([xpos 1], [w+xpos, h], coefs, [-c_max-eps c_max+eps]);
+        text(xpos+(w/2), h*4/5, sprintf('Sparsity: %f\nSmoothness: %f', ...
+             sparsity_metric(coefs), ...
+             smoothness_metric(coefs)));
+        xpos = xpos + 1 + size(mdls{ii}.coefs, 2);
     end
     hold off;
-    axis tight;
-end
-
-function do_plot_fir_coefs_as_heatmap(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-    [sf, ~, ~] = get_baphy_plot_controls(stack);
-    coefs = mdl.get_coefs(mdl, sf);
-    
-    mm=max(abs(coefs(:)));
-    imagesc(coefs,[-mm mm]);
     set(gca,'YDir','normal');
     ca = caxis;
     lim = max(abs(ca));
     caxis([-lim, +lim]);
-    axis tight;
-    textLoc(sprintf('Sparsity: %f\nSmoothness: %f', ...
-        sparsity_metric(coefs), smoothness_metric(coefs)), 'NorthWest');
-    
+    axis tight;    
+    do_xlabel('Coef Time Index');
+    do_ylabel('Coef Channel Index');
 end
 
-function do_plot_all_fir_coefs_as_heatmap(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
+function do_plot_all_filtered_channels(sel, stack, xxx)
+    [mdls, xins, xouts] = do_calc_paramsets(stack, xxx); 
+    sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
+    do_plot(xouts, mdls{1}.time, mdls{1}.filtered_input, ...
+            sel, 'Time [s]', 'Filtered Channel [-]');
+end
+
+function do_plot_single_filtered_channel(sel, stack, xxx)
+    [mdls, xins, xouts] = do_calc_paramsets(stack, xxx); 
+    do_plot(xouts, mdls{1}.time, mdls{1}.output, ...
+            sel, 'Time [s]', 'Filtered Channel [-]');
+end
+
+function do_plot_filter_output(sel, stack, xxx)
+    [mdls, xins, xouts] = do_calc_paramsets(stack, xxx); 
+    sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
+    do_plot(xouts, mdls{1}.time, mdls{1}.output, ...
+            sel, 'Time [s]', 'FIR Output [-]');
+end
+
+function do_plot_fir_coefs(sel, stack, xxx)
+    mdls = stack{end};
     
-    mm=max(abs(mdl.fircoefs(:)));
-    imagesc(mdl.fircoefs,[-mm mm]);
-    set(gca,'YDir','normal');
-    ca = caxis;
-    lim = max(abs(ca));
-    caxis([-lim, +lim]);
+    % Plot all parameter sets' coefficients. Separate them by white pixels    
+    hold on;
+    handles = [];
+    names = {};
+    for ii = 1:length(mdls)
+        mdl = mdls{ii};
+        coefs = mdl.coefs;
+        [w, h] = size(coefs);
+        for c = 1:w
+            handles(end+1) = stem(1:mdl.num_coefs, coefs(c, :), pickcolor(c));
+            names{end+1} = ['PS' num2str(ii) '/CH' num2str(c)];
+        end 
+    end
+    hold off;
     axis tight;
-    textLoc(sprintf('Sparsity: %f\nSmoothness: %f', ...
-        sparsity_metric(mdl.fircoefs), smoothness_metric(mdl.fircoefs)), 'NorthWest');
-        
+    do_xlabel('Coef Time Index');
+    do_ylabel('Coef Magnitude');
+    legend(handles, names{:}, 'Location', 'NorthWest');
 end
 
 end

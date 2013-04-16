@@ -50,30 +50,18 @@ fig = figure('Menubar', 'figure', 'Resize','off', 'Visible', 'on', ...
 % Call the auto-plot functions
 for ii = 1:nplots
     idx = ap(ii);  
-    mm = STACK{idx};
-    if iscell(mm)    
-        lm = length(mm);
-        for jj = 1:lm,
-            m = mm{jj};
-        
-            plotfn = m.auto_plot;
+    m = STACK{idx};
     
-            aw = (w-lb*2) / lm;
-            ax = axes('Parent', fig, 'Units', 'pixels', ...
-                 'Position', [lb+(aw*(jj-1)) (nplots-ii)*ph+bb aw-lb ph-bb]);
+    plotfn = m.auto_plot;
     
-            plotfn(STACK(1:idx), XXX(1:idx+1));          
-        end
-    else
-        m = mm;
-        
-        plotfn = m.auto_plot;
+    ax = axes('Parent', fig, 'Units', 'pixels', ...
+        'Position', [lb (nplots-ii)*ph+bb w-lb*2 ph-bb]);
     
-        ax = axes('Parent', fig, 'Units', 'pixels', ...
-            'Position', [lb (nplots-ii)*ph+bb w-lb*2 ph-bb]);
-    
-        plotfn(STACK(1:idx), XXX(1:idx+1));
-    end
+    fns = fieldnames(XXX(idx+1).dat);
+    sel.stimfile = fns{1};
+    sel.chan_idx = 1;
+    sel.stim_idx = 1;
+    plotfn(sel, STACK(1:idx), XXX(1:idx+1));
 end
 
 % TEXT AT TOP

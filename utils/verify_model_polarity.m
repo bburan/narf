@@ -14,13 +14,9 @@ global STACK XXX;
 [~, firmod_idxs] = find_modules(STACK, 'fir_filter');
 
 for kk = 1:length(firmod_idxs)
-    idx = firmod_idxs(kk);   
+    idx = firmod_idxs{kk};
     
-    if iscell(STACK{idx})            
-        firmod = STACK{idx}{1};
-    else
-        firmod = STACK{idx};
-    end
+    firmod = STACK{idx}{1};
     x = XXX{idx+1};
         
     % Flip the sign of the coefs if there is a negative slope

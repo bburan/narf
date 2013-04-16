@@ -16,19 +16,11 @@ global STACK;
 
 mm = STACK{module_index};
 
-if iscell(mm)
-    paramarray = cell(1, length(mm));
-    
-    for ii = 1:length(mm)
-        m = mm{ii};
-        if isfield(m, paramname)
-            paramarray{ii} = m.(paramname);
-        end
-    end
-else
-    m = mm;
-    paramarray = {};
+paramarray = cell(1, length(mm));
+
+for ii = 1:length(mm)
+    m = mm{ii};
     if isfield(m, paramname)
-        paramarray{1} = m.(paramname);
+        paramarray{ii} = m.(paramname);
     end
 end

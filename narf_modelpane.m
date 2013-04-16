@@ -111,7 +111,7 @@ end
 % panel to reflect the available plot options.
 function update_available_plots(mod_idx)  
     plot_fns = {};
-    pfns = STACK{mod_idx}.plot_fns;
+    pfns = STACK{mod_idx}{1}.plot_fns;
     for idx = 1:length(pfns);
         plot_fns{idx} = pfns{idx}.pretty_name;
     end
@@ -160,7 +160,7 @@ end
 
 function module_selected_callback(mod_idx)
     % Which module was selected?
-    m = STACK{mod_idx};
+    m = STACK{mod_idx}{1};
     c = cellstr(get(NARFGUI{mod_idx}.fn_popup,'String'));
     pretty_name = c{get(NARFGUI{mod_idx}.fn_popup,'Value')};
     
@@ -186,8 +186,8 @@ function module_selected_callback(mod_idx)
     
     % All the above work just to find out what was selected! Oof!
     % Set the stack at this point to be the selected module. 
-    STACK{mod_idx} = merge_structs(STACK{mod_idx}, MODULES.(selected));
-    m = STACK{mod_idx}; % Get a new shorthand abbreviation 
+    STACK{mod_idx}{1} = merge_structs(STACK{mod_idx}{1}, MODULES.(selected));
+    m = STACK{mod_idx}{1}; % Get a new shorthand abbreviation 
     
     % Invalidate data beyond this point
     XXX = XXX(1:mod_idx);
@@ -204,7 +204,7 @@ end
 
 % When the user presses the button, apply the function
 function module_apply_callback(mod_idx)
-    m = STACK{mod_idx};
+    m = STACK{mod_idx}{1};
     XXX = XXX(1:mod_idx);  % Invalidate later data so it cannot be 
                            % accidentally used by this or later functions
     
@@ -238,7 +238,7 @@ end
 % TODO: Right now this is used as the general-use interface to the
 % plotting subsystem and it's a little hacky. 
 function module_plot_callback(mod_idx)
-    m = STACK{mod_idx};
+    m = STACK{mod_idx}{1};
 
     % Get the selected plot function
     idx = get(NARFGUI{mod_idx}.plot_popup, 'Value');    
@@ -288,21 +288,21 @@ function module_data_table_callback(mod_idx)
     % If there was an error extracting the fields, reset the GUI
     if isempty(s)
         update_checkbox_uitable(NARFGUI{mod_idx}.fn_table, ...
-                                    STACK{mod_idx}, ...
-                                    STACK{mod_idx}.editable_fields);
+                                    STACK{mod_idx}{1}, ...
+                                    STACK{mod_idx}{1}.editable_fields);
         return;
     end
     
     % Insert the field values into the stack
     for fs = fieldnames(s)', fs=fs{1};
-        STACK{mod_idx}.(fs) = s.(fs);
+        STACK{mod_idx}{1}.(fs) = s.(fs);
     end
     
     % Update the selected fields
-    STACK{mod_idx}.fit_fields = extract_checked_fields(NARFGUI{mod_idx}.fn_table, 1, 2);
+    STACK{mod_idx}{1}.fit_fields = extract_checked_fields(NARFGUI{mod_idx}.fn_table, 1, 2);
     
     % Give the module a chance to run its own code
-    STACK{mod_idx} = STACK{mod_idx}.mdl(STACK{mod_idx});  
+    STACK{mod_idx}{1} = STACK{mod_idx}{1}.mdl(STACK{mod_idx}{1});  
             
     % Request a recalculation from this point onwards. 
     recalc_from_depth(mod_idx);
@@ -493,11 +493,11 @@ function update_any_changed_tables_and_recalc()
     first_fit_depth = 1;
     % Loop through and update any data tables which changed
     for ii = 1:length(STACK)
-        if isfield(STACK{ii}, 'fit_fields')
+        if isfield(STACK{ii}{1}, 'fit_fields')
             first_fit_depth = min(first_fit_depth, ii);
             update_checkbox_uitable(NARFGUI{ii}.fn_table, ...
-                STACK{ii}, ...
-                STACK{ii}.editable_fields);
+                STACK{ii}{1}, ...
+                STACK{ii}{1}.editable_fields);
         end
     end
     % Recalc from the first fittable point all the way to the end
@@ -536,9 +536,9 @@ function rebuild_gui_from_stack()
         NARFGUI{ii} = create_mod_block_panel(parent_handle, ii);
         % Set the popup to display the selected model type
         % TODO: Also make it display 'Select Module' so it's not locked in
-        set(NARFGUI{ii}.fn_popup, 'String', STACK{ii}.pretty_name, 'Value', 1);
-        update_checkbox_uitable(NARFGUI{ii}.fn_table, STACK{ii}, ...
-                                    STACK{ii}.editable_fields); 
+        set(NARFGUI{ii}.fn_popup, 'String', STACK{ii}{1}.pretty_name, 'Value', 1);
+        update_checkbox_uitable(NARFGUI{ii}.fn_table, STACK{ii}{1}, ...
+                                    STACK{ii}{1}.editable_fields); 
         update_available_plots(ii);                         
     end
     
@@ -549,7 +549,7 @@ function rebuild_gui_from_stack()
     % The plotting and plot_gui's need to know about the XXX struct to work
     % So we rebuild the XXX struct as needed, and then call replot. 
     for ii = 1:length(STACK) 
-        m = STACK{ii};
+        m = STACK{ii}{1};
         
         % Recompute the data 
         if length(XXX) <= ii
@@ -563,8 +563,8 @@ function rebuild_gui_from_stack()
         end
     
         % Now everything is ready to rebuild the GUI if there is one
-        if isfield(STACK{ii}, 'plot_gui_create_fn')
-            NARFGUI{ii}.plot_gui = STACK{ii}.plot_gui_create_fn(NARFGUI{ii}.plot_panel, STACK(1:ii), XXX(1:ii+1));
+        if isfield(STACK{ii}{1}, 'plot_gui_create_fn')
+            NARFGUI{ii}.plot_gui = STACK{ii}{1}.plot_gui_create_fn(NARFGUI{ii}.plot_panel, STACK(1:ii), XXX(1:ii+1));
         end
     end
     

@@ -16,27 +16,14 @@ rr = 1;
 for ii = 1:length(STACK)    
     mm = STACK{ii};
     
-    if iscell(mm)        
-        for kk = 1:length(mm)
-            m = mm{kk};
-            if isfield(m, 'fit_fields')
-                for jj = 1:length(m.fit_fields),
-                    p = m.fit_fields{jj};
-                    n = numel(m.(p));
-                    tmp = w(rr:rr+n-1);
-                    STACK{ii}{kk}.(p) = reshape(tmp, size(m.(p)));
-                    rr = rr + n;
-                end
-            end
-        end
-    else
-        m = mm;
+    for kk = 1:length(mm)
+        m = mm{kk};
         if isfield(m, 'fit_fields')
             for jj = 1:length(m.fit_fields),
                 p = m.fit_fields{jj};
                 n = numel(m.(p));
                 tmp = w(rr:rr+n-1);
-                STACK{ii}.(p) = reshape(tmp, size(m.(p)));
+                STACK{ii}{kk}.(p) = reshape(tmp, size(m.(p)));
                 rr = rr + n;
             end
         end

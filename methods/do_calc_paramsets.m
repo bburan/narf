@@ -1,9 +1,7 @@
 function [mdls, xins, xouts] = do_calc_paramsets(stack, xxx)
+mdls = stack{end};
 
-if ~iscell(stack{end})
-    mdls = {stack{end}};
-    xins = {xxx{end-1}};
-    xouts = {xxx{end}};      
-else
-    error('Not implemented yet. Should look like core of calc_xxx');
-end
+% TODO: This should look like a splitter!!!!!!
+% TODO: This should look more like recalc_xxx()
+xins = {xxx{end-1}};
+xouts = {xxx{end}};

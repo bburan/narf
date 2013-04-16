@@ -386,7 +386,7 @@ function hs = create_gui(parent_handle, stack, xxx)
     h = pos(4) - 10;
     hs = [];
     
-    m = stack{end}; % TODO: These three looks like an accidental closure! Remove it
+    mdl = stack{end}{1};
     mod_idx = length(stack);
     x = xxx{end};
     
@@ -452,7 +452,7 @@ function hs = create_gui(parent_handle, stack, xxx)
         sf = popup2str(hs.selected_stimfile_popup);
         
         if isfield(x.dat, sf)
-            [d1, d2, d3] = size(x.dat.(sf).(m.output_stim));
+            [d1, d2, d3] = size(x.dat.(sf).(mdl.output_stim));
             d = {};
             for i = 1:d2
                 d{i} = sprintf('%d',i);
@@ -468,7 +468,7 @@ function hs = create_gui(parent_handle, stack, xxx)
         sf = popup2str(hs.selected_stimfile_popup);
         
         if isfield(x.dat, sf)
-            [d1, d2, d3] = size(x.dat.(sf).(m.output_stim));
+            [d1, d2, d3] = size(x.dat.(sf).(mdl.output_stim));
             d = {};
             for i = 1:d3
                 d{i} = sprintf('%d',i);

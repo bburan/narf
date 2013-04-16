@@ -35,12 +35,11 @@ if start_depth > length(XXX)
 end
 
 % Now, do the recalculation of the data
-for ii = start_depth:(end_depth-1),
-    m = STACK{ii};
-    
-    if iscell(m)        
+for ii = start_depth:(end_depth-1),    
+    mdls = STACK{ii};
+    if length(mdls) > 1
         % It is a split parameter module. Split the data for each parameter set
-        splitxxx = m{1}.splitter(XXX(1:ii));        
+        splitxxx = mdls{1}.splitter(XXX(1:ii));        
         
         ret = cell(1, length(m));
         
@@ -50,23 +49,23 @@ for ii = start_depth:(end_depth-1),
         end
         
         % Iterate through each parameter set
-        for jj = 1:length(m)
+        for jj = 1:length(mdls)
             tmpstack = STACK(1:ii-1);
-            tmpstack{end+1} = m{jj};         
+            tmpstack{end+1} = mdls{jj};         
 
-            if ~m{jj}.isready_pred(tmpstack, splitXXX(jj));
+            if ~mdls{jj}.isready_pred(tmpstack, splitXXX(jj));
                 error('Stack was not fully ready at depth %d idx %d', ii, jj);
             end
-            ret{end+1} = m{jj}.fn(m, splitxxx{jj}{ii}, tmpstack, splitxxx(jj));
+            ret{end+1} = mdls{jj}.fn(mdls{jj}, splitxxx{jj}{ii}, tmpstack, splitxxx(jj));
         end
         
         % Unify the returned values 
-        XXX{ii+1} = m{1}.unifier(ret);
+        XXX{ii+1} = mdls{1}.unifier(ret);
     else
         % It is not a split parameter module
-        if ~STACK{ii}.isready_pred(STACK(1:ii), XXX(1:ii));
+        if ~mdls{1}.isready_pred(STACK(1:ii), XXX(1:ii));
             error('Stack was not fully ready at depth %d', ii);
         end
-        XXX{ii+1} = m.fn(m, XXX{ii}, STACK(1:ii), XXX(1:ii));
+        XXX{ii+1} = mdls{1}.fn(mdls{1}, XXX{ii}, STACK(1:ii), XXX(1:ii));
     end
 end

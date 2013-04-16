@@ -30,9 +30,9 @@ if all(isfield(module, {'splitter', 'unifier'}))
     STACK{l+1} = ret;
 else
     if isfield(module, 'auto_init')
-        STACK{l+1} = module.auto_init(STACK, XXX(1:l+1));
+        STACK{l+1} = {module.auto_init(STACK, XXX(1:l))};
     else
-        STACK{l+1} = module;
+        STACK{l+1} = {module};
     end
 end
 
