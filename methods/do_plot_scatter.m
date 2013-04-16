@@ -1,4 +1,4 @@
-function do_plot_scatter(stack, xxx, field1, field2)
+function do_plot_scatter(sel, stack, xxx, field1, field2)
     mdl = stack{end};
     x = xxx{end};
     

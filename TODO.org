@@ -57,6 +57,11 @@
   - [ ] Need some scatter plots for the nonlinearities!
   - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots"
 
+* Scatter plots should fit even MORE info :
+  - For example, a smoothed scatter plot gives us a lot of info but...
+    ...the AXES could also show a color-coded IMAGESC which shows density
+    Right now when many points overlap, you can't tell.
+
 * PLOTTING
   - [X] Plot all output channels with different colors    (SHAREABLE METHOD) 
   - [X] Plot just one output channel in black             (SHAREABLE METHOD)

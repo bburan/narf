@@ -26,8 +26,11 @@ m.plot_fns{1}.pretty_name = 'Output Channels (All)';
 m.plot_fns{2}.fn = @do_plot_single_default_output;
 m.plot_fns{2}.pretty_name = 'Output Channel (Single)';
 
-%m.plot_fns{1}.fn = @do_plot_smooth_scatter_and_nonlinearity; 
-%m.plot_fns{1}.pretty_name = 'Stim/Resp Smooth Scatter';
+m.plot_fns{3}.fn = @do_plot_scatter_and_nonlinearity; 
+m.plot_fns{3}.pretty_name = 'Stim/Resp Scatter';
+
+m.plot_fns{4}.fn = @do_plot_smooth_scatter_and_nonlinearity; 
+m.plot_fns{4}.pretty_name = 'Stim/Resp Smooth Scatter';
 
 %m.plot_fns{3}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), false);
 %m.plot_fns{3}.pretty_name = 'Nonlinearity';
@@ -120,8 +123,7 @@ end
 
 function do_plot_scatter_and_nonlinearity(sel, stack, xxx)
     hold on;
-    do_plot_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
-    xlims = xlim();
+    do_plot_scatter(sel, stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
     [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx(1:end-1));
     errorbar(phi{1},phi{2},outbinserr);
     hold off
@@ -129,7 +131,7 @@ end
 
 function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)
     hold on;
-    do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
+    do_plot_avg_scatter(sel, stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
     [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx(1:end-1));
     errorbar(phi{1},phi{2},outbinserr);
     hold off

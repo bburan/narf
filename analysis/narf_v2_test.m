@@ -15,7 +15,7 @@ batch = 242;
 %       {'mse', 'mses5'}, ...
 %       'boost'};
 
-mm = {'env100', 'log2b', 'firn', 'npnl'};
+mm = {'env100', 'log2b', 'firn', 'initones', 'npnl'};
 
 cells = request_celldb_batch(batch, 'por024b-b1');
 modulekeys = keyword_combos(mm);
@@ -25,13 +25,12 @@ for ii = 1:length(cells)
         fprintf('Fitting cell [%d/%d] model [%d/%d]\n', ...
             ii, length(cells),  jj, length(modulekeys)); 
         
-        % For local testing, use fit_single_model
+        % For testing, use fit_single_model instead of enqueue_single_model
         fit_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
             cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
         
-        % Smart enough to only enqueue if new work needs to be done
-%        enqueue_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
-%            cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
+        %  enqueue_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
+        %   cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
         
     end
 end
