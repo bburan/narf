@@ -30,12 +30,7 @@ hspace = 0.05;
 % Scan through the STACK looking for things to .auto_plot
 ap = [];
 for ii = 1:length(STACK)
-    if iscell(STACK{ii})
-        m = STACK{ii}{1};
-    else
-        m = STACK{ii};
-    end
-    
+    m = STACK{ii}{1};
     if isfield(m, 'auto_plot')
         ap(end+1) = ii;
     end
@@ -50,14 +45,14 @@ fig = figure('Menubar', 'figure', 'Resize','off', 'Visible', 'on', ...
 % Call the auto-plot functions
 for ii = 1:nplots
     idx = ap(ii);  
-    m = STACK{idx};
+    m = STACK{idx}{1};
     
     plotfn = m.auto_plot;
     
     ax = axes('Parent', fig, 'Units', 'pixels', ...
         'Position', [lb (nplots-ii)*ph+bb w-lb*2 ph-bb]);
     
-    fns = fieldnames(XXX(idx+1).dat);
+    fns = fieldnames(XXX{idx+1}.dat);
     sel.stimfile = fns{1};
     sel.chan_idx = 1;
     sel.stim_idx = 1;

@@ -31,7 +31,8 @@
   12) [-] Substantial work in pretty much every module which touches STACK naively
 	  - [X] load-stim-from-baphy
 	  - [X] normalizer
-	  - [ ] FIR
+	  - [X] FIR
+	  - [X] LOG2b
 	  - [ ] NPNL
 	  - [ ] NPFNL
 	  - [ ] Other?
@@ -44,98 +45,36 @@
   14) [ ] Instead of having STACK be EITHER a singleton OR a cell-array, 
 	  ....make EVERYTHING a cell array of parameter sets.
 
-* UNDUN
-    sel.stimfile = popup2str(mdl.plot_gui.selected_stimfile_popup);
-    sel.stim_idx = popup2num(mdl.plot_gui.selected_stim_idx_popup);
-    sel.chan_idx = popup2num(mdl.plot_gui.selected_stim_chan_popup);
-
-* Module Interface Changes
-  - DO functions now get passed four arguments instead of two:
-    | mdl   | Module parameter set                                                   |
-    | x     | default xxx data to work on                                            |
-    | stack | The whole stack. It's STRONGLY ENCOURAGED you don't actually use this. |
-    | xxx   | The whole xxx. It's STRONGLY ENCOURAGED you not use this.              |
-
-  - PLOT functions now get passed six arguments
-    | selected | Struct containing plot_gui selections                            |
-    | stack    | The whole stack up to this point, including alternate param sets |
-    | xxx      | The whole xxx up to N+1 with the unified results                 |
-
-  - These can easily be computed from stack and xxx
-    | mdls   | cell array of module parameter sets for this module |
-    | xprevs | cell array of split inputs                          |
-    | xnexts | cell array of outputs before the unify              |
-    | mdl    |                                                     |
-    | xprev  |                                                     |
-    | xnext  |                                                     |
-
-  - Selected struct has these fields
-    | selected.stimfile    | Selected stimfile              |
-    | selected.stim_idx    | Selected stim idx              |
-    | selected.chan_idx    | Default selected channel idx   |
-    | selected.parmset_idx | Default selected parameter set (or this parmset) |
-
-  - The selected struct is built by walking the NARFGUI array and merging fields
-
-  - When a plot-gui is changed, it triggers a REFRESH_GUI from that point
-    Model the logic on the recalc_xxx and it should be fine
-
-  - Only remaining questions is should I
-    1. Plot per parameter set and encapsulate loops?
-    2. Plot entire thing
-
-    I guess it makes more sense to plot the whole damn thing
-    If I just want to plot part of it, I do: 
-
-  - For encapsulation at some point, we may want to remove global defaults:
-    1. We should pass a handle to the plot axes to the plot functions
+* MORE CORRECTIONS:
+  - [ ] Many modules need default per-paramset, per-channel heatmap data viewers
+	- [ ] Loadstimfrompbaphy
+	- [ ] NORMALIZE CHANNELS
+	- [ ] FIR filter
+	- [ ] Nonlinearity
+	- [ ] Pretty much everybody!
+  - [ ] FIR filter needs an 'ACTIVE FIR COEFS' plot which only displays paramsets matching selected
+  - [ ] do_calc_paramsets needs some fixing
+  - [ ] Need some scatter plots for the nonlinearities!
+  - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots"
 
 * PLOTTING
-  - [ ] Plot all output channels with different colors    (SHAREABLE METHOD) 
-  - [ ] Plot just one output channel in black             (SHAREABLE METHOD)
+  - [X] Plot all output channels with different colors    (SHAREABLE METHOD) 
+  - [X] Plot just one output channel in black             (SHAREABLE METHOD)
   - [ ] Plot just one output channel as a spectrogram     (SHAREABLE METHOD)
   - [ ] Plot all output channels as a heatmap             (SHAREABLE METHOD)
-  - [ ] Plot just the average response                    (Specific but similar to 'plot one channel')
+  - [X] Plot just the average response                    (Specific but similar to 'plot one channel')
   - [ ] Plot all output responses as a raster             (Specific...unless I want to raster time-scaled stuff?)
   - [ ] Plot specrogram + raster                          (specific, combo)
-  - [ ] Plot active set of FIR coefs as heatmap           (SHAREABLE)
-  - [ ] Plot all sets of FIR coefs as heatmap
-  - [ ] Plot active set of FIR coefs as stem plot
+  - [X] Plot active set of FIR coefs as heatmap           (SHAREABLE)
+  - [X] Plot all sets of FIR coefs as heatmap
+  - [X] Plot active set of FIR coefs as stem plot
   - [ ] Plot all intermediate channels for a single paramset ( FIR specific)
   - [ ] Plot the FIR output channel (1D) for a single/multiple param set
  
-* Meta-Methods
-** I need a generic plotting method which takes
-  - A function that plots a single line
-  - x axis vector-valued cell array {x1, x2, x3}
-  - y axis matrix-valued cell array {Y1, Y2, Y3}
-  - fieldnames (Assumed to be parameter set names)
-  - channames (assumed to be channels and corresponding with Y's 2nd dimension)
-
-** It should also:
-   - Colors indicate channel: b, g, r, c, m, 
-   - Line types:    -, --, -., :, o-, x-,
-   - Automatic legend, X axis, Y axis, etc
-   - plot(dat.(mdl.output_stim_time), ...
-       dat.(mdl.output_stim)(:, sel.stim_idx, sel.chan_idx), 'k-');
-
 * Why the plot functions have to change so much:
   Because right now in EVERY single plot function, we check the status of a GUI that may not exist
   For better flexibility, we should allow plotting to occur programmatically
   This can only occur if plot functions are GIVEN the GUI status as an argument
-
-* Have the FIR module be MIMO, and then SUM the outputs
-  Is it useful to do this to simplify plot routines? Or not?
-  
-* Bayesian perspective
-  You have a model structure (STACK)
-  You have several model parameter sets (Sideways sets of parameters in STACK)
-  Each of those has a likelihood/data chain (XXX)
-  Now that we can have multiple parameter sets, we can even have ENSEMBLE models
-  (Use a gaussian random splitter, and a mean unifier or one that discards outliers)
-  
-* Places to correct plot function stuff
-  - [ ] narf_modelpane.m:        m.plot_fns{idx}.fn(STACK(1:mod_idx), XXX(1:mod_idx+1));
 
 * Architectual Improvements
   1. [ ] Make the fits run faster by removing then re-adding the 'test_set' data after fitting process

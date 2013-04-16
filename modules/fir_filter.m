@@ -39,9 +39,9 @@ m.plot_fns{1}.pretty_name = 'FIR Coefs (Heat map)';
 m.plot_fns{2}.fn = @do_plot_fir_coefs;
 m.plot_fns{2}.pretty_name = 'FIR Coefficients (Stem)';
 m.plot_fns{3}.fn = @do_plot_all_filtered_channels;
-m.plot_fns{3}.pretty_name = 'FIR Filtered Channels (All)';
+m.plot_fns{3}.pretty_name = 'Filtered Channels (All)';
 m.plot_fns{4}.fn = @do_plot_single_filtered_channel;
-m.plot_fns{4}.pretty_name = 'FIR Filtered Channels (Single)';
+m.plot_fns{4}.pretty_name = 'Filtered Channels (Single)';
 m.plot_fns{5}.fn = @do_plot_filter_output;
 m.plot_fns{5}.pretty_name = 'FIR Output';
 
@@ -135,9 +135,9 @@ function do_plot_fir_coefs_as_heatmap(sel, stack, xxx)
     hold on;
     for ii = 1:length(mdls)
         coefs = mdls{ii}.coefs;
-        [w, h] = size(coefs);
-        imagesc([xpos 1], [w+xpos, h], coefs, [-c_max-eps c_max+eps]);
-        text(xpos+(w/2), h*4/5, sprintf('Sparsity: %f\nSmoothness: %f', ...
+        [w, h] = size(coefs');
+        imagesc([xpos xpos+w-1], [1, h], coefs, [-c_max-eps c_max+eps]);
+        text(xpos, 1, sprintf('Sparsity: %f\nSmoothness: %f', ...
              sparsity_metric(coefs), ...
              smoothness_metric(coefs)));
         xpos = xpos + 1 + size(mdls{ii}.coefs, 2);

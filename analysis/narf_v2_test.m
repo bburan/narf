@@ -15,7 +15,7 @@ batch = 242;
 %       {'mse', 'mses5'}, ...
 %       'boost'};
 
-mm = {'env100', 'firn'};
+mm = {'env100', 'log2b', 'firn', 'npnl'};
 
 cells = request_celldb_batch(batch, 'por024b-b1');
 modulekeys = keyword_combos(mm);

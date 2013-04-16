@@ -859,3 +859,74 @@ Ivar
     - Need to go through XXX data  
     - Could accidentally overwrite XXX data
     BAD IDEA!
+* Module Interface Changes
+  - DO functions now get passed four arguments instead of two:
+    | mdl   | Module parameter set                                                   |
+    | x     | default xxx data to work on                                            |
+    | stack | The whole stack. It's STRONGLY ENCOURAGED you don't actually use this. |
+    | xxx   | The whole xxx. It's STRONGLY ENCOURAGED you not use this.              |
+
+  - PLOT functions now get passed six arguments
+    | selected | Struct containing plot_gui selections                            |
+    | stack    | The whole stack up to this point, including alternate param sets |
+    | xxx      | The whole xxx up to N+1 with the unified results                 |
+
+  - These can easily be computed from stack and xxx
+    | mdls   | cell array of module parameter sets for this module |
+    | xprevs | cell array of split inputs                          |
+    | xnexts | cell array of outputs before the unify              |
+ 
+  - Selected struct has these fields
+    | selected.stimfile    | Selected stimfile              |
+    | selected.stim_idx    | Selected stim idx              |
+    | selected.chan_idx    | Default selected channel idx   |
+    | selected.parmset_idx | Default selected parameter set (or this parmset) |
+
+  - The selected struct is built by walking the NARFGUI array and merging fields
+
+  - When a plot-gui is changed, it triggers a REFRESH_GUI from that point
+    Model the logic on the recalc_xxx and it should be fine
+
+  - Only remaining questions is should I
+    1. Plot per parameter set and encapsulate loops?
+    2. Plot entire thing
+
+    I guess it makes more sense to plot the whole damn thing
+    If I just want to plot part of it, I do: 
+
+  - For encapsulation at some point, we may want to remove global defaults:
+    1. We should pass a handle to the plot axes to the plot functions
+
+* Meta-Methods
+** I need a generic plotting method which takes
+  - A function that plots a single line
+  - x axis vector-valued cell array {x1, x2, x3}
+  - y axis matrix-valued cell array {Y1, Y2, Y3}
+  - fieldnames (Assumed to be parameter set names)
+  - channames (assumed to be channels and corresponding with Y's 2nd dimension)
+
+** It should also:
+   - Colors indicate channel: b, g, r, c, m, 
+   - Line types:    -, --, -., :, o-, x-,
+   - Automatic legend, X axis, Y axis, etc
+   - plot(dat.(mdl.output_stim_time), ...
+       dat.(mdl.output_stim)(:, sel.stim_idx, sel.chan_idx), 'k-');
+
+* Have the FIR module be MIMO, and then SUM the outputs
+  Is it useful to do this to simplify plot routines? Or not?
+  99% of the time I want the summing, so let's include it. 
+
+* Bayesian perspective
+  You have a model structure, which is the TYPE of module in the (STACK)
+  You have several model parameter sets (Sideways sets of parameters in STACK)
+  Each of those has a likelihood/data chain (XXX)
+  Now that we can have multiple parameter sets, we can even have ENSEMBLE models
+  (Use a gaussian random splitter, and a mean unifier or one that discards outliers)
+  
+A true bayesian would allow parameter sets to vary across the WHOLE stack.
+There's no reason we couldn't do this with a tree-shaped STACK.
+It would be like encompassing multiple models in the same file, all working on the same data.
+The downside would be that aggregating data for plotting would be a bitch.
+Training would also be a bitch. 
+For now, being able to localize changes to a single module is good enough. 
+Besides, we already have enough rope to hang ourselves with.

@@ -21,9 +21,9 @@ m.force_positive = false;
 %m.plot_gui_create_fn = @create_chan_selector_gui;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_all_normalized_channels;
-m.plot_fns{1}.pretty_name = 'Normalized Channels (All)';
+m.plot_fns{1}.pretty_name = 'Normalized Chan (All)';
 m.plot_fns{2}.fn = @do_plot_single_normalized_channel;
-m.plot_fns{2}.pretty_name = 'Normalized Channel (Single)';
+m.plot_fns{2}.pretty_name = 'Normalized Chan (Single)';
 %m.plot_fns{3}.fn = @do_plot_normalized_channels_as_heatmap;
 %m.plot_fns{3}.pretty_name = 'Normalized Channels (Heatmap)';
 
