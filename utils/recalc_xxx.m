@@ -35,7 +35,7 @@ if start_depth > length(XXX)
 end
 
 % Now, do the recalculation of the data
-for ii = start_depth:end_depth;
+for ii = start_depth:(end_depth-1),
     m = STACK{ii};
     
     if iscell(m)        

@@ -248,7 +248,7 @@ function module_plot_callback(mod_idx)
     if (idx > 0 && idx <= length(m.plot_fns) && length(XXX) >= mod_idx + 1)
         % Set the axes, clear it, and run the plot function
         axes(NARFGUI{mod_idx}.plot_axes);
-        cla;
+        cla; legend off;
         sel = narfgui_widget_selected_values(NARFGUI(1:mod_idx));        
         m.plot_fns{idx}.fn(sel, STACK(1:mod_idx), XXX(1:mod_idx+1));
         replot_from_depth(mod_idx+1);
@@ -400,7 +400,7 @@ function gh = create_mod_block_panel(parent_handle, mod_idx)
     % remember that when you move the fn_panel around, you also need to update
     % the axes object associated with that panel.
     gh.plot_axes = axes('Parent', parent_handle, ...
-        'Units','pixels', 'Position', [520 20 (w-520-25) (ph-25)]);
+        'Units','pixels', 'Position', [550 20 (w-550-25) (ph-25)]);
 end
 
 % Callback for creating a module block
