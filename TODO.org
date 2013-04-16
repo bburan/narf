@@ -155,13 +155,9 @@
          - [ ] Heat Map current display button	
   4. [ ] Repair NarfModelpane
          - [ ] Displays model name, training set, test set, and other important info at bottom of window
+         - [ ] Repair the add/delete module button functionality
          - [ ] Provide a dropdown to pick more fitters
-	 - [ ] Standardized colors for all module plots
   5. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  6. [ ] IRRITATION: Why doesn't it show the model save filename so I can see which file I just loaded if I forgot?
-  7. [ ] IRRITATION: Why doesn't every plotted signal have a legend?
-  8. [ ] IRRITATION: Why don't the X (or at least the Y) axes have scales?
-  9. [ ] IRRITATION: Why are the editable text boxes so damn small?
   10. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
   11. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
   12. [ ] Make sure that fitters return specific codes indicating how they terminated

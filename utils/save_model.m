@@ -18,17 +18,6 @@ if nargin ~= 4
     error('save_model() needs exactly 4 arguments');
 end
 
-% OBSOLETED now that GUI stuff is in a separate structure NARFGUI
-% % Strip off any GUI handles and plot GUI handles
-% for ii = 1:length(stack)
-%     if isfield(stack{ii}, 'gh')
-%         stack{ii} = rmfield(stack{ii}, 'gh');
-%     end
-%     if isfield(stack{ii}, 'plot_gui')
-%         stack{ii} = rmfield(stack{ii}, 'plot_gui');
-%     end
-% end
-
 % Save to disk
 xxx = xxx{1};
 if exist(filepath, 'file'),
@@ -36,8 +25,10 @@ if exist(filepath, 'file'),
 end
 
 % Make sure the directory exists
-narf_modelpane;
-keyboard;
+s = filesep;
+path = regexp(filepath, ['^(.*)' s], 'tokens');
+path = path{1}{1};
+unix(['mkdir -p ' path]); % TODO: Make this portable to windows
 
 save(filepath, 'stack', 'xxx', 'meta');
 
