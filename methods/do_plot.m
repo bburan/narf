@@ -32,7 +32,7 @@ for ii = 1:length(xs)
     y = ys{ii};
     lw = ceil(ii / n_linestyles); 
     ls = linestyle{mod(ii-1, n_linestyles) + 1};
-    for jj = 1:size(ys, 2) 
+    for jj = 1:size(y, 2) 
         c = colors{mod(jj-1, n_colors) + 1};
         % Special case: if there is only one signal, make it black
         if 1 == size(ys,2)
@@ -44,8 +44,8 @@ for ii = 1:length(xs)
     end
 end
 
-lh = legend(handles, leg{:}, 'Location', 'NorthWest');
-set(lh,'Interpreter','none');
+lh = legend(handles, leg{:}, 'Location', 'NorthWest'); %FUCKING PIECE OF SHIT MATLAB CAN"T UNDERSTAND CELL ARRAYS
+set(lh,'Interpreter', 'none');
 
 xh = xlabel(xlab, 'Interpreter', 'none');
 set(xh, 'Units', 'pixels', 'FontWeight', 'bold');
