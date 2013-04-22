@@ -32,47 +32,32 @@ end
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_inputs;
+m.plot_fns{1}.fn = @do_plot_correlation_inputs;
 m.plot_fns{1}.pretty_name = 'Inputs vs Time';
+% 
+% m.plot_fns{2}.fn = @blah;
+% m.plot_fns{2}.pretty_name = 'Correlation Scatter Plot';
+% 
+% m.plot_fns{3}.fn = @blah;
+% m.plot_fns{3}.pretty_name = 'Smoothed Scatter';
 
-m.plot_fns{2}.fn = @(stack, xxx) do_plot_scatter(stack, xxx, stack{end}.input1, stack{end}.input2);
-m.plot_fns{2}.pretty_name = 'Correlation Scatter Plot';
-
-m.plot_fns{3}.fn = @(stack, xxx) do_plot_avg_scatter(stack, xxx, stack{end}.input1, stack{end}.input2);
-m.plot_fns{3}.pretty_name = 'Smoothed Scatter';
-
-function x = do_correlation(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-    % -------------
+function x = do_correlation(mdl, x, stack, xxx)    
     % Compute the training set correlation, ignoring nans
-    V1 = [];
-    V2 = [];
-    for ii = 1:length(x.training_set),
-        sf = x.training_set{ii};
-        V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));
-        V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));
-    end
-    R = corrcoef(excise([V1 V2]));
+    p = flatten_field(x.dat, x.training_set, mdl.input1);
+    q = flatten_field(x.dat, x.training_set, mdl.input2); 
+    R = corrcoef(excise([p q]));
     if isnan(R)
-        x.(mdl.train_score) = NaN;
-        x.(mdl.output) = NaN;
+        x.(mdl.train_score) = NaN; 
+        x.(mdl.output) = -2;
     else
         x.(mdl.train_score) = R(2,1);
         x.(mdl.output) = 1 - R(2,1);
     end
     
-    %---------------
     % Compute the test set correlation, ignoring nans
-    V1 = [];
-    V2 = [];
-    for ii = 1:length(x.test_set),
-        sf = x.test_set{ii};
-        V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));
-        V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));
-    end
-    R = corrcoef(excise([V1 V2]));
+    ptest = flatten_field(x.dat, x.test_set, mdl.input1);
+    qtest = flatten_field(x.dat, x.test_set, mdl.input2); 
+    R = corrcoef(excise([ptest qtest]));
     if isnan(R)
         x.(mdl.test_score) = NaN;
     else
@@ -81,20 +66,12 @@ function x = do_correlation(stack, xxx)
     
 end
 
-function do_plot_inputs(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
-    dat = x.dat.(sf);  
-        
-    plot(dat.(mdl.time), dat.(mdl.input1)(:, stim_idx), 'b-', ...
-         dat.(mdl.time), dat.(mdl.input2)(:, stim_idx), 'g-');
-    
-    axis tight;
-    legend(mdl.input1, mdl.input2);
-    textLoc(sprintf(' Train r: %f\n Test r : %f', ...
-        x.(mdl.train_score), x.(mdl.test_score)), 'NorthWest');
+function do_plot_correlation_inputs(sel, stack, xxx)
+     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+%     do_plot(xouts, mdls{1}.time, mdls{1}.input1, ...
+%             sel, 'Prediction [Hz]', 'RespAvg [Hz]');
+%    textLoc(sprintf(' Train r: %f\n Test r : %f', ...
+%        x.(mdls{1}.train_score), x.(mdl.test_score)), 'NorthWest');
 
 end
 

@@ -77,7 +77,7 @@ while ~termfn(n, x, stepsize, s_delta)
     s_next = s;
     
     % Try to take a step along every dimension
-    fprintf('boosting.m: Stepping');
+    fprintf('Boosting');
     
     for d = 1:l
         stepdir = zeros(l, 1);
@@ -111,7 +111,7 @@ while ~termfn(n, x, stepsize, s_delta)
     % If the search point has not changed, step size is too big.
      if all(x == x_next)
          stepsize = stepsize / stepscale;
-         fprintf('Stepsize decreased to %d\n', stepsize);
+         fprintf('Decreased stepsize to %d\n', stepsize);
      else        
         % Compute the improvement in score
         s_delta = s - s_next;
@@ -125,7 +125,7 @@ while ~termfn(n, x, stepsize, s_delta)
         s = s_next;
         
         % Print the improvement after stepping
-        fprintf('Step on %d improved by: %d\n', dir, s_delta);
+        fprintf('coef# %3d, delta: %d, score:%d\n', dir, s_delta, s);
         n = n + 1;
      end
     

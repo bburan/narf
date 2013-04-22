@@ -7,17 +7,21 @@ global MODULES;
 
 MODULES = scan_directory_for_modules();   
 
-batch = 242;
+batch = 241;
+% batch = 242;
+
 % mm = {'env100', ...
 %       'log2b', ...
 %       {{'firn', {'initrc', 'initzero'}, 'npfnl'}, ...
 %        {'depn', 'npnl'}, 'inex'}, ...
 %       {'mse', 'mses5'}, ...
 %       'boost'};
+% initones
 
-mm = {'env100', 'log2b', 'firn', 'initones', 'npnl'};
+mm = {'env100', 'log2b', 'firn', 'npnlx', 'mse', 'boost'};
 
-cells = request_celldb_batch(batch, 'por024b-b1');
+cells = request_celldb_batch(batch, 'por023b-b1');
+% cells = request_celldb_batch(batch, 'por028d-b1');
 modulekeys = keyword_combos(mm);
 
 for ii = 1:length(cells)

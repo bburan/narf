@@ -36,7 +36,7 @@ end
 
 % Compute the entire stack, using calc_paramsets to manage actual
 % computation of the modules' parameter sets
-for ii = start_depth:(end_depth-1),
+for ii = start_depth:end_depth,
     [mdls, ~, xouts] = calc_paramsets(STACK(1:ii), XXX(1:ii));
     
     if length(xouts) == 1 && ~isfield(mdls{1}, 'unifier')

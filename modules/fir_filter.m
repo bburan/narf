@@ -184,7 +184,7 @@ function do_plot_fir_coefs(sel, stack, xxx)
         coefs = mdl.coefs;
         [w, h] = size(coefs);
         for c = 1:w
-            handles(end+1) = stem(1:mdl.num_coefs, coefs(c, :), pickcolor(c));
+            handles(end+1) = stem(1:mdl.num_coefs, coefs(c, :), 'Color', pickcolor(c));
             names{end+1} = ['PS' num2str(ii) '/CH' num2str(c)];
         end 
     end

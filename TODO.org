@@ -11,13 +11,22 @@
    - Right now there's no GUI selection for module paramset, but there will be soon
 
 * What is really needed before NARFv2 can be pushed? 
-  - [X] The computation for 'sel' needs fixing
-  - [X] Most modules need a repaired plotgui
-  - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots"
-  - [ ] Boosting fitter must work again
+  - [X] Boosting fitter must work again
+  - [X] Cleaner boosting fitter output
+  - [X] Add autoplot hints to NPNL 
   - [ ] The splitter/unifier must be tested for FIR filters and NPNLs   
- 
+  - [ ] Splitter/unifiers must understand the val/est distinction
+
+
+* Move sparseness penalties to the fitter
+  
+    % Add a penalty related to the non-smoothness of the FIR coefs
+    [firmod, ~] = find_modules(stack, 'fir_filter');
+    Output +  mdl.smoothness_weight * smoothness_metric(firmod.coefs(:)) + ...
+              mdl.sparseness_weight * sparsity_metric(firmod.coefs(:))
+	      
 * After the push, we can cover these secondary objectives:
+  1. [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots"
   1. [ ] Plot of just the selected stimfile's data, plus whatever parameter sets' nonlinearities can be plotted
   2. [ ] Put more data into the scatter plots
 	 - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP

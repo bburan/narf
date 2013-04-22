@@ -39,7 +39,7 @@ function hs = create_chan_selector_gui(parent_handle, stack, xxx, chanfield)
     uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
         'HorizontalAlignment', 'left',  'String', 'Chan:', ...
         'Units', 'pixels', 'Position', [5 (h-25) 50 25]);
-    hs.selected_chan_popup = uicontrol('Parent', parent_handle, ...
+    hs.selected_stim_chan_popup = uicontrol('Parent', parent_handle, ...
         'Style', 'popupmenu', 'Enable', 'on', 'String', 'NONE', ...
         'Units', 'pixels', 'Position', [45 (h-25) w-50 25], ...
         'Callback', @(a,b,c) selected_chan_popup_callback());
@@ -54,8 +54,8 @@ function hs = create_chan_selector_gui(parent_handle, stack, xxx, chanfield)
             for ii = 1:C
                 d{ii} = sprintf('%d',ii);
             end
-            set(hs.selected_chan_popup, 'String', char(d));
-            set(hs.selected_chan_popup, 'Value', 1);
+            set(hs.selected_stim_chan_popup, 'String', char(d));
+            set(hs.selected_stim_chan_popup, 'Value', 1);
         else
             error('Selected stimulus file not found: %s', sf);
         end

@@ -14,13 +14,13 @@ for ii = 1:length(narfgui)
 
     if isfield(gui, 'plot_gui')
         if isfield(gui.plot_gui, 'selected_stimfile_popup')
-            sel.stimfile = popup2str(narfgui{1}.plot_gui.selected_stimfile_popup);
+            sel.stimfile = popup2str(gui.plot_gui.selected_stimfile_popup);
         end
         if isfield(gui.plot_gui, 'selected_stim_idx_popup')
-            sel.stim_idx = popup2num(narfgui{1}.plot_gui.selected_stim_idx_popup);
+            sel.stim_idx = popup2num(gui.plot_gui.selected_stim_idx_popup);
         end
         if isfield(gui.plot_gui, 'selected_stim_chan_popup')
-            sel.chan_idx = popup2num(narfgui{1}.plot_gui.selected_stim_chan_popup);    
+            sel.chan_idx = popup2num(gui.plot_gui.selected_stim_chan_popup);    
         end
     end
 end

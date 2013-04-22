@@ -20,15 +20,16 @@ m.bincount = 20;
 
 % Optional fields
 m.plot_fns = {};
+m.auto_plot = @do_plot_smooth_scatter_and_nonlinearity;
+m.plot_fns{1}.fn = @do_plot_smooth_scatter_and_nonlinearity; 
+m.plot_fns{1}.pretty_name = 'Stim/Resp Smooth Scatter';
+m.plot_fns{2}.fn = @do_plot_scatter_and_nonlinearity; 
+m.plot_fns{2}.pretty_name = 'Stim/Resp Scatter';
+m.plot_fns{3}.fn = @do_plot_all_default_outputs;
+m.plot_fns{3}.pretty_name = 'Output Channels (All)';
+m.plot_fns{4}.fn = @do_plot_single_default_output;
+m.plot_fns{4}.pretty_name = 'Output Channel (Single)';
 
-m.plot_fns{1}.fn = @do_plot_all_default_outputs;
-m.plot_fns{1}.pretty_name = 'Output Channels (All)';
-m.plot_fns{2}.fn = @do_plot_single_default_output;
-m.plot_fns{2}.pretty_name = 'Output Channel (Single)';
-m.plot_fns{3}.fn = @do_plot_scatter_and_nonlinearity; 
-m.plot_fns{3}.pretty_name = 'Stim/Resp Scatter';
-m.plot_fns{4}.fn = @do_plot_smooth_scatter_and_nonlinearity; 
-m.plot_fns{4}.pretty_name = 'Stim/Resp Smooth Scatter';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
