@@ -30,7 +30,7 @@ m.time =   'stim_time';
 m.output = 'stim';
 
 % Optional fields
-%m.plot_gui_create_fn = @(hh, stack, xxx) create_chan_selector_gui(hh, stack, xxx(1:end-1), m.input);
+m.plot_gui_create_fn = @create_chan_selector_gui;
 m.auto_plot = @do_plot_fir_coefs_as_heatmap;
 m.auto_init = @auto_init_fir_filter;
 m.plot_fns = {};

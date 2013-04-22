@@ -213,12 +213,12 @@ function module_apply_callback(mod_idx)
     if m.isready_pred(STACK(1:mod_idx), XXX)
         % Apply the function
         calc_xxx(mod_idx, mod_idx+1);
-        % Was: XXX{mod_idx+1} = m.fn(STACK(1:mom.fnd_idx), XXX); 
         % Enable graphing
         set(NARFGUI{mod_idx}.plot_popup, 'Enable', 'on');
         % Build the plot panel, now that we know XXX{mod_idx+1}
+        % Only build if it doesn't already exist
         if isfield(m, 'plot_gui_create_fn') && ~isfield(NARFGUI{mod_idx}, 'plot_gui')
-            NARFGUI{mod_idx}.plot_gui = m.plot_gui_create_fn(NARFGUI{mod_idx}.plot_panel, STACK(1:mod_idx), XXX);
+            NARFGUI{mod_idx}.plot_gui = m.plot_gui_create_fn(NARFGUI{mod_idx}.plot_panel, STACK(1:mod_idx), XXX(1:mod_idx+1));
         end
         % Trigger a redraw of the gui
         hgfeval(get(NARFGUI{mod_idx}.plot_popup,'Callback'), mod_idx, []);

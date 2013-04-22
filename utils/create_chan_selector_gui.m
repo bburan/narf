@@ -26,7 +26,7 @@ function hs = create_chan_selector_gui(parent_handle, stack, xxx, chanfield)
     h = pos(4) - 10;
     hs = [];
     
-    m = stack{end};
+    m = stack{end}{1};
     mod_idx = length(stack);
     x = xxx{end};
 

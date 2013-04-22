@@ -11,13 +11,8 @@
    - Right now there's no GUI selection for module paramset, but there will be soon
 
 * What is really needed before NARFv2 can be pushed? 
-  - [X] do_calc_paramsets needs some fixing
-  - [X] Pick color
-  - [X] Pick linestyle
-  - [X] Scatter plot nonlinearities
-	- [X] Plots of the two nonlinearities for the two paramsets
-  - [ ] The computation for 'sel' needs fixing
-  - [ ] Most modules need a repaired plotgui
+  - [X] The computation for 'sel' needs fixing
+  - [X] Most modules need a repaired plotgui
   - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots"
   - [ ] Boosting fitter must work again
   - [ ] The splitter/unifier must be tested for FIR filters and NPNLs   
