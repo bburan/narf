@@ -16,9 +16,10 @@ batch = 241;
 %        {'depn', 'npnl'}, 'inex'}, ...
 %       {'mse', 'mses5'}, ...
 %       'boost'};
+
 % initones
 
-mm = {'env100', 'log2b', 'firn', 'npnlx', 'mse', 'boost'};
+mm = {'env100', 'log2b', 'firnpr', 'npnl', 'mse', 'boost'};
 
 cells = request_celldb_batch(batch, 'por023b-b1');
 % cells = request_celldb_batch(batch, 'por028d-b1');

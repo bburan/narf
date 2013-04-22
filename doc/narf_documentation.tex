@@ -973,3 +973,50 @@ Besides, we already have enough rope to hang ourselves with.
 	  - [X] NPNL
 	  - [ ] NPFNL
 	  - [ ] Other?
+Hi Stephen, 
+
+I just thought I would update you on NARFv2. It's pretty much like NARFv1 but with some programmatic interface changes that streamline the modules a bit better and let us do a few things we couldn't do before:
+
+1. Plotting via scripts is now far more controllable. This was not possible at all before, strangely enough, since I had focused on plotting from the GUI.
+
+2. Each module can have multiple 'parameter sets' of data. In other words, the FIR module can now have multiple sets of coefficients which work on different parts of the data, or even on the same data if you want. The function which splits up the data and passes it to each parameter set is called a 'splitter', and the one which brings the data back together again is called the 'unifier'. I intended this to solve our problem of needing to do per-respfile or per-behavioral condition fits for just part of the model. However, this could be interesting for doing something like 'consensus' or 'ensemble' modules, which each could be trained on some jackknifed subset of the data. We could then throw out the worst FIR coefs (which were sensitive to outliers), and average the rest of the values to make a prediction. 
+
+3. Arbitrary initialization of any part of the model, at any step in the fitting process, is possible with a keyword system. If you want to do two-step fitting routines, this should become much simpler now. 
+
+4. Modules are smart enough to plot their multiple parameter sets in the same plot window for easy viewing (i.e., multiple NPNLs can be shown on the same axes plot, or multiple FIR filters can be shown on the same FIR coefs plot).
+
+5. Keywords can be combined in a clever recursive fashion to allow us to test combinationss in an extremely complex way. We now have plenty of rope to hang ourselves with.
+
+6. We can go into the details of the changes; it is slightly more painful to mess with STACK manually now, but on the other hand the added functionality is probably worth it. This isn't a huge problem -- you should be using "append_module" to build a model whenever possible anyway. 
+
+7. Plotting routines are standardized and work for multiple parameter sets and multiple channels. I added intelligent legends and labels for the NARF newbies as well.
+
+The only remaining things to do before I push the code back in are:
+
+1. Fixing some awkwardness with plotting multiple parameter sets in the narf_modelpane gui
+
+2. Finishing testing the splitter/unifier code for the minimum relevant modules (FIR, NPNL, NPFNL)
+
+3. Testing that the boosting fitter still works as intended (probably fine).
+
+4. Check that I didn't break the job system in anyway (probably fine).
+
+I'd guess it will take me another 2 days to finish those, but it may be more or less, depending on how smart I am feeling. 
+
+I'll be here next week on Monday and Tuesday. Whether I can come in this Friday depends on how much I get done Wed/Thu of this week. 
+
+
+Ivar
+
+
+* Talking Points for Stephen
+** Multiple paramsets
+  - I'm allowing load-stim-from-baphy to have them too
+    - Why: Perhaps someday we will want to integrate data from MULTIPLE cellids
+    - We can do this by hacking out a strange 'splitter & unifier' for loadstimfrombaphy
+    - Allowing such aggregation of data doesn't increase baphy's or narf's complexity
+** Recalculating
+  - There is more 'recalcing' going on than before during plotting
+  - It sounds goofy, but plot functions now recalc all the data, instead of just calling plot functions 
+** Plotting
+   - Right now there's no GUI selection for module paramset, but there will be soon

@@ -1,78 +1,64 @@
-* Talking Points for Stephen
-** Multiple paramsets
-  - I'm allowing load-stim-from-baphy to have them too
-    - Why: Perhaps someday we will want to integrate data from MULTIPLE cellids
-    - We can do this by hacking out a strange 'splitter & unifier' for loadstimfrombaphy
-    - Allowing such aggregation of data doesn't increase baphy's or narf's complexity
-** Recalculating
-  - There is more 'recalcing' going on than before during plotting
-  - It sounds goofy, but plot functions now recalc all the data, instead of just calling plot functions 
-** Plotting
-   - Right now there's no GUI selection for module paramset, but there will be soon
-
 * What is really needed before NARFv2 can be pushed? 
-  - [X] Boosting fitter must work again
-  - [X] Cleaner boosting fitter output
-  - [X] Add autoplot hints to NPNL 
   - [ ] The splitter/unifier must be tested for FIR filters and NPNLs   
   - [ ] Splitter/unifiers must understand the val/est distinction
 
+* Move sparseness penalties to the fitter  
+  % Add a penalty related to the non-smoothness of the FIR coefs
+  [firmod, ~] = find_modules(stack, 'fir_filter');
+  Output +  mdl.smoothness_weight * smoothness_metric(firmod.coefs(:)) + ...
+  mdl.sparseness_weight * sparsity_metric(firmod.coefs(:))
 
-* Move sparseness penalties to the fitter
-  
-    % Add a penalty related to the non-smoothness of the FIR coefs
-    [firmod, ~] = find_modules(stack, 'fir_filter');
-    Output +  mdl.smoothness_weight * smoothness_metric(firmod.coefs(:)) + ...
-              mdl.sparseness_weight * sparsity_metric(firmod.coefs(:))
-	      
 * After the push, we can cover these secondary objectives:
   1. [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots"
-  1. [ ] Plot of just the selected stimfile's data, plus whatever parameter sets' nonlinearities can be plotted
-  2. [ ] Put more data into the scatter plots
+  2. [ ] Add the FILECODE to the baphy plot module so 
+  3. [ ] Filecodes should also be managed during the splitter/unifier
+  4. [ ] Widen the module plot selectors so you can read long respfile names
+  5. [ ] Plot of just the selected stimfile's data, plus whatever parameter sets' nonlinearities can be plotted
+  6. [ ] Put more data into the scatter plots
 	 - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
 	       Use grayish/blackish colormap
-  3. [ ] FIR filter needs an 'ACTIVE FIR COEFS' plot which only displays paramsets matching selected
-  4. [ ] Many modules need default per-paramset, per-channel heatmap data viewers
+  7. [ ] FIR filter needs an 'ACTIVE FIR COEFS' plot which only displays paramsets matching selected
+  8. [ ] Many modules need default per-paramset, per-channel heatmap data viewers
 	 - [ ] Loadstimfrompbaphy
 	 - [ ] NORMALIZE CHANNELS
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
 	 - [ ] Pretty much everybody!
-  5. [ ] Plot a SINGLE paramset's SINGLE high-bandwidth channel as a spectrogram 
-  6. [ ] Make the fits run faster by removing then re-adding the 'test_set' data after fitting process
-  7. [ ] Make a 2D NPNL heightmap nonlinearity
-	 Input X is the exitation
-	 Input Y is the inhibition
-	 Returns Z, the height of the map
-	 Data will probably NOT be scattered uniformly around the map.
-  8. [ ] Repair NarfModelpane
-         - [ ] Displays model name, training set, test set, and other important info at bottom of window
-         - [ ] Repair the add/delete module button functionality
-         - [ ] Provide a dropdown to pick more fitters
-  9. [-] Clean up distribution of code before a modelfit
-	 - [ ] Function which distributes GIT to workers before enqueing models
-	 - [X] Checks local repository is clean
-  10. [-] NARF Browser Improvements
+  9. [ ] Plot a SINGLE paramset's SINGLE high-bandwidth channel as a spectrogram 
+  10. [ ] Make the fits run faster by removing then re-adding the 'test_set' data after fitting process
+  11. [ ] Make a 2D NPNL heightmap nonlinearity
+	  Input X is the exitation
+	  Input Y is the inhibition
+	  Returns Z, the height of the map
+	  Data will probably NOT be scattered uniformly around the map.
+  12. [ ] Repair NarfModelpane
+          - [ ] Displays model name, training set, test set, and other important info at bottom of window
+          - [ ] Repair the add/delete module button functionality
+          - [ ] Provide a dropdown to pick more fitters
+  13. [-] Clean up distribution of code before a modelfit
+	  - [ ] Function which distributes GIT to workers before enqueing models
+	  - [X] Checks local repository is clean
+  14. [-] NARF Browser Improvements
           - [X] Scatter plot test/train button
           - [ ] Heat Map current display button	
-  11. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
-  12. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
-  13. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  14. [ ] Make sure that fitters return meaningful, specific codes indicating how they terminated
-  15. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
-  16. [ ] Antialiasing problem when saving images
-  17. [ ] MODULE: Standardized single/multi channel gammatone filter
-  18. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  19. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
-  20. [ ] FN: Cover an input space logarithmically with filters
-  21. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
-  22. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
-  23. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
-  24. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  25. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
-  26. [ ] IRRITATION: Why can't I resize windows?
-  27. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to 
-  28. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
+  15. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
+  16. [ ] Is this line fine with the closures? m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
+  17. [ ] Remember to invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
+  18. [ ] Make sure that fitters return meaningful, specific codes indicating how they terminated
+  19. [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
+  20. [ ] Antialiasing problem when saving images
+  21. [ ] MODULE: Standardized single/multi channel gammatone filter
+  22. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  23. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  24. [ ] FN: Cover an input space logarithmically with filters
+  25. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
+  26. [ ] Ensure that no closures of data are being done by methods. Methods should accept the module object as their first argument, not close over anything.
+  27. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
+  28. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
+  29. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
+  30. [ ] IRRITATION: Why can't I resize windows?
+  31. [ ] Repair histogram plots when doing scatter stuff so you can see densities better relative to 
+  32. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
 
 * ENQUEUING MANAGER PROGRAM:
   1. Should Batching should work like this?

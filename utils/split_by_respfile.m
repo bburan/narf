@@ -4,13 +4,22 @@ function xxxs = split_by_respfile(xxx)
 % Returns a cell array of XXX structs with only one respfile per final
 % cell.
 
-fns = fieldnames(xxx{end}.dat);
+estfiles = xxx{end}.training_set;
+valfiles = xxx{end}.test_set;
 
-xxxs = cell(1, length(fns));
+if length(estfiles) ~= length(valfiles)
+    error('I cannot split by respfiles unless there are an equal number of estimation and validation files.');
+end
 
-for ii = 1:length(fns)
-    sf = fns{ii};
+xxxs = cell(1, length(estfiles));
+
+for ii = 1:length(estfiles)
+    esf = estfiles{ii};
+    vsf = valfiles{ii};
     xxxs{ii} = xxx;
     xxxs{ii}{end}.dat = [];   
-    xxxs{ii}{end}.dat.(sf) = xxx(end).dat.(sf);
+    xxxs{ii}{end}.dat.(esf) = xxx{end}.dat.(esf);
+    xxxs{ii}{end}.dat.(vsf) = xxx{end}.dat.(vsf);
+    xxxs{ii}{end}.training_set = {esf};
+    xxxs{ii}{end}.test_set     = {vsf};
 end

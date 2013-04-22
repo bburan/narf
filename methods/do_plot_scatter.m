@@ -4,6 +4,11 @@ function do_plot_scatter(sel, mdl, x, field1, field2, forcelinestyle, n_plotpts)
 % If not provided, all points will be plotted. 
 % If you want a smoother plot, try n_plotpts=100
 
+if ~isfield(x.dat, sel.stimfile)
+    % Do nothing if there is no matching selected stimfile
+    return;
+end
+
 dat = x.dat.(sel.stimfile);  
     
 if ~isequal(size(dat.(field1)), size(dat.(field2)))
