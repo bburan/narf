@@ -12,12 +12,13 @@ function plotpath = plot_model_summary()
 %
 % Example:
 %   load_model('/path/to/mymodel.mat');
-%   recalc_xxx(1);
+%   calc_xxx(1);
 %   plot_model_summary();
 
 global META XXX STACK NARF_SAVED_IMAGES_PATH;
 
-lb = 30;  % Left border
+lb = 50;  % Left border
+rb = 20;  % Right border
 bb = 30;  % Bottom border
 th = 180; % text height
 ph = 200; % Plot height
@@ -50,7 +51,7 @@ for ii = 1:nplots
     plotfn = m.auto_plot;
     
     ax = axes('Parent', fig, 'Units', 'pixels', ...
-        'Position', [lb (nplots-ii)*ph+bb w-lb*2 ph-bb]);
+        'Position', [lb (nplots-ii)*ph+bb w-lb-rb ph-bb]);
     
     fns = fieldnames(XXX{idx+1}.dat);
     sel.stimfile = fns{1};
@@ -66,7 +67,7 @@ end
 
 % Print the text at the top
 axtt = axes('Parent', fig , 'Units','pixels', ...
-    'Position', [lb nplots*ph+bb w-lb*2 ph-bb]);
+    'Position', [lb nplots*ph+bb w-lb-rb ph-bb]);
 set(gca,'xtick',[]); set(gca,'xticklabel',[]);
 set(gca,'ytick',[]); set(gca,'yticklabel',[]);
 ax_text  = text('Interpreter', 'none', 'Position', [0.05, 0.45], ...

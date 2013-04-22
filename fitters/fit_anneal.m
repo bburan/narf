@@ -37,7 +37,7 @@ function score = my_obj_fn(phi)
     cnt = cnt + 1;
 
     unpack_fittables(phi);
-    recalc_xxx(start_depth);
+    calc_xxx(start_depth);
     score = XXX{end}.(objective_score);
 end
 

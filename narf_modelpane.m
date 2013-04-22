@@ -212,7 +212,7 @@ function module_apply_callback(mod_idx)
     % upstream part of the stack, leaving this function actually invalid
     if m.isready_pred(STACK(1:mod_idx), XXX)
         % Apply the function
-        recalc_xxx(mod_idx, mod_idx+1);
+        calc_xxx(mod_idx, mod_idx+1);
         % Was: XXX{mod_idx+1} = m.fn(STACK(1:mom.fnd_idx), XXX); 
         % Enable graphing
         set(NARFGUI{mod_idx}.plot_popup, 'Enable', 'on');
@@ -224,7 +224,7 @@ function module_apply_callback(mod_idx)
         hgfeval(get(NARFGUI{mod_idx}.plot_popup,'Callback'), mod_idx, []);
         drawnow;
 
-         % If auto-recalc of the NEXT fn is checked, go down the stack
+         % If auto-calc of the NEXT fn is checked, go down the stack
         if length(STACK) > mod_idx + 1 && ...
            isequal(true, get(NARFGUI{mod_idx+1}.fn_recalc, 'Value'))
            module_apply_callback(mod_idx+1);
@@ -256,9 +256,9 @@ function module_plot_callback(mod_idx)
 end
 
 function recalc_from_depth(mod_idx)
-    % Like recalc_xxx() but for use as a gui callback
+    % Like calc_xxx() but for use as a gui callback
     % Try to rebuild XXX, starting at stack depth mod_idx
-    % Unlike recalc_xxx(), it stops when a module's autoapply isn't checked
+    % Unlike calc_xxx(), it stops when a module's autoapply isn't checked
     for ii = mod_idx:length(STACK);
         if isfield(NARFGUI{ii}, 'fn_recalc') && get(NARFGUI{ii}.fn_recalc, 'Value')
             module_apply_callback(ii);
@@ -458,7 +458,7 @@ function load_model_callback (a, b, c)
     else
         delete_all_module_guis();
         load_model([pathname filesep filename]);
-        recalc_xxx(1);
+        calc_xxx(1);
         rebuild_gui_from_stack();
     end
 end
@@ -501,7 +501,7 @@ function update_any_changed_tables_and_recalc()
         end
     end
     % Recalc from the first fittable point all the way to the end
-    recalc_xxx(first_fit_depth);
+    calc_xxx(first_fit_depth);
     module_plot_callback(first_fit_depth);
 end
 
@@ -553,7 +553,7 @@ function rebuild_gui_from_stack()
         
         % Recompute the data 
         if length(XXX) <= ii
-            recalc_xxx(ii, ii+1);
+            calc_xxx(ii, ii+1);
             %was: XXX{ii+1} = m.fn(STACK(1:ii), XXX); 
         end
     

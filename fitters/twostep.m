@@ -19,7 +19,7 @@ function termcond = twostep(fitter1, fitter2)
     end
     
     % Now we will just fit the FIR
-    recalc_xxx(2);
+    calc_xxx(2);
     fitter1();
     
     % Wire the NL up again and fit the NL independently    
@@ -36,7 +36,7 @@ function termcond = twostep(fitter1, fitter2)
     STACK{corridx}.input1 = 'stim';
     
     % Now we will just fit the NL
-    recalc_xxx(2);
+    calc_xxx(2);
     fitter2();
     
     % Restore the stack phi values

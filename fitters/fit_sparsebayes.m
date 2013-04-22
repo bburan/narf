@@ -24,7 +24,7 @@ function basis = build_basis(phi)
     N = length(target);    
        
     % Get the default prediction from where you are    
-    recalc_xxx(start_depth);
+    calc_xxx(start_depth);
     pred_default = flatten_field(XXX{end}.dat, XXX{end}.training_set, pred_field);
     pred_default = excise(pred_default);
     
@@ -43,7 +43,7 @@ function basis = build_basis(phi)
         newphi = phi;
         newphi(jj) = phi(jj) + delta;
         unpack_fittables(newphi);
-        recalc_xxx(start_depth);
+        calc_xxx(start_depth);
         pred = flatten_field(XXX{end}.dat, XXX{end}.training_set, pred_field);
         pred = excise(pred);
         pred(isnan(target)) = 0;

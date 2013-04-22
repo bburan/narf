@@ -33,7 +33,7 @@ end
 
 xouts = cell(1, length(mdls));
 
-% Iterate through each parameter set
+% Iterate through each parameter set if there is a unifier
 for jj = 1:length(mdls)
-    xouts{jj} = mdls{jj}.fn(mdls{jj}, xins{jj}{ii}, stack, xins);
+    xouts{jj} = mdls{jj}.fn(mdls{jj}, xins{jj}{end}, stack, xins);
 end

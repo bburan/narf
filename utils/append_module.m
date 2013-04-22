@@ -36,4 +36,4 @@ else
     end
 end
 
-recalc_xxx(l+1); % was: XXX{l+2} = STACK{l+1}.fn(STACK(1:l+1), XXX(1:l+1));
+calc_xxx(l+1); % was: XXX{l+2} = STACK{l+1}.fn(STACK(1:l+1), XXX(1:l+1));

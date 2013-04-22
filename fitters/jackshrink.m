@@ -8,7 +8,7 @@ function termcond = jackshrink(n_jacks, fitter, prior)
 % OPERATION:
 %   Calls FITTER with XXX{2} set to each jackknife.
 %   For the jackknife to work, FITTER must NOT alter XXX{2}. So any
-%   recalc_xxx()'s that occur in FITTER must begin at 2 or higher.
+%   calc_xxx()'s that occur in FITTER must begin at 2 or higher.
 %   Finally, it computes the appropriate shrinkage for the parameters using
 %   the James Stein Estimator equation. 
 %   http://upload.wikimedia.org/math/c/4/c/c4c103ca9fc386d90d9efeb64638f1f9.png
@@ -24,7 +24,7 @@ if nargin < 2
     fitter = @fit_lsq;
 end
 
-recalc_xxx(1); 
+calc_xxx(1); 
 cache = XXX{2};
 
 phi_init = pack_fittables(STACK);
@@ -74,7 +74,7 @@ for jj = 1:n_jacks
     end
 
     unpack_fittables(phi_init);
-    recalc_xxx(2); 
+    calc_xxx(2); 
     fitter();
     phi_jack(:, jj) = pack_fittables(STACK);
 end
@@ -99,7 +99,7 @@ end
 % Recalc all the way through
 unpack_fittables(phi_best);
 XXX{2} = cache;
-recalc_xxx(2);
+calc_xxx(2);
 termcond = NaN;
 
 end

@@ -930,3 +930,46 @@ The downside would be that aggregating data for plotting would be a bitch.
 Training would also be a bitch. 
 For now, being able to localize changes to a single module is good enough. 
 Besides, we already have enough rope to hang ourselves with.
+
+* Why the plot functions have to change so much:
+  Because right now in EVERY single plot function, we check the status of a GUI that may not exist
+  For better flexibility, we should allow plotting to occur programmatically
+  This can only occur if plot functions are GIVEN the GUI status as an argument
+* SUMMARY OF CHANGES:
+  1) [X] Jackknifing is a generic FITTER function keyword and requires no special work.
+         - Besides, we need to do jackknifing even on split models.
+  2) [X] STACK is now a 2x deep cell array. XXX has no change.
+  3) [X] Modules all have a 'splitter' fn and a 'unifier' fn
+	 - The splitter function is called when append_module() is done
+	 - The splitter accounts for data conditions
+	   {[mdl1, dat1], [mdl2, dat2]} = splitter(STACK, XXX)
+	 - The unifier brings back multiple data conditions
+	   XXX{N+1} = unifier(x1{n+1), x2{n+1});
+  4) [X] Pack and unpack_fittables now understand split parameters
+  5) [X] Peeking at another module's data without using EXTRACT_MODULE_PARAMS() is now STRICTLY FORBIDDEN
+         - You provide the index number, which you found previously with find_modules()
+	 - {cellarrayofparams} = Extract_module_params(module_index, param) 
+  6) [X] recalc_XXX now 
+	   1. calls mdl.fn() on each split parameter set
+	   2. calls mdl.unifier() on the XXX results of all of those
+  7) [X] Whatever calls plot hooks in narf_modelpane now
+  8) [X] Substantial work in utils/
+	 All the functions which use STACK should now be more or less workable!	  
+  9) [X] There are three splitter implementations available:
+	 1. per-respfile
+	 2. per-filecode category
+	 3. all-files (No splitter provided)
+  10) [X] There is one generic unifier
+          1. Per-respfile merger
+  11) [X] STACK{}.gh is now its own structure: NARFGUI
+	  - [X] Ensure no more *.gh things exist
+	  - [X] Ensure that all the plot_gui's now are in NARFGUI
+	  - [X] get_baphy_plot_controls should become irrelevant now
+  12) [-] Substantial work in pretty much every module which touches STACK naively
+	  - [X] load-stim-from-baphy
+	  - [X] normalizer
+	  - [X] FIR
+	  - [X] LOG2b
+	  - [X] NPNL
+	  - [ ] NPFNL
+	  - [ ] Other?

@@ -36,6 +36,6 @@ for kk = 1:length(firmod_idxs)
             STACK{idx}{aa}.coefs = - STACK{idx}{aa}.coefs;
         end
     end
-    recalc_xxx(idx); 
+    calc_xxx(idx); 
     
 end

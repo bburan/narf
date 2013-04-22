@@ -22,7 +22,7 @@ function termcond = fit_nlsep(nl_index)
     end
     
     % Now we will just fit the FIR
-    recalc_xxx(2);
+    calc_xxx(2);
     fit_fminlsq('score', 'fittertempstim', 'respavg');
     
     % Wire the NL up again and fit the NL independently    
@@ -43,7 +43,7 @@ function termcond = fit_nlsep(nl_index)
     XXX{2}.training_set = {XXX{2}.training_set{nl_index}};
     
     % Now we will just fit the NL
-    recalc_xxx(2);
+    calc_xxx(2);
     fit_fminlsq();
     
     % Restore the stack phi values

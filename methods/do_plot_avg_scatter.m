@@ -16,6 +16,7 @@ if ~isequal(size(dat.(field1)), size(dat.(field2)))
     axis([0, 1, 0 1]);
     return;
 end
+
 % Sort and average them by groups of 100
 D = [dat.(field1)(:) dat.(field2)(:)]; 
 D=D(~isnan(D(:,1))&~isnan(D(:,2)),:);

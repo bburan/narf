@@ -50,7 +50,7 @@ function error = my_obj_fn(phi)
     cnt = cnt + 1;
 
     unpack_fittables(phi);
-    recalc_xxx(start_depth);
+    calc_xxx(start_depth);
     
     % Concatenate training set prediction and reality into a long vector
     pred    = flatten_field(XXX{end}.dat, XXX{end}.training_set, field1);

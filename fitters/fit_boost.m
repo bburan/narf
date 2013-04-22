@@ -55,7 +55,7 @@ start_depth = find_fit_start_depth(STACK);
 
 function score = my_obj_fn(phi)
     unpack_fittables(phi);
-    recalc_xxx(start_depth);
+    calc_xxx(start_depth);
     score = XXX{end}.(objective_score);
 end
 

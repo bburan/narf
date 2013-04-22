@@ -14,24 +14,6 @@ if ~isfield(sel, 'stimfile') || ~isfield(sel, 'stim_idx') || ...
     error('sel has 3 required fields: stimfile, stim_idx, chan_idx');    
 end
 
-colors = {[0,  0,  1], ...
-          [0,  1,  0], ...
-          [1,  0,  0], ...
-          [0,  1,  1], ...
-          [1,  0,  1], ...
-          [1,  1,  0], ...
-          [0,  0,  0.5], ...
-          [0,  0.5,  0], ...
-          [0.5,  0,  1], ...
-          [0,  0.5,  0.5], ...
-          [0.5,  0,  0.5], ...
-          [0.5, 0.5,   0]};
-      
-linestyle = {'-', '--', '-.', ':'};
-
-n_colors = length(colors);
-n_linestyles = length(linestyle);
-
 hold on;
 leg = {};
 handles = [];
@@ -44,9 +26,9 @@ for ii = 1:length(xxs)
         continue;
     end
     
-    % Otherwise, plot all the selected channels
+    % Otherwise, plot all the selected channels   
+    [ls, n_linestyles] = pickline(ii);
     lw = ceil(ii / n_linestyles); 
-    ls = linestyle{mod(ii-1, n_linestyles) + 1};
     
     chansize = 1:size(xxs{ii}.dat.(sel.stimfile).(yfield), 3);
     if isempty(sel.chan_idx)
@@ -55,7 +37,7 @@ for ii = 1:length(xxs)
     
     for qq = 1:length(sel.chan_idx)
         jj = sel.chan_idx(qq);
-        c = colors{mod(jj-1, n_colors) + 1};
+        c = pickcolor(jj);
         % Special case: if there is only one signal possible, make it black
         if 1 == chansize;
             c = [0, 0, 0];

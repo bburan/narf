@@ -273,27 +273,27 @@ end
 % Plot functions
 
 function do_plot_all_stim_channels(sel, stack, xxx)       
-    [mdls, xins, xouts] = do_calc_paramsets(stack, xxx); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
     sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
     do_plot(xouts, mdls{1}.output_stim_time, mdls{1}.output_stim, ...
             sel, 'Time [s]', what_is_ylabel(mdls));
 end
 
 function do_plot_single_stim_channel(sel, stack, xxx)       
-    [mdls, xins, xouts] = do_calc_paramsets(stack, xxx); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
     do_plot(xouts, mdls{1}.output_stim_time, mdls{1}.output_stim, ...
             sel, 'Time [s]', what_is_ylabel(mdls)); 
 end
 
 function do_plot_respavg(sel, stack, xxx)
-    [mdls, xins, xouts] = do_calc_paramsets(stack, xxx); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
     sel.chan_idx = 1;    
     do_plot(xouts, mdls{1}.output_resp_time, mdls{1}.output_respavg, ...
             sel, 'Time [s]', 'Spike Rate Average [Hz]'); 
 end
 
 function do_plot_response_raster(sel, stack, xxx)
-    [mdls, xins, xouts] = do_calc_paramsets(stack, xxx); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
     mdl = mdls{1};
     dat = xouts{1}.dat.(sel.stimfile);
     [T, S, R] = size(dat.(mdl.output_resp));
