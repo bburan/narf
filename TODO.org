@@ -2,6 +2,9 @@
   - [X] The splitter/unifier must be tested for FIR filters and NPNLs   
   - [X] Splitter/unifiers must understand the val/est distinction
 
+* Possible problem point:
+  Using "thresh" from within the keywords directory results in "keywords/thresh.m" being called accidentally!
+
 * Priorities
   1. verify on 240, 242 that performance meets or exceeds previous version for boost, npfnl, mse5, firn
   2. 2D NPNL

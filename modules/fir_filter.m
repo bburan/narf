@@ -28,6 +28,7 @@ m.input =  'stim';
 m.filtered_input = 'stim_filtered';
 m.time =   'stim_time';
 m.output = 'stim';
+m.init_fit_sig = 'respavg';
 
 % Optional fields
 m.plot_gui_create_fn = @create_chan_selector_gui;

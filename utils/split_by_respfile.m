@@ -22,5 +22,12 @@ for ii = 1:length(estfiles)
     xxxs{ii}{end}.dat.(vsf) = xxx{end}.dat.(vsf);
     xxxs{ii}{end}.training_set = {esf};
     xxxs{ii}{end}.test_set     = {vsf};
-    xxxs{ii}{end}.filecodes    = {xxx{end}.filecodes{ii}};
+    % Filecodes are not guaranteed to exist, so we need to do this:
+    % FIXME: In a later version of baphy/narf, we should make explicit what
+    % will be provided and what not
+    if length(estfiles) == length(xxx{end}.filecodes)
+        xxxs{ii}{end}.filecodes    = {xxx{end}.filecodes{ii}};
+    else
+        xxxs{ii}{end}.filecodes    = xxx{end}.filecodes;
+    end
 end

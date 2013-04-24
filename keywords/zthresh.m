@@ -1,4 +1,4 @@
-function thresh()
+function zthresh()
 
 global MODULES;
 
