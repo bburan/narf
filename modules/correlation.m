@@ -67,11 +67,14 @@ function x = do_correlation(mdl, x, stack, xxx)
 end
 
 function do_plot_correlation_inputs(sel, stack, xxx)
-     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+%     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
 %     do_plot(xouts, mdls{1}.time, mdls{1}.input1, ...
 %             sel, 'Prediction [Hz]', 'RespAvg [Hz]');
 %    textLoc(sprintf(' Train r: %f\n Test r : %f', ...
 %        x.(mdls{1}.train_score), x.(mdl.test_score)), 'NorthWest');
+
+    text(0.35, 0.5, 'Ivar hasn''t implemented plotting yet!');
+    axis([0, 1, 0 1]);
 
 end
 
