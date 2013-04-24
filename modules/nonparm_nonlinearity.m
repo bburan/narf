@@ -1,8 +1,5 @@
 function m = nonparm_nonlinearity(args)
 % Applies a nonparametric static nonlinear function to the input. 
-%
-%
-% You may of course define your own functions. 
 
 % Module fields that must ALWAYS be defined
 m = [];
@@ -20,41 +17,41 @@ m.input_resp = 'respavg';
 m.time = 'stim_time';
 m.output = 'stim';
 m.bincount = 20;
-m.phi={zeros(m.bincount,1),zeros(m.bincount,1)};
-m.outbinserr=zeros(m.bincount,1);
 
 % Optional fields
 m.plot_fns = {};
+m.auto_plot = @do_plot_smooth_scatter_and_nonlinearity;
 m.plot_fns{1}.fn = @do_plot_smooth_scatter_and_nonlinearity; 
 m.plot_fns{1}.pretty_name = 'Stim/Resp Smooth Scatter';
+m.plot_fns{2}.fn = @do_plot_scatter_and_nonlinearity; 
+m.plot_fns{2}.pretty_name = 'Stim/Resp Scatter';
+m.plot_fns{3}.fn = @do_plot_all_default_outputs;
+m.plot_fns{3}.pretty_name = 'Output Channels (All)';
+m.plot_fns{4}.fn = @do_plot_single_default_output;
+m.plot_fns{4}.pretty_name = 'Output Channel (Single)';
 
-m.plot_fns{2}.fn = @(stack, xxx) do_plot_signal(stack, xxx, stack{end}.time, stack{end}.output);
-m.plot_fns{2}.pretty_name = 'Output vs Time';
-
-%m.plot_fns{3}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), false);
-%m.plot_fns{3}.pretty_name = 'Nonlinearity';
-
-%m.plot_fns{4}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), true);
-%m.plot_fns{4}.pretty_name = 'Nonlinearity + Histogram';
-
-m.plot_fns{3}.fn = @do_plot_scatter_and_nonlinearity; 
-m.plot_fns{3}.pretty_name = 'Stim/Resp Scatter';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
     m = merge_structs(m, args);
 end
 
-function [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx)
+% ------------------------------------------------------------------------
+% Methods
+
+function [phi,outbinserr] = init_nonparm_nonlinearity(mdl, x)
     % calculate nonparm_nonlinearity parameters
     
-    mdl = stack{end};
-    x = xxx{end};
-    
+        
     % find out parameters:
     pred=[]; resp=[];
     for sf = x.training_set,
         sf=sf{1};
+        % It's an error if there is more than one channel:
+        if size(x.dat.(sf).(mdl.input_stim)(:), 3) > 1 || ...
+           size(x.dat.(sf).(mdl.input_resp)(:), 3) > 1,
+            error('NPNL is a 1D method!');
+        end
         pred=cat(1,pred,x.dat.(sf).(mdl.input_stim)(:));
         resp=cat(1,resp,x.dat.(sf).(mdl.input_resp)(:));
     end
@@ -108,59 +105,42 @@ function [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx)
     
  end
 
-function x = do_np_nonlinearity(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-    [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx);
-    
-    for sf = fieldnames(x.dat)', sf=sf{1};
+function x = do_np_nonlinearity(mdl, x, stack, xxx)    
+    [phi, ~] = init_nonparm_nonlinearity(mdl, x);
+    fns = fieldnames(x.dat);
+    for ii = 1:length(fns)
+        sf = fns{ii};
         [T, S, C] = size(x.dat.(sf).(mdl.input_stim));
-        y = zeros(T, S, C);
-        
-        % TODO: If a scalar-valued function, use this
-        % y = arrayfun(@(in) mdl.nlfn(mdl.phi, in), x.dat.(sf).(mdl.input_stim));
-        
-        % Otherwise use the much faster vector valued functions
-        y = raw_nl(phi, x.dat.(sf).(mdl.input_stim)(:));      
-        
-        % TODO: Find a better solution than this hacky way of zeroing nans
-        % so that optimization continue in the presence of singularities
-        y(isnan(y)) = 0;
-        
+        y = raw_nl(phi, x.dat.(sf).(mdl.input_stim)(:));                      
+        y(isnan(y)) = 0; % TODO: Find better solution than zeroing to avoid singularities        
         x.dat.(sf).(mdl.output) = reshape(y,[T,S,C]);
     end
 end
 
-function do_plot_scatter_and_nonlinearity(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
+function help_plot_npnl(sel, mdls, xins, xouts)
+    for ii = 1:length(mdls)
+        [phi,outbinserr] = init_nonparm_nonlinearity(mdls{ii}, xins{ii}{end});
+        xouts{ii}.dat.(sel.stimfile).npnlstim = phi{1};
+        xouts{ii}.dat.(sel.stimfile).npnlpred = phi{2};
+        xouts{ii}.dat.(sel.stimfile).temperr  = outbinserr;
+    end
     
-    hold on;
-    do_plot_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
-    xlims = xlim();
-    % xs = linspace(xlims(1), xlims(2), 100);
-    % plot(xs, raw_nl(mdl.phi, xs));
-    [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx(1:end-1));
-    errorbar(phi{1},phi{2},outbinserr);
-    hold off
+    hold on;    
+    do_plot(xouts, 'npnlstim', 'npnlpred', ...
+            sel, 'NPNL Input [-]', 'RespAvg Prediction [Hz]');   
+	hold off;
 end
 
-function do_plot_smooth_scatter_and_nonlinearity(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    hold on;
-    do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
-    % xlims = xlim();
-    % xs = linspace(xlims(1), xlims(2), 100)';
-    % plot(xs, raw_nl(mdl.phi, xs));
-    [phi,outbinserr] = init_nonparm_nonlinearity(stack, xxx(1:end-1));
-    errorbar(phi{1},phi{2},outbinserr);
-    hold off
-    minrange=phi{2}-outbinserr.*2;
-    maxrange=phi{2}+outbinserr.*2;
-    aa=axis;
-    axis([aa(1:2) min(minrange) max(maxrange)]);
+function do_plot_scatter_and_nonlinearity(sel, stack, xxx)    
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp);  
+    help_plot_npnl(sel, mdls, xins, xouts);
+end
+
+function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100); 
+    help_plot_npnl(sel, mdls, xins, xouts);
 end
 
 end

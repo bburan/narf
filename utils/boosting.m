@@ -1,63 +1,91 @@
-function [x_bst, s_bst] = boosting(objfn, x_0, termfn, stepsize)
-% Ivar's interpretation of a (perhaps not truly) boosting algorithm.
+function [x_bst, s_bst, n] = boosting(objfn, x_0, termfn, stepsize, stepscale)
+% [x_bst, s_bst, n] = boosting(objfn, x_0, termfn, stepsize=1, stepscale=10)
+%
+% A naive 'boosting' search method in which stepsize can only decrease from
+% its initial value. Good for linear searches of FIR coefficient space, but
+% not suitable for nonlinear searches in which. 
 %
 % ARGUMENTS: 
 %    objfn     Objective function. Must accept vector x and return a scalar
+%              which is to be minimized.
+%
 %    x_0       Starting point for the optimization of vector x.
-%    termfn    Termination function. Accepts arguments:
+%
+%    termfn    Termination function which accepts 4 arguments:
 %                     n    Step number of this iteration.
 %                     x    The present x being considered.
-%                     s    Score as evaluated by objfn(x).
-%    stepsize  Size of steps to take when optimizing x.
+%                     s    Stepsize taken in this past step
+%                     d    Score improvement (delta) vs previous point
+%              The loop terminates when this returns a true.                
+%
+%    stepsize  Initial size of steps to take when optimizing x.
+%              Default is 1. 
+%
+%    stepscale When no better steps are found, stepsize is scaled by:
+%                stepsize = stepsize / stepscale.
+%              Default is stepscale=2, the classic "binary search"
 % 
 % RETURNS:
 %    x_bst     The best vector x found so far.
+%
 %    s_bst     The score of that vector, as evaluated by objfn.
 %
+%    n         The number of boosting steps taken.
+%
 % DETAILS:
-% Given a starting vector x=x_0, this algorithm samples a step in each
+% Given a starting vector x = x_0, this algorithm samples a step in each
 % direction along every dimension in x and moves to that new point 
 % if it improves the score according to objective function objfn(x) more
-% than any alternative direction. 
+% than any alternative step along a different dimension of x.
 %
-% Will terminate whenever @termfn(n,x,s) returns a boolean true value, or
-% the stepsize goes below 10^-9.
-%
-% Returns the best point found and the score of that point. 
-%     
-% Oct 12, 2012. Ivar Thorson.
+% Will terminate whenever @termfn(n,x,s,d) returns a boolean true value.
+% Good termination function examples include:
+%    @(n,x,s,d) n>300          Terminate after 300 steps.
+%    @(n,x,s,d) d<10^-6        Terminate when is score delta is improving
+%                              very slowly.
+%    @(n,x,s,d) s<10^-3        Terminate when step size is small.
 
-% Ensure that the arguments are valid
-[nr, nc] = size(x_0); 
+if nargin < 3,  
+    error('boosting() needs 3 or more arguments.');
+end
 
-if (nr ~= 1) error('x_0 must be a row vector'); end
-if (stepsize <= 0) error('stepsize must be > 0'); end
+if ~exist('stepsize','var'),    
+    stepsize = 1;
+end
+
+if ~exist('stepscale','var'),    
+    stepscale = 2;
+end
+    
+if (stepsize <= 0) 
+    error('stepsize must be > 0');
+end
+
+if (stepscale <= 1) 
+    error('stepscalemust be > 1');
+end
 
 % Starting search point
-x = x_0;
+x = x_0(:);
 s = objfn(x);
 l = length(x_0);
-n = 1;  % Step number
+n = 0;  % Step number
+s_delta = s;
 
-% intial extreme values
-min_s_pct_change=1e-7;
-s_pct_change=1;
-
-while (stepsize > 10^-9) && s_pct_change>min_s_pct_change && ~termfn(n,x,s)
-    x_pre = x;   % The state before taking any steps
-    x_next = x;  % The best direction to step in so far
+while ~termfn(n, x, stepsize, s_delta)    
+    x_next = x;  % x_next holds best stepping direction so far
     s_next = s;
     
     % Try to take a step along every dimension
-    fprintf('boosting.m: Stepping');
+    fprintf('Boosting');
     
     for d = 1:l
-        stepdir = zeros(1, l);
+        stepdir = zeros(l, 1);
         stepdir(d) = stepsize;
                 
         % Step in the direction
-        x_fwd = x_pre + stepdir;
-        x_bck = x_pre - stepdir;
+        x_fwd = x + stepdir;
+        x_bck = x - stepdir;
 
         s_fwd = objfn(x_fwd);
         s_bck = objfn(x_bck);
@@ -79,34 +107,28 @@ while (stepsize > 10^-9) && s_pct_change>min_s_pct_change && ~termfn(n,x,s)
             fprintf('.');
         end
     end
-    
-    % Take a step in the best direction
-    x = x_next; 
-    s_prev=s;
-    s = s_next;
-    
-    s_pct_change=(s_prev-s)./s_prev;
-    
+        
     % If the search point has not changed, step size is too big.
-    % Decrease the step size by sqrt(10x)
-     if all(x_pre == x)
-         stepsize = stepsize * sqrt(0.1);
-         fprintf('No improvement. Stepsize decreased to %d\n', stepsize);
-         s_pct_change=1;
-     else
+     if all(x == x_next)
+         stepsize = stepsize / stepscale;
+         fprintf('Decreased stepsize to %d\n', stepsize);
+     else        
+        % Compute the improvement in score
+        s_delta = s - s_next;
+    
+        % Compute the direction of the step;
+        dirs = 1:l;
+        dir = dirs(x ~= x_next);
+                
+        % Take a step in the best direction
+        x = x_next; 
+        s = s_next;
+        
         % Print the improvement after stepping
-        fprintf('Scored: %d (change %.8f%%)\n', s, s_pct_change);
-        if s_pct_change<min_s_pct_change,
-            fprintf('Below minimum required improvement: %.8f%%\n',min_s_pct_change);
-        end
-        % set stop threshold based on size of first improvement
-        if min_s_pct_change==1e-7 || s_pct_change./1e04>min_s_pct_change,
-            min_s_pct_change=s_pct_change./1e04;
-            fprintf('Adjusting minimum required improvement: %.8f%%\n',min_s_pct_change);
-        end
+        fprintf('coef# %3d, delta: %d, score:%d\n', dir, s_delta, s);
+        n = n + 1;
      end
-     
-     n = n + 1;
+    
 end
 
 % Return the best value found so far

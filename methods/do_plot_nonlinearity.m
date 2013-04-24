@@ -3,7 +3,7 @@ function do_plot_nonlinearity(stack, xxx, thesig, thefn, showhist)
     x_pre = xxx{end-1};
     x_post = xxx{end};
     
-    [sf, stim_idx, unused] = get_baphy_plot_controls(stack);  
+    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);  
     
     [bins, centers] = hist(x_pre.dat.(sf).(thesig)(:, stim_idx), 50);
     xs = linspace(centers(1), centers(end), 200);

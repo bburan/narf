@@ -742,3 +742,281 @@ One other thought I had: should we also be considering a nonparametric compresso
 
 
 Ivar
+  7. [X] Why doesn't SB fitter seem to respect smoothness penalties?
+	 Because it steps in the direction which best describes the data, which may have nothing to do with sparsity
+
+  5. [ ] Replace 'model groups' abstraction with a list of arbitrary nested model-perturbing functions and associated keywords
+	 Why: In the future, more information should be stored in the META structure:
+         META.fitter = ...;  % Fitting tools are not specific to a single module, but are actually more global
+	 META.scorer = ...;  % Performance metrics are likewise not really modules
+	 Why: It would allow mutation of multiple parts of the stack, simultaneously. 
+	 Why: Fitters need to have their own arbitrary string to describe their actions, and this is OUTSIDE of the normal module keyword system
+  8. [ ] Fitters need to be composable
+	 1. Fit the FIR coefs with reverse correlation first
+	 2. Then fit the FIR coefs with Boosting
+	 3. Then fit the NL part with fminlsq
+	 4. Then have a loop where you do one boosting step and one lsq step.
+* Discussion with Stephen
+
+** Solved problem: How to initialize complex models in complex ways
+   No other way around it; defining a new keyword function is the only truly flexible way to do this. 
+   Some complex keywords can even add and initialize a model in the same step.
+   Our never-ending task is to isolate the functionality of each keyword in the most logical and recombinable manner.
+   But that's not a hard problem, since we can always refactor functionality we find ourselves cut-and-pasting.
+
+** Unsolved problem: How should we accomodate our need to be able to study a model
+   Although right now we are just looking at FIR and NPNL and how they vary when trained on one/multiple files.
+   We can't just train five models, because we want the REST of the model to use all the same data.
+   We can anticipate that we will be doing this all/individual separation of data for almost every computational module.
+   
+*** Option 1: Use wiring to connect many simple modules which use inputs that are all- or per- file
+    Pros: 
+    + Using 'wiring' to solve the problem can be done algorithmically, and doesn't change the modules.
+    + A module which 'splits' a signal by respfile channel 
+    + No change to existing modules
+    Cons:
+    - Makes comparison graphing more difficult
+    - Confuses the idea of a 'model structure' with the 'experimental structure' 
+    - Increased number of modules
+    - Tree navigation required to some extent.
+    - Looks like a bookkeeping nightmare having to name all those signals programmatically
+
+*** Option 2: Make the all-/per- file analysis local to each module.
+    Pros:
+    + Fewer modules are created, improving fitting/plotting speed
+    + The all-/per-file comparison is so much easier because the data is local
+    + No changes to gui code
+    + You can graph all or per simultaneously
+    Cons:
+    - Changes to EVERY SINGLE module that wants to implement this.      
+    - Data structures become more complex
+
+*** Discussion
+    It has to be Option 2: change every single module to accomodate this all/per file experimental thing. 
+    This is the only option because it would be very bad to confuse the experimental structure with the model structure. 
+    Our experiment may bei asking how a module's parameters look in various behavior states, but that's not the same thing as having branches in a model.
+    We also have a real need to train part of the model on everything, and another part only on specific respfiles.
+    Keeping track of if we are looking at the Inhibition or Excitation FIR filter when you have 8 Respfiles would be too confusing...that's 16 FIR filters, plus splitters/joiners!
+
+*** Proposed Solution:
+    What we really need is a uniform abstraction that can be applied to any module.
+
+    1. Manage module fields for both all-file or per-file cases
+    2. Manage module plotting for all- or per- cases
+    3. Align training/test set pairs when using a particular parameter set grouping
+    4. Remains customizable in the event that we need to create different groupings (say, active1 vs active2 vs passive behaviors) 
+
+    The way to achieve this uniform abstraction is to change the functional interface of each module:
+
+    1. Every module function interface now accepts:
+       - the module parameter set to use
+       - the respfiles/data to act upon
+       - previous STACK
+       - previous XXX
+
+    2. Modules now have an optional flag
+       - When true, arguments to functions are given
+       - The respfile cell array is specified by some 'experimental respfile selector function'
+
+    3. The default function of a modules no longer works on ALL data, but only on the respfile argument.
+
+    4. Plot functions of modules no longer works on ALL data, but only on the respfile cell array argument.
+       Modules no longer plot directly to their output
+       Instead, they accept an argument of where to plot, 
+       They also receive the module fields to use when plotting
+
+** PROBLEM: Each model structure will have a different way of defining sparsity
+     Some models have 1 FIR filter, some have per-file filters, some have IN/EX filters
+  Therefore, don't build it in to the MSE module...it is instead part of a fitter.
+  
+* SPLIT PARAMETER SETS
+ SUMMARY OF CHANGES:
+  1) [ ] Jackknifing is a generic FITTER function keyword and requires no special work.
+         - Besides, we need to do jackknifing even on split models.
+  2) [ ] Peeking at another module's data without using EXTRACT_MODULE_PARAMS() is now STRICTLY FORBIDDEN
+         - You provide the index number, which you found previously with find_modules()
+  3) [ ] STACK is now a 2x deep cell array. XXX has no change.
+  4) [ ] Modules all have a 'splitter' fn and a 'unifier' fn
+	 - The splitter function is called when append_module() is done
+	 - The splitter accounts for data conditions
+	   {[mdl1, dat1], [mdl2, dat2]} = splitter(STACK, XXX)
+	 - The unifier brings back multiple data conditions
+	   XXX{N+1} = unifier(x1{n+1), x2{n+1});
+  5) [ ] recalc_XXX now 
+	   1. calls mdl.fn() on each split parameter set
+	   2. calls mdl.unify() on the XXX results of all of those
+  6) [ ] Whatever calls plot hooks in narf_modelpane now
+	   1. calls splitter() to get the group parameter sets
+	   2. Creates a pack of axes()
+	   3. Calls the selected plot function on each one
+  7) [ ] Pack and unpack_fittables now understand split parameters
+
+* Should I put selected GUI info  in the XXX data struct?
+    Pros:
+    + No extra argument    
+    Cons:
+    - Confuses GUI state and XXX data
+    - Need to go through XXX data  
+    - Could accidentally overwrite XXX data
+    BAD IDEA!
+* Module Interface Changes
+  - DO functions now get passed four arguments instead of two:
+    | mdl   | Module parameter set                                                   |
+    | x     | default xxx data to work on                                            |
+    | stack | The whole stack. It's STRONGLY ENCOURAGED you don't actually use this. |
+    | xxx   | The whole xxx. It's STRONGLY ENCOURAGED you not use this.              |
+
+  - PLOT functions now get passed six arguments
+    | selected | Struct containing plot_gui selections                            |
+    | stack    | The whole stack up to this point, including alternate param sets |
+    | xxx      | The whole xxx up to N+1 with the unified results                 |
+
+  - These can easily be computed from stack and xxx
+    | mdls   | cell array of module parameter sets for this module |
+    | xprevs | cell array of split inputs                          |
+    | xnexts | cell array of outputs before the unify              |
+ 
+  - Selected struct has these fields
+    | selected.stimfile    | Selected stimfile              |
+    | selected.stim_idx    | Selected stim idx              |
+    | selected.chan_idx    | Default selected channel idx   |
+    | selected.parmset_idx | Default selected parameter set (or this parmset) |
+
+  - The selected struct is built by walking the NARFGUI array and merging fields
+
+  - When a plot-gui is changed, it triggers a REFRESH_GUI from that point
+    Model the logic on the recalc_xxx and it should be fine
+
+  - Only remaining questions is should I
+    1. Plot per parameter set and encapsulate loops?
+    2. Plot entire thing
+
+    I guess it makes more sense to plot the whole damn thing
+    If I just want to plot part of it, I do: 
+
+  - For encapsulation at some point, we may want to remove global defaults:
+    1. We should pass a handle to the plot axes to the plot functions
+
+* Meta-Methods
+** I need a generic plotting method which takes
+  - A function that plots a single line
+  - x axis vector-valued cell array {x1, x2, x3}
+  - y axis matrix-valued cell array {Y1, Y2, Y3}
+  - fieldnames (Assumed to be parameter set names)
+  - channames (assumed to be channels and corresponding with Y's 2nd dimension)
+
+** It should also:
+   - Colors indicate channel: b, g, r, c, m, 
+   - Line types:    -, --, -., :, o-, x-,
+   - Automatic legend, X axis, Y axis, etc
+   - plot(dat.(mdl.output_stim_time), ...
+       dat.(mdl.output_stim)(:, sel.stim_idx, sel.chan_idx), 'k-');
+
+* Have the FIR module be MIMO, and then SUM the outputs
+  Is it useful to do this to simplify plot routines? Or not?
+  99% of the time I want the summing, so let's include it. 
+
+* Bayesian perspective
+  You have a model structure, which is the TYPE of module in the (STACK)
+  You have several model parameter sets (Sideways sets of parameters in STACK)
+  Each of those has a likelihood/data chain (XXX)
+  Now that we can have multiple parameter sets, we can even have ENSEMBLE models
+  (Use a gaussian random splitter, and a mean unifier or one that discards outliers)
+  
+A true bayesian would allow parameter sets to vary across the WHOLE stack.
+There's no reason we couldn't do this with a tree-shaped STACK.
+It would be like encompassing multiple models in the same file, all working on the same data.
+The downside would be that aggregating data for plotting would be a bitch.
+Training would also be a bitch. 
+For now, being able to localize changes to a single module is good enough. 
+Besides, we already have enough rope to hang ourselves with.
+
+* Why the plot functions have to change so much:
+  Because right now in EVERY single plot function, we check the status of a GUI that may not exist
+  For better flexibility, we should allow plotting to occur programmatically
+  This can only occur if plot functions are GIVEN the GUI status as an argument
+* SUMMARY OF CHANGES:
+  1) [X] Jackknifing is a generic FITTER function keyword and requires no special work.
+         - Besides, we need to do jackknifing even on split models.
+  2) [X] STACK is now a 2x deep cell array. XXX has no change.
+  3) [X] Modules all have a 'splitter' fn and a 'unifier' fn
+	 - The splitter function is called when append_module() is done
+	 - The splitter accounts for data conditions
+	   {[mdl1, dat1], [mdl2, dat2]} = splitter(STACK, XXX)
+	 - The unifier brings back multiple data conditions
+	   XXX{N+1} = unifier(x1{n+1), x2{n+1});
+  4) [X] Pack and unpack_fittables now understand split parameters
+  5) [X] Peeking at another module's data without using EXTRACT_MODULE_PARAMS() is now STRICTLY FORBIDDEN
+         - You provide the index number, which you found previously with find_modules()
+	 - {cellarrayofparams} = Extract_module_params(module_index, param) 
+  6) [X] recalc_XXX now 
+	   1. calls mdl.fn() on each split parameter set
+	   2. calls mdl.unifier() on the XXX results of all of those
+  7) [X] Whatever calls plot hooks in narf_modelpane now
+  8) [X] Substantial work in utils/
+	 All the functions which use STACK should now be more or less workable!	  
+  9) [X] There are three splitter implementations available:
+	 1. per-respfile
+	 2. per-filecode category
+	 3. all-files (No splitter provided)
+  10) [X] There is one generic unifier
+          1. Per-respfile merger
+  11) [X] STACK{}.gh is now its own structure: NARFGUI
+	  - [X] Ensure no more *.gh things exist
+	  - [X] Ensure that all the plot_gui's now are in NARFGUI
+	  - [X] get_baphy_plot_controls should become irrelevant now
+  12) [-] Substantial work in pretty much every module which touches STACK naively
+	  - [X] load-stim-from-baphy
+	  - [X] normalizer
+	  - [X] FIR
+	  - [X] LOG2b
+	  - [X] NPNL
+	  - [ ] NPFNL
+	  - [ ] Other?
+Hi Stephen, 
+
+I just thought I would update you on NARFv2. It's pretty much like NARFv1 but with some programmatic interface changes that streamline the modules a bit better and let us do a few things we couldn't do before:
+
+1. Plotting via scripts is now far more controllable. This was not possible at all before, strangely enough, since I had focused on plotting from the GUI.
+
+2. Each module can have multiple 'parameter sets' of data. In other words, the FIR module can now have multiple sets of coefficients which work on different parts of the data, or even on the same data if you want. The function which splits up the data and passes it to each parameter set is called a 'splitter', and the one which brings the data back together again is called the 'unifier'. I intended this to solve our problem of needing to do per-respfile or per-behavioral condition fits for just part of the model. However, this could be interesting for doing something like 'consensus' or 'ensemble' modules, which each could be trained on some jackknifed subset of the data. We could then throw out the worst FIR coefs (which were sensitive to outliers), and average the rest of the values to make a prediction. 
+
+3. Arbitrary initialization of any part of the model, at any step in the fitting process, is possible with a keyword system. If you want to do two-step fitting routines, this should become much simpler now. 
+
+4. Modules are smart enough to plot their multiple parameter sets in the same plot window for easy viewing (i.e., multiple NPNLs can be shown on the same axes plot, or multiple FIR filters can be shown on the same FIR coefs plot).
+
+5. Keywords can be combined in a clever recursive fashion to allow us to test combinationss in an extremely complex way. We now have plenty of rope to hang ourselves with.
+
+6. We can go into the details of the changes; it is slightly more painful to mess with STACK manually now, but on the other hand the added functionality is probably worth it. This isn't a huge problem -- you should be using "append_module" to build a model whenever possible anyway. 
+
+7. Plotting routines are standardized and work for multiple parameter sets and multiple channels. I added intelligent legends and labels for the NARF newbies as well.
+
+The only remaining things to do before I push the code back in are:
+
+1. Fixing some awkwardness with plotting multiple parameter sets in the narf_modelpane gui
+
+2. Finishing testing the splitter/unifier code for the minimum relevant modules (FIR, NPNL, NPFNL)
+
+3. Testing that the boosting fitter still works as intended (probably fine).
+
+4. Check that I didn't break the job system in anyway (probably fine).
+
+I'd guess it will take me another 2 days to finish those, but it may be more or less, depending on how smart I am feeling. 
+
+I'll be here next week on Monday and Tuesday. Whether I can come in this Friday depends on how much I get done Wed/Thu of this week. 
+
+
+Ivar
+
+
+* Talking Points for Stephen
+** Multiple paramsets
+  - I'm allowing load-stim-from-baphy to have them too
+    - Why: Perhaps someday we will want to integrate data from MULTIPLE cellids
+    - We can do this by hacking out a strange 'splitter & unifier' for loadstimfrombaphy
+    - Allowing such aggregation of data doesn't increase baphy's or narf's complexity
+** Recalculating
+  - There is more 'recalcing' going on than before during plotting
+  - It sounds goofy, but plot functions now recalc all the data, instead of just calling plot functions 
+** Plotting
+   - Right now there's no GUI selection for module paramset, but there will be soon

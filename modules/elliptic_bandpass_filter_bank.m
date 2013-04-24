@@ -89,7 +89,7 @@ function do_plot_filtered_spectrogram(stack, xxx)
     x = xxx{end};
     
     [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack);
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
+    [baphy_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy', true);
     dat = x.dat.(sf);
     
     logfsgram(dat.(mdl.output)(:, stim_idx, chan_idx)', 4048, baphy_mod.raw_stim_fs, [], [], 500, 12); 
@@ -106,7 +106,7 @@ function do_plot_elliptic_bandpass_filter_bank_frq_resp(stack, xxx)
         ww = 0:(pi/1000):pi;
         H = freqz(mdl.coefs{filt_idx}{1}, mdl.coefs{filt_idx}{2}, ww);
         loglog(ww, abs(H), pickcolor(filt_idx));
-        setAxisLabelCallback(gca, @(f) (f*mdl.sampfs/(3.14*2)), 'X');
+        setAxisLabelCallback('X', @(f) (f*mdl.sampfs/(3.14*2)));
         axis tight;
     end 
     hold off;

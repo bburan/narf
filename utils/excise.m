@@ -1,3 +1,4 @@
-function [x] = excise(x)
-% Exrcises all rows of matrix x containing NaNs
+function x = excise(x)
+% x = excise(x)
+% Excises all rows of matrix x which contain a NaN at any position. 
 x(any(isnan(x)'),:) = [];

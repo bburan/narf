@@ -43,19 +43,3 @@ for ii = 1:length(cells)
         
     end
 end
-
-% Generate "top 10" plots for each cellid
-% for ii = 1:length(cells)
-%     % Plot the top 10 models
-%     models = db_get_models(batch, cells{ii}.cellid);
-%     compare_models(cellstr(char(models(max(length(models)-10,1):end).modelpath)));
-%     % TODO: Scatter plots
-% end
-
-% TODO: Generate heat map plots (Buggy right now due to caching problem)
-
-
-% Write a function which makes an SQL query
-% Look at db_get_models() for an example
-%
-

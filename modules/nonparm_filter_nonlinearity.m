@@ -25,29 +25,30 @@ m.output = 'stim';
 % work pretty well, but its' really ad-hoc!
     
 % Optional fields
+m.auto_plot = @do_plot_smooth_scatter_npfnl;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_smooth_scatter_npfnl; 
 m.plot_fns{1}.pretty_name = 'Stim/Resp Smooth Scatter';
 
-m.plot_fns{2}.fn = @(stack, xxx) do_plot_signal(stack, xxx, stack{end}.time, stack{end}.output);
-m.plot_fns{2}.pretty_name = 'Output vs Time';
+m.plot_fns{2}.fn = @do_plot_scatter_npfnl; 
+m.plot_fns{2}.pretty_name = 'Stim/Resp Scatter';
+
+m.plot_fns{3}.fn = @do_plot_single_default_output;
+m.plot_fns{3}.pretty_name = 'Output vs Time';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
     m = merge_structs(m, args);
 end
 
-function npfnl = calc_npfnl(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
+function npfnl = calc_npfnl(mdl, x)   
     % Create the pred and resp vectors
     pred = []; 
     resp = [];
     for ii = 1:length(x.training_set),
         sf = x.training_set{ii};
-        pred = cat(1,pred,x.dat.(sf).(mdl.input_stim)(:));
-        resp = cat(1,resp,x.dat.(sf).(mdl.input_resp)(:));
+        pred = cat(1, pred, x.dat.(sf).(mdl.input_stim)(:));
+        resp = cat(1, resp, x.dat.(sf).(mdl.input_resp)(:));
     end
     
     % Remove entries with NaNs in resp.
@@ -68,25 +69,37 @@ function npfnl = calc_npfnl(stack, xxx)
     D = sortrows([pred(idxs) resp(idxs)]); 
     S = iconv(D(:, 1), gf);
     R = iconv(D(:, 2), gf);
-
+    
     rs = mdl.edgesize; 
     ls = mdl.edgesize * 4; 
-    right_slope = (mean(R(end-rs:end)) - mean(R(end-ls:end-rs))) / ...
-                  (mean(S(end-rs:end)) - mean(S(end-ls:end-rs)));
     
-    left_slope = (mean(R(1:rs)) - mean(R(rs+1:ls))) / ...
-                  (mean(S(1:rs)) - mean(S(rs+1:ls)));
+    if length(S) < mdl.edgesize * 4 || length(R) < mdl.edgesize * 4
+        right_slope = 0;
+        left_slope = 0;
+    else
+        right_slope = (mean(R(end-rs:end)) - mean(R(end-ls:end-rs))) / ...
+                      (mean(S(end-rs:end)) - mean(S(end-ls:end-rs)));
+        left_slope = (mean(R(1:rs)) - mean(R(rs+1:ls))) / ...
+                     (mean(S(1:rs)) - mean(S(rs+1:ls)));
+    end
+    
 	if mdl.leftzero
         left_slope = 0;
     end
-              
+    
     right_interp = @(x) R(end) + right_slope * (x-S(end));
     left_interp = @(x) R(1) - left_slope * (S(1)-x);
+    
+    lengthsok = (length(S) > 1) && (length(R) > 1);
     
     % Return a function that can interpolate arbitrary values
     function z = hacky_interpolator(xs)        
         
-        z = interp1(S, R, xs, 'linear');
+        if lengthsok
+            z = interp1(S, R, xs, 'linear');
+        else
+            z = xs;
+        end
         
         % Correct the fact that values outside the linear range are NaN
         leftz  = xs < S(1); 
@@ -99,43 +112,57 @@ function npfnl = calc_npfnl(stack, xxx)
     npfnl = @hacky_interpolator;
  end
 
-function x = do_npfnl(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
+function x = do_npfnl(mdl, x, stack, xxx)
     
-    npfnl = calc_npfnl(stack, xxx);
+    npfnl = calc_npfnl(mdl, x);
     
     for sf = fieldnames(x.dat)', sf=sf{1};
-        [T, S, C] = size(x.dat.(sf).(mdl.input_stim));
-        yout = npfnl(x.dat.(sf).(mdl.input_stim)(:));
+        in = x.dat.(sf).(mdl.input_stim);
+        [T, S, C] = size(in);
+        if all(isnan(in(:)))
+            yout = in(:);
+        else
+            yout = npfnl(in(:));
+        end
         x.dat.(sf).(mdl.output) = reshape(yout,[T,S,C]);
     end
 end
 
-function plotthecurve(nlfn, xs)
-    xmin = min(xs);
-    xmax = max(xs);
-    aa = linspace(xmin, xmax, 100);
-    z = nlfn(aa);
-    ymin = min(z);
-    ymax = max(z);
-    plot(aa, z, 'k-');  
-    axis([xmin, xmax, ymin, ymax]);
+function help_plot_npfnl(sel, mdls, xins, xouts)     
+    
+    v = axis;
+    xmin = v(1);
+    xmax = v(2);
+    
+    for ii = 1:length(mdls)    
+        npfnl = calc_npfnl(mdls{ii}, xins{ii}{end});
+        
+        %xs = xins{ii}{end}.dat.(sel.stimfile).(mdls{ii}.input_stim)(:);  
+        %xmin = min(xs);
+        %xmax = max(xs);
+        aa = linspace(xmin, xmax, 100);        
+        z = npfnl(aa);
+        
+        xouts{ii}.dat.(sel.stimfile).npfnlstim = aa';
+        xouts{ii}.dat.(sel.stimfile).npfnlpred = z';
+    end
+    
+    hold on;    
+    do_plot(xouts, 'npfnlstim', 'npfnlpred', ...
+            sel, 'NPFNL Input [-]', 'RespAvg Prediction [Hz]');   
+	hold off;
 end
 
-function do_plot_smooth_scatter_npfnl(stack, xxx)
-    mdl = stack{end};
-    
-    npfnl = calc_npfnl(stack, xxx(1:end-1));
-    
-    hold on;
-    do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);    
-    
-    [sf, ~, ~] = get_baphy_plot_controls(stack);
-    plotthecurve(npfnl, xxx{end-1}.dat.(sf).(mdl.input_stim)(:));
-    do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp); 
-    
-    hold off;
+function do_plot_smooth_scatter_npfnl(sel, stack, xxx)
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100);  
+    help_plot_npfnl(sel, mdls, xins, xouts); 
+end
+
+function do_plot_scatter_npfnl(sel, stack, xxx)
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp);  
+    help_plot_npfnl(sel, mdls, xins, xouts);
 end
 
 end

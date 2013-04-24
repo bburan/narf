@@ -1,18 +1,25 @@
 function c = pickcolor(n)
-m = mod(n,7);
-switch m
-    case 0 
-        c='k-';
-    case 1 
-        c='b-';
-    case 2 
-        c='g-';
-    case 3 
-        c='r-';
-    case 4 
-        c='c-';
-    case 5
-        c='m-';
-    case 6
-        c='y-';
+% c = pickcolor(n)
+%
+% Returns a color and linestyle for a particular index. 
+% Useful when 'hold on' is set and you need to plot different lines with
+% repeated calls to PLOT() but want them to be the proper colors.
+
+colors = {[0,  0,  1], ...
+          [0,  1,  0], ...
+          [1,  0,  0], ...
+          [0,  1,  1], ...
+          [1,  0,  1], ...
+          [1,  1,  0], ...
+          [0,  0,  0.5], ...
+          [0,  0.5,  0], ...
+          [0.5,  0,  1], ...
+          [0,  0.5,  0.5], ...
+          [0.5,  0,  0.5], ...
+          [0.5, 0.5,   0]};
+      
+n_colors = length(colors);
+
+c = colors{mod(n-1, n_colors) + 1};
+
 end

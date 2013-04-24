@@ -1,8 +1,10 @@
-function [] = setAxisLabelCallback(gca, fn, axis)
-% Sets up fn as the callback fn to label an axis dynamically
+function setAxisLabelCallback(axis, fn)
+% setAxisLabelCallback(axis, fn)
+%
+% Sets up fn as the callback fn to label an axis dynamically for the
+% current graphics object gca.
 %
 % INPUTS:
-%   gca    Current graphics object handle
 %   fn     Callback function which accepts a single argument only
 %   axis   A string, either 'X' or 'Y' (case sensitive!)
 %
@@ -12,7 +14,7 @@ function [] = setAxisLabelCallback(gca, fn, axis)
 % 2012-09-21, Ivar Thorson
 
 % Define an inner function because matlab is too retarded to make multiline anonymous ones
-    function innerCallback(hProp,eventData)
+    function innerCallback(~,eventData)
         hAxes = eventData.AffectedObject;
         tickValues = get(hAxes, sprintf('%sTick', axis));
         newLabels = arrayfun(@(value)(fn(value)), tickValues, 'UniformOutput',false);

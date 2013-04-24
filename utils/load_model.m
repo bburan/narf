@@ -1,22 +1,21 @@
-function load_model_stack(filename)
-    global STACK XXX META;
-    vars = load(filename, 'stack', 'xxx', 'meta');
-    
-    XXX = {};
-    XXX{1} = vars.xxx;
-    META = vars.meta;
-    stack = vars.stack;
-    
-    % Connect the old GUI to the new model, if the old gui exists
-    for ii = 1:length(stack)
-        if isfield(stack{ii}, 'gh')
-            STACK{ii}.gh = stack{ii}.gh;
-        end
-        if isfield(stack{ii}, 'plot_gui')
-            STACK{ii}.plot_gui = stack{ii}.plot_gui;
-        end
-    end
-    
-    % Swap in the new stack
-    STACK = vars.stack;
-end
+function load_model(filepath)
+% load_model(filepath)
+%
+% Loads the NARF model found at path FILEPATH into the global variables 
+% STACK, XXX, and META. Their contents are overwritten if they exist.
+%
+% ARGUMENTS
+%    filepath    The absolute path to where the NARF .mat file is found
+% 
+% RETURNS: Nothing
+
+global STACK XXX META;
+vars = load(filepath, 'stack', 'xxx', 'meta');
+
+XXX = {};
+
+% Swap in the new globals
+XXX{1} = vars.xxx;
+META = vars.meta;
+STACK = vars.stack;  
+

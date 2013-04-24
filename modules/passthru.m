@@ -25,9 +25,6 @@ end
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.input);
-m.plot_fns{1}.pretty_name = 'Input Channel vs Time';
-m.plot_gui_create_fn = @create_chan_selector_gui;
 
 function x = do_passthru(stack, xxx)
     mdl = stack{end};

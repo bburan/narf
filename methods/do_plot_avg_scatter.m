@@ -8,7 +8,7 @@ function do_plot_avg_scatter(stack, xxx, field1, field2)
 
 x = xxx{end};
 
-[sf, stim_idx, unused] = get_baphy_plot_controls(stack);
+[sf, ~, ~] = get_baphy_plot_controls(stack);
 dat = x.dat.(sf);  
 
 if ~isequal(size(dat.(field1)), size(dat.(field2)))
@@ -16,6 +16,7 @@ if ~isequal(size(dat.(field1)), size(dat.(field2)))
     axis([0, 1, 0 1]);
     return;
 end
+
 % Sort and average them by groups of 100
 D = [dat.(field1)(:) dat.(field2)(:)]; 
 D=D(~isnan(D(:,1))&~isnan(D(:,2)),:);

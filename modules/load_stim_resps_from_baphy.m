@@ -13,7 +13,7 @@ m.pretty_name = 'Load stim+resp from BAPHY';
 m.editable_fields = {'raw_stim_fs', 'raw_resp_fs', 'include_prestim', ...
                      'stimulus_format','stimulus_channel_count', ...
                      'output_stim', 'output_stim_time', ...
-                     'output_resp', 'output_resp_time'};
+                     'output_resp', 'output_resp_time', 'output_respavg'};
 m.isready_pred = @isready_baphy;
 
 % Module fields that are specific to THIS MODULE
@@ -27,6 +27,7 @@ m.output_stim = 'stim';
 m.output_stim_time = 'stim_time';
 m.output_resp = 'resp';
 m.output_resp_time = 'resp_time';
+m.output_respavg = 'respavg';
 m.include_prestim = 1;
 
 % Overwrite the default module fields with arguments 
@@ -36,28 +37,28 @@ end
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @(xxx, stack) do_plot_all_channels(xxx, stack, m.output_stim_time, m.output_stim); 
-m.plot_fns{1}.pretty_name = 'All Stim Channels';
-m.plot_fns{2}.fn = @do_plot_stim;
-m.plot_fns{2}.pretty_name = 'Single Stim Channel';
-m.plot_fns{3}.fn = @do_plot_stim_log_spectrogram;
-m.plot_fns{3}.pretty_name = 'Stimulus Log Spectrogram';
-m.plot_fns{4}.fn = @(xx, stck) do_plot_channels_as_heatmap(xx, stck, m.output_stim);
-m.plot_fns{4}.pretty_name = 'Channels as Heatmap';
-m.plot_fns{5}.fn = @do_plot_respavg;
-m.plot_fns{5}.pretty_name = 'Response Average';
-m.plot_fns{6}.fn = @do_plot_response_rastered;
-m.plot_fns{6}.pretty_name = 'Response Raster Plot';
-m.plot_fns{7}.fn = @do_plot_spectro_and_raster;
-m.plot_fns{7}.pretty_name = 'Spectrogram + Raster';
+m.plot_fns{1}.fn = @do_plot_all_stim_channels;
+m.plot_fns{1}.pretty_name = 'Stim Channels (All)';
+m.plot_fns{2}.fn = @do_plot_single_stim_channel;
+m.plot_fns{2}.pretty_name = 'Stim Channel (Single)';
+% m.plot_fns{3}.fn = @(xx, stck) do_plot_channels_as_heatmap(xx, stck, m.output_stim);
+% m.plot_fns{3}.pretty_name = 'Stim Channels (Heatmap)';
+m.plot_fns{3}.fn = @do_plot_respavg;
+m.plot_fns{3}.pretty_name = 'Response Average';
+m.plot_fns{4}.fn = @do_plot_response_raster;
+m.plot_fns{4}.pretty_name = 'Response Raster';
+
+% m.plot_fns{6}.fn = @do_plot_stim_log_spectrogram;
+% m.plot_fns{6}.pretty_name = 'Stimulus Log Spectrogram';
+% m.plot_fns{7}.fn = @do_plot_spectro_and_raster;
+% m.plot_fns{7}.pretty_name = 'Spectrogram + Raster';
+
 m.plot_gui_create_fn = @create_gui;
 
 % ------------------------------------------------------------------------
 % Define the 'methods' of this module, as if it were a class
-function x = do_load_from_baphy(stack, xxx)
-    n = length(stack);
-    mdl = stack{n};
-    x = xxx{n};
+
+function x = do_load_from_baphy(mdl, x, stack, xxx)
     
     % Merge the training and test set names, which may overlap
     files_to_load = unique({x.training_set{:}, x.test_set{:}});
@@ -238,142 +239,157 @@ function x = do_load_from_baphy(stack, xxx)
         
         x.dat.(f).(mdl.output_stim) = stim;
         x.dat.(f).(mdl.output_resp) = permute(resp, [1, 3, 2]);
-        x.dat.(f).respavg = squeeze(nanmean(x.dat.(f).(mdl.output_resp), ...
+        x.dat.(f).(mdl.output_respavg) = squeeze(nanmean(x.dat.(f).(mdl.output_resp), ...
                                             3));
+                                        
+        % Scale respavg so it is a spike rate in Hz
+        x.dat.(f).(mdl.output_respavg) = (mdl.raw_resp_fs) .* x.dat.(f).(mdl.output_respavg);
         
         % Create time signals for later convenience
         [s1 s2 s3] = size(x.dat.(f).(mdl.output_stim));
         [r1 r2 r3] = size(x.dat.(f).(mdl.output_resp));
-        [a1 a2]    = size(x.dat.(f).respavg);
+        [a1 a2]    = size(x.dat.(f).(mdl.output_respavg));
         
-        % TODO: Check stim, resp, raw_time signal sizes match.
-        
+        % TODO: Check stim, resp, raw_time signal sizes match.       
         x.dat.(f).(mdl.output_stim_time) = (1/mdl.raw_stim_fs).*[1:s1]';
         x.dat.(f).(mdl.output_resp_time) = (1/mdl.raw_resp_fs).*[1:r1]';
     end
 end
 
-function do_plot_stim(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-    % Read the GUI to find out the selected stim files
-    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
-    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
-    chan = popup2num(mdl.plot_gui.selected_stim_chan_popup);
-    
-    dat = x.dat.(sf);   
-    
-    plot(dat.(mdl.output_stim_time), ...
-         dat.(mdl.output_stim)(:, stim, chan), 'k-');
-    axis tight;    
-    
-end
+% ------------------------------------------------------------------------
+% Helper functions
 
-function do_plot_stim_log_spectrogram(stack, xxx)
-    mdl = stack{end};    
-    x = xxx{end};
-    
-    if strcmp(mdl.stimulus_format, 'envelope')
-        text(0.35, 0.5, 'Cannot visualize envelope as spectrogram');
-        axis([0, 1, 0 1]);
-        return;
+    function ylab = what_is_ylabel(mdls)
+        if strcmp(mdls{1}.stimulus_format, 'envelope')
+            ylab = 'Envelope Magnitude [?]';
+        elseif strcmp(mdls{1}.stimulus_format, 'wav')
+            ylab = 'Volume [?]';
+        else
+            ylab = 'Unknown';
+        end
     end
-    % Read the GUI to find out the selected stim files
-    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
-    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
-    chan = popup2num(mdl.plot_gui.selected_stim_chan_popup);
-    
-    dat = x.dat.(sf);
-   
-    % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-    logfsgram(dat.(mdl.output_stim)(:, stim, chan), ...
-              4048, mdl.raw_stim_fs, [], [], 500, 12); 
-    caxis([-20,40]);  % TODO: use a 'smarter' caxis here
-    axis tight;
+
+% ------------------------------------------------------------------------
+% Plot functions
+
+function do_plot_all_stim_channels(sel, stack, xxx)       
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));
+    mdls = stack{end};
+    xins = {xxx(1:end-1)};
+    xouts = xxx(end);        
+    sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
+    do_plot(xouts, mdls{1}.output_stim_time, mdls{1}.output_stim, ...
+            sel, 'Time [s]', what_is_ylabel(mdls));
 end
 
-function do_plot_respavg(stack, xxx)
-    mdl = stack{end};    
-    x = xxx{end};
-    
-    % Read the GUI to find out the selected stim files
-    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
-    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
-    
-    dat = x.dat.(sf);
-    
-    plot(dat.(mdl.output_resp_time), dat.respavg(:, stim), 'k-');
-    axis tight;
+function do_plot_single_stim_channel(sel, stack, xxx)   
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    mdls = stack{end};
+    xins = {xxx(1:end-1)};
+    xouts = xxx(end);
+    do_plot(xouts, mdls{1}.output_stim_time, mdls{1}.output_stim, ...
+            sel, 'Time [s]', what_is_ylabel(mdls)); 
 end
 
-function do_plot_respavg_as_spikes(stack, xxx)
-    mdl = stack{end};    
-    x = xxx{end};
-    
-    % Read the GUI to find out the selected stim files
-    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
-    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
-    dat = x.dat.(sf);
-    
-    [xs,ys] = find(dat.respavg(idx, :) > 0);
-    bar(dat.(mdl.output_resp_time)(ys), dat.respavg(idx,ys), 0.01, 'k-');
-    axis([0 dat.(mdl.output_resp_time)(end) 0 max(dat.respavg(:, stim))]);
-
+function do_plot_respavg(sel, stack, xxx)
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    mdls = stack{end};
+    xins = {xxx(1:end-1)};
+    xouts = xxx(end);
+    sel.chan_idx = 1;    
+    do_plot(xouts, mdls{1}.output_resp_time, mdls{1}.output_respavg, ...
+            sel, 'Time [s]', 'Spike Rate Average [Hz]'); 
 end
 
-function do_plot_response_rastered(stack, xxx)
-    mdl = stack{end};    
-    x = xxx{end};
-    
-    % Read the GUI to find out the selected stim files
-    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
-    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
-    dat = x.dat.(sf);
-    
+function do_plot_response_raster(sel, stack, xxx)    
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    mdls = stack{end};
+    xins = {xxx(1:end-1)};
+    xouts = xxx(end);
+    mdl = mdls{1};
+    dat = xouts{1}.dat.(sel.stimfile);
     [T, S, R] = size(dat.(mdl.output_resp));
     hold on;
     for r = 1:R
-        [xs,ys] = find(dat.(mdl.output_resp)(:, stim, r) > 0);
-        plot(dat.(mdl.output_resp_time)(xs), r*dat.(mdl.output_resp)(xs,stim,r), 'k.');
-	end
+        [xs,ys] = find(dat.(mdl.output_resp)(:, sel.stim_idx, r) > 0);
+        plot(dat.(mdl.output_resp_time)(xs), r*ys, 'k.');
+    end
+    do_xlabel('Time [s]');
+    do_ylabel('Trial #');
     axis([0 dat.(mdl.output_resp_time)(end) 0 R+1]);
-    % setAxisLabelCallback(gca, @(y)(y), 'Y');
     hold off;
 end
 
-function do_plot_spectro_and_raster(stack, xxx)
-    mdl = stack{end};    
-    x = xxx{end};
-    
-    if strcmp(mdl.stimulus_format, 'envelope')
-        text(0.35, 0.5, 'Cannot visualize envelope as spectrogram');
-        axis([0, 1, 0 1]);
-        return;
-    end
-    
-    % Read the GUI to find out the selected stim files
-    sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
-    stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
-    dat = x.dat.(sf);
-    
-    hold on;
-    % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-    logfsgram(dat.(mdl.output_stim)(:,stim)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
-    caxis([-20,40]);  % TODO: use a 'smarter' caxis here
-    h = get(gca, 'YLim');
-    d = h(2) - h(1);
-    axis tight;    
-    [T, S, R] = size(dat.(mdl.output_resp));
-    hold on;
-    for r = 1:R
-        [xs,ys] = find(dat.(mdl.output_resp)(:, stim, r) > 0);
-        plot(dat.(mdl.output_resp_time)(xs), ...
-             h(1) + (r/R)*d*(d/(d+d/R))*dat.(mdl.output_resp)(xs,stim,r), 'k.');
-       
-    end    
-    hold off;
-end
+% function do_plot_respavg_as_spikes(stack, xxx)
+%     mdl = stack{end};    
+%     x = xxx{end};
+%     
+%     % Read the GUI to find out the selected stim files
+%     sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
+%     stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
+%     dat = x.dat.(sf);
+%     
+%     [xs,ys] = find(dat.respavg(idx, :) > 0);
+%     bar(dat.(mdl.output_resp_time)(ys), dat.respavg(idx,ys), 0.01, 'k-');
+%     axis([0 dat.(mdl.output_resp_time)(end) 0 max(dat.respavg(:, stim))]);
+% 
+% end
+
+% function do_plot_stim_log_spectrogram(stack, xxx)
+%     mdl = stack{end};    
+%     x = xxx{end};
+%     
+%     if strcmp(mdl.stimulus_format, 'envelope')
+%         text(0.35, 0.5, 'Cannot visualize envelope as spectrogram');
+%         axis([0, 1, 0 1]);
+%         return;
+%     end
+%     
+%     % Read the GUI to find out the selected stim files
+%     sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
+%     stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
+%     chan = popup2num(mdl.plot_gui.selected_stim_chan_popup);
+%     
+%     dat = x.dat.(sf);
+%    
+%     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
+%     logfsgram(dat.(mdl.output_stim)(:, stim, chan), ...
+%               4048, mdl.raw_stim_fs, [], [], 500, 12); 
+%     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
+%     axis tight;
+% end
+% 
+% function do_plot_spectro_and_raster(stack, xxx)
+%     mdl = stack{end};    
+%     x = xxx{end};
+%     
+%     if strcmp(mdl.stimulus_format, 'envelope')
+%         text(0.35, 0.5, 'Cannot visualize envelope as spectrogram');
+%         axis([0, 1, 0 1]);
+%         return;
+%     end
+%     
+%     % Read the GUI to find out the selected stim files
+%     sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
+%     stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
+%     dat = x.dat.(sf);
+%     
+%     hold on;
+%     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
+%     logfsgram(dat.(mdl.output_stim)(:,stim)', 4048, mdl.raw_stim_fs, [], [], 500, 12); 
+%     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
+%     h = get(gca, 'YLim');
+%     d = h(2) - h(1);
+%     axis tight;    
+%     [T, S, R] = size(dat.(mdl.output_resp));
+%     hold on;
+%     for r = 1:R
+%         [xs,ys] = find(dat.(mdl.output_resp)(:, stim, r) > 0);
+%         plot(dat.(mdl.output_resp_time)(xs), ...
+%              h(1) + (r/R)*d*(d/(d+d/R))*dat.(mdl.output_resp)(xs,stim,r), 'k.');
+%     end    
+%     hold off;
+% end
 
 
 function hs = create_gui(parent_handle, stack, xxx)
@@ -382,7 +398,7 @@ function hs = create_gui(parent_handle, stack, xxx)
     h = pos(4) - 10;
     hs = [];
     
-    m = stack{end}; % TODO: These three looks like an accidental closure! Remove it
+    mdl = stack{end}{1};
     mod_idx = length(stack);
     x = xxx{end};
     
@@ -448,7 +464,7 @@ function hs = create_gui(parent_handle, stack, xxx)
         sf = popup2str(hs.selected_stimfile_popup);
         
         if isfield(x.dat, sf)
-            [d1, d2, d3] = size(x.dat.(sf).(m.output_stim));
+            [d1, d2, d3] = size(x.dat.(sf).(mdl.output_stim));
             d = {};
             for i = 1:d2
                 d{i} = sprintf('%d',i);
@@ -464,7 +480,7 @@ function hs = create_gui(parent_handle, stack, xxx)
         sf = popup2str(hs.selected_stimfile_popup);
         
         if isfield(x.dat, sf)
-            [d1, d2, d3] = size(x.dat.(sf).(m.output_stim));
+            [d1, d2, d3] = size(x.dat.(sf).(mdl.output_stim));
             d = {};
             for i = 1:d3
                 d{i} = sprintf('%d',i);
@@ -493,14 +509,16 @@ function hs = create_gui(parent_handle, stack, xxx)
     end
     
     function selected_stim_idx_popup_callback()
-        % Call the plot function again via the plot_popup 
-        hgfeval(get(m.gh.plot_popup,'Callback'), mod_idx, []);
+        global NARFGUI;
+        % Call the plot function again via the plot_popup        
+        hgfeval(get(NARFGUI{mod_idx}.plot_popup,'Callback'), mod_idx, []);
         drawnow;
     end
     
     function selected_stim_chan_popup_callback()
+        global NARFGUI;
         % Call the plot function again via the plot_popup 
-        hgfeval(get(m.gh.plot_popup,'Callback'), mod_idx, []);
+        hgfeval(get(NARFGUI{mod_idx}.plot_popup,'Callback'), mod_idx, []);
         drawnow;
     end
 end
