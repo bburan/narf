@@ -2,6 +2,13 @@
   - [ ] The splitter/unifier must be tested for FIR filters and NPNLs   
   - [ ] Splitter/unifiers must understand the val/est distinction
 
+* Priorities
+  1. verify on 240, 242 that performance meets or exceeds previous version for boost, npfnl, mse5, firn
+  2. 2D NPNL
+  3. The three initial conditions
+     Fitter that fits FIRN, then splits the FIRN into two filters with positive and negative coefs only
+     C1/C2
+
 * Move sparseness penalties to the fitter  
   % Add a penalty related to the non-smoothness of the FIR coefs
   [firmod, ~] = find_modules(stack, 'fir_filter');
@@ -9,6 +16,7 @@
   mdl.sparseness_weight * sparsity_metric(firmod.coefs(:))
 
 * After the push, we can cover these secondary objectives:
+  1. [ ] What module does the GUI edit anymore?
   1. [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots"
   2. [ ] Add the FILECODE to the baphy plot module so 
   3. [ ] Filecodes should also be managed during the splitter/unifier

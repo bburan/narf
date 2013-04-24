@@ -10,8 +10,8 @@ valfiles = xxx{end}.test_set;
 xxxs = cell(1, length(estfiles));
 
 % If there are no filecodes, put everything together
-if isfield(xxx{1}, 'filecode')
-    filecodes = xxx{1}.filecode;
+if isfield(xxx{1}, 'filecodes')
+    filecodes = xxx{1}.filecodes;
 else
     xxxs = {xxx};
     return

@@ -179,12 +179,13 @@ function do_plot_fir_coefs(sel, stack, xxx)
     hold on;
     handles = [];
     names = {};
-    for ii = 1:length(mdls)
+    n_mdls = length(mdls)
+    for ii = 1:n_mdls
         mdl = mdls{ii};
         coefs = mdl.coefs;
         [w, h] = size(coefs);
         for c = 1:w
-            handles(end+1) = stem(1:mdl.num_coefs, coefs(c, :), 'Color', pickcolor(c));
+            handles(end+1) = stem((0.3*(ii/n_mdls))+(1:mdl.num_coefs), coefs(c, :), 'Color', pickcolor(c), 'LineStyle', pickline(ii));
             names{end+1} = ['PS' num2str(ii) '/CH' num2str(c)];
         end 
     end
