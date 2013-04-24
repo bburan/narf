@@ -31,6 +31,7 @@ for ii = 1:length(xxs)
     lw = ceil(ii / n_linestyles); 
     
     chansize = 1:size(xxs{ii}.dat.(sel.stimfile).(yfield), 3);
+    
     if isempty(sel.chan_idx)
         sel.chan_idx = chansize;
     end
@@ -38,9 +39,16 @@ for ii = 1:length(xxs)
     for qq = 1:length(sel.chan_idx)
         jj = sel.chan_idx(qq);
         c = pickcolor(jj);
+        
         % Special case: if there is only one signal possible, make it black
-        if 1 == chansize;
-            c = [0, 0, 0];
+        if 1 == chansize
+%            if length(xxs) == 1
+                 c = [0, 0, 0];
+%             else
+%                 c = pickcolor(ii);
+%                 ls = pickline(1);
+%                 lw = 1;
+%             end
         end
         h = plot(xxs{ii}.dat.(sel.stimfile).(xfield)(:), ...
                  squeeze(xxs{ii}.dat.(sel.stimfile).(yfield)(:, sel.stim_idx, jj)), ...

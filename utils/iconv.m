@@ -24,6 +24,11 @@ for ii = 1:lx
     z(ii) = tmp(ii+lf/2);
 end
 
+% If there are for some reason a very small number of elements, just leave
+if lx < lf/2
+    return;
+end
+
 % "Double up" the ends of the filter
 for ii = 1:lf/2
     z(ii) = (z(ii) + tmp((lf/2) - ii + 1)); % Left side

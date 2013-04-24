@@ -48,6 +48,7 @@ function x = do_normalize_channels(mdl, x, stack, xxx)
     end
     rms=nanstd(tstim);
     
+    
     % For every channel, remove DC offset and scale by RMS^-1
     fns = fieldnames(x.dat);
     for ii = 1:length(fns),
@@ -55,7 +56,14 @@ function x = do_normalize_channels(mdl, x, stack, xxx)
         [T, S, C] = size(x.dat.(sf).(mdl.input));
         out = zeros(size(x.dat.(sf).(mdl.input)));
         for c = 1:C,
-            out(:,:,c) = (1/rms(c)) .* (-mm(c) + x.dat.(sf).(mdl.input)(:,:,c));
+            if (rms(c) == 0)
+                out(:,:,c) = x.dat.(sf).(mdl.input)(:,:,c); % div/0 error
+            else
+                out(:,:,c) = (1/rms(c)) .* (-mm(c) + x.dat.(sf).(mdl.input)(:,:,c));
+            end
+        end
+        if any(isnan(rms))
+            error('divide by zero errors in normalize_channels');
         end
         x.dat.(sf).(mdl.output) = out;
     end

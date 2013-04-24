@@ -39,7 +39,7 @@ end
 % ------------------------------------------------------------------------
 % Methods
 
-function [phi,outbinserr] = init_nonparm_nonlinearity(mdl, x, stack, xxx)
+function [phi,outbinserr] = init_nonparm_nonlinearity(mdl, x)
     % calculate nonparm_nonlinearity parameters
     
         
@@ -106,7 +106,7 @@ function [phi,outbinserr] = init_nonparm_nonlinearity(mdl, x, stack, xxx)
  end
 
 function x = do_np_nonlinearity(mdl, x, stack, xxx)    
-    [phi, ~] = init_nonparm_nonlinearity(mdl, x, stack, xxx);
+    [phi, ~] = init_nonparm_nonlinearity(mdl, x);
     fns = fieldnames(x.dat);
     for ii = 1:length(fns)
         sf = fns{ii};
@@ -117,58 +117,30 @@ function x = do_np_nonlinearity(mdl, x, stack, xxx)
     end
 end
 
-function help_scatter(sel, stack, xxx, npts)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
-    
-    hold on;
-   
-    % These variables will hold the limits of ALL plots
-    xmin = nan;
-    xmax = nan;
-    ymin = nan;
-    ymax = nan;
-    
+function help_plot_npnl(sel, mdls, xins, xouts)
     for ii = 1:length(mdls)
-        mdl = mdls{ii};
-        [phi,outbinserr] = init_nonparm_nonlinearity(mdl, xins{ii}{end},...
-                                                     stack, xxx(1:end-1));
+        [phi,outbinserr] = init_nonparm_nonlinearity(mdls{ii}, xins{ii}{end});
         xouts{ii}.dat.(sel.stimfile).npnlstim = phi{1};
         xouts{ii}.dat.(sel.stimfile).npnlpred = phi{2};
         xouts{ii}.dat.(sel.stimfile).temperr  = outbinserr;
-        
-        c = pickcolor(ii);
-        c = [c '.'];
-        if isnan(npts)
-            do_plot_scatter(sel, mdls{ii}, xins{ii}{end}, ...
-                            mdl.input_stim, mdl.input_resp, ...
-                            c);
-        else
-            do_plot_scatter(sel, mdls{ii}, xins{ii}{end}, ...
-                            mdl.input_stim, mdl.input_resp, ...
-                            c, npts);
-        end
-        axis tight;
-        v = axis;
-        xmin = min(xmin, v(1)); 
-        xmax = max(xmax, v(2)); 
-        ymin = min(xmin, v(3)); 
-        ymax = max(xmax, v(4)); 
-       
     end
     
+    hold on;    
     do_plot(xouts, 'npnlstim', 'npnlpred', ...
-            sel, 'NPNL Input [-]', 'RespAvg Prediction [Hz]');
-   
-    axis([xmin, xmax, ymin, ymax]);
+            sel, 'NPNL Input [-]', 'RespAvg Prediction [Hz]');   
 	hold off;
 end
 
 function do_plot_scatter_and_nonlinearity(sel, stack, xxx)    
-    help_scatter(sel, stack, xxx, nan);
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp);  
+    help_plot_npnl(sel, mdls, xins, xouts);
 end
 
 function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)
-    help_scatter(sel, stack, xxx, 100);
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100); 
+    help_plot_npnl(sel, mdls, xins, xouts);
 end
 
 end

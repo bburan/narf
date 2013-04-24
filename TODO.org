@@ -1,6 +1,6 @@
 * What is really needed before NARFv2 can be pushed? 
-  - [ ] The splitter/unifier must be tested for FIR filters and NPNLs   
-  - [ ] Splitter/unifiers must understand the val/est distinction
+  - [X] The splitter/unifier must be tested for FIR filters and NPNLs   
+  - [X] Splitter/unifiers must understand the val/est distinction
 
 * Priorities
   1. verify on 240, 242 that performance meets or exceeds previous version for boost, npfnl, mse5, firn
@@ -18,8 +18,8 @@
 * After the push, we can cover these secondary objectives:
   1. [ ] What module does the GUI edit anymore?
   1. [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots"
-  2. [ ] Add the FILECODE to the baphy plot module so 
-  3. [ ] Filecodes should also be managed during the splitter/unifier
+  2. [ ] Add the FILECODE to the baphy plot module so it is visible to the user
+  3. [X] Filecodes should also be managed during the splitter/unifier
   4. [ ] Widen the module plot selectors so you can read long respfile names
   5. [ ] Plot of just the selected stimfile's data, plus whatever parameter sets' nonlinearities can be plotted
   6. [ ] Put more data into the scatter plots
