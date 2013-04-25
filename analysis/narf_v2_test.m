@@ -18,8 +18,8 @@ mm = {'env100', ...
       'boost'};
 
 %cells = request_celldb_batch(batch, 'por023b-b1');
-cells = request_celldb_batch(batch, 'por028d-b1');
-%cells = request_celldb_batch(batch);
+%cells = request_celldb_batch(batch, 'por028d-b1');
+cells = request_celldb_batch(batch);
 modulekeys = keyword_combos(mm);
 
 for ii = 1:length(cells)
@@ -32,8 +32,8 @@ for ii = 1:length(cells)
         %fit_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
         %    cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
         
-        %enqueue_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
-        % cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, true);
+        enqueue_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
+         cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, true);
         
     end
 end

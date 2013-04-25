@@ -8,20 +8,20 @@ function delete_module_gui(idx)
 
 global NARFGUI;
 
-if isfield(NARFGUI{idx}, 'gh')
-    try
-        delete(NARFGUI{idx}.plot_axes);
-        delete(NARFGUI{idx}.plot_popup);
-        delete(NARFGUI{idx}.plot_panel);
-        delete(NARFGUI{idx}.fn_apply);
-        delete(NARFGUI{idx}.fn_table);
-        delete(NARFGUI{idx}.fn_popup);
-        delete(NARFGUI{idx}.fn_panel);
-    catch
-        % Do nothing if a delete failed
-    end
-    NARFGUI{idx} = rmfield(NARFGUI{idx}, 'gh');
+try
+    delete(NARFGUI{idx}.plot_axes);
+    delete(NARFGUI{idx}.plot_popup);
+    delete(NARFGUI{idx}.plot_panel);
+    delete(NARFGUI{idx}.fn_apply);
+    delete(NARFGUI{idx}.fn_table);
+    delete(NARFGUI{idx}.fn_popup);
+    delete(NARFGUI{idx}.fn_panel);
+    delete(NARFGUI{idx}.fn_recalc);
+    delete(NARFGUI{idx}.fn_replot);
+catch
+    % Do nothing if a delete failed
 end
+
 if isfield(NARFGUI{idx}, 'plot_gui')
     NARFGUI{idx} = rmfield(NARFGUI{idx}, 'plot_gui');
 end
