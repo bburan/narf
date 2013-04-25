@@ -27,23 +27,38 @@ if nargin > 0
 end
 
 % Optional fields
+m.plot_gui_create_fn = @create_chan_selector_gui;
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_filtered_stim_heatmap;
-m.plot_fns{1}.pretty_name = 'Filtered Stimulus Heatmap';
-m.plot_fns{2}.fn = @do_plot_filtered_stim;
-m.plot_fns{2}.pretty_name = 'Filtered Stimulus vs Time';
+m.plot_fns{1}.fn = @do_plot_all_default_outputs;
+m.plot_fns{1}.pretty_name = 'Filtered Stimuli (All)';
+m.plot_fns{2}.fn = @do_plot_single_default_output;
+m.plot_fns{2}.pretty_name = 'Filtered Stimuli (Single)';
 
 % Finally, define the 'methods' of this module, as if it were a class
-function x = do_depression_filter(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
+function x = do_depression_filter(mdl, x, stack, xxx)
+    
     if ~isfield(mdl,'pedestal'),
         mdl.pedestal=0;
     end
     
     [baphy_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy', true);
+    baphy_mod = baphy_mod{1}; % We assume only 1 paramset
+    
+    % calculate global mean level of each channel for scaling dep
+    stimmax=[];
+    T=0;
+    for sf = fieldnames(x.dat)', sf = sf{1};
+        if T==0,
+            stimmax=nansum(nansum(x.dat.(sf).(mdl.input),1),2);
+        else
+            stimmax=stimmax+nansum(nansum(x.dat.(sf).(mdl.input),1),2);
+        end
         
-    % Exotic way to loop over field names using ' and {1}...
+        T=T+sum(sum(~isnan(x.dat.(sf).(mdl.input)(:,:,1)),1),2);
+    end
+    stimmax=stimmax./T;
+
+    % Now actually compute depression
     for sf = fieldnames(x.dat)', sf = sf{1};
         [T, S, N] = size(x.dat.(sf).(mdl.input));
         ret = zeros(T, S, N*mdl.num_channels);
@@ -51,20 +66,20 @@ function x = do_depression_filter(stack, xxx)
             stim_in=squeeze(x.dat.(sf).(mdl.input)(:,s,:))';
             
             if mdl.pedestal>0,
-                thresh=mdl.pedestal./stimmax(:);
+                thresh = mdl.pedestal./stimmax(:);
                 for n=1:N,
                     stim_in(n,stim_in(n,:)<thresh(n))=thresh(n);
                 end
-                extrabins=round(baphy_mod.raw_stim_fs*0.5);
-                stim_in=cat(2,repmat(thresh,[1 extrabins]),stim_in);
+                extrabins = round(baphy_mod.raw_stim_fs*0.5);
+                stim_in = cat(2,repmat(thresh,[1 extrabins]),stim_in);
             end
             
-            depresp=depression_bank(stim_in,(1./stimmax(:))*mdl.strength,...
-                                    mdl.tau.*baphy_mod.raw_stim_fs./1000,1)';
+            depresp=depression_bank(stim_in, (1./stimmax(:)) * mdl.strength, ...
+                                    mdl.tau .* baphy_mod.raw_stim_fs ./ 1000, 1)';
             depresp=permute(depresp,[1 3 2]);
             
             if mdl.pedestal>0,
-                depresp=depresp((extrabins+1):end,:,:);
+                depresp = depresp((extrabins+1):end,:,:);
             end
             
             ret(:,s,:) = depresp;
@@ -74,36 +89,36 @@ function x = do_depression_filter(stack, xxx)
     end
 end
 
-% Plot the filter responses
-function do_plot_filtered_stim(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-
-    % Find the GUI controls
-    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
-    chan_idx = get(baphy_mod.plot_gui.selected_stim_chan_popup, 'Value');
-    dat = x.dat.(sf);
-    stepsize=baphy_mod.stimulus_channel_count;
-    plot(dat.(mdl.time), ...
-         squeeze(dat.(mdl.output)(:,stim_idx,chan_idx:stepsize:end)));
-    
-    axis tight;
-end
-
-% Plot heatmap of the filter responses
-function do_plot_filtered_stim_heatmap(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-   % Find the GUI controls   
-    [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
-    dat = x.dat.(sf);
-    chancount=size(dat.(mdl.output),4);
-    imagesc(dat.(mdl.time),1:chancount, ...
-         squeeze(dat.(mdl.output)(:,stim_idx,:))');
-    
-    axis tight;
-    axis xy
-end
+% % Plot the filter responses
+% function do_plot_filtered_stim(stack, xxx)
+%     mdl = stack{end};
+%     x = xxx{end};
+% 
+%     % Find the GUI controls
+%     [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
+%     chan_idx = get(baphy_mod.plot_gui.selected_stim_chan_popup, 'Value');
+%     dat = x.dat.(sf);
+%     stepsize=baphy_mod.stimulus_channel_count;
+%     plot(dat.(mdl.time), ...
+%          squeeze(dat.(mdl.output)(:,stim_idx,chan_idx:stepsize:end)));
+%     
+%     axis tight;
+% end
+% 
+% % Plot heatmap of the filter responses
+% function do_plot_filtered_stim_heatmap(stack, xxx)
+%     mdl = stack{end};
+%     x = xxx{end};
+%     
+%    % Find the GUI controls   
+%     [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
+%     dat = x.dat.(sf);
+%     chancount=size(dat.(mdl.output),4);
+%     imagesc(dat.(mdl.time),1:chancount, ...
+%          squeeze(dat.(mdl.output)(:,stim_idx,:))');
+%     
+%     axis tight;
+%     axis xy
+% end
 
 end

@@ -11,9 +11,9 @@
      3) With the FIRN coefs split into two filters of positive/negative coefs only    
 
 * Actions
-  1. [ ] Get modules up and running again
-	 - [ ] Depression
-	 - [ ] Concat second order terms
+  1. [X] Get modules up and running again
+	 - [X] Depression
+	 - [X] Concat second order terms
   2. [ ] Repair NarfModelpane
          - [ ] Displays model name, training set, test set, and other important info at bottom of window
 	 - [ ] Add the FILECODE to the baphy plot module so it is visible to the user
@@ -70,7 +70,7 @@
   6. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
   7. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
   8. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  9. [ ] Make Concat Second Order Terms work for any higher order nchoosek type stuff
+  9. [X] Make Concat Second Order Terms work for any higher order nchoosek type stuff
   10. [ ] MODULE: Standardized single/multi channel gammatone filter
   11. [ ] MODULE: Standardized single/multi channel elliptic filter 
   12. [ ] FN: Cover an input space logarithmically with filters
