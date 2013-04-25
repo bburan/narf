@@ -32,8 +32,9 @@ global STACK XXX META NARFGUI MODULES;
 MODULES = scan_directory_for_modules();
 
 if ~exist('parent_handle','var')
-    parent_handle = figure('Menubar','figure', 'Resize','off', 'MenuBar', 'none', ...
+    parent_handle = figure('Menubar','figure', 'Resize','off', 'MenuBar', 'none', ...              
              'Units','pixels', 'Position', [20 50 1300 max(600, min(170*length(STACK)+40, 1100))]);
+    % 'ResizeFcn', @update_windowsize, ... Someday write this!
 end
 
 pos = get(parent_handle, 'Position');
@@ -286,25 +287,36 @@ function module_data_table_callback(mod_idx)
     % Extract the structure of the field
     s = extract_field_val_pairs(NARFGUI{mod_idx}.fn_table, 2, 3);
     
+    if length(STACK{mod_idx}) > 1 &&...
+        ~strcmp('Yes', questdlg('Overwrite ALL parameter sets? This GUI has no way of modifying a single parameter set yet.'))
+        s = [];
+    end
+    
     % If there was an error extracting the fields, reset the GUI
     if isempty(s)
         update_checkbox_uitable(NARFGUI{mod_idx}.fn_table, ...
-                                    STACK{mod_idx}{1}, ...
-                                    STACK{mod_idx}{1}.editable_fields);
+                                STACK{mod_idx}{1}, ...
+                                STACK{mod_idx}{1}.editable_fields);
         return;
     end
     
-    % Insert the field values into the stack
-    for fs = fieldnames(s)', fs=fs{1};
-        STACK{mod_idx}{1}.(fs) = s.(fs);
+    % Throw an error if you are trying to edit a field that has different
+    % values across each parameter set
+    % OR, make sure that you are editing only the SELECTED parameter set
+    
+    for ii = 1:length(STACK{mod_idx})    
+        % Insert the field values into the stack
+        for fs = fieldnames(s)', fs=fs{1};
+            STACK{mod_idx}{ii}.(fs) = s.(fs);
+        end
+    
+        % Update the selected fields
+        STACK{mod_idx}{ii}.fit_fields = extract_checked_fields(NARFGUI{mod_idx}.fn_table, 1, 2);
+    
+        % Give the module a chance to run its own code
+        STACK{mod_idx}{ii} = STACK{mod_idx}{ii}.mdl(STACK{mod_idx}{ii});  
     end
     
-    % Update the selected fields
-    STACK{mod_idx}{1}.fit_fields = extract_checked_fields(NARFGUI{mod_idx}.fn_table, 1, 2);
-    
-    % Give the module a chance to run its own code
-    STACK{mod_idx}{1} = STACK{mod_idx}{1}.mdl(STACK{mod_idx}{1});  
-            
     % Request a recalculation from this point onwards. 
     recalc_from_depth(mod_idx);
 end

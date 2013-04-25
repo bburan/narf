@@ -11,9 +11,7 @@
 
 * Actions
   1. [-] Repair NarfModelpane 
-	 - [X] Repair the add/delete module button functionality
 	 - [ ] What module does the GUI edit anymore?
-         - [ ] IRRITATION: Why can't I resize windows? 
   3. [ ] Repair Fitters 
 	 - [ ] Fitters need access to the penalty, which should be stored in the META struct or in the FITTER itself
 	       Actually, instead of a 'penalty' and a datastructure, just attach a function that computes the penalty instead	 
@@ -198,7 +196,8 @@
   48. Fit combo: Fit at 100hz, then use that to init a fit at 200Hz, then again at 400Hz.
   49. Replace my nargin checks with "if ~exist('BLAH','var'),"
   50. sf=sf{1}; should be eliminated IN EVERY SINGLE FILE! 
-  7. [ ] FIR filter needs an 'ACTIVE FIR COEFS' plot which only displays paramsets matching selected
+  51. [ ] FIR filter needs an 'ACTIVE FIR COEFS' plot which only displays paramsets matching selected
+  52. [ ] IRRITATION: Why can't I resize windows?
 ** Crazyboost
    How's this for a fitter?
    Boosting works well, and tries every possible step before taking a new one.
