@@ -61,7 +61,7 @@ function update_panel_positions()
     offset = get(hSld,'Value');
     p = get(hPan, 'Position');
     set(hPan, 'Position', [p(1) -offset p(3) p(4)]);
-    N = length(STACK);
+    N = length(NARFGUI);
     top = (N)*ph + bh;
     for yi = 1:N
         p = get(NARFGUI{yi}.fn_panel, 'Position');
@@ -74,7 +74,7 @@ end
 
 % Update scrollbar and panel sizes whenever the number of modules changes
 function update_scrollbar_size()
-   N = length(STACK);
+   N = length(NARFGUI);
    hSld = handles.container_slider;
    hPan = handles.container_panel;
    set(hPan, 'Position', [0 0 w (bh+ph*N)]);
@@ -97,7 +97,7 @@ function update_ready_modules(mod_idx)
         return
     end
     for idx = 1:length(fns);
-        if MODULES.(fns{idx}).isready_pred(STACK(1:mod_idx), XXX(1:mod_idx))
+        if MODULES.(fns{idx}).isready_pred(STACK, XXX)
             ready_mods{j} = MODULES.(fns{idx}).pretty_name;
             j = j+1;
         end 
@@ -160,7 +160,6 @@ end
 
 function module_selected_callback(mod_idx)
     % Which module was selected?
-    m = STACK{mod_idx}{1};
     c = cellstr(get(NARFGUI{mod_idx}.fn_popup,'String'));
     pretty_name = c{get(NARFGUI{mod_idx}.fn_popup,'Value')};
     
@@ -186,19 +185,21 @@ function module_selected_callback(mod_idx)
     
     % All the above work just to find out what was selected! Oof!
     % Set the stack at this point to be the selected module. 
-    STACK{mod_idx}{1} = merge_structs(STACK{mod_idx}{1}, MODULES.(selected));
-    m = STACK{mod_idx}{1}; % Get a new shorthand abbreviation 
-    
+    STACK{mod_idx} = {MODULES.(selected)};
+
     % Invalidate data beyond this point
     XXX = XXX(1:mod_idx);
     
-    % Update the data table values
+    % Update the data table values 
+    m = STACK{mod_idx}{1};
     update_checkbox_uitable(NARFGUI{mod_idx}.fn_table, m, m.editable_fields); 
     
     % Update the plotting popup menu, but leave it disabled
     update_available_plots(mod_idx);
-    set(NARFGUI{mod_idx}.plot_popup, 'Enable', 'off');
-    
+    set(NARFGUI{mod_idx}.plot_popup, 'Enable', 'off');   
+    set(NARFGUI{mod_idx}.fn_recalc, 'Value', false);   
+    set(NARFGUI{mod_idx}.fn_replot, 'Value', false);   
+        
 end
 
 
@@ -212,7 +213,7 @@ function module_apply_callback(mod_idx)
     % upstream part of the stack, leaving this function actually invalid
     if m.isready_pred(STACK(1:mod_idx), XXX)
         % Apply the function
-        calc_xxx(mod_idx, mod_idx+1);
+        calc_xxx(mod_idx, mod_idx);
         % Enable graphing
         set(NARFGUI{mod_idx}.plot_popup, 'Enable', 'on');
         % Build the plot panel, now that we know XXX{mod_idx+1}
@@ -405,28 +406,35 @@ end
 
 % Callback for creating a module block
 function add_mod_block()
+    if length(NARFGUI) > length(STACK)
+        return
+    end
     % Add a new model block, update the stack, and finally the view
-    idx = (length(STACK)+1);
+    idx = (length(NARFGUI)+1);   
     NARFGUI{idx} = create_mod_block_panel(parent_handle, idx);
     % Trigger the popup callback to initialize it
     hgfeval(get(NARFGUI{idx}.fn_popup, 'Callback'), idx, []);
     % Update the view
     update_scrollbar_size();
-    update_panel_positions();    
+    update_panel_positions();      
 end
 
 % Callback for deleting a module block
 function del_mod_block()
-    idx = length(STACK);
+    idx = length(NARFGUI);
     
-    if idx == 0
+    if idx == 0 
         return;
     end
     
-    delete_module_gui(idx)
+    delete_module_gui(idx);
+    NARFGUI = NARFGUI(1:idx-1);
     
     % Update the stack, the remaining module positions, and the view
-    STACK = STACK(1:idx-1);
+    if length(STACK) == idx,
+        STACK = STACK(1:idx-1);
+        XXX = XXX(1:idx);
+    end
     update_scrollbar_size();
     update_panel_positions();    
     
@@ -539,7 +547,7 @@ handles.modelinfo_text = uicontrol('Parent', handles.container_panel, ...
 
 function update_modelinfo_text()
     set(handles.modelinfo_text, 'String', ...
-        sprintf('Batch:     %d     (Fit Time=%f)\nCellid:    %s\nModel:     %s', ...
+        sprintf('Batch:     %d     (Fit Time=%f)\nCellid:    %s\nModel:    %s', ...
                  META.batch, META.fit_time, XXX{1}.cellid,  META.modelname));
 end
 
