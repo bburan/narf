@@ -394,8 +394,8 @@ end
 
 function hs = create_gui(parent_handle, stack, xxx)
     pos = get(parent_handle, 'Position');
-    w = pos(3) - 10;
-    h = pos(4) - 10;
+    w = pos(3) - 5;
+    h = pos(4) - 5;
     hs = [];
     
     mdl = stack{end}{1};
@@ -404,35 +404,35 @@ function hs = create_gui(parent_handle, stack, xxx)
     
     % Create a popup which selects
     uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
-        'HorizontalAlignment', 'left',  'String', 'Stim:', ...
-        'Units', 'pixels', 'Position', [5 (h-25) 50 25]);
+        'HorizontalAlignment', 'left',  'String', 'Stimfile:', ...
+        'Units', 'pixels', 'Position', [5 (h-25) 100 25]);
     hs.selected_stimfile_popup = uicontrol('Parent', parent_handle, ...
         'Style', 'popupmenu', 'Enable', 'on', 'String', 'NONE', ...
-        'Units', 'pixels', 'Position', [45 (h-25) w-50 25], ...
+        'Units', 'pixels', 'Position', [5 (h-40) w-5 25], ...
         'Callback', @(a,b,c) selected_stimfile_popup_callback());
     
     % Create a stimfile selector
     uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
         'HorizontalAlignment', 'left', 'String', 'Idx:', ...
-        'Units', 'pixels', 'Position', [5 (h-50) 50 25]);
+        'Units', 'pixels', 'Position', [5 (h-70) 50 25]);
     hs.selected_stim_idx_popup = uicontrol('Parent', parent_handle, ...
         'Style', 'popupmenu', 'Enable', 'on', ...
         'String', 'NONE', ...
-        'Units', 'pixels', 'Position', [45 (h-50) w-50 25], ...
+        'Units', 'pixels', 'Position', [45 (h-70) w-50 25], ...
         'Callback', @(a,b,c) selected_stim_idx_popup_callback());
 
     % Create a channel selector
     uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
         'HorizontalAlignment', 'left',  'String', 'Chan:', ...
-        'Units', 'pixels', 'Position', [5 (h-75) 50 25]);
+        'Units', 'pixels', 'Position', [5 (h-95) 50 25]);
     hs.selected_stim_chan_popup = uicontrol('Parent', parent_handle, ...
         'Style', 'popupmenu', 'Enable', 'on', 'String', 'NONE', ...
-        'Units', 'pixels', 'Position', [45 (h-75) w-50 25], ...
+        'Units', 'pixels', 'Position', [45 (h-95) w-50 25], ...
         'Callback', @(a,b,c) selected_stim_chan_popup_callback());
     
     hs.textbox = uicontrol('Parent', parent_handle, 'Style', 'text', 'Enable', 'on', ...
         'HorizontalAlignment', 'left',  'String', '', ...
-        'Units', 'pixels', 'Position', [5 (h-100) w h-100]);
+        'Units', 'pixels', 'Position', [5 (h-125) w-5 h-100]);
     
     % Two functions to populate the two popup menus
     function update_selected_stimfile_popup()
@@ -448,13 +448,20 @@ function hs = create_gui(parent_handle, stack, xxx)
         is_training = any(strcmp(sf, x.training_set));
         
         if is_training & is_test
-            str = 'Training&Test Sets';
+            str = 'Est&Val Set';
         elseif is_training
-            str = 'Training Set';
+            str = 'Estimation Set';
         elseif is_test
-            str = 'Test Set';
+            str = 'Validation Set';
         else
             str = 'Not in a set!?'
+        end
+        
+        % Also append the filecode info
+        if isfield(x, 'filecodes')
+            fc = x.filecodes(or(strcmp(sf, x.training_set), ...
+                                strcmp(sf, x.test_set)));
+            str = [str ' [' sprintf('%s', fc{1}) ']'];
         end
         
         set(hs.textbox, 'String', str); 

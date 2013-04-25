@@ -11,12 +11,10 @@
 
 * Actions
   1. [-] Repair NarfModelpane 
-         - [X] narfmodelpane not deleting properly
-         - [ ] MSE plot needs color and label/legend
-         - [ ] initzero needs its own keyword
-         - [ ] Displays model name, training set, test set, and other important info at bottom of window
-	 - [ ] Add the FILECODE to the baphy plot module so it is visible to the user
-	 - [ ] Widen the module plot selectors so you can read long respfile names
+	 - [X] Add the FILECODE to the baphy plot module so it is visible to the user
+	 - [X] Widen the module plot selectors so you can read long respfile names
+         - [X] initzero needs its own keyword
+         - [X] Displays META info model name, training set, test set, and other important info at bottom of window
 	 - [ ] Repair the add/delete module button functionality
 	 - [ ] What module does the GUI edit anymore?
          - [ ] IRRITATION: Why can't I resize windows? 
