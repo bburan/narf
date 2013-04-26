@@ -15,42 +15,22 @@
   - Jackshrink needs to be tested and used in some keyword functions
 
 * Actions
-  1. [-] Repair Fitters 
-	 - [-] Abstract functions to be used by every fitter
-	       - [ ] Remove, then re add test_set data
-	       - [X] Default print_progress () routine
-	       - [X] Use of the META.performance_metric() function
-	       - [X] Meaningful code for what the fitter returned?
-         - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-	       - [ ] ???????
-	 - [-] Verify functionality works:
-	       - [X] fit_anneal.m
-	       - [X] fit_boost.m
-	       - [X] fit_fminsearch.m
-	       - [X] fit_fminunc.m
-	       - [X] fit_genetic.m
-	       - [X] fit_sparsebayes.m
-	       - [X] fit_lsq.m
-	       - [X] fit_fminlsq.m
-	       - [ ] fit_lsqnonlin.m
-	 - [X] Fitter keywords
-	       - [X] qfmin
-	       - [X] qboost
-	       - [X] qlsq
-  2. [ ] Repair Narf Browser
+  1. [ ] Repair Narf Browser
 	 - [ ] Sparsity is not going into the DB
 	 - [ ] Antialiasing problem when saving images
 	 - [ ] Heat Map current display button in NARF
 	 - [ ] AND/OR/NOT query token filter
 	 - [ ] Generic 'modelstring' query space
-  3. [-] Refactor
-	 - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots". Grep through and remove any 'bullshit concats'
-	 - [X] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
-  4. [ ] Default per-paramset, per-channel heatmap graph fns:
+  2. [ ] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [ ] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
+  3. [-] Refactor
+	 - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots". Grep through and remove any 'bullshit concats'
+  4. [-] Repair Fitters 
+         - [ ] Remove, then re add test_set data by default to make fitters faster
+         - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
   5. [ ] Add new functionality to the do_scatter_plot method
 	 - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
 	       Use grayish/blackish 
