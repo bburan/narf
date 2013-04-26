@@ -1,5 +1,5 @@
-function [x_bst, s_bst, n] = boosting(objfn, x_0, termfn, stepsize, stepscale)
-% [x_bst, s_bst, n] = boosting(objfn, x_0, termfn, stepsize=1, stepscale=10)
+function [x_bst, s_bst, termcond] = boosting(objfn, x_0, termfn, stepsize, stepscale)
+% [x_bst, s_bst, termcond] = boosting(objfn, x_0, termfn, stepsize=1, stepscale=10)
 %
 % A naive 'boosting' search method in which stepsize can only decrease from
 % its initial value. Good for linear searches of FIR coefficient space, but
@@ -30,7 +30,7 @@ function [x_bst, s_bst, n] = boosting(objfn, x_0, termfn, stepsize, stepscale)
 %
 %    s_bst     The score of that vector, as evaluated by objfn.
 %
-%    n         The number of boosting steps taken.
+%    termcond  The termination condition 
 %
 % DETAILS:
 % Given a starting vector x = x_0, this algorithm samples a step in each
@@ -134,4 +134,4 @@ end
 % Return the best value found so far
 x_bst = x;
 s_bst = s;
-
+termcond = termfn(n, x, stepsize, s_delta);

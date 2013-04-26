@@ -523,6 +523,7 @@ function update_any_changed_tables_and_recalc()
     % Recalc from the first fittable point all the way to the end
     calc_xxx(first_fit_depth);
     module_plot_callback(first_fit_depth);
+    update_modelinfo_text();
 end
 
 handles.fitter_dropdown = uicontrol('Parent', handles.container_panel, ...
@@ -559,8 +560,8 @@ handles.modelinfo_text = uicontrol('Parent', handles.container_panel, ...
 
 function update_modelinfo_text()
     set(handles.modelinfo_text, 'String', ...
-        sprintf('Batch:     %d     (Fit Time=%f)\nCellid:    %s\nModel:    %s', ...
-                 META.batch, META.fit_time, XXX{1}.cellid,  META.modelname));
+        sprintf('Batch:     %d\nCellid:    %s\nModel:    %s', ...
+                 META.batch, XXX{1}.cellid,  META.modelname));
 end
 
 update_modelinfo_text();

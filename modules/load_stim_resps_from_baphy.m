@@ -458,7 +458,7 @@ function hs = create_gui(parent_handle, stack, xxx)
         end
         
         % Also append the filecode info
-        if isfield(x, 'filecodes')
+        if isfield(x, 'filecodes') && ~isempty(x.filecodes)
             fc = x.filecodes(or(strcmp(sf, x.training_set), ...
                                 strcmp(sf, x.test_set)));
             str = [str ' [' sprintf('%s', fc{1}) ']'];
