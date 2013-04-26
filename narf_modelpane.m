@@ -564,8 +564,6 @@ function update_modelinfo_text()
                  META.batch, XXX{1}.cellid,  META.modelname));
 end
 
-update_modelinfo_text();
-
 function rebuild_gui_from_stack()
     delete_all_module_guis();
         
@@ -612,10 +610,8 @@ function rebuild_gui_from_stack()
     % ready.
     if 0 < length(STACK)
         module_plot_callback(1);
-    end
-    
-    % Finally, reset the modelinfo string
-    update_modelinfo_text();
+        update_modelinfo_text();
+    end   
     
 end
 
