@@ -32,15 +32,16 @@ global STACK XXX META NARFGUI MODULES;
 MODULES = scan_directory_for_modules();
 
 if ~exist('parent_handle','var')
-    parent_handle = figure('Menubar','figure', 'Resize','off', 'MenuBar', 'none', ...
+    parent_handle = figure('Menubar','figure', 'Resize','off', 'MenuBar', 'none', ...              
              'Units','pixels', 'Position', [20 50 1300 max(600, min(170*length(STACK)+40, 1100))]);
+    % 'ResizeFcn', @update_windowsize, ... Someday write this!
 end
 
 pos = get(parent_handle, 'Position');
 w = pos(3); % Width of the parent panel
 h = pos(4); % Height of the parent panel
 
-bh = 35;   % Add/del function block button height, +5 pixel padding per side
+bh = 65;   % Add/del function block button height, +5 pixel padding per side
 ph = 170;  % The height of all module panels
 
 % Create a panel inside it which will slide
@@ -61,7 +62,7 @@ function update_panel_positions()
     offset = get(hSld,'Value');
     p = get(hPan, 'Position');
     set(hPan, 'Position', [p(1) -offset p(3) p(4)]);
-    N = length(STACK);
+    N = length(NARFGUI);
     top = (N)*ph + bh;
     for yi = 1:N
         p = get(NARFGUI{yi}.fn_panel, 'Position');
@@ -74,7 +75,7 @@ end
 
 % Update scrollbar and panel sizes whenever the number of modules changes
 function update_scrollbar_size()
-   N = length(STACK);
+   N = length(NARFGUI);
    hSld = handles.container_slider;
    hPan = handles.container_panel;
    set(hPan, 'Position', [0 0 w (bh+ph*N)]);
@@ -97,7 +98,7 @@ function update_ready_modules(mod_idx)
         return
     end
     for idx = 1:length(fns);
-        if MODULES.(fns{idx}).isready_pred(STACK(1:mod_idx), XXX(1:mod_idx))
+        if MODULES.(fns{idx}).isready_pred(STACK, XXX)
             ready_mods{j} = MODULES.(fns{idx}).pretty_name;
             j = j+1;
         end 
@@ -160,7 +161,6 @@ end
 
 function module_selected_callback(mod_idx)
     % Which module was selected?
-    m = STACK{mod_idx}{1};
     c = cellstr(get(NARFGUI{mod_idx}.fn_popup,'String'));
     pretty_name = c{get(NARFGUI{mod_idx}.fn_popup,'Value')};
     
@@ -186,19 +186,21 @@ function module_selected_callback(mod_idx)
     
     % All the above work just to find out what was selected! Oof!
     % Set the stack at this point to be the selected module. 
-    STACK{mod_idx}{1} = merge_structs(STACK{mod_idx}{1}, MODULES.(selected));
-    m = STACK{mod_idx}{1}; % Get a new shorthand abbreviation 
-    
+    STACK{mod_idx} = {MODULES.(selected)};
+
     % Invalidate data beyond this point
     XXX = XXX(1:mod_idx);
     
-    % Update the data table values
+    % Update the data table values 
+    m = STACK{mod_idx}{1};
     update_checkbox_uitable(NARFGUI{mod_idx}.fn_table, m, m.editable_fields); 
     
     % Update the plotting popup menu, but leave it disabled
     update_available_plots(mod_idx);
-    set(NARFGUI{mod_idx}.plot_popup, 'Enable', 'off');
-    
+    set(NARFGUI{mod_idx}.plot_popup, 'Enable', 'off');   
+    set(NARFGUI{mod_idx}.fn_recalc, 'Value', false);   
+    set(NARFGUI{mod_idx}.fn_replot, 'Value', false);   
+        
 end
 
 
@@ -212,7 +214,7 @@ function module_apply_callback(mod_idx)
     % upstream part of the stack, leaving this function actually invalid
     if m.isready_pred(STACK(1:mod_idx), XXX)
         % Apply the function
-        calc_xxx(mod_idx, mod_idx+1);
+        calc_xxx(mod_idx, mod_idx);
         % Enable graphing
         set(NARFGUI{mod_idx}.plot_popup, 'Enable', 'on');
         % Build the plot panel, now that we know XXX{mod_idx+1}
@@ -285,25 +287,36 @@ function module_data_table_callback(mod_idx)
     % Extract the structure of the field
     s = extract_field_val_pairs(NARFGUI{mod_idx}.fn_table, 2, 3);
     
+    if length(STACK{mod_idx}) > 1 &&...
+        ~strcmp('Yes', questdlg('Overwrite ALL parameter sets? This GUI has no way of modifying a single parameter set yet.'))
+        s = [];
+    end
+    
     % If there was an error extracting the fields, reset the GUI
     if isempty(s)
         update_checkbox_uitable(NARFGUI{mod_idx}.fn_table, ...
-                                    STACK{mod_idx}{1}, ...
-                                    STACK{mod_idx}{1}.editable_fields);
+                                STACK{mod_idx}{1}, ...
+                                STACK{mod_idx}{1}.editable_fields);
         return;
     end
     
-    % Insert the field values into the stack
-    for fs = fieldnames(s)', fs=fs{1};
-        STACK{mod_idx}{1}.(fs) = s.(fs);
+    % Throw an error if you are trying to edit a field that has different
+    % values across each parameter set
+    % OR, make sure that you are editing only the SELECTED parameter set
+    
+    for ii = 1:length(STACK{mod_idx})    
+        % Insert the field values into the stack
+        for fs = fieldnames(s)', fs=fs{1};
+            STACK{mod_idx}{ii}.(fs) = s.(fs);
+        end
+    
+        % Update the selected fields
+        STACK{mod_idx}{ii}.fit_fields = extract_checked_fields(NARFGUI{mod_idx}.fn_table, 1, 2);
+    
+        % Give the module a chance to run its own code
+        STACK{mod_idx}{ii} = STACK{mod_idx}{ii}.mdl(STACK{mod_idx}{ii});  
     end
     
-    % Update the selected fields
-    STACK{mod_idx}{1}.fit_fields = extract_checked_fields(NARFGUI{mod_idx}.fn_table, 1, 2);
-    
-    % Give the module a chance to run its own code
-    STACK{mod_idx}{1} = STACK{mod_idx}{1}.mdl(STACK{mod_idx}{1});  
-            
     % Request a recalculation from this point onwards. 
     recalc_from_depth(mod_idx);
 end
@@ -405,28 +418,35 @@ end
 
 % Callback for creating a module block
 function add_mod_block()
+    if length(NARFGUI) > length(STACK)
+        return
+    end
     % Add a new model block, update the stack, and finally the view
-    idx = (length(STACK)+1);
+    idx = (length(NARFGUI)+1);   
     NARFGUI{idx} = create_mod_block_panel(parent_handle, idx);
     % Trigger the popup callback to initialize it
     hgfeval(get(NARFGUI{idx}.fn_popup, 'Callback'), idx, []);
     % Update the view
     update_scrollbar_size();
-    update_panel_positions();    
+    update_panel_positions();      
 end
 
 % Callback for deleting a module block
 function del_mod_block()
-    idx = length(STACK);
+    idx = length(NARFGUI);
     
-    if idx == 0
+    if idx == 0 
         return;
     end
     
-    delete_module_gui(idx)
+    delete_module_gui(idx);
+    NARFGUI = NARFGUI(1:idx-1);
     
     % Update the stack, the remaining module positions, and the view
-    STACK = STACK(1:idx-1);
+    if length(STACK) == idx,
+        STACK = STACK(1:idx-1);
+        XXX = XXX(1:idx);
+    end
     update_scrollbar_size();
     update_panel_positions();    
     
@@ -473,20 +493,20 @@ handles.add_fn_button = uicontrol('Parent', handles.container_panel, ...
 handles.del_fn_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Delete Module', ...
-    'Units', 'pixels', 'Position', [150 5 140 25], ...
+    'Units', 'pixels', 'Position', [5 30 140 25], ...
     'Callback', @(h,b,c) del_mod_block());
 
 % Create save/load model buttons
 handles.save_model_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Save Module Stack', ...
-    'Units', 'pixels', 'Position', [350 5 140 25], ...
+    'Units', 'pixels', 'Position', [w-165 5 140 25], ...
     'Callback', @save_model_callback);
 
 handles.load_model_button = uicontrol('Parent', handles.container_panel, ...
     'Style', 'pushbutton', 'Enable', 'on', ...
     'String', 'Load Module Stack', ...
-    'Units', 'pixels', 'Position', [500 5 140 25], ...
+    'Units', 'pixels', 'Position', [w-165 30 140 25], ...
     'Callback', @load_model_callback);
 
 function update_any_changed_tables_and_recalc()
@@ -503,30 +523,48 @@ function update_any_changed_tables_and_recalc()
     % Recalc from the first fittable point all the way to the end
     calc_xxx(first_fit_depth);
     module_plot_callback(first_fit_depth);
+    update_modelinfo_text();
 end
 
-% Create a wrapper fn and button which fits params using least squares
-function wrapper_for_lsqcurvefit()
-    fit_lsq(); 
+handles.fitter_dropdown = uicontrol('Parent', handles.container_panel, ...
+    'Style', 'popupmenu', 'Enable', 'on', ...
+    'String', 'Uninitialized', ...
+    'Units', 'pixels', 'Position', [160 30 150 25]);
+
+handles.fit_button = uicontrol('Parent', handles.container_panel, ...
+    'Style', 'pushbutton', 'Enable', 'on', ...
+    'String', 'Fit!', ...
+    'Units', 'pixels', 'Position', [160 5 150 25], ...
+    'Callback', @(a, b, c) wrapper_for_fit());
+
+function fitter_dropdown_init()
+	global NARF_FITTERS_PATH;
+    fitters = dir2cell([NARF_FITTERS_PATH filesep '*.m']);
+    fitters = cellfun(@(x) x(1:end-2), fitters, 'UniformOutput', false);
+	set(handles.fitter_dropdown, 'String', char(fitters{:}));
+end
+
+fitter_dropdown_init();
+
+function wrapper_for_fit()
+    fitter = popup2str(handles.fitter_dropdown);
+    func = str2func(fitter);
+    func();
     update_any_changed_tables_and_recalc();
 end
 
-function wrapper_for_fit_fminsearch()
-    fit_fminsearch();
-    update_any_changed_tables_and_recalc();
+handles.modelinfo_text = uicontrol('Parent', handles.container_panel, ...
+    'Style', 'text', 'Enable', 'on', 'HorizontalAlignment', 'left', ...
+    'String', 'Uninitialized', ...
+    'Units', 'pixels', 'Position', [320 5 500 bh-15]);
+
+function update_modelinfo_text()
+    set(handles.modelinfo_text, 'String', ...
+        sprintf('Batch:     %d\nCellid:    %s\nModel:    %s', ...
+                 META.batch, XXX{1}.cellid,  META.modelname));
 end
 
-handles.lsqcurvefit_button = uicontrol('Parent', handles.container_panel, ...
-    'Style', 'pushbutton', 'Enable', 'on', ...
-    'String', 'Fit w/lsqcurvefit()', ...
-    'Units', 'pixels', 'Position', [700 5 150 25], ...
-    'Callback', @(a, b, c) wrapper_for_lsqcurvefit());
-
-handles.fit_fmin_button = uicontrol('Parent', handles.container_panel, ...
-    'Style', 'pushbutton', 'Enable', 'on', ...
-    'String', 'Fit w/fit_fminsearch()', ...
-    'Units', 'pixels', 'Position', [860 5 150 25], ...
-    'Callback', @(a, b, c) wrapper_for_fit_fminsearch());
+update_modelinfo_text();
 
 function rebuild_gui_from_stack()
     delete_all_module_guis();
@@ -575,7 +613,10 @@ function rebuild_gui_from_stack()
     if 0 < length(STACK)
         module_plot_callback(1);
     end
-
+    
+    % Finally, reset the modelinfo string
+    update_modelinfo_text();
+    
 end
 
 rebuild_gui_from_stack();

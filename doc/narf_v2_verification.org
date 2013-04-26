@@ -1,0 +1,47 @@
+* Batch 242 Verification
+
+  For all models with boost, mse, npfnl, and initrc
+
+  |              |   Rtest_v1 | Rtest_v2 |    Change % | Notes                        |
+  |--------------+------------+----------+-------------+------------------------------|
+  | por024b-b1   |      .5056 |    .4867 |  -3.7381329 |                              |
+  | por024b-b2   |      .5999 |    .6010 |  0.18336389 |                              |
+  | por024b-c1   |      .6952 |    .6954 | 0.028768700 |                              |
+  | por025a-b1   |      .3375 |    .3255 |  -3.5555556 |                              |
+  | por025a-c1   |      .4871 |    .4841 | -0.61588996 |                              |
+  | por025a-c2   |      .2563 |    .2509 |  -2.1069060 |                              |
+  | por025a-d1   |      .3371 |    .3193 |  -5.2803322 |                              |
+  | por026a-b1   |      .2691 |    .2310 |  -14.158305 | V1 ran 117sec, V2 ran 196sec |
+  | por026a-d1   |      .2519 |    .2352 |  -6.6296149 |                              |
+  | por026b-a1   |      .3181 |    .3021 |  -5.0298648 |                              |
+  | por026b-a2   |      .2412 |    .2377 |  -1.4510779 |                              |
+  | por027a-a1   |      .1092 |    .0830 |  -23.992674 |                              |
+  | por027a-b1   |      .1862 |    .1813 |  -2.6315789 |                              |
+  | por027a-c1   |      .4240 |    .4257 |  0.40094340 |                              |
+  | por027b-b1   |      .4328 |    .4450 |   2.8188540 |                              |
+  | por027b-c1   |      .3579 |    .3612 |  0.92204526 |                              |
+  | por028b-b1   |      .2008 |    .1930 |  -3.8844622 |                              |
+  | por028b-c1   |      .3321 |    .2626 |  -20.927431 | V1 ran 404sec, v2 ran 178    |
+  | por028b-d1   |      .5637 |    .5491 |  -2.5900302 |                              |
+  | por028d-a1   |      .6107 |    .6136 |  0.47486491 |                              |
+  | por028d-a2   |      .5363 |    .5345 | -0.33563304 |                              |
+  | por028d-b1   |      .7470 |    .7489 |  0.25435074 |                              |
+  | por028d-c2   |      .3878 |    .4711 |   21.480144 |                              |
+  | por028d-d1   |      .4554 |    .5340 |   17.259552 |                              |
+  | por031b-09-1 |      .2560 |    .2732 |     6.71875 |                              |
+  | por031b-09-2 |      .2762 |    .3599 |   30.304127 |                              |
+  | por049a-07-1 |      .6403 |    .6393 | -0.15617679 |                              |
+  | por049a-08-1 |      .1738 |    .1744 |  0.34522440 |                              |
+  |              |            |          |         0/0 |                              |
+  | MEAN         | 0.39247143 | 0.393525 |  0.26844502 |                              |
+  |              |            |          |         0/0 |                              |
+  #+TBLFM: $4=100*($3-$2)/$2::@31$2=vmean(@2$2..@30$2)::@31$3=vmean(@2$3..@30$3)
+
+* Conclusions
+  - I'm going to chalk up differences to changes in the boost termination conditions.
+  - Overall, the average improved by 0.25% with v2, which I'm going to wave my hands and call equivalent
+  - Also, our ability to start from different initial conditions is a clear win.
+  - Other interesting things that I just discovered
+    1. Starting from initrc or from zeros are both fine options
+    2. Starting the FIR coef search from all ones is clearly suboptimal
+    3. The 2nd order module is working better than the depression model

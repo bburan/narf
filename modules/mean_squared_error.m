@@ -56,9 +56,7 @@ end
 function do_plot_inputs_and_mse(sel, stack, xxx)    
     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
     hold on;
-    do_plot(xouts, mdls{1}.time, mdls{1}.input1, ...
-            sel, '', '');
-    do_plot(xouts, mdls{1}.time, mdls{1}.input2, ...
+    do_plot(xouts, mdls{1}.time, {mdls{1}.input1, mdls{1}.input2}, ...
             sel, 'Time [s]', 'Prediction & RespAvg [-]');
     hold off;
 end

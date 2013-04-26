@@ -1,5 +1,5 @@
-function termcond = fit_lsq(field1, field2, options)
-% termcond = fit_lsq(field1, field2, options)
+function [termcond, n_iters] = fit_lsq(field1, field2, options)
+% [termcond, n_iters] = fit_lsq(field1, field2, options)
 %
 % Fits all parameters in STACK marked with 'fit_fields' such that signals
 % FIELD1 and FIELD2 have a least-squared error that is minimized. Uses only
@@ -34,13 +34,13 @@ end
 % If so, append a bogus element to the objective target vector and 
 % prediction vector in order to mimic the effect of a sparseness penalty.
 
-[~, idxes] = find_modules(STACK, 'mean_squared_error');
-if ~isempty(idxes) && STACK{idxes(1)}.sparseness_weight ~= 0
-    append_penalty = true;
-    sparseness_weight = STACK{idxes(1)}.sparseness_weight;
-else
+%[~, idxes] = find_modules(STACK, 'mean_squared_error');
+%if ~isempty(idxes) && STACK{idxes{1}}{1}.sparseness_weight ~= 0
+%    append_penalty = true;
+%    sparseness_weight = STACK{idxes{1}}{1}.sparseness_weight;
+%else
     append_penalty = false;
-end
+%end
 
 function error = my_obj_fn(phi, start_depth)
     % Compute the stack values from start_depth to the end of the XXX data 
@@ -113,4 +113,5 @@ else
                                     zeros(len, 1), LB, UB, options);
 end
 unpack_fittables(phi_best);
+n_iters = cnt;
 end

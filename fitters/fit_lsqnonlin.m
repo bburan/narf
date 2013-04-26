@@ -1,5 +1,5 @@
-function termcond = fit_lsqnonlin(field1, field2, options)
-% termcond = fit_nlinlsq(field1, field2, options)
+function [termcond, n_iters] = fit_lsqnonlin(field1, field2, options)
+% [termcond, n_iters] = fit_nlinlsq(field1, field2, options)
 %
 % Fits all parameters in STACK marked with 'fit_fields' such that signals
 % FIELD1 and FIELD2 have a least-squared error that is minimized. Uses only
@@ -11,7 +11,7 @@ function termcond = fit_lsqnonlin(field1, field2, options)
 %    field2   The name of the second signal
 %             Defaults to 'respavg' if no argument is passed
 %    options  Options  passed to lsqcurvefit() to help fit. Defaults are:
-%                MaxIter 1000
+%                MaxIter 5000
 %                MaxFunEvals 5000
 %                TolFun 1e-12
 %                TolX 1e-9
@@ -83,4 +83,5 @@ len = length(flatten_field(XXX{end}.dat, XXX{end}.training_set, 'respavg'));
 [phi_best, resnorm, residual, termcond] = lsqnonlin(@my_obj_fn, phi_init, LB, UB, options);
                                 
 unpack_fittables(phi_best);
+n_iters = cnt;
 end

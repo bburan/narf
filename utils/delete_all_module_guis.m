@@ -14,3 +14,4 @@ for ii = 1:length(NARFGUI)
     delete_module_gui(ii);
 end
 
+NARFGUI = {};

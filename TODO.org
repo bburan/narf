@@ -1,48 +1,59 @@
 * Priorities
-  1. verify on 240, 242 that performance meets or exceeds previous version for boost, npfnl, mse5, firn
-  2. 2D NPNL
+  1. 2D NPNL (Stephen's domain?)
      Input X is the exitation
      Input Y is the inhibition
      Returns Z, the height of the map
      Data will probably NOT be scattered uniformly around the map.
-  3. The three initial conditions: 
-     1) All zeros
-     2) RC correlation, but with one channel zeroed.
-     3) With the FIRN coefs split into two filters of positive/negative coefs only    
+  2. The three initial conditions: 
+     1) [X] All zeros
+     2) [ ] RC correlation, but with one channel zeroed.
+     3) [ ] With the FIRN coefs split into two filters of positive/negative coefs only    
+
+* Irregularities that need fixing
+  - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
+  - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
+  - Jackshrink needs to be tested and used in some keyword functions
 
 * Actions
-  1. [X] Get modules up and running again
-	 - [X] Depression
-	 - [X] Concat second order terms
-  2. [ ] Repair NarfModelpane
-         - [ ] Displays model name, training set, test set, and other important info at bottom of window
-	 - [ ] Add the FILECODE to the baphy plot module so it is visible to the user
-	 - [ ] Widen the module plot selectors so you can read long respfile names
-	 - [ ] Repair the add/delete module button functionality
-	 - [ ] What module does the GUI edit anymore?
-         - [ ] IRRITATION: Why can't I resize windows? 
-         - [ ] Invalidate data BELOW the present point on a table-edit callback... and to update the gui to reflect this!
-  3. [ ] Repair Fitters 
-	 - [ ] Fitters need access to the penalty, which should be stored in the META struct or in the FITTER itself
-	       Actually, instead of a 'penalty' and a datastructure, just attach a function that computes the penalty instead	 
-	       We also need a 'getsparsity()' method for the META struct
-	 - [ ] Provide a dropdown to pick more fitters
-	 - [ ] Make the fits run faster by removing then re-adding the 'test_set' data after fitting process  
-	 - [ ] Make sure that fitters return meaningful, specific codes indicating how they terminated
-  4. [ ] Refactor
-	 - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots".	 Grep through and remove any 'bullshit concats' 
-	 - [ ] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
-  5. [ ] Default per-paramset, per-channel heatmap graph fns:
+  1. [-] Repair Fitters 
+	 - [-] Abstract functions to be used by every fitter
+	       - [ ] Remove, then re add test_set data
+	       - [X] Default print_progress () routine
+	       - [X] Use of the META.performance_metric() function
+	       - [X] Meaningful code for what the fitter returned?
+         - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
+	       - [ ] ???????
+	 - [-] Verify functionality works:
+	       - [X] fit_anneal.m
+	       - [X] fit_boost.m
+	       - [X] fit_fminsearch.m
+	       - [X] fit_fminunc.m
+	       - [X] fit_genetic.m
+	       - [X] fit_sparsebayes.m
+	       - [X] fit_lsq.m
+	       - [X] fit_fminlsq.m
+	       - [ ] fit_lsqnonlin.m
+	 - [X] Fitter keywords
+	       - [X] qfmin
+	       - [X] qboost
+	       - [X] qlsq
+  2. [ ] Repair Narf Browser
+	 - [ ] Sparsity is not going into the DB
+	 - [ ] Antialiasing problem when saving images
+	 - [ ] Heat Map current display button in NARF
+	 - [ ] AND/OR/NOT query token filter
+	 - [ ] Generic 'modelstring' query space
+  3. [-] Refactor
+	 - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots". Grep through and remove any 'bullshit concats'
+	 - [X] Pull out repeated code blocks in the fitters (because they are all pretty much the same damn thing over and over again)
+  4. [ ] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [ ] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  6. [ ] Repair Narf Browser
-	 - [ ] Antialiasing problem when saving images
-	 - [ ] Heat Map current display button in NARF
-  7. [ ] Add new functionality to the do_scatter_plot method
+  5. [ ] Add new functionality to the do_scatter_plot method
 	 - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
-	       Use grayish/blackish colormap
+	       Use grayish/blackish 
 
 * ENQUEUING MANAGER PROGRAM:
   1. Should Batching should work like this?
@@ -203,7 +214,8 @@
   48. Fit combo: Fit at 100hz, then use that to init a fit at 200Hz, then again at 400Hz.
   49. Replace my nargin checks with "if ~exist('BLAH','var'),"
   50. sf=sf{1}; should be eliminated IN EVERY SINGLE FILE! 
-  7. [ ] FIR filter needs an 'ACTIVE FIR COEFS' plot which only displays paramsets matching selected
+  51. [ ] FIR filter needs an 'ACTIVE FIR COEFS' plot which only displays paramsets matching selected
+  52. [ ] IRRITATION: Why can't I resize windows?
 ** Crazyboost
    How's this for a fitter?
    Boosting works well, and tries every possible step before taking a new one.

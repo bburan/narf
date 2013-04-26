@@ -33,13 +33,7 @@ end
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_correlation_inputs;
-m.plot_fns{1}.pretty_name = 'Inputs vs Time';
-% 
-% m.plot_fns{2}.fn = @blah;
-% m.plot_fns{2}.pretty_name = 'Correlation Scatter Plot';
-% 
-% m.plot_fns{3}.fn = @blah;
-% m.plot_fns{3}.pretty_name = 'Smoothed Scatter';
+m.plot_fns{1}.pretty_name = 'Correlation';
 
 function x = do_correlation(mdl, x, stack, xxx)    
     % Compute the training set correlation, ignoring nans
@@ -67,15 +61,17 @@ function x = do_correlation(mdl, x, stack, xxx)
 end
 
 function do_plot_correlation_inputs(sel, stack, xxx)
-%     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
-%     do_plot(xouts, mdls{1}.time, mdls{1}.input1, ...
-%             sel, 'Prediction [Hz]', 'RespAvg [Hz]');
-%    textLoc(sprintf(' Train r: %f\n Test r : %f', ...
-%        x.(mdls{1}.train_score), x.(mdl.test_score)), 'NorthWest');
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    xout = xxx{end};
+    mdl = mdls{1};
+    
+    do_plot_scatter(sel, {xxx}, mdls{1}.input1, mdls{1}.input2, 500);
+    textLoc(sprintf(' Train r: %f\n Test r : %f', ...
+        xout.(mdls{1}.train_score), xout.(mdl.test_score)), 'NorthWest');
 
-    text(0.35, 0.5, 'Ivar hasn''t implemented plotting yet!');
-    axis([0, 1, 0 1]);
-
+    do_xlabel('Prediction [Hz]');
+    do_ylabel('Actual Response [Hz]');
+    
 end
 
 

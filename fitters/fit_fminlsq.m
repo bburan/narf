@@ -1,9 +1,4 @@
-function termcond = fit_fminlsq(objective_score, field1, field2)
-if nargin < 3
-    objective_score = 'score';
-    field1 = 'stim';
-    field2 = 'respavg';
-end
-    fit_fminsearch(objective_score);
-    termcond = fit_lsq(field1, field2);
-end
+function [termcond, n_iters] = fit_fminlsq()
+[~, n_iters1] = fit_fminsearch();
+[termcond, n_iters2] = fit_lsq();
+n_iters = n_iters1 + n_iters2;
