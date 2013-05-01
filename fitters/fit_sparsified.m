@@ -186,6 +186,9 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
     mu = mean(phi_jacks, 2);    
     sigma_sq = var(phi_jacks, [], 2);
     
+    % TODO: Add a 'best only' option here! It might be useful to pick only
+    % the best predicting thing rather than all of them.
+    
     if strcmp('mean', shrinkstyle)
         % Average across the jackknifed PHI sets to get the 'good' set                             
         phi_jacked = mean(phi_jacks, 2);
