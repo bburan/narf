@@ -28,14 +28,31 @@ for kk = 1:length(firmod_idxs)
         V2 = cat(1, V2, x.dat.(sf).respavg(:));
     end
     D = [V1(:) V2(:)]; 
+    D = excise(D);
     D = sortrows(D);
-    P = polyfit(D(:,1),D(:,2), 1);
     
-    if (P(1) < 0)
+    % OLD way wasn't sufficiently reliable: just linear isn't enough?
+    % P = polyfit(D(:,1),D(:,2), 1);
+    %if (P(1) < 0)
+    %    for aa = 1:length(STACK{idx})
+    %        STACK{idx}{aa}.coefs = - STACK{idx}{aa}.coefs;
+    %    end
+    %end
+    
+    % New way: try to fit a sigmoid to the curve 
+    xs = D(:,1);
+    ys = D(:,2);
+    phi_init = [mean(xs), var(xs), 0.5*(max(xs)-min(xs)), 0]; 
+       
+    phi_best = lsqcurvefit(@nl_sigmoid, ...
+                           phi_init, xs, ys);
+    
+    if (phi_best(3) < 0)
         for aa = 1:length(STACK{idx})
             STACK{idx}{aa}.coefs = - STACK{idx}{aa}.coefs;
         end
-    end
+    end   
+    
     calc_xxx(idx); 
     
 end

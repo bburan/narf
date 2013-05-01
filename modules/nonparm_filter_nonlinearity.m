@@ -67,6 +67,7 @@ function npfnl = calc_npfnl(mdl, x)
     % Throw out duplicates, sort, and smooth
     [~, idxs, ~] = unique(pred, 'first'); % TODO: Take mean instead of just throwing duplicates away
     D = sortrows([pred(idxs) resp(idxs)]); 
+    D = excise(D);
     S = iconv(D(:, 1), gf);
     R = iconv(D(:, 2), gf);
     

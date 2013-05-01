@@ -26,6 +26,7 @@ m.error  = 'error';
 m.train_score  = 'score_train_mse';
 m.test_score  = 'score_test_mse';
 m.output = 'score_train_mse';
+m.is_perf_metric = true;
 
 % Overwrite the default module fields with arguments 
 if nargin > 0

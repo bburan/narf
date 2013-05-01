@@ -1,37 +1,43 @@
-* Priorities
-  1. 2D NPNL (Stephen's domain?)
-     Input X is the exitation
-     Input Y is the inhibition
-     Returns Z, the height of the map
-     Data will probably NOT be scattered uniformly around the map.
-  2. The three initial conditions: 
-     1) [X] All zeros
-     2) [ ] RC correlation, but with one channel zeroed.
-     3) [ ] With the FIRN coefs split into two filters of positive/negative coefs only    
+* Comments from Stephen
+  - Stephen will do the init condition for FIRN coefs split into two filters of positive/negative coefs only    
+  - Write a termination condition that ends when "delta = 10^-5 * max-delta-found-so-far" for boosting
+  - Profile the time spent during boosting and look for optimizations:
+     - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
+     - Write a FIR speed booster, which uses N vectors (one per FIR coef, which are a product with the stimulus). Each boost step, only 1 coef need be updated.
+     - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
 
 * Irregularities that need fixing
+  - Not all nonlinearities can accomodate NaNs in their code 
   - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
   - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
   - Jackshrink needs to be tested and used in some keyword functions
+
+* Decisions on Jackknifing that could be modified:
+  - Instead of taking the mean, take the single best held-out predictor
+    - Problem: doing that means you will always INCLUDE the outliers!
+  - Maybe take the 'worst' held-out prediction?
+  -
 
 * Actions
   1. [ ] Repair Narf Browser
 	 - [ ] Sparsity is not going into the DB
 	 - [ ] Antialiasing problem when saving images
 	 - [ ] Heat Map current display button in NARF
-	 - [ ] AND/OR/NOT query token filter
+	 - [ ] AND/OR/NOT query token filter, or 'In position 3' filter
 	 - [ ] Generic 'modelstring' query space
   2. [ ] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [ ] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  3. [-] Refactor
+  3. [ ] Add functionality
+	 - [ ] Loadstimfrombaphy should haev a "chop_beginning" parameter that removes the first N samples
+  4. [-] Refactor
 	 - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots". Grep through and remove any 'bullshit concats'
-  4. [-] Repair Fitters 
+  5. [-] Repair Fitters 
          - [ ] Remove, then re add test_set data by default to make fitters faster
          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  5. [ ] Add new functionality to the do_scatter_plot method
+  6. [ ] Add new functionality to the do_scatter_plot method
 	 - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
 	       Use grayish/blackish 
 
@@ -68,19 +74,19 @@
 
 * THE GREAT NAME REPLACING PROPOSAL
   1. [X] recalc_xxx -> calc_xxx
-  2. [ ] "training set" -> "estimation set"
-  3. [ ] "test set" -> "Validation set"
-  4. [ ] META -> (Suggestion: Should this be MODELINFO, instead of just 'metadata'?)
-  5. [ ] STACK ->  (Suggestion: Should this be MODULES or MODS?)
-  6. [ ] MODULES (What would this become?)
-  7. [ ] XXX -> (Suggestion: Should this be called "VC" for "ValueChain" or something?)
-  8. [ ] FITTER (containing a list of available fitters?)
-  9. [ ] Make a list of every function used purely for side effects, and rename it with a ! at the end
-  10. [ ] Name convention of STACK vs stack, XXX vs xxx and the difficulty in understanding which one we are looking at! 
+  2. [ ] WHATEVER IS GOING INTO XXX{1} should be given to fit_single_model as well! When I'm not using BAPHY it should still be able to work.
+  3. [ ] "training set" -> "estimation set"
+  4. [ ] "test set" -> "Validation set"
+  5. [ ] META -> (Suggestion: Should this be MODELINFO, instead of just 'metadata'?)
+  6. [ ] STACK ->  (Suggestion: Should this be MODULES or MODS?)
+  7. [ ] MODULES (What would this become?)
+  8. [ ] XXX -> (Suggestion: Should this be called "VC" for "ValueChain" or something?)
+  9. [ ] FITTER (containing a list of available fitters?)
+  10. [ ] Make a list of every function used purely for side effects, and rename it with a ! at the end
+  11. [ ] Name convention of STACK vs stack, XXX vs xxx and the difficulty in understanding which one we are looking at! 
 	  Lots of hidden assumptions here which are a problem. Plot modules have access to AFTER data, too.
 
 * TECHNICALLY HARDER CHUNKS OF WORK
-  1. [ ] Depression model fits for 240, 242
   2. [ ] Inhibition/Excitiation model
   3. [ ] Log Likelihood Fitter: (Any noise model, not just gaussian)
 	 Why: Noise model entropy is a metric of performance. (If best-fit noise distribution has low entropy, we know _more_ about the system) 
@@ -96,6 +102,7 @@
   5. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
   6. [ ] Use a single wavelet transform in place of downsampling + FIR filter
   7. [ ] Write a crash course guide on using NARF
+  8. [ ] http://www.mathworks.com/matlabcentral/fileexchange/27662-evolve-top-and-bottom-envelopes-for-time-signals-i-e
 
 * DEFERRED
 ** Stephen's boosting verification

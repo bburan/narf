@@ -39,7 +39,7 @@ function score = my_obj_fn(phi)
 end
 
 fprintf('----------------------------------------------------------------------\n');
-fprintf('Fitting %d variables with %s', length(phi_init), fittername);
+fprintf('Fitting %d variables with %s\n', length(phi_init), fittername);
 
 [phi_best, ~, termcond] = highlevel_fn(@my_obj_fn, phi_init);
                                 
