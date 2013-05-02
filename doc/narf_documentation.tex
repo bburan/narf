@@ -1020,3 +1020,65 @@ Ivar
   - It sounds goofy, but plot functions now recalc all the data, instead of just calling plot functions 
 ** Plotting
    - Right now there's no GUI selection for module paramset, but there will be soon
+
+* Questions for Stephen
+  - I notice that more jacknifes (10 instead of 5) will mean more jackknifes will share data.
+    As we have more and more jackknifes, they will converge on being almost exactly the same, except for 1 data point's effect
+    Therefore, predictions will also tend to be pretty much identical as if we hadn't jackknifed at all?
+    However, if we only have 2-4 jackknifes, they share no data
+    The prediction in one may be pretty different from the prediction in the other. 
+    That seems closer to what we are looking for: if each predicts the other poorly, we are clearly not sparse enough.
+    Maybe that's still true for more jackknifes, but it just escapes my intuition?
+
+* Options
+** Overwrite the test_set file with the held-out data, and use correlation's test_set result to pick the winner
+*** Strategy:    
+    1. Fitter removes the test-set data and replaces it with the held-out data (Which is NAN every where else)
+    2. Complete duplication of the STACK in a local cache so that we can pull out coefs at the end
+    3. Each jackknife generates a prediction
+       1) These predictions are stored in an XXX struct, since we DO need to keep them around, if only to aggregate the results
+       2) The predictions are made by overwriting the test set.
+    4. Each jackknife's predictions are merged. Specifically, meaning that:    
+       1) Predictions must be stored in a special array of XXX structures, one for each jackknife
+       2) Every element of XXX from 2 onward needs to have merging occur IFF it is a fittable_field one
+       3) The non-NAN elements are merged
+    5. Computing the MSE is going to be a bitch, because:
+       1) If I 'calc_xxx', I lose the merged data in one swell foop!
+       2) Do I propogate everything down until it reaches the MSE thing? Or what?
+       3) The MSE needs to work on the test set data. 
+    6. The test-set performance is cached in many XXX, so aggregated data cannot be fed through modules in the normal way
+       We _could_ move the MSE into META, since it's part of the performance metric, after all.
+       BUT, then there's no good place to view it in the GUI, and I want to allow user-defined modules
+       1) I could mark performance metric modules somehow and feed them the data, then recompute
+       2) I could make sparsemse module
+    7. Then, the fitter restores the test set data when done
+*** Problems:
+    1. It's VERY LIKELY it interacts poorly with the splitter functions, since they use test set info?
+
+** Other options  
+  1. Insert a module that 'masks' out data? How on EARTH would I jackknife by doing that, though? It buys me nothing.
+  2. Create a 'held-out' data set which are understood by all modules, and use paramsets to jackknife
+     - Confounds the splitter and jackknifing
+     - Paramsets would have to be multiplied (2 paramsets x 10 jackknifes = 20 paramsets)
+     - Would require splitters and unifiers be daisy-chained.
+   
+* THE PROBLEMS: 
+** It's hard to add jackknifing and maintain simultaneous support for
+     - multiple FIR filters
+     - multiple paramsets
+     - arbitrary performance metrics
+     - fitting NPNL on the training data, and using it to predict the held-out data 
+     - gui
+** In other words
+   1. If there are multiple parameter sets used to compute the held-out prediction, then anything you push into the model is ephemeral and a single recalc could wipe it out.
+   2. It's hard to compute the 'correlation' without making this very specific to a particular model type.
+   3. It's hard to do this without accidentally having the NPNL adjust its fit to the held-out data.
+
+
+* How about this for an experiment?
+  - Learn what a particular neuron does, what 'feature' it responds to
+  - Remove that discrimination
+  - Play the featureless sound back (Animal can't do the task) 
+  - Play the featureless sound back with bogus stimulation (Animal can't do task)
+  - Play the feauterless sound back with good stimulation (Animal can do the task)
+  - Proof: that sound feature is represented by that part of the sound

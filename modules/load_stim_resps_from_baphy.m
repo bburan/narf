@@ -29,6 +29,7 @@ m.output_resp = 'resp';
 m.output_resp_time = 'resp_time';
 m.output_respavg = 'respavg';
 m.include_prestim = 1;
+m.is_data_loader = true; % Special marker used by jackknifing routine
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
