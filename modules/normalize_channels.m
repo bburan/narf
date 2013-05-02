@@ -24,8 +24,8 @@ m.plot_fns{1}.fn = @do_plot_all_normalized_channels;
 m.plot_fns{1}.pretty_name = 'Normalized Chan (All)';
 m.plot_fns{2}.fn = @do_plot_single_normalized_channel;
 m.plot_fns{2}.pretty_name = 'Normalized Chan (Single)';
-%m.plot_fns{3}.fn = @do_plot_normalized_channels_as_heatmap;
-%m.plot_fns{3}.pretty_name = 'Normalized Channels (Heatmap)';
+m.plot_fns{3}.fn = @do_plot_channels_as_heatmap;
+m.plot_fns{3}.pretty_name = 'Normalized Channels (Heatmap)';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0

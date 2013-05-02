@@ -19,6 +19,9 @@ function [sf, stim_idx, chan_idx] = get_baphy_plot_controls(stack)
 global XXX NARFGUI; 
 
 [~, baphy_idx] = find_modules(stack, 'load_stim_resps_from_baphy', true);
+if isempty(baphy_idx),
+    [~,baphy_idx] = find_modules(stack, 'load_stim_resps_wehr',true);
+end
 
 if isfield(NARFGUI{baphy_idx}, 'plot_gui')
     sf = popup2str(NARFGUI{baphy_idx}.plot_gui.selected_stimfile_popup);

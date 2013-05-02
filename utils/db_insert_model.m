@@ -39,7 +39,7 @@ if ~isfield(XXX{end},'sparsity')
 end
     
 % -----------------------------------------------------------------------
-
+dbopen(1); % make sure server connection not broken during a long fit
 sql = ['SELECT * FROM NarfResults WHERE modelname="' META.modelname '"' ...
        ' AND batch=' num2str(META.batch) ...
        ' AND cellid="' XXX{1}.cellid '"'];

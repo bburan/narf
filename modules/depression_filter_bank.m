@@ -33,6 +33,8 @@ m.plot_fns{1}.fn = @do_plot_all_default_outputs;
 m.plot_fns{1}.pretty_name = 'Filtered Stimuli (All)';
 m.plot_fns{2}.fn = @do_plot_single_default_output;
 m.plot_fns{2}.pretty_name = 'Filtered Stimuli (Single)';
+m.plot_fns{3}.fn = @do_plot_channels_as_heatmap;
+m.plot_fns{3}.pretty_name = 'Filtered Stimuli (Heatmap)';
 
 % Finally, define the 'methods' of this module, as if it were a class
 function x = do_depression_filter(mdl, x, stack, xxx)
@@ -41,8 +43,11 @@ function x = do_depression_filter(mdl, x, stack, xxx)
         mdl.pedestal=0;
     end
     
-    [baphy_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy', true);
-    baphy_mod = baphy_mod{1}; % We assume only 1 paramset
+    [load_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy',true);
+    if isempty(load_mod),
+        [load_mod, ~] = find_modules(stack, 'load_stim_resps_wehr',true);
+    end
+    load_mod = load_mod{1}; % We assume only 1 paramset
     
     % calculate global mean level of each channel for scaling dep
     stimmax=[];
@@ -70,13 +75,13 @@ function x = do_depression_filter(mdl, x, stack, xxx)
                 for n=1:N,
                     stim_in(n,stim_in(n,:)<thresh(n))=thresh(n);
                 end
-                extrabins = round(baphy_mod.raw_stim_fs*0.5);
+                extrabins = round(load_mod.raw_stim_fs*0.5);
                 stim_in = cat(2,repmat(thresh,[1 extrabins]),stim_in);
             end
             
-            depresp=depression_bank(stim_in, (1./stimmax(:)) * mdl.strength, ...
-                                    mdl.tau .* baphy_mod.raw_stim_fs ./ 1000, 1)';
-            depresp=permute(depresp,[1 3 2]);
+            depresp=depression_bank(stim_in, (1./stimmax(:))*mdl.strength,...
+                                    mdl.tau .* load_mod.raw_stim_fs/1000, 1);
+            depresp=permute(depresp',[1 3 2]);
             
             if mdl.pedestal>0,
                 depresp = depresp((extrabins+1):end,:,:);
@@ -96,9 +101,9 @@ end
 % 
 %     % Find the GUI controls
 %     [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
-%     chan_idx = get(baphy_mod.plot_gui.selected_stim_chan_popup, 'Value');
+%     chan_idx = get(load_mod.plot_gui.selected_stim_chan_popup, 'Value');
 %     dat = x.dat.(sf);
-%     stepsize=baphy_mod.stimulus_channel_count;
+%     stepsize=load_mod.stimulus_channel_count;
 %     plot(dat.(mdl.time), ...
 %          squeeze(dat.(mdl.output)(:,stim_idx,chan_idx:stepsize:end)));
 %     

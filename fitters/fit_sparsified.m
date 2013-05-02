@@ -36,7 +36,7 @@ if ~exist('n_sparsity_loops', 'var')
     n_sparsity_loops = 10;
 end
 
-if ~exist('n_sparsity_loops', 'var')
+if ~exist('shrinkstyle', 'var')
     shrinkstyle = 'mean'; % Can also be 'james', or 'stephen'
 end
 phi_init = pack_fittables(STACK);

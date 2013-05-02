@@ -1,11 +1,16 @@
-function do_plot_channels_as_heatmap(stack, xxx, signal)
-    mdl = stack{end};
-    x = xxx{end};
+function do_plot_channels_as_heatmap(sel, stack, xxx)
+
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));  
     
-    [sf, stim_idx, baphy_chan_idx] = get_baphy_plot_controls(stack);
+         
+    ii=1;  % assuming just a single data set for now...
+    h = imagesc(xouts{ii}.dat.(sel.stimfile).(mdls{1}.time)(:),...
+                1:size(xouts{ii}.dat.(sel.stimfile).(mdls{1}.output),3),...
+                squeeze(xouts{ii}.dat.(sel.stimfile).(mdls{1}.output)(:, sel.stim_idx, :))');
+    do_xlabel('Time [s]');
+    do_ylabel('Output [-]');
     
-    imagesc(squeeze(x.dat.(sf).(signal)(:,stim_idx,:))');
     set(gca,'YDir','normal');
-    axis tight;
+    axis xy tight;
     
 end

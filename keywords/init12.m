@@ -1,4 +1,4 @@
-function initrc ()
+function init12 ()
 % Initializes all FIR filters via reverse correlation.
 
 global STACK XXX;
@@ -32,8 +32,11 @@ for ii = 1:length(mod_idxs) % For each match
             params.sfscount    = 5;
             params.sfsstep     = 3;
             strf = cellxcdataloaded(stim, resp, params);
-            STACK{idx}{jj}.coefs = strf(1).h;
-            STACK{idx}{jj}.num_dims = size(strf(1).h, 1);
+            h=zeros(size(strf(1).h));
+            h(ii,:)=strf(1).h(ii,:);
+            
+            STACK{idx}{jj}.coefs = h;
+            STACK{idx}{jj}.num_dims = size(h, 1);
             
         end
     end

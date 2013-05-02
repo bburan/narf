@@ -8,7 +8,7 @@ m.name = 'nonparm_nonlinearity_2d';
 m.fn = @do_np_nonlinearity_2d;
 m.pretty_name = 'Nonparametric Nonlinearity 2D';
 m.editable_fields = {'input_stim1', 'input_stim2', 'input_resp', 'time',...
-                     'output', 'bincount'};
+                     'output', 'bincount', 'smoothwindow'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
@@ -18,6 +18,7 @@ m.input_resp = 'respavg';
 m.time = 'stim_time';
 m.output = 'stim';
 m.bincount = 20;
+m.smoothwindow=1;
 
 % Optional fields
 m.plot_fns = {};
@@ -38,65 +39,108 @@ end
 function [phi,outbinserr] = init_nonparm_nonlinearity_2d(mdl, x, stack, xxx)
     
     % find out parameters:
-    pred=[]; resp=[];
+    pred1=[]; pred2=[]; resp=[];
     for sf = x.training_set,
         sf=sf{1};
         % It's an error if there is more than one channel:
-        if size(x.dat.(sf).(mdl.input_stim)(:), 3) > 1 || ...
-           size(x.dat.(sf).(mdl.input_resp)(:), 3) > 1,
+        if size(x.dat.(sf).(mdl.input_stim1), 3) > 1 || ...
+           size(x.dat.(sf).(mdl.input_stim2), 3) > 1 || ...
+           size(x.dat.(sf).(mdl.input_resp), 3) > 1,
             error('NPNL is a 1D method!');
         end
-        pred=cat(1,pred,x.dat.(sf).(mdl.input_stim)(:));
+        pred1=cat(1,pred1,x.dat.(sf).(mdl.input_stim1)(:));
+        pred2=cat(1,pred2,x.dat.(sf).(mdl.input_stim2)(:));
         resp=cat(1,resp,x.dat.(sf).(mdl.input_resp)(:));
     end
     
     keepidx=find(~isnan(resp));
-    pred=pred(keepidx);
+    pred1=pred1(keepidx);
+    pred2=pred2(keepidx);
     resp=resp(keepidx);
     
     bincount=mdl.bincount;
-    pp=zeros(bincount,1);
-    rr=zeros(bincount,1);
-    rre=zeros(bincount,1);
+    smoothwindow=mdl.smoothwindow;
+    pp=zeros(bincount,2);
+    rr=zeros(bincount,bincount);
+    rre=zeros(bincount,bincount);
     
     if nansum(resp)>0,
-        [ss,si1]=sort(pred);
+        [ss1,si1]=sort(pred1);
         tb=bincount;
-        b=[];
+        b1=[];
         
-        while length(b)<bincount && tb<length(si1),
+        while length(b1)<bincount && tb<length(si1),
             tb=tb+1;
             edges1=round(linspace(1,length(si1)+1,tb));
-            [b,ui,uj]=unique(ss(edges1(1:(end-1)))');
+            if std(ss1(edges1(1:(end-1))))>0
+                [b1,ui]=unique(ss1(edges1(1:(end-1)))');
+            else
+                b1=ss1(edges1(1:(end-1)))';
+                ui=1:length(b1);
+            end
+               
         end
         edgeend=edges1(end);
         edges1=edges1(ui);
         
-        if length(b)<bincount,
-            b=[b repmat(b(end),[1 bincount-length(b)])];
+        if length(b1)<bincount,
+            b1=[b1 repmat(b1(end),[1 bincount-length(b1)])];
             edges1=[edges1 repmat(edges1(end),[1 bincount-length(edges1)])];
         end
         edges1=[edges1 edgeend];
+        b1(bincount+1)=ss1(end)+eps;
+        
+        [ss2,si2]=sort(pred2);
+        tb=bincount;
+        b2=[];
+        
+        while length(b2)<bincount && tb<length(si2),
+            tb=tb+1;
+            edges2=round(linspace(1,length(si2)+1,tb));
+            if std(ss2(edges2(1:(end-1))))>0
+                [b2,ui]=unique(ss2(edges2(1:(end-1)))');
+            else
+                b2=ss1(edges2(1:(end-1)))';
+                ui=1:length(b2);
+            end
+        end
+        edgeend=edges2(end);
+        edges2=edges2(ui);
+        
+        if length(b2)<bincount,
+            b2=[b2 repmat(b2(end),[1 bincount-length(b2)])];
+            edges2=[edges2 repmat(edges2(end),[1 bincount-length(edges2)])];
+        end
+        edges2=[edges2 edgeend];
+        b2(bincount+1)=ss2(end)+eps;
         
         for bb=1:bincount,
-            pp(bb)=mean(pred(si1(edges1(bb):(edges1(bb+1)-1))));
-            rr(bb)=mean(resp(si1(edges1(bb):(edges1(bb+1)-1))));
-            nn=sqrt(edges1(bb+1)-edges1(bb));
-            if edges1(bb+1)>edges1(bb),
-                rre(bb)=std(resp(si1(edges1(bb):(edges1(bb+1)-1))))./...
-                    (nn+(nn==1));
+            pp(bb,1)=mean(ss1(edges1(bb):(edges1(bb+1)-1)));
+            pp(bb,2)=mean(ss2(edges2(bb):(edges2(bb+1)-1)));
+        end
+        
+        for bb1=1:bincount,
+            for bb2=1:bincount,
+                ff=find(pred1>=b1(bb1) & pred1<b1(bb1+1) &...
+                        pred2>=b2(bb2) & pred2<b2(bb2+1));
+                rr(bb1,bb2)=mean(resp(ff));
+                nn=length(ff);
+                if nn,
+                    %rre(bb1,bb2)=std(resp(ff))./sqrt((nn+(nn==0)));
+                    rre(bb1,bb2)=nn;
+                end
             end
         end
         pp(isnan(pp))=0;
         rr(isnan(rr))=0;
         
-        rr(:)=gsmooth(rr(:),1);
-        % [pp(:,dd),rr(:,dd)]
+        rr=gsmooth(rr,[smoothwindow smoothwindow]);
+        
     end
     
     phi={pp,rr};
     outbinserr=rre;
-    
+    %keyboard
  end
 
 function x = do_np_nonlinearity_2d(mdl, x, stack, xxx)    
@@ -106,9 +150,10 @@ function x = do_np_nonlinearity_2d(mdl, x, stack, xxx)
     fns = fieldnames(x.dat);
     for ii = 1:length(fns)
         sf = fns{ii};
-        [T, S, C] = size(x.dat.(sf).(mdl.input_stim));
-        y = raw_nl2d(phi2d, x.dat.(sf).(mdl.input_stim)(:));                      
-        y(isnan(y)) = 0; 
+        [T, S, C] = size(x.dat.(sf).(mdl.input_stim1));
+        y = raw_nl(phi2d, [x.dat.(sf).(mdl.input_stim1)(:) ...
+                     x.dat.(sf).(mdl.input_stim2)(:)]);                      
+        y(isnan(y)) = 0;
         x.dat.(sf).(mdl.output) = reshape(y,[T,S,C]);
     end
     
@@ -128,15 +173,19 @@ function do_plot_2d_nonlinearity(sel, stack, xxx)
     xin = xins{1};
     xout = xouts{1};
     
-	hold on;
+    hold on;
     
     % FIXME: Plot a heat map here of the 2D nonlinearity
-    imagesc(xout.mycoefmatrix);
-                
+    imagesc(xout.mycoefmatrix{1}(:,1),...
+            xout.mycoefmatrix{1}(:,2),...
+            xout.mycoefmatrix{2});
+    hold on;
     % Scatter plot the data points
-    do_plot_scatter(sel, mdl, xins{ii}{end}, ...
-                    mdl.input_stim1, mdl.input_stim2);
-           
+    %do_plot_scatter(sel, xins, ...
+    %                 mdl.input_stim1, mdl.input_stim2);
+   
+    colorbar
+    
     do_xlabel('Input1 [-]');
     do_ylabel('Input2 [-]');
     legend off;

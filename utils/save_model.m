@@ -30,7 +30,12 @@ path = regexp(filepath, ['^(.*)' s], 'tokens');
 path = path{1}{1};
 unix(['mkdir -p ' path]); % TODO: Make this portable to windows
 
+% make directory world-writable so that other people can analyze the
+% same cells.
+unix(['chmod 777 ' path]);
+
 save(filepath, 'stack', 'xxx', 'meta');
 
 % Change the file to be read-only so you don't accidentally alter it later
 % unix(['chmod 444 ' filepath]);
+unix(['chmod 777 ' filepath]);
