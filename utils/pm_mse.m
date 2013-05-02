@@ -9,9 +9,11 @@ if ~isfield(META, 'sparsity_weight')
     score = XXX{end}.score_train_mse; 
 else
     [fir_mods, fir_idxs] = find_modules(STACK, 'fir_filter');
-    sparsities = zeros(size(fir_idxs));   
+    sparsities = [];
     for ii=1:length(fir_idxs)
-        sparsities(ii) = sparsity_metric(fir_mods{ii}.coefs);
+        for pp=1:length(fir_mods{ii})
+            sparsities(end+1) = sparsity_metric(fir_mods{ii}{pp}.coefs);
+        end
     end
     score = XXX{end}.score_train_mse + META.sparsity_weight * sum(sparsities);
 end
