@@ -15,5 +15,5 @@ else
             sparsities(end+1) = sparsity_metric(fir_mods{ii}{pp}.coefs);
         end
     end
-    score = XXX{end}.score_train_mse + META.sparsity_weight * sum(sparsities);
+    score = XXX{end}.score_train_mse + (META.sparsity_weight * sum(sparsities));
 end

@@ -29,11 +29,11 @@ for ii = 1:length(cells)
             write_readably(modulekeys{jj})); 
         
         % For testing, use fit_single_model instead of enqueue_single_model
-        %fit_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
-        %   cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
+        fit_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
+           cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
         
-         enqueue_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
-         cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, true);
+        %enqueue_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
+        %cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, true);
         
     end
 end

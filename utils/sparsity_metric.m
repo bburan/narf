@@ -34,5 +34,10 @@ if ncoefs < 2
     return
 end
 
+if all(coefs(1) == coefs)
+    sparsity = ncoefs;
+    return
+end
+
 c_bar = sqrt(sum(coefs(:).^2)); % L2 norm
 sparsity = sum(abs(coefs(:)) / c_bar)^2;
