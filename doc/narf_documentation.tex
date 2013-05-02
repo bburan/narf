@@ -1082,3 +1082,8 @@ Ivar
   - Play the featureless sound back with bogus stimulation (Animal can't do task)
   - Play the feauterless sound back with good stimulation (Animal can do the task)
   - Proof: that sound feature is represented by that part of the sound
+
+* Decisions on Jackknifing that could be modified:
+  - Instead of taking the mean, take the single best held-out predictor
+    - Problem: doing that means you will always INCLUDE the outliers!
+  - Maybe take the 'worst' held-out prediction?

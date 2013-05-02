@@ -37,7 +37,7 @@ if ~exist('n_sparsity_loops', 'var')
 end
 
 if ~exist('shrinkstyle', 'var')
-    shrinkstyle = 'mean'; % Can also be 'james', or 'stephen'
+    shrinkstyle = 'mean'; % Options: 'mean', 'james', 'stephen', 'besttrain', or 'bestholdout'
 end
 phi_init = pack_fittables(STACK);
 
@@ -130,31 +130,43 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
         xxx_jack{jj} = XXX;
         stack_jack{jj} = STACK; 
     end
-    
-    
-    
-    
-    % Plot some debugging crap
-    sel = [];    
-    sel.chan_idx = 1;
-    sel.stim_idx = 1;
-    for ii = 1:n_jacks
-        %sel.stimfile = xxx_jack{ii}{5}.training_set{ii};
-        %figure; stack_jack{ii}{4}{1}.plot_fns{1}.fn(sel, stack_jack{ii}(1:4), xxx_jack{ii}(1:5));
-        %figure; stack_jack{ii}{4}{1}.plot_fns{1}.fn(sel, stack_jack{ii}(1:4), xxx_jack{ii}(1:5));
-        
-        STACK = stack_jack{ii};
-        XXX = xxx_jack{ii};
-        plot_model_summary();       
-        %narf_modelpane
-    end
+            
+%     % Plot some debugging crap
+%     sel = [];    
+%     sel.chan_idx = 1;
+%     sel.stim_idx = 1;
+%     for ii = 1:n_jacks
+%         %sel.stimfile = xxx_jack{ii}{5}.training_set{ii};
+%         %figure; stack_jack{ii}{4}{1}.plot_fns{1}.fn(sel, stack_jack{ii}(1:4), xxx_jack{ii}(1:5));
+%         %figure; stack_jack{ii}{4}{1}.plot_fns{1}.fn(sel, stack_jack{ii}(1:4), xxx_jack{ii}(1:5));
+%         
+%         STACK = stack_jack{ii};
+%         XXX = xxx_jack{ii};
+%         plot_model_summary();       
+%         %narf_modelpane
+%     end
           
-    keyboard
-    
-    
-    
-    
-    
+    % Compute which jackknifes had the best training and holdout scores
+    bst_train_score = [];
+    bst_train_idx = 0;
+    bst_holdout_score = [];
+    bst_holdout_idx = 0;
+    for ii = 1:n_jacks
+        STACK = stack_jack{ii};
+        XXX = xxx_jack{ii};        
+        if isempty(bst_train_score) || bst_train_score < META.perf_metric()
+            bst_train_score = META.perf_metric();
+            bst_train_idx = ii;
+        end
+        
+        if isempty(bst_holdout_score) || (isfield(XXX{end}, 'score_test_corr') && ...
+                                        bst_holdout_score < XXX{end}.score_test_corr)
+            bst_holdout_score = XXX{end}.score_test_corr; %TODO: Unfortunate Special case!
+            bst_holdout_idx = ii;
+        end
+        
+    end
+        
     % Reload the original stack and xxx
     XXX = cached_xxx;
     STACK = cached_stack;
@@ -164,15 +176,16 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
     idx = areperfmetrics(1);
         
     % Replace the training set with the held-out data
-    sf = XXX{idx}.training_set{ii};
-    nsf = [sf '_holdout'];
-    
-    sigs = fieldnames(XXX{idx}.dat.(sf));
-    for ss = 1:length(sigs),
-        jackidx = floor(linspace(1, size(XXX{idx}.dat.(sf).(sigs{ss}), 1), n_jacks+1));
-        for jj = 1:n_jacks,
-            % Beware all ye who look into the eye of madness:
-            XXX{idx}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1),:,:) = xxx_jack{jj}{idx}.dat.(nsf).(sigs{ss})(jackidx(jj):jackidx(jj+1),:,:);
+    for ii = 1:length(XXX{idx}.training_set)
+        sf = XXX{idx}.training_set{ii};
+        nsf = [sf '_holdout'];
+        sigs = fieldnames(XXX{idx}.dat.(sf));
+        for ss = 1:length(sigs),
+            jackidx = floor(linspace(1, size(XXX{idx}.dat.(sf).(sigs{ss}), 1), n_jacks+1));
+            for jj = 1:n_jacks,
+                % Beware all ye who look into the eye of madness:
+                XXX{idx}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1),:,:) = xxx_jack{jj}{idx}.dat.(nsf).(sigs{ss})(jackidx(jj):jackidx(jj+1),:,:);
+            end
         end
     end
     
@@ -180,16 +193,17 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
     calc_xxx(idx);
     score = META.perf_metric(); 
     
-    phi_jacks = cell2mat(cellfun(@pack_fittables, stack_jack), ...
-                                 'UniformOutput', false);
+    phi_jacks = cell2mat(cellfun(@pack_fittables, stack_jack, ...
+                                 'UniformOutput', false));
     m = length(phi_init);    
     mu = mean(phi_jacks, 2);    
     sigma_sq = var(phi_jacks, [], 2);
-    
-    % TODO: Add a 'best only' option here! It might be useful to pick only
-    % the best predicting thing rather than all of them.
-    
-    if strcmp('mean', shrinkstyle)
+        
+    if strcmp('besttrain', shrinkstyle)
+        phi_jacked = phi_jacks(:, bst_train_idx);
+    elseif strcmp('bestholdout', shrinkstyle)
+        phi_jacked = phi_jacks(:, bst_holdout_idx);
+    elseif strcmp('mean', shrinkstyle)
         % Average across the jackknifed PHI sets to get the 'good' set                             
         phi_jacked = mean(phi_jacks, 2);
     elseif strcmp('stephen', shrinkstyle)
@@ -200,10 +214,11 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
             fprintf('WARNING: A James Stein Estimator is only better if there are 3 or more params. Using simple mean.');
             phi_jacked = mu;
         else
+            prior = phi_init;
             phi_jacked = prior + (mu - prior) .* (  1 - (((m-2) * (sigma_sq / n_jacks)) / sum((mu - prior).^2))); 
         end
     else
-        error('shrinkstyle can only be ''mean'', ''stephen'', or ''james''.');
+        error('shrinkstyle can only be ''besttrain'', ''mean'', ''stephen'', or ''james''.');
     end        
 end
 
@@ -231,7 +246,7 @@ function [best_sparsity, best_phi] = linear_search ()
             best_sparsity = sparsity_weights(ii);
         end
         
-        fprintf('Sparsity level %f had score %f\n', ... 
+        fprintf('Sparsity level %e had score %f\n', ... 
             META.sparsity_weight, score);
     end
 end
@@ -242,7 +257,7 @@ end
 
 % Start one of the outer loops
 [best_sparsity, best_phi] = linear_search();
-%% [best_score, best_sparsity, best_phi] = bisection_search();
+%% [best_sparsity, best_phi] = bisection_search();
 
 % Set the optimal sparseness weight level and best parameters found
 META.sparsity_weight = best_sparsity;
