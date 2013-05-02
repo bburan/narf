@@ -45,7 +45,7 @@ for kk = 1:length(firmod_idxs)
     phi_init = [mean(xs), var(xs), 0.5*(max(xs)-min(xs)), 0]; 
     opts = optimset('Display','off');
     phi_best = lsqcurvefit(@nl_sigmoid, ...
-                           phi_init, xs, ys, opts);
+                           phi_init, xs, ys, [], [], opts);
     
     if (phi_best(3) < 0)
         for aa = 1:length(STACK{idx})

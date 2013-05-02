@@ -103,17 +103,17 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
             
             sigs = fieldnames(XXX{fit_start_depth}.dat.(sf));
             for ss = 1:length(sigs),
-                jackidx = floor(linspace(1, size(XXX{fit_start_depth}.dat.(sf).(sigs{ss}), 1), n_jacks+1)); 
+                jackidx = floor(linspace(1, 1+size(XXX{fit_start_depth}.dat.(sf).(sigs{ss}), 1), n_jacks+1));
                 
                 % Copy the training set data to the fake test set
                 XXX{fit_start_depth}.dat.(nsf).(sigs{ss}) = XXX{fit_start_depth}.dat.(sf).(sigs{ss});
                 
                 % NAN out the held-out data in the training set stimfile
-                XXX{fit_start_depth}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1),:,:) = NaN;
+                XXX{fit_start_depth}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:) = NaN;
                 
                 % Nan out everything but the held-out data in the test set                
                 mask = ones(size(XXX{fit_start_depth}.dat.(sf).(sigs{ss})));
-                mask(jackidx(jj):jackidx(jj+1),:,:) = 0;
+                mask(jackidx(jj):jackidx(jj+1)-1,:,:) = 0;
                 XXX{fit_start_depth}.dat.(nsf).(sigs{ss})(mask>0) = NaN;
             end
         end
@@ -161,10 +161,9 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
         
         if isempty(bst_holdout_score) || (isfield(XXX{end}, 'score_test_corr') && ...
                                         bst_holdout_score < XXX{end}.score_test_corr)
-            bst_holdout_score = XXX{end}.score_test_corr; %TODO: Unfortunate Special case!
+            bst_holdout_score = XXX{end}.score_test_corr; % FIXME: Unfortunate Special case!
             bst_holdout_idx = ii;
         end
-        
     end
         
     % Reload the original stack and xxx
@@ -181,17 +180,17 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
         nsf = [sf '_holdout'];
         sigs = fieldnames(XXX{idx}.dat.(sf));
         for ss = 1:length(sigs),
-            jackidx = floor(linspace(1, size(XXX{idx}.dat.(sf).(sigs{ss}), 1), n_jacks+1));
+            jackidx = floor(linspace(1, 1+size(XXX{idx}.dat.(sf).(sigs{ss}), 1), n_jacks+1));
             for jj = 1:n_jacks,
                 % Beware all ye who look into the eye of madness:
-                XXX{idx}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1),:,:) = xxx_jack{jj}{idx}.dat.(nsf).(sigs{ss})(jackidx(jj):jackidx(jj+1),:,:);
+                XXX{idx}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:) = xxx_jack{jj}{idx}.dat.(nsf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:);
             end
         end
     end
     
     % Compute the performance from here to the end
     calc_xxx(idx);
-    score = META.perf_metric(); 
+    score = META.perf_metric();
     
     phi_jacks = cell2mat(cellfun(@pack_fittables, stack_jack, ...
                                  'UniformOutput', false));
@@ -204,11 +203,11 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
     elseif strcmp('bestholdout', shrinkstyle)
         phi_jacked = phi_jacks(:, bst_holdout_idx);
     elseif strcmp('mean', shrinkstyle)
-        % Average across the jackknifed PHI sets to get the 'good' set                             
-        phi_jacked = mean(phi_jacks, 2);
+        phi_jacked = mu;
     elseif strcmp('stephen', shrinkstyle)
         % Use Stephen's shrinkage equation
         phi_jacked = real(mu .* sqrt(1 - ((sqrt(sigma_sq) / sqrt(n_jacks)) ./ mu).^2));
+        phi_jacked(isnan(phi_jacked)) = 0;
     elseif strcmp('james', shrinkstyle) 
         if m < 3
             fprintf('WARNING: A James Stein Estimator is only better if there are 3 or more params. Using simple mean.');
@@ -230,7 +229,7 @@ sparsity_weight_max = 10^2;
 sparsity_weight_min = 10^-8;
 
 function [best_sparsity, best_phi] = linear_search ()
-    sparsity_weights = linspace(sparsity_weight_min, ...
+    sparsity_weights = logspace(sparsity_weight_min, ...
                                 sparsity_weight_max, ... 
                                 n_sparsity_loops);
 	

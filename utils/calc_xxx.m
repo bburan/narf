@@ -1,7 +1,7 @@
 function calc_xxx(start_depth, end_depth)
 % calc_xxx(start_depth, end_depth)
 %
-% Computes the XXX data structure from = start_depth to < end_depth,
+% Computes the XXX data structure from STACK depth = start_depth to < end_depth,
 % invalidating and overwriting any previous data in that area.
 % A very important function, calc_xxx is responsible for actually 
 % computing the prediction made by a model.
@@ -45,5 +45,5 @@ for ii = start_depth:end_depth,
         XXX{ii+1} = mdls{1}.unifier(xouts);
     else
         error('A unifier should not be used for single parameter set.');
-    end    
+    end
 end
