@@ -103,32 +103,46 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
             
             sigs = fieldnames(XXX{fit_start_depth}.dat.(sf));
             for ss = 1:length(sigs),
-                jackidx = floor(linspace(1, 1+size(XXX{fit_start_depth}.dat.(sf).(sigs{ss}), 1), n_jacks+1));
+                 % Copy the training set data to the fake test set
+                 XXX{fit_start_depth}.dat.(nsf).(sigs{ss}) = XXX{fit_start_depth}.dat.(sf).(sigs{ss});
+                 
+% $$$                 jackidx = floor(linspace(1, 1+size(XXX{fit_start_depth}.dat.(sf).(sigs{ss}), 1), n_jacks+1));
+% $$$                 
+% $$$                 % NAN out the held-out data in the training set stimfile
+% $$$                 XXX{fit_start_depth}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:) = NaN;
+% $$$                 
+% $$$                 % Nan out everything but the held-out data in the test set                
+% $$$                 mask = ones(size(XXX{fit_start_depth}.dat.(sf).(sigs{ss})));
+% $$$                 mask(jackidx(jj):jackidx(jj+1)-1,:,:) = 0;
+% $$$                 XXX{fit_start_depth}.dat.(nsf).(sigs{ss})(mask>0) = NaN;
                 
-                % Copy the training set data to the fake test set
-                XXX{fit_start_depth}.dat.(nsf).(sigs{ss}) = XXX{fit_start_depth}.dat.(sf).(sigs{ss});
+                datdim=size(XXX{fit_start_depth}.dat.(sf).(sigs{ss}));
+                mask=ones(datdim(1),datdim(2));
+                jackidx=floor(linspace(1,1+datdim(1)*datdim(2),n_jacks+1));
+                mask(jackidx(jj):jackidx(jj+1)-1)=0;
+                mask=repmat(mask,[1 1 datdim(3:end)]);
                 
                 % NAN out the held-out data in the training set stimfile
-                XXX{fit_start_depth}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:) = NaN;
+                XXX{fit_start_depth}.dat.(sf).(sigs{ss})(mask==0) = NaN;
                 
-                % Nan out everything but the held-out data in the test set                
-                mask = ones(size(XXX{fit_start_depth}.dat.(sf).(sigs{ss})));
-                mask(jackidx(jj):jackidx(jj+1)-1,:,:) = 0;
-                XXX{fit_start_depth}.dat.(nsf).(sigs{ss})(mask>0) = NaN;
-            end
+                % Nan out everything but the held-out data in the test set
+                XXX{fit_start_depth}.dat.(nsf).(sigs{ss})(mask==1) = NaN;
+           end
         end
-        
+       
         % Fit that jackknife
         unpack_fittables(phi_init);
         calc_xxx(fit_start_depth); 
         fitter();
-                
+        
         % Correct the sign of the model
         verify_model_polarity();
         
         % Save the STACK and XXX into the jackknife data structure
         xxx_jack{jj} = XXX;
         stack_jack{jj} = STACK; 
+        
+        %keyboard
     end
             
 %     % Plot some debugging crap
@@ -173,7 +187,7 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
     % Merge the output of the jackknifed data sets at the input to the
     % performance metric module    
     idx = areperfmetrics(1);
-        
+    
     % Replace the training set with the held-out data
     for ii = 1:length(XXX{idx}.training_set)
         sf = XXX{idx}.training_set{ii};
