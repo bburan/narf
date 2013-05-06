@@ -102,9 +102,7 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
             XXX{fit_start_depth}.test_set{ii} = nsf;
             
             sigs = fieldnames(XXX{fit_start_depth}.dat.(sf));
-            for ss = 1:length(sigs),
-                jackidx = floor(linspace(1, 1+size(XXX{fit_start_depth}.dat.(sf).(sigs{ss}), 1), n_jacks+1));
-    
+            for ss = 1:length(sigs),                                
                 % Copy the training set data to the fake test set
                 XXX{fit_start_depth}.dat.(nsf).(sigs{ss}) = XXX{fit_start_depth}.dat.(sf).(sigs{ss});
     
@@ -112,14 +110,25 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
                 % I am NANing out everything in the respavg but not in
                 % other signals because doing just the respavg avoids creating gaps in the
                 % prediction caused by FIR filter passing over NANs
-                if strcmp(sigs{ss}, 'respavg')
+                if strcmp(sigs{ss}, 'respavg')                    
+                    datdim=size(XXX{fit_start_depth}.dat.(sf).(sigs{ss}));
+                    mask=ones(datdim(1),datdim(2));
+                    jackidx=floor(linspace(1,1+datdim(1)*datdim(2),n_jacks+1));
+                    mask(jackidx(jj):jackidx(jj+1)-1)=0;
+                    mask=repmat(mask,[1 1 datdim(3:end)]);
+                
                     % NAN out the held-out data in the training set stimfile
-                    XXX{fit_start_depth}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:) = NaN;
-    
-                    % Nan out everything but the held-out data in the test set                
-                    mask = ones(size(XXX{fit_start_depth}.dat.(sf).(sigs{ss})));
-                    mask(jackidx(jj):jackidx(jj+1)-1,:,:) = 0;
-                    XXX{fit_start_depth}.dat.(nsf).(sigs{ss})(mask>0) = NaN;
+                    XXX{fit_start_depth}.dat.(sf).(sigs{ss})(mask==0) = NaN;
+                
+                    % Nan out everything but the held-out data in the test set
+                    XXX{fit_start_depth}.dat.(nsf).(sigs{ss})(mask==1) = NaN;
+
+                    % Old Way
+                    %jackidx = floor(linspace(1, 1+size(XXX{fit_start_depth}.dat.(sf).(sigs{ss}), 1), n_jacks+1))
+	                %XXX{fit_start_depth}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:) = NaN;
+                    %mask = ones(size(XXX{fit_start_depth}.dat.(sf).(sigs{ss})));
+                    %mask(jackidx(jj):jackidx(jj+1)-1,:,:) = 0;
+                    %XXX{fit_start_depth}.dat.(nsf).(sigs{ss})(mask==1) = NaN;
                 end
             end
         end
