@@ -1,11 +1,11 @@
+* What is the problem? 
+18296 	ivar  	 dead(2013-04-25)  	2  	por032a-08-1/242/env100_log2b_firn_initrc_npnl_mse_qboost  	microbat  	26473  	 DELETE RESET  	DUMP 
 
 * Found one problem:
   - Jackknifing is a dumb algorithm that just NANs out the data. This is simpler than playing with indexes and easier to reconstruct at the end.
   - However, when the FIR filter encounters NANs, it doesn't know what to do, and so the next NCOEFS-1 data points are also NAN
   - When the jackknifed data is brought back together again, we have N_COEFS-1 wide gaps between the points
   - This is probably the right thing to do, in retrospect. Lucky it turned out that way. 
-
-
 
 * Actions
   1. [ ] Repair Narf Browser

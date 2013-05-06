@@ -16,12 +16,14 @@ end
 
 n_iters = 1;
 start_depth = find_fit_start_depth(STACK);
-score_prev = META.perf_metric();
+[mse, pen] = META.perf_metric();
+score_prev = mse + pen;
 
 function score = my_obj_fn(phi)
     unpack_fittables(phi);
     calc_xxx(start_depth);
-    score = META.perf_metric();
+    [m, p] = META.perf_metric();
+    score = m + p;
     score_delta = score_prev - score;
     score_prev = score;
     

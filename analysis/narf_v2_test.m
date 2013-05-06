@@ -7,12 +7,11 @@ global MODULES;
 
 MODULES = scan_directory_for_modules();   
 
-%batch = 241;
 batch = 242;
 
 mm = {'env100', ...
       'log2b', ...
-      {{'firn', 'init0'}}, ... % {{'add2', 'firn'}, {'depn'}, {'firn'}, {'firn', 'initrc'}}, ...
+      {{'firn', 'init0'}, {'firn', 'initrc'}}, ... % {{'add2', 'firn'}, {'depn'}, {'firn'}, {'firn', 'initrc'}}, ...
       'npfnl', ... % {'npnl', 'npfnl', 'npnlx', 'npfnlx'}, ...
       'mse', ...
       {'sp1boost', 'sp2boost', 'sp3boost', 'sp4boost', 'sp5boost'}};% {'fmin', 'fminlsq', 'boost', 'fminu', 'qfmin', 'qlsq', 'qboost', 'lsqn', 'genetic', 'anneal', 'sb'}};
@@ -20,6 +19,7 @@ mm = {'env100', ...
 % cells = request_celldb_batch(batch, 'por023b-b1'); % 241
 cells = request_celldb_batch(batch, 'por028d-b1'); % 242
 %cells = request_celldb_batch(batch);
+
 modulekeys = keyword_combos(mm);
 
 for ii = 1:length(cells)
@@ -29,11 +29,11 @@ for ii = 1:length(cells)
             write_readably(modulekeys{jj})); 
         
         % For testing, use fit_single_model instead of enqueue_single_model
-        fit_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
-           cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
+        %fit_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
+        %   cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
         
-        %enqueue_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
-        %cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, true);
+        enqueue_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
+        cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, true);
         
     end
 end

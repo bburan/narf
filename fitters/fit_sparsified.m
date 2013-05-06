@@ -154,13 +154,14 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
     for ii = 1:n_jacks
         STACK = stack_jack{ii};
         XXX = xxx_jack{ii};        
-        if isempty(bst_train_score) || bst_train_score < META.perf_metric()
-            bst_train_score = META.perf_metric();
+        [score, ~] = META.perf_metric();
+        if isempty(bst_train_score) || bst_train_score > score
+            bst_train_score = score;
             bst_train_idx = ii;
         end
         
         if isempty(bst_holdout_score) || (isfield(XXX{end}, 'score_test_corr') && ...
-                                        bst_holdout_score < XXX{end}.score_test_corr)
+                                        bst_holdout_score > XXX{end}.score_test_corr)
             bst_holdout_score = XXX{end}.score_test_corr; % FIXME: Unfortunate Special case!
             bst_holdout_idx = ii;
         end
@@ -189,8 +190,8 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
     end
     
     % Compute the performance from here to the end
-    calc_xxx(idx);
-    score = META.perf_metric();
+    calc_xxx(idx);    
+    [score, ~] = META.perf_metric();
     
     phi_jacks = cell2mat(cellfun(@pack_fittables, stack_jack, ...
                                  'UniformOutput', false));
@@ -233,13 +234,14 @@ function [best_sparsity, best_phi] = linear_search ()
                                 log10(sparsity_weight_max), ... 
                                 n_sparsity_loops);
 	
-    best_score = META.perf_metric();
+    % Compute non-sparsity weighted starting point
+    [best_score, ~] = META.perf_metric();
     best_phi = phi_init;
     
     for ii = 1:length(sparsity_weights)        
         META.sparsity_weight = sparsity_weights(ii);
         [score, phi] = calc_jackknifed_prediction_score();
-        if score > best_score
+        if score < best_score
             best_score = score;
             best_phi = phi;
             best_sparsity = sparsity_weights(ii);
