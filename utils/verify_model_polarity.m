@@ -36,15 +36,6 @@ for kk = 1:length(firmod_idxs)
     xs = D(:,1);
     ys = D(:,2);
     
-%     % Maybe filtering will help remove outliers?
-% 	winsize = ceil(length(ys) / 4);
-%     if mod(winsize, 2) == 1
-%         winsize = winsize + 1;
-%     end
-%     gf = gausswin(winsize);
-%     gf = gf / sum(gf);
-%     %x = filter(gf, 1, xs);
-%     y = filter(gf, 1, ys);    
     idx10 = ceil(length(ys) / 20);
     y1 = mean(ys(1:idx10));
     y2 = mean(ys(end-idx10:end));
@@ -54,43 +45,7 @@ for kk = 1:length(firmod_idxs)
             STACK{idx}{aa}.coefs = - STACK{idx}{aa}.coefs;
         end
     end
-    
-    % Possible 4th attempt: Find the index of the peak point
-    % If it is to the 'left' of the center of the range, flip?
-    
-    % Debug crap
-    figure; plot(xs, ys, 'b.');
-    figure; imagesc(STACK{idx}{1}.coefs);
-    ca = caxis;
-    lim = max(abs(ca));
-    caxis([-lim, +lim]);
-    keyboard
-    
-    % OLD way wasn't sufficiently reliable: just linear isn't enough?
-    % P = polyfit(D(:,1),D(:,2), 1);
-    % if (P(1) < 0)
-    %     for aa = 1:length(STACK{idx})
-    %         STACK{idx}{aa}.coefs = - STACK{idx}{aa}.coefs;
-    %     end
-    % end
-    
-    % Another way: try to fit a sigmoid to the curve 
-%     xs = D(:,1);
-%     ys = D(:,2);
-%     phi_init1 = [mean(xs), var(xs), 0.5*(max(xs)-min(xs)), 0]; 
-%     phi_init2 = [- mean(xs), var(xs), 0.5*(max(xs)-min(xs)), 0];    
-%     opts = optimset('Display','off');
-%     [phi_best1, rn1] = lsqcurvefit(@nl_sigmoid, ...
-%                            phi_init1, xs, ys, [], [], opts);
-%     [phi_best2, rn2] = lsqcurvefit(@nl_sigmoid, ...
-%                            phi_init2, xs, ys, [], [], opts);
-%     if (rn2 < rn1)
-%         for aa = 1:length(STACK{idx})
-%             STACK{idx}{aa}.coefs = - STACK{idx}{aa}.coefs;
-%         end
-%     end   
-    
-    
+        
     calc_xxx(idx); 
     
 end
