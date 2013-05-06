@@ -11,6 +11,7 @@ global XXX META STACK;
 
 if ~isfield(META, 'sparsity_weight')
     mse = XXX{end}.score_train_mse; 
+    penalty = 0;
 else    
     [fir_mods, fir_idxs] = find_modules(STACK, 'fir_filter');
     sparsities = [];

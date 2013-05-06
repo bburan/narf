@@ -104,17 +104,23 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
             sigs = fieldnames(XXX{fit_start_depth}.dat.(sf));
             for ss = 1:length(sigs),
                 jackidx = floor(linspace(1, 1+size(XXX{fit_start_depth}.dat.(sf).(sigs{ss}), 1), n_jacks+1));
-                
+    
                 % Copy the training set data to the fake test set
                 XXX{fit_start_depth}.dat.(nsf).(sigs{ss}) = XXX{fit_start_depth}.dat.(sf).(sigs{ss});
-                
-                % NAN out the held-out data in the training set stimfile
-                XXX{fit_start_depth}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:) = NaN;
-                
-                % Nan out everything but the held-out data in the test set                
-                mask = ones(size(XXX{fit_start_depth}.dat.(sf).(sigs{ss})));
-                mask(jackidx(jj):jackidx(jj+1)-1,:,:) = 0;
-                XXX{fit_start_depth}.dat.(nsf).(sigs{ss})(mask>0) = NaN;
+    
+                % FIXME: This IF statement is a hack that is not generalizable!!!
+                % I am NANing out everything in the respavg but not in
+                % other signals because doing just the respavg avoids creating gaps in the
+                % prediction caused by FIR filter passing over NANs
+                if strcmp(sigs{ss}, 'respavg')
+                    % NAN out the held-out data in the training set stimfile
+                    XXX{fit_start_depth}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:) = NaN;
+    
+                    % Nan out everything but the held-out data in the test set                
+                    mask = ones(size(XXX{fit_start_depth}.dat.(sf).(sigs{ss})));
+                    mask(jackidx(jj):jackidx(jj+1)-1,:,:) = 0;
+                    XXX{fit_start_depth}.dat.(nsf).(sigs{ss})(mask>0) = NaN;
+                end
             end
         end
         
@@ -135,16 +141,16 @@ function [score, phi_jacked] = calc_jackknifed_prediction_score()
 %     sel = [];    
 %     sel.chan_idx = 1;
 %     sel.stim_idx = 1;
-%     for ii = 1:n_jacks
+     for ii = 1:n_jacks
 %         %sel.stimfile = xxx_jack{ii}{5}.training_set{ii};
 %         %figure; stack_jack{ii}{4}{1}.plot_fns{1}.fn(sel, stack_jack{ii}(1:4), xxx_jack{ii}(1:5));
 %         %figure; stack_jack{ii}{4}{1}.plot_fns{1}.fn(sel, stack_jack{ii}(1:4), xxx_jack{ii}(1:5));
 %         
-%         STACK = stack_jack{ii};
-%         XXX = xxx_jack{ii};
-%         plot_model_summary();       
+         STACK = stack_jack{ii};
+         XXX = xxx_jack{ii};
+         plot_model_summary();       
 %         %narf_modelpane
-%     end
+     end     
           
     % Compute which jackknifes had the best training and holdout scores
     bst_train_score = [];
