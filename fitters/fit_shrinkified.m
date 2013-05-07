@@ -7,7 +7,7 @@ global STACK XXX META;
 n_iters = 0;
 
 if ~exist('fitter', 'var')
-    fitter = @(~) fit_boost(1);
+    fitter = fit_boost;
 end
 
 if ~exist('n_jacks', 'var')
@@ -15,7 +15,7 @@ if ~exist('n_jacks', 'var')
 end
 
 if ~exist('n_shrink_loops', 'var')
-    n_shrink_loops = 40;
+    n_shrink_loops = 100;
 end
 
 phi_init = pack_fittables(STACK);
@@ -130,9 +130,7 @@ function [stack_jack, xxx_jack] = calc_jackknifes()
     STACK = cached_stack;    
 end
 
-function [holdout_score, phi_jacked] = shrink_and_predict(stack_jack, xxx_jack, shrink_amount)    
-    fprintf('Shrinking parameters by %e\n', shrink_amount)
-      
+function [holdout_score, phi_jacked] = shrink_and_predict(stack_jack, xxx_jack, shrink_amount)           
     phi_jacks = cell2mat(cellfun(@pack_fittables, stack_jack, ...
                                  'UniformOutput', false));
     m = length(phi_init);
@@ -144,18 +142,19 @@ function [holdout_score, phi_jacked] = shrink_and_predict(stack_jack, xxx_jack, 
         STACK = stack_jack{jj};
         XXX = xxx_jack{jj};
         
-        jphi = pack_fittables();
+        jphi = pack_fittables(STACK);        
+        jphi = real(jphi .* sqrt(1 - shrink_amount*((sqrt(sigma_sq) / sqrt(n_jacks)) ./ jphi).^2));
+        jphi(isnan(jphi)) = 0;
         
-        keyboard;
-        
-        scalefactor = 1 - ((sqrt(sigma_sq) / sqrt(n_jacks)) ./ jphi).^2;
-        scalefactor(scalefactor < 0) = 0;
-        jphi = jphi .* sqrt(shrink_amount);
+        %scalefactor = 1 - ((sqrt(sigma_sq) / sqrt(n_jacks)) ./ jphi).^2;
+        %scalefactor(isnan(scalefactor)) = 0;
+        %scalefactor(scalefactor < 0) = 0;
+        %jphi = jphi .* sqrt(shrink_amount);
         
         unpack_fittables(jphi);
         calc_xxx(fit_start_depth); 
         
-        stack_jack{jj} = STACK
+        stack_jack{jj} = STACK;
         xxx_jack{jj} = XXX;
     end
     
@@ -181,7 +180,7 @@ function [holdout_score, phi_jacked] = shrink_and_predict(stack_jack, xxx_jack, 
     calc_xxx(idx);    
     [holdout_score, ~] = META.perf_metric();
     
-    fprintf('Holdout Performance was: %e\n', holdout_score);
+    fprintf('Holdout_score/shrink_amount: %e / %e\n', holdout_score, shrink_amount);
     
     % Finally, compute the average of the shrunk jackknifes
     phi_jackshrunk = cell2mat(cellfun(@pack_fittables, stack_jack, ...
@@ -194,13 +193,13 @@ end
 % OUTER LOOP FUNCTIONS
 
 % Sparsity search constants
-shrink_max = 10^3;
-shrink_min = 10^-3;
+shrink_max = 10^5;
+shrink_min = 10^-5;
 
 function [best_phi] = linear_search ()
     shrinkage = logspace(log10(shrink_min), ...
-                                log10(shrink_max), ... 
-                                n_shrink_loops);
+                         log10(shrink_max), ... 
+                         n_shrink_loops);
 	
 	META.sparsity_weight = 0.0;
    
@@ -217,7 +216,7 @@ function [best_phi] = linear_search ()
         if isnan(best_holdout_score) || holdout_score < best_holdout_score
             best_holdout_score = holdout_score;
             best_phi = shrunk_phi_jack_avg;
-        end        
+        end
     end
 end
 
