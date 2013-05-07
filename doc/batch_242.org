@@ -3,8 +3,6 @@
  | Cell ID    | NL     | Fitter  | MSE# |  R^2 |    S | Satu-   |Right         | Left     | Category     | Notes                 |
  |            |        |         |      |      |      | ration  |              |          |              |                       |
  |------------+--------+---------+------+------+------+---------+--------------+----------+--------------+-----------------------|
- |            |        |         |      |      |      |         |              |          |              |                       |
- |            |        |         |      |      |      |         |              |          |              |                       |
  | por024b-b1 | npnfl3 | boost   |    5 | .258 | 5.25 | Low     | +2,-7        | +1,-7    | Simul/Offset | Depression candidate. |
  | por024b-b2 | senl   | sb      | none | .386 | 12.4 | Low     | -4,+9        | UGLY     |              |                       |
  | por024b-c1 | npnl   | sb      | none | .493 | 10.3 | Sigmoid | +2,-6        | +2       | Simul        |                       |
@@ -39,3 +37,58 @@
  | por028d-c1 | senl   | fmin    |    4 | .012 | 1.94 | Linear  | -1           | none     |              |                       |
  | por028d-c2 | senl   | boost   |    5 | .356 | 3.17 | Low     | -11          | none     |              |                       |
  | por028d-d1 | npnl   | boost   |    4 | .311 | 5.66 | Sigmoid | +2,-6,-9     | +2,-11   | Simul/Offset | Depression candidate  |
+
+* Experiment done May 6th, 2013:
+  Goal was to see whether or not the new sp#boost keywords are beating out boost. 
+  
+  When starting with INITRC:
+
+  | cellid     | BoostR | sp# R | best SP | Winner    | Sp#R (init0) | Best SP(Init0 |
+  |------------+--------+-------+---------+-----------+--------------+---------------|
+  | por026a-b1 | INCOMP |       |         |           |              |               |
+  | por026b-d1 | INCOMP |       |         |           |              |               |
+  | por026c-b2 |   CRAP |       |         |           |              |               |
+  | por026c-c1 | INCOMP |       |         |           |              |               |
+  | por027a-a1 | INCOMP |       |         |           |              |               |
+  | por027b-b1 | INCOMP |       |         |           |              |               |
+  | por028d-a2 | INCOMP |       |         |           |              |               |
+  | por028d-c1 |   CRAP |       |         |           |              |               |
+  | por028d-d1 | INCOMP |       |         |           |              |               |
+  | por028b-d1 |   0.54 |  0.50 | sp1     | boost     |              |               |
+  | por028b-c1 |   0.26 |  0.26 | sp5     | sp5       |              |               |
+  | por026b-c2 |   0.23 |  0.17 | sp1     | boost     |         0.19 | sp3           |
+  | por028b-b1 |   0.19 |  0.21 | sp5     | sp5       |         0.20 | sp1           |
+  | por027a-b1 |   0.18 |  0.17 | sp4     | sp2_init0 |         0.23 | sp2           |
+  | por026b-c1 |   0.24 |  0.25 | sp1     | sp1       |         0.24 | sp1           |
+  | por026b-a2 |   0.23 |  0.23 | sp3     | sp3_init0 |         0.24 | sp3           |
+  | por026b-b2 |   0.24 |  0.25 | sp1     | sp3_init0 |         0.26 | sp3           |
+  | por025a-c2 |   0.25 |  0.26 | sp4     | sp4       |         0.26 | sp4           |
+  | por026a-d1 |   0.23 |  0.25 | sp4     | sp4_init0 |         0.27 | sp4           |
+  | por026b-b1 |   0.27 |  0.28 | sp5     | sp3_init0 |         0.29 | sp3           |
+  | por026b-a1 |   0.30 |  0.30 | sp3     | sp3       |         0.30 | sp2           |
+  | por025a-d1 |   0.31 |  0.31 | sp3     | sp1_init0 |         0.32 | sp1           |
+  | por025a-b1 |   0.32 |  0.34 | sp4     | sp4       |         0.32 | sp4           |
+  | por027b-c1 |   0.36 |  0.33 | sp1     | boost     |         0.33 | sp2           |
+  | por027a-c1 |   0.42 |  0.42 | sp4     | sp5_init0 |         0.42 | sp5           |
+  | por026c-d1 |   0.43 |  0.44 | sp3     | sp3       |         0.43 | sp3           |
+  | por025a-c1 |   0.48 |  0.48 | sp5     | sp5       |         0.47 | sp3           |
+  | por024b-b1 |   0.48 |  0.51 | sp2     | sp2       |         0.49 | sp1           |
+  | por028d-c2 |   0.47 |  0.40 | sp5     | boost     |         0.53 | sp2           |
+  | por024b-b2 |   0.60 |  0.59 | sp3     | boost     |         0.58 | sp1           |
+  | por028d-a1 |   0.61 |  0.61 | sp4     | sp3_init0 |         0.61 | sp3           |
+  | por024b-c1 |   0.69 |  0.68 | sp4     | boost     |         0.69 | sp2           |
+  | por026c-b1 |   0.73 |  0.73 | sp2     | boost     |         0.72 | sp2           |
+  | por028d-b1 |   0.74 |  0.74 | sp2     | sp3_init0 |         0.75 | sp3           |
+  | por026c-a1 |   0.80 |  0.80 | sp2     | boost     |         0.79 | sp2           |
+
+** Rough Conclusions for INITRC
+   1. Plain Old Boosting is still the champ. 
+   2. Sparsified stuff wins for R<0.3, Plain Old Boosting wins above that.
+   3. SP4 is very, very weakly the best of the SPs? Maybe?
+
+** Rough Conclusions for INITI0
+   1. SP3_init0 is doing actually pretty dang well. 
+   2. Init0 is better than initrc for these shrinkage things
+      (it's probably a result of qboost not having enough iterations)
+
+

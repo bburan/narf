@@ -185,8 +185,13 @@ uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
         for tt = 1:length(toks)
             t = toks{tt};
             
-            if any(cellfun(@(x) isempty(strfind(x, t)), ret))
-                % If any are empty, add it
+            tmp={};
+            for rr = 1:length(ret)
+                garr = tokenize_string(ret{rr}); 
+                tmp{rr} = [garr{:}];                
+            end
+            
+            if ~all(cellfun(@(x) any(strcmp(x, t)), tmp))
                 disptoks{end+1} = t;
             end
         end

@@ -252,6 +252,7 @@ function [best_sparsity, best_phi] = linear_search ()
     % Compute non-sparsity weighted starting point
     [best_score, ~] = META.perf_metric();
     best_phi = phi_init;
+    best_sparsity = 0.0;
     
     for ii = 1:length(sparsity_weights)        
         META.sparsity_weight = sparsity_weights(ii);
