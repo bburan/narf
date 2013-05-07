@@ -7,7 +7,7 @@ global STACK XXX META;
 n_iters = 0;
 
 if ~exist('fitter', 'var')
-    fitter = fit_boost;
+    fitter = @fit_boost;
 end
 
 if ~exist('n_jacks', 'var')
