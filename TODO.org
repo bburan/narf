@@ -95,6 +95,10 @@
   7. [ ] Write a crash course guide on using NARF
   8. [ ] http://www.mathworks.com/matlabcentral/fileexchange/27662-evolve-top-and-bottom-envelopes-for-time-signals-i-e
 
+* Verification
+  - Do DB contents and Filesystem still sync up?
+ 
+
 * DEFERRED
 ** Stephen's boosting verification
   1. A Shrinking step size is stupid simple. Is there a better way?
