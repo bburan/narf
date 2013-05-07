@@ -1,4 +1,4 @@
-function msen2()
+function mses1()
 
 global MODULES META;
 
@@ -6,4 +6,4 @@ append_module(MODULES.mean_squared_error.mdl(struct('output', 'score')));
 append_module(MODULES.correlation);
 
 META.perf_metric = @pm_mse;
-META.sparsity_weight = 10^2;
+META.sparsity_weight = 10^4;
