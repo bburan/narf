@@ -1,3 +1,3 @@
-function shboo2()
+function shboo3()
 
-fit_shrinkified(@fit_lsq, 20, 200, true);
+fit_shrinkified3(@fit_lsq, 20, 200, true);

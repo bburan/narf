@@ -94,39 +94,39 @@
 
 * Same for SCHBOO
 
-  | cellid     | BoostR | Schboo | Schboo Wins? |
-  |------------+--------+--------+--------------|
-  | por024b-b2 |   0.60 |        |              |
-  | por024b-c1 |   0.69 |        |              |
-  | por026a-b1 | INCOMP |   0.45 |              |
-  | por026b-a1 |   0.30 |   0.31 |              |
-  | por026b-d1 | INCOMP |   0.26 |              |
-  | por026c-c1 | INCOMP |        |              |
-  | por027a-a1 | INCOMP |        |              |
-  | por027b-b1 | INCOMP |        |              |
-  | por027b-c1 |   0.36 |        |              |
-  | por028b-b1 |   0.19 |        |              |
-  | por028b-c1 |   0.26 |        |              |
-  | por028b-d1 |   0.54 |        |              |
-  | por028d-a1 |   0.61 |        |              |
-  | por028d-a2 | INCOMP |        |              |
-  | por028d-c1 |   CRAP |        |              |
-  | por028d-c2 |   0.47 |        |              |
-  | por028d-d1 | INCOMP |        |              |
-  | por024b-b1 |   0.48 |   0.28 | FAIL         |
-  | por025a-c1 |   0.48 |   0.23 | FAIL         |
-  | por026a-d1 |   0.23 |   0.18 | FAIL         |
-  | por026b-c1 |   0.24 |   0.18 | FAIL         |
-  | por026b-c2 |   0.23 |   0.13 | FAIL         |
-  | por026c-a1 |   0.80 |   0.66 | FAIL         |
-  | por026c-b1 |   0.73 |   0.57 | FAIL         |
-  | por026c-d1 |   0.43 |   0.19 | FAIL         |
-  | por028d-b1 |   0.74 |   0.58 | FAIL         |
-  | por025a-b1 |   0.32 |   0.43 | WIN          |
-  | por025a-c2 |   0.25 |   0.31 | WIN          |
-  | por025a-d1 |   0.31 |   0.36 | WIN          |
-  | por026b-a2 |   0.23 |   0.23 | WIN          |
-  | por026b-b1 |   0.27 |   0.30 | WIN          |
-  | por026b-b2 |   0.24 |   0.31 | WIN          |
-  | por027a-b1 |   0.18 |   0.28 | WIN          |
-  | por027a-c1 |   0.42 |   0.17 | FAIL         |
+  | cellid     | Boost | Shboo | Shboo2 | Winner? |
+  |------------+-------+-------+--------+---------|
+  | por024b-b1 |  0.48 |  0.28 |   0.23 | Boost   |
+  | por024b-c1 |  0.69 |  0.48 |   0.49 | Boost   |
+  | por025a-c1 |  0.48 |  0.23 |   0.24 | Boost   |
+  | por026a-d1 |  0.23 |  0.18 |   0.19 | Boost   |
+  | por026b-c1 |  0.24 |  0.18 |   0.22 | Boost   |
+  | por026b-c2 |  0.23 |  0.13 |   0.20 | Boost   |
+  | por026b-d1 |  0.26 |  0.26 |   0.26 | Boost   |
+  | por026c-a1 |  0.80 |  0.66 |   0.68 | Boost   |
+  | por026c-b1 |  0.73 |  0.57 |   0.58 | Boost   |
+  | por026c-c1 |  0.50 |  0.35 |   0.29 | Boost   |
+  | por026c-d1 |  0.43 |  0.19 |   0.18 | Boost   |
+  | por027a-c1 |  0.42 |  0.17 |   0.16 | Boost   |
+  | por027b-b1 |  0.44 |  0.33 |   0.31 | Boost   |
+  | por028b-c1 |  0.26 |  0.22 |   0.23 | Boost   |
+  | por028b-d1 |  0.54 |  0.38 |   0.35 | Boost   |
+  | por028d-a1 |  0.61 |  0.33 |   0.39 | Boost   |
+  | por028d-a2 |  0.53 |  0.27 |   0.26 | Boost   |
+  | por028d-b1 |  0.74 |  0.58 |   0.55 | Boost   |
+  | por028d-c2 |  0.47 |  0.24 |   0.16 | Boost   |
+  | por028d-d1 |  0.53 |  0.24 |   0.09 | Boost   |
+  | por025a-c2 |  0.25 |  0.31 |   0.28 | Shboo   |
+  | por026b-b1 |  0.27 |  0.30 |   0.29 | Shboo   |
+  | por026b-b2 |  0.24 |  0.31 |   0.30 | Shboo   |
+  | por028b-b1 |  0.19 |  0.22 |   0.15 | Shboo   |
+  | por025a-d1 |  0.31 |  0.36 |   0.33 | Shboo   |
+  | por024b-b2 |  0.60 |  0.69 |   0.76 | Shboo2  |
+  | por025a-b1 |  0.32 |  0.43 |   0.44 | Shboo2  |
+  | por026a-b1 |  0.23 |  0.45 |   0.45 | Shboo2  |
+  | por026b-a1 |  0.30 |  0.31 |   0.33 | Shboo2  |
+  | por026b-a2 |  0.23 |  0.23 |   0.26 | Shboo2  |
+  | por027a-a1 |  0.08 |  0.14 |   0.16 | Shboo2  |
+  | por027a-b1 |  0.18 |  0.28 |   0.30 | Shboo2  |
+  | por027b-c1 |  0.36 |  0.31 |   0.39 | Shboo2  |
+

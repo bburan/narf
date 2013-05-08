@@ -1,11 +1,3 @@
-* Schboo
-  Schboo is working properly, just not performing well.
-  Should I be taking the simple mean of the shrunk jackknifes?
-  Alternatives:
-  - Instead of mean, weight each according to it's holdout predictive power
-  - Use LSQ instead of boosting
-  - Use more jackknifes  
-
 * Actions
   1. [ ] Repair Narf Browser
 	 - [ ] Sparsity is not going into the DB
@@ -30,14 +22,13 @@
 	 - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
 	       Use grayish/blackish 
   7. [ ] jackknifing needs to work with other performance metrics?
-  8. Profile the time spent during boosting and look for optimizations:
+  8. [ ] Profile the time spent during boosting and look for optimizations:
      - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
      - Write a FIR speed booster, which uses N vectors (one per FIR coef, which are a product with the stimulus). Each boost step, only 1 coef need be updated.
      - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
 
 * Things to add again:
   - [ ] nonl keyword
-  - [ ] 
 
 * Irregularities that need fixing
   - Not all nonlinearities can accomodate NaNs in their code 
