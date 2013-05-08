@@ -1,6 +1,6 @@
-function [termcond, n_iters] = fit_shrinkified(fitter, n_jacks, n_shrink_loops)
-% [termcond, n_iters] = fit_shrinkified(fitter, n_jacks, n_shrink_loops)
-%
+function [termcond, n_iters] = fit_shrinkified(fitter, n_jacks, n_shrink_loops, weighted_avg)
+% [termcond, n_iters] = fit_shrinkified(fitter, n_jacks, n_shrink_loops,
+% weighted_avg)
 
 global STACK XXX META;
 
@@ -14,8 +14,12 @@ if ~exist('n_jacks', 'var')
     n_jacks = 10;
 end
 
-if ~exist('n_shrink_loops', 'var')
+if ~exist('n_shrink_loops', 'var')   
     n_shrink_loops = 100;
+end
+
+if ~exist('weighted_avg', 'var')
+    weighted_avg = false;
 end
 
 phi_init = pack_fittables(STACK);
@@ -185,8 +189,27 @@ function [holdout_score, phi_jacked] = shrink_and_predict(stack_jack, xxx_jack, 
     % Finally, compute the average of the shrunk jackknifes
     phi_jackshrunk = cell2mat(cellfun(@pack_fittables, stack_jack, ...
                                  'UniformOutput', false));
-    phi_jacked = mean(phi_jackshrunk, 2);
-    
+                             
+    if weighted_avg
+        weights = cell2mat(cellfun(@(x) x{end}.score_test_mse, xxx_jack, ...
+                                 'UniformOutput', false))   
+        phi_jacked = phi_jackshrunk * weights';
+    else
+        phi_jacked = mean(phi_jackshrunk, 2);
+    end
+%     
+%      for ii = 1:n_jacks
+% %         %sel.stimfile = xxx_jack{ii}{5}.training_set{ii};
+% %         %figure; stack_jack{ii}{4}{1}.plot_fns{1}.fn(sel, stack_jack{ii}(1:4), xxx_jack{ii}(1:5));
+% %         %figure; stack_jack{ii}{4}{1}.plot_fns{1}.fn(sel, stack_jack{ii}(1:4), xxx_jack{ii}(1:5));
+% %         
+%          STACK = stack_jack{ii};
+%          XXX = xxx_jack{ii};
+%          plot_model_summary();       
+% %         %narf_modelpane
+%      end     
+%      keyboard;
+     
 end
 
 % ---------------------------------------------------------------------
