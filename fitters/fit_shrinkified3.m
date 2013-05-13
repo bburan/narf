@@ -141,18 +141,18 @@ function [holdout_score, phi_jacked] = shrink_and_predict(stack_jack, xxx_jack, 
     XXX = cached_xxx;
     STACK = cached_stack;    
     % Replace the training set with the held-out data
-    for ii = 1:length(XXX{fit_start_depth}.training_set)
-        sf = XXX{fit_start_depth}.training_set{ii};
-        nsf = [sf '_holdout'];
-        sigs = fieldnames(XXX{fit_start_depth}.dat.(sf));
-        for ss = 1:length(sigs),
-            jackidx = floor(linspace(1, 1+size(XXX{fit_start_depth}.dat.(sf).(sigs{ss}), 1), n_jacks+1));
-            for jj = 1:n_jacks,
-                % Beware all ye who look into the eye of madness:
-                XXX{fit_start_depth}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:) = xxx_jack{jj}{fit_start_depth}.dat.(nsf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:);
-            end
-        end
-    end
+%     for ii = 1:length(XXX{fit_start_depth}.training_set)
+%         sf = XXX{fit_start_depth}.training_set{ii};
+%         nsf = [sf '_holdout'];
+%         sigs = fieldnames(XXX{fit_start_depth}.dat.(sf));
+%         for ss = 1:length(sigs),
+%             jackidx = floor(linspace(1, 1+size(XXX{fit_start_depth}.dat.(sf).(sigs{ss}), 1), n_jacks+1));
+%             for jj = 1:n_jacks,
+%                 % Beware all ye who look into the eye of madness:
+%                 XXX{fit_start_depth}.dat.(sf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:) = xxx_jack{jj}{fit_start_depth}.dat.(nsf).(sigs{ss})(jackidx(jj):jackidx(jj+1)-1,:,:);
+%             end
+%         end
+%     end
     
     m = length(phi_init);
     mu = mean(phi_jacks, 2);

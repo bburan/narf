@@ -28,7 +28,8 @@ mdlcount = 0;
 
 for token_idx = 1:length(freetokens)
     
-    models = db_get_models(batch, cellid, cat(2, holdtokens, freetokens{token_idx}));
+    models = db_get_models(batch, cellid, cat(2, holdtokens, freetokens{token_idx}));   
+    
     mdlcount = mdlcount + length(models);
     
     vals = [models(:).(ordinate)];
@@ -45,6 +46,9 @@ for token_idx = 1:length(freetokens)
     for ii = 1:n_pts;
         y(ii, token_idx) = sum(vals < x(ii, token_idx) ) / n;
     end
+    
+    % This is just so the number is listed in the legend:
+    freetokens{token_idx} = [freetokens{token_idx} '(' num2str(length(models)) ')'];
 end
 
 fh = figure;
@@ -56,4 +60,4 @@ plot(x, y);
 xlabel(ordinate, 'Interpreter', 'none');
 ylabel(['Cumulative fraction of models with ' ordinate ' > value'], 'Interpreter', 'none')
 legend(freetokens, 'Interpreter', 'none');
-title(['Performance of Tokens (# Models: ' num2str(mdlcount) ')']);
+title(['Performance of Tokens (# Models: ' num2str(mdlcount) ') \{' write_readably(holdtokens) '\}']);
