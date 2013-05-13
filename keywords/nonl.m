@@ -2,4 +2,4 @@ function nonl()
 
 global MODULES;
 
-append_module(MODULES.passthru);
+% Don't need to append anything, not even a passthrough

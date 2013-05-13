@@ -1,0 +1,8 @@
+#+TITLE: Where do we go from here?
+
+* Questions we have asked and answered
+** What is best compressor?
+
+
+* Questions we have not yet addressed:
+** What estimates do we get with a 200Hz envelope stimulus?

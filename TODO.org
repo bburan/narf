@@ -29,6 +29,11 @@
 
 * Things to add again:
   - [ ] nonl keyword
+  - Try nonl and some other logarithmic compressors once more
+  
+* Why an FPGA would kick ass for this stuff
+  - You could try all 300 coefficient boosting steps simultaneously
+  - This is an embarassingly parallel problem
 
 * Irregularities that need fixing
   - Not all nonlinearities can accomodate NaNs in their code 
