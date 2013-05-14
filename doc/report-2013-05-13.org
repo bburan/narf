@@ -1,22 +1,28 @@
 #+TITLE: Where do we go from here?
 
-* Questions we have asked and answered
-** What is best compressor?
-
-** Without 
-
-** Is MSE picking up the MSES tokens during the cumulative curve plots?
-   No. As long as you 
-
 * Questions we have not yet addressed:
 ** What estimates do we get with a 200Hz envelope stimulus?
+   In progress.
+
 ** Does jackknifing work better without a) post FIR normalization and b) a NPNL?
-** Should we Drop first second of stimuli to improve stationarity?
+   In progress. 
+
 ** Run the sp#boost and shboo# fitters again without NPNLs (nonl)
-** FIR filter keyword without post-FIR normalization 
+   In progress
+
+** Should we drop first second of stimuli to improve stationarity?
+   Not a bad idea. Let's call it env100d1s (for drop 1 sec).
+
 ** Better searching/sorting of semi-arbitrary keyword 
-
-** Should we do a code review of Shboo3 to make sure I did it right?
-
    
 * Things to tackle next:
+  1. Make it so my edits don't mess up queued work
+  2. Do a code review of shboo3
+
+* Questions we have asked and answered
+** What is best compressor?
+   log2b. But maybe that has changed!
+
+** Is MSE picking up the MSES tokens during the cumulative curve plots?
+   No. But it will pick up extra tokens if you aren't careful about locking down all the other 'hold' tokens.
+

@@ -54,26 +54,26 @@
   | por028d-a2 | INCOMP |       |         |           |              |               |
   | por028d-c1 |   CRAP |       |         |           |              |               |
   | por028d-d1 | INCOMP |       |         |           |              |               |
-  | por028b-d1 |   0.54 |  0.50 | sp1     | boost     |              |               |
-  | por028b-c1 |   0.26 |  0.26 | sp5     | sp5       |              |               |
   | por026b-c2 |   0.23 |  0.17 | sp1     | boost     |         0.19 | sp3           |
-  | por028b-b1 |   0.19 |  0.21 | sp5     | sp5       |         0.20 | sp1           |
   | por027a-b1 |   0.18 |  0.17 | sp4     | sp2_init0 |         0.23 | sp2           |
-  | por026b-c1 |   0.24 |  0.25 | sp1     | sp1       |         0.24 | sp1           |
+  | por028b-b1 |   0.19 |  0.21 | sp5     | sp5       |         0.20 | sp1           |
   | por026b-a2 |   0.23 |  0.23 | sp3     | sp3_init0 |         0.24 | sp3           |
+  | por026b-c1 |   0.24 |  0.25 | sp1     | sp1       |         0.24 | sp1           |
   | por026b-b2 |   0.24 |  0.25 | sp1     | sp3_init0 |         0.26 | sp3           |
-  | por025a-c2 |   0.25 |  0.26 | sp4     | sp4       |         0.26 | sp4           |
   | por026a-d1 |   0.23 |  0.25 | sp4     | sp4_init0 |         0.27 | sp4           |
+  | por028b-c1 |   0.26 |  0.26 | sp5     | sp5       |              |               |
+  | por025a-c2 |   0.25 |  0.26 | sp4     | sp4       |         0.26 | sp4           |
   | por026b-b1 |   0.27 |  0.28 | sp5     | sp3_init0 |         0.29 | sp3           |
   | por026b-a1 |   0.30 |  0.30 | sp3     | sp3       |         0.30 | sp2           |
   | por025a-d1 |   0.31 |  0.31 | sp3     | sp1_init0 |         0.32 | sp1           |
-  | por025a-b1 |   0.32 |  0.34 | sp4     | sp4       |         0.32 | sp4           |
   | por027b-c1 |   0.36 |  0.33 | sp1     | boost     |         0.33 | sp2           |
+  | por025a-b1 |   0.32 |  0.34 | sp4     | sp4       |         0.32 | sp4           |
+  | por028d-c2 |   0.47 |  0.40 | sp5     | boost     |         0.53 | sp2           |
   | por027a-c1 |   0.42 |  0.42 | sp4     | sp5_init0 |         0.42 | sp5           |
   | por026c-d1 |   0.43 |  0.44 | sp3     | sp3       |         0.43 | sp3           |
   | por025a-c1 |   0.48 |  0.48 | sp5     | sp5       |         0.47 | sp3           |
+  | por028b-d1 |   0.54 |  0.50 | sp1     | boost     |              |               |
   | por024b-b1 |   0.48 |  0.51 | sp2     | sp2       |         0.49 | sp1           |
-  | por028d-c2 |   0.47 |  0.40 | sp5     | boost     |         0.53 | sp2           |
   | por024b-b2 |   0.60 |  0.59 | sp3     | boost     |         0.58 | sp1           |
   | por028d-a1 |   0.61 |  0.61 | sp4     | sp3_init0 |         0.61 | sp3           |
   | por024b-c1 |   0.69 |  0.68 | sp4     | boost     |         0.69 | sp2           |
@@ -86,7 +86,7 @@
    2. Sparsified stuff wins for R<0.3, Plain Old Boosting wins above that.
    3. SP4 is very, very weakly the best of the SPs? Maybe?
 
-** Rough Conclusions for INITI0
+** Rough Conclusions for INIT0
    1. SP3_init0 is doing actually pretty dang well. 
    2. Init0 is better than initrc for these shrinkage things
       (it's probably a result of qboost not having enough iterations)
@@ -94,44 +94,92 @@
 
 * Same for SCHBOO
 
-  | cellid     | Boost | Shboo | Shboo2 | Shboo3 | Winner? |
-  |------------+-------+-------+--------+--------+---------|
-  | por024b-b1 |  0.48 |  0.28 |   0.23 |   0.48 | Boost   |
-  | por024b-c1 |  0.69 |  0.48 |   0.49 |   0.67 | Boost   |
-  | por025a-c1 |  0.48 |  0.23 |   0.24 |   0.47 | Boost   |
-  | por026b-c2 |  0.23 |  0.13 |   0.20 |   0.19 | Boost   |
-  | por026c-a1 |  0.80 |  0.66 |   0.68 |   0.79 | Boost   |
-  | por026c-b1 |  0.73 |  0.57 |   0.58 |   0.71 | Boost   |
-  | por026c-c1 |  0.50 |  0.35 |   0.29 |   0.49 | Boost   |
-  | por026c-d1 |  0.43 |  0.19 |   0.18 |   0.43 | Boost   |
-  | por027a-c1 |  0.42 |  0.17 |   0.16 |   0.40 | Boost   |
-  | por027b-b1 |  0.44 |  0.33 |   0.31 |   0.44 | Boost   |
-  | por028b-c1 |  0.26 |  0.22 |   0.23 |   0.23 | Boost   |
-  | por028b-d1 |  0.54 |  0.38 |   0.35 |   0.52 | Boost   |
-  | por028d-a1 |  0.61 |  0.33 |   0.39 |   0.58 | Boost   |
-  | por028d-a2 |  0.53 |  0.27 |   0.26 |   0.52 | Boost   |
-  | por028d-b1 |  0.74 |  0.58 |   0.55 |   0.73 | Boost   |
-  | por028d-c2 |  0.47 |  0.24 |   0.16 |   0.42 | Boost   |
-  | por028d-d1 |  0.53 |  0.24 |   0.09 |   0.41 | Boost   |
-  | por025a-c2 |  0.25 |  0.31 |   0.28 |   0.24 | Shboo   |
-  | por025a-d1 |  0.31 |  0.36 |   0.33 |   0.31 | Shboo   |
-  | por026b-b1 |  0.27 |  0.30 |   0.29 |   0.27 | Shboo   |
-  | por026b-b2 |  0.24 |  0.31 |   0.30 |   0.24 | Shboo   |
-  | por028b-b1 |  0.19 |  0.22 |   0.15 |   0.16 | Shboo   |
-  | por024b-b2 |  0.60 |  0.69 |   0.76 |   0.56 | Shboo2  |
-  | por025a-b1 |  0.32 |  0.43 |   0.44 |   0.32 | Shboo2  |
-  | por026a-b1 |  0.23 |  0.45 |   0.45 |   0.26 | Shboo2  |
-  | por026b-a1 |  0.30 |  0.31 |   0.33 |   0.31 | Shboo2  |
-  | por026b-a2 |  0.23 |  0.23 |   0.26 |   0.21 | Shboo2  |
-  | por027a-a1 |  0.08 |  0.14 |   0.16 |   0.13 | Shboo2  |
-  | por027a-b1 |  0.18 |  0.28 |   0.30 |   0.11 | Shboo2  |
-  | por027b-c1 |  0.36 |  0.31 |   0.39 |   0.33 | Shboo2  |
-  | por026a-d1 |  0.23 |  0.18 |   0.19 |   0.24 | Shboo3  |
-  | por026b-c1 |  0.24 |  0.18 |   0.22 |   0.25 | Shboo3  |
-  | por026b-d1 |  0.26 |  0.26 |   0.26 |   0.27 | Shboo3  |
-
+  | cellid     | Boost | Shboo | Shboo2 | Shboo3 | Winner? |                       |
+  |------------+-------+-------+--------+--------+---------+-----------------------|
+  | por024b-b1 |  0.48 |  0.28 |   0.23 |   0.48 | Boost   |                       |
+  | por024b-b2 |  0.60 |  0.69 |   0.76 |   0.56 | Shboo2  |                       |
+  | por024b-c1 |  0.69 |  0.48 |   0.49 |   0.67 | Boost   |                       |
+  | por025a-b1 |  0.32 |  0.43 |   0.44 |   0.32 | Shboo2  | Improved without NPNL |
+  | por025a-c1 |  0.48 |  0.23 |   0.24 |   0.47 | Boost   |                       |
+  | por025a-c2 |  0.25 |  0.31 |   0.28 |   0.24 | Shboo   | Improved without NPNL |
+  | por025a-d1 |  0.31 |  0.36 |   0.33 |   0.31 | Shboo   |                       |
+  | por026a-b1 |  0.23 |  0.45 |   0.45 |   0.26 | Shboo2  |                       |
+  | por026a-d1 |  0.23 |  0.18 |   0.19 |   0.24 | Shboo3  |                       |
+  | por026b-a1 |  0.30 |  0.31 |   0.33 |   0.31 | Shboo2  |                       |
+  | por026b-a2 |  0.23 |  0.23 |   0.26 |   0.21 | Shboo2  |                       |
+  | por026b-b1 |  0.27 |  0.30 |   0.29 |   0.27 | Shboo   |                       |
+  | por026b-b2 |  0.24 |  0.31 |   0.30 |   0.24 | Shboo   |                       |
+  | por026b-c1 |  0.24 |  0.18 |   0.22 |   0.25 | Shboo3  |                       |
+  | por026b-c2 |  0.23 |  0.13 |   0.20 |   0.19 | Boost   |                       |
+  | por026b-d1 |  0.26 |  0.26 |   0.26 |   0.27 | Shboo3  |                       |
+  | por026c-a1 |  0.80 |  0.66 |   0.68 |   0.79 | Boost   |                       |
+  | por026c-b1 |  0.73 |  0.57 |   0.58 |   0.71 | Boost   |                       |
+  | por026c-c1 |  0.50 |  0.35 |   0.29 |   0.49 | Boost   |                       |
+  | por026c-d1 |  0.43 |  0.19 |   0.18 |   0.43 | Boost   |                       |
+  | por027a-a1 |  0.08 |  0.14 |   0.16 |   0.13 | Shboo2  |                       |
+  | por027a-b1 |  0.18 |  0.28 |   0.30 |   0.11 | Shboo2  |                       |
+  | por027a-c1 |  0.42 |  0.17 |   0.16 |   0.40 | Boost   |                       |
+  | por027b-b1 |  0.44 |  0.33 |   0.31 |   0.44 | Boost   |                       |
+  | por027b-c1 |  0.36 |  0.31 |   0.39 |   0.33 | Shboo2  |                       |
+  | por028b-b1 |  0.19 |  0.22 |   0.15 |   0.16 | Shboo   |                       |
+  | por028b-c1 |  0.26 |  0.22 |   0.23 |   0.23 | Boost   |                       |
+  | por028b-d1 |  0.54 |  0.38 |   0.35 |   0.52 | Boost   |                       |
+  | por028d-a1 |  0.61 |  0.33 |   0.39 |   0.58 | Boost   |                       |
+  | por028d-a2 |  0.53 |  0.27 |   0.26 |   0.52 | Boost   |                       |
+  | por028d-b1 |  0.74 |  0.58 |   0.55 |   0.73 | Boost   |                       |
+  | por028d-c2 |  0.47 |  0.24 |   0.16 |   0.42 | Boost   |                       |
+  | por028d-d1 |  0.53 |  0.24 |   0.09 |   0.41 | Boost   |                       |
 
 ** Conclusions:
   1. Shboo3 is pretty close to boosting, but doesn't seem to beat it
   2. Shboo1 and Shboo2 don't beat boosting. 
 
+
+* Discussion with Stephen (May 13, 2013)  
+   - Shboo3 has equivalent performance to boosting if there is no nonlinearity, and is /slightly/ more sparse
+     If there is a nonlinearity, shboo3 doesn't work as well.
+     Suggests to me that shrinking works poorly for nonlinearly compensated systems. 
+   - There is a tradeoff in complexity between nonlinearity and filter
+     Simple filters have complex nonlinearities.
+     Complex nonlinearites make simpler filters
+     This suggests that for sparse, clean filters, we should have better NPNLs
+   - Trying simulations at 200Hz and maybe even 500Hz could be interesting
+     Sparsity may help us more here
+     Smoothness is probably not as valuable -- it would be better just to use bigger bin sizes
+   - Interpreting and comparing many models results is getting difficult with the complexity
+     Perhaps a checklist would help make comparisons easier?
+     Perhaps a grid of scatter plots would make comparisons easier? (I find that the scatter plots are easiest to understand quickly)
+   - Chopping off the first second may not be the best for scientific accuracy
+     Although it may improve scores, let's avoid this for now.
+   - Fitting the depression filter coefficients is a good way to go. 
+   - Although cleanliness is extra work, Stephen agrees that we might benefit from tools that let us clean up our mess faster.
+     A faster way of checking that all models are valid for comparison is probably a good place to start.
+     Another simple thing is to check that the models ONLY differ by a single keyword (so that comparisons are not confounding)
+   - Stephen likes the idea of doing fitting on complex nonlinear models in multiple steps.
+     
+** Things Ivar wants to try for no good reason:
+   - A "You are here" experiment for 242 with all the fitter/combo/etc which boosts in every model direction
+   - NPFNL with a zeros-flattened left side (anything left of the minimum) to get rid of U shaped things?
+   - After a boosted NONL fit, replace it with an NPNL
+   - Fitting the depression filter params
+   - Appending the depression channel, then doing a volterra model on it.
+   - Doing a more complex nonlinearity before the FIR (Would a monotonic NPNL work?)
+   - Inhibition Excitation models
+   - Try the shboost algorithms with a full boost (not just qboost)
+   - A cheating fitter that picks the best sparseness penalty via binary search (peeking at the validation data)
+   - Perhaps the 'state-of-the-art' model (the entire model stack) can be saved as a single "sota01" keyword? But how would I perturb it?
+   - While all those above code things run, I should finish the documentation, which has gotten to be a huge unfinished brainfart list
+
+** Method 
+   1. Use batch 242 as a reference point.
+   2. Perturb that model a dozen different ways (on each single keyword)
+   3. Compare all those perturbations with scatter plots, and take the best perturbation as the new default model.
+   4. GOTO step 1.
+
+** Basic Models
+   1. Single FIR
+   2. FIR with 2nd order volterra
+   3. Depression
+   5. Inhibition Excitation
+    
+** Complexities:

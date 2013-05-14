@@ -1,3 +1,6 @@
+- Clean up saved_analysis, saved_models, saved_images
+- Look at write permissions for images
+
 * Actions
   1. [ ] Repair Narf Browser
 	 - [ ] Sparsity is not going into the DB
@@ -27,16 +30,12 @@
      - Write a FIR speed booster, which uses N vectors (one per FIR coef, which are a product with the stimulus). Each boost step, only 1 coef need be updated.
      - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
 
-* Things to add again:
-  - [ ] nonl keyword
-  - Try nonl and some other logarithmic compressors once more
-  
 * Why an FPGA would kick ass for this stuff
   - You could try all 300 coefficient boosting steps simultaneously
   - This is an embarassingly parallel problem
 
 * Irregularities that need fixing
-  - Not all nonlinearities can accomodate NaNs in their code 
+  - Not all nonlinearities can accomodate NaNs in their code?
   - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
   - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
 
@@ -213,5 +212,5 @@
    That's good and deterministic, but maybe we could speed things up by randomly sorting the steps (so as not to be biased towards early values)
    Then just take a step _any_ time it improves the score
    It would take many more steps each iteration.
-   No guarantee it would converge, but maybe we could do it a few times.
+   No guarantee it would converge, but maybe we could do it just to get started more quickly
    
