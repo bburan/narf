@@ -107,6 +107,11 @@ for nn = 1:length(rundata)
     else
         % figure out what files to use for what stage of the analysis
         [cellfiledata, times, params] = cellfiletimes(cellid, rundata(nn).batch);
+        runclassids=cat(cellfiledata.runclassid);
+        if sum(runclassids~=103)==0,
+            cellfiledata=cellfiledata(1);
+        end
+        
         if length(cellfiledata)==1,
             train_set{1}=[cellfiledata.stimfile,'_est'];
             test_set{1}=[cellfiledata.stimfile,'_val'];

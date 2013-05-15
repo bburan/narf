@@ -46,7 +46,11 @@ for pidx=1:size(pairs,1),
     figure
     ff=find(~isnan(rmtx(:,pairs(pidx,1))) & ...
             ~isnan(rmtx(:,pairs(pidx,2))));
-    
+    for ii=1:length(ff),
+        fprintf('%20s  %6.3f  %6.3f\n',cellids{ff(ii)},...
+                rmtx(ff(ii),pairs(pidx,:)));
+    end
+    fprintf('%20s  %6.3f  %6.3f\n','mean',mean(rmtx(ff,pairs(pidx,:))));
     plot(rmtx(ff,pairs(pidx,1)),rmtx(ff,pairs(pidx,2)),'.');
     hold on;
     plot([-0.2 0.8],[-0.2 0.8],'k--');

@@ -132,7 +132,29 @@ if isfield(params,'specialbatch'),
                     strcmpi(strtrim(parms.Ref_SplitChannels),'Yes') &&...
                     length(parms.Ref_LowFreq)>1 &&...
                     diff(parms.Ref_LowFreq)==0 &&...
-                    diff(parms.Ref_HighFreq)==0,
+                    diff(parms.Ref_HighFreq)==0 && ...
+                    ~strcmpi(cellfiledata(ii).behavior,'active') ,
+                keepfiles(ii)=1;
+                keepcellids=union(keepcellids,cellfiledata(ii).cellid);
+            end
+        end
+        keepidx=find(keepfiles);
+        cellfileids=cellfileids(keepidx);
+        cellfiledata=cellfiledata(keepidx);
+        cellids=keepcellids;
+      case 'lr-behavior',
+        
+        % spn / left-right same spectral features batch
+        keepfiles=zeros(size(cellfiledata));
+        keepcellids={};
+        for ii=1:length(cellfiledata),
+            parms=dbReadData(cellfiledata(ii).rawid);
+            if isfield(parms,'Ref_SplitChannels') &&...
+                    strcmpi(strtrim(parms.Ref_SplitChannels),'Yes') &&...
+                    length(parms.Ref_LowFreq)>1 &&...
+                    diff(parms.Ref_LowFreq)==0 &&...
+                    diff(parms.Ref_HighFreq)==0 && ...
+                    strcmpi(cellfiledata(ii).behavior,'active') ,
                 keepfiles(ii)=1;
                 keepcellids=union(keepcellids,cellfiledata(ii).cellid);
             end
