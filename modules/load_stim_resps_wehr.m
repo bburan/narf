@@ -30,6 +30,7 @@ m.output_resp = 'resp';
 m.output_resp_time = 'resp_time';
 m.output_respavg = 'respavg';
 m.include_prestim = 1;
+m.is_data_loader = true; % Special marker used by jackknifing routine
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -202,11 +203,16 @@ function x = do_load_wehr(mdl, x, stack, xxx)
             dsi=dsi(11:end);
             
             % remove linear trend
-            ri=detrend(ri);
+            %ri=detrend(ri);
+            % remove trend by substracting 4th order polynomial fit
+            order = 4;
+            p = polyfit((1:numel(ri))', ri(:), order);
+            %keyboard
+            ri = ri(:) - polyval(p, (1:numel(ri))');
             
             onsettimesi=(0:floor(length(si)./(3.2*SR)-1))*(3.2.*SR)+...
                 1+round(length(s0)./SRint*SR)-10;
-            onsettimes=[onsettimes onsettimesi+length(r)];
+            onsettimes=[onsettimes onsettimesi+length(r(:))];
             
             if length(si)<size(s,1),
                 sdiff=size(s,1)-length(si);
@@ -260,7 +266,11 @@ function x = do_load_wehr(mdl, x, stack, xxx)
                 resp(FitRange)=nan;
              else
                 resp(ValRange)=nan;
-           end
+            end
+            
+            % nan out the pre stim silence:
+            resp(1:(onsettimes(1)-1),:)=nan;
+            %keyboard
         end
         
         x.dat.(fbase).(mdl.output_stim) = stim;

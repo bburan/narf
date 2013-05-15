@@ -215,7 +215,7 @@ uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
 % SVD: scatter plot button
 uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
     'String', 'Scatter Plot', ...
-    'Units','pixels', 'Position', [0 rh+150 mw 25], ...
+    'Units','pixels', 'Position', [0 rh+150 mw./2 25], ...
     'Callback', @plot_scatter);
     
     function plot_scatter(~,~,~)
@@ -264,8 +264,47 @@ uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
         
     end
     
+% SVD: bar plot summary button
+uicontrol('Parent', parent_handle, 'Style', 'pushbutton',...
+    'String', 'Bar Plot', ...
+    'Units','pixels', 'Position', [mw./2 rh+150 mw./2 25], ...
+    'Callback', @plot_bar);
     
-
+    function plot_bar(~,~,~)
+        
+        sel_batch  = popup2str(condition_handles(1));
+        if strcmp(sel_batch, '*'),
+            return
+        end
+        
+        sel_cellid = popup2str(condition_handles(2));
+        if strcmp(sel_cellid, '*'),
+            sel_cellid = '';
+        end
+        
+        inner_sql = sql_query_builder(); 
+        ret = mysql(['SELECT DISTINCT modelname FROM (' inner_sql ') AS sq']);
+        ret = cellstr(char(ret(:).modelname));
+        ret2 = sprintf('%s_', ret{:}); % Big long string
+        toks = tokenize_string(ret2); % Break it up into tokens
+        toks = unique([toks{:}]); % Only unique tokens
+        
+        holdtoks = {popup2str(condition_handles(3)), ...
+                    popup2str(condition_handles(4)), ...
+                    popup2str(condition_handles(5)), ...
+                    popup2str(condition_handles(6))};
+                
+        star_cells = cellfun(@(x)strcmp('*', x) , holdtoks);
+        holdtoks(star_cells) = []; % Remove *'d cells
+        
+        plot_performance_bar(sel_batch, ...
+            sel_cellid, ...
+            holdtoks, ...
+            toks, ...
+            popup2str(condition_handles(8)));
+        
+    end
+    
 
 
 % TODO: Heat map button

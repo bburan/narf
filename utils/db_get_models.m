@@ -21,13 +21,17 @@ function models = db_get_models(batch, cellid, matching_tokens, sort_field)
 
 constraints = {};
 
-sql = 'SELECT * FROM NarfResults';
+if exist('cellid', 'var') && strcmpi(cellid,'modelnames'),
+    sql = 'SELECT DISTINCT modelname FROM NarfResults';
+else
+    sql = 'SELECT * FROM NarfResults';
+end
 
 if exist('batch', 'var')
     constraints{end+1} = ['batch=' num2str(batch)];
 end
 
-if exist('cellid', 'var') && ~isempty(cellid)
+if exist('cellid', 'var') && ~isempty(cellid) && ~strcmpi(cellid,'modelnames'),
     constraints{end+1} = ['cellid="' cellid '"'];
 end
 
