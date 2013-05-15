@@ -1,6 +1,6 @@
-function [termcond, n_iters] = fit_shrinkified3(fitter, n_jacks, n_shrink_loops, weighted_avg)
+function [termcond, n_iters] = fit_shrinkified3(fitter, n_jacks, n_shrink_loops, weighted_avg, use_corr_during_jackknifes)
 % [termcond, n_iters] = fit_shrinkified(fitter, n_jacks, n_shrink_loops,
-% weighted_avg)
+% weighted_avg, use_corr_during_jackknifes)
 
 global STACK XXX META;
 
@@ -48,6 +48,7 @@ end
 % Therefore, we should cache the original value at that point.
 cached_xxx = XXX;
 cached_stack = STACK;
+cached_perf_metric = META.perf_metric;
 
 % Make sure all elements are the same length
 for iii = 1:length(XXX{fit_start_depth}.training_set),
@@ -189,6 +190,9 @@ function [best_phi] = linear_search ()
     best_phi = phi_init;
     best_holdout_score = NaN;
     
+    if use_corr_during_jackknifes
+        META.perf_metric = @pm_corr;
+    end
     % Try a bunch of shrinkage levels (which is fast) and find the best
     for ii = 1:length(shrinkage)        
         [holdout_score, shrunk_phi_jack_avg] = shrink_and_predict(stack_jack_orig, xxx_jack_orig, shrinkage(ii));
@@ -197,6 +201,9 @@ function [best_phi] = linear_search ()
             best_phi = shrunk_phi_jack_avg;
         end
     end
+    
+    % Replace the perf metric
+    META.perf_metric = cached_perf_metric;
 end
 
 [best_phi] = linear_search();
