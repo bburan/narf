@@ -1,3 +1,17 @@
+
+  1. The total number of spikes in each behavior respfile should be displayed?
+* Engineering
+
+** Avoiding Bugs
+   I've noticed the following bugs in our job queueing system so far.
+   1. Stephen and I have queued up the same work and end up overwriting each other redundantly
+   2. I forget to git push to my workers before starting the jobs
+   3. I edit my own code while the cluster is running, thus messes up just the jobs that run on my own machine.
+
+** Features
+   Better searching/sorting of semi-arbitrary keywords
+   Better scatter plot graphing
+
 - Clean up saved_analysis, saved_models, saved_images
 - Look at write permissions for images
 

@@ -1,28 +1,328 @@
-#+TITLE: Where do we go from here?
+#+TITLE: Report: Where do we go from here?
+#+AUTHOR: Ivar Thorson
+#+OPTIONS:  toc:nil
+#+LaTeX_CLASS: article
+#+LaTeX_CLASS_OPTIONS: [twoside,twocolumn]
 
-* Questions we have not yet addressed:
-** What estimates do we get with a 200Hz envelope stimulus?
-   In progress.
+  One of the things I got in the habit of doing as an engineer was a periodic design review. Here's my thoughts on where we stand.
 
-** Does jackknifing work better without a) post FIR normalization and b) a NPNL?
-   In progress. 
+* Questioning Model Structure
 
-** Run the sp#boost and shboo# fitters again without NPNLs (nonl)
-   In progress
+  NARF has seen some major growth in the last 5 months. Now that we are simulating many models a day, it seems like an appropriate time to slow down and question our assumptions before proceeding further down the current path -- an easier one may be awaiting us nearby.
 
-** Should we drop first second of stimuli to improve stationarity?
-   Not a bad idea. Let's call it env100d1s (for drop 1 sec).
+** Stimulus
 
-** Better searching/sorting of semi-arbitrary keyword 
+*** Stimulus Envelope
+    
+    The stimulus envelope has proven to be a reliable feature from which to predict neural activity since it shows the intensity of a single frequency band. But we haven't criticised it in a while so let's try to remember its limitations. First, in the particular implementation we are using, the stimulus envelope is not being extracted from the WAV file presented to the ferret, but is rather taken directly from the modulation used to generate the WAV file. Although the correlation between the two is probably very high, since this is random noise we are modulating, there is a possibility that the stimulus envelope used to generate the WAV and the actual stimulus envelope present in the WAV are different in some respect. Also, perhaps neurons are /not/ perfect at reconstructing a sound envelope and have some biases that make them unable to catch modulations faster or slower than some limit.
+
+*** Stimulus Prestim Silence
+
+    Obviously if we are using a stationary models we are using will poorly track the first second or so of the stimulus because the neuron will undergo a huge shift in its internal state as it fires repeatedly. However, when we tested the effect of removing prestim silence on batch 240, only 9 of 38 neurons showed any improvement. All of those 9 neurons had "low saturation" nonlinearities. Whether this is coincidence or not remains to be determined.
+    
+    I also maintain that many neurons seem to exhibit very strange behavior in stimulus #1, the very first edge (right after the sound begins). These are never tracked as close as the other stimuli, and I think it's because there is more than 0.5s of prestim silence. Chronological order /matters/ to our neurons, and I don't really like the idea of randomizing them for no good reason. Are they being randomized? 
+
+*** Multiple Frequency Channels
+
+    Right now we are stimulating neurons in a very limited way: using bandpass filtered noise chosen to match the peak sensitivity of a neuron. Most of the neurons show only a single peak in the STRF -- is this an artifact of the way STRFs are computed, or is it a fundamental truth about the way neurons in A1 behave? I can imagine that these artificial stimuli we are presenting are not driving some cells very well. It seems conceivable that some neurons respond well only to two-frequency stimuli, for example. If A is one frequency and B is another frequency, are there neurons that fire when both (A AND B) are present? Are there neurons that fire when ether or both is present (A OR B)? Are there pathological neurons that fire only when one but not both are present (A XOR B)? The latter case could not be predicted with a linear filter, I believe.
+
+*** Pitch
+
+    While helping Daniela with her homework, I learned about how some neurons are pitch-sensitive and essentially fire in a way that suggests they can reconstruct a missing or attenuated fundamental frequency of a natural sound from its harmonics. I immediately imagined this phenomenon occuring as some sort of second-order effect resulting from combinations of frequency-sensitive neurons. Graphically, it would be something like this:
+    
+    #+LaTeX: \begin{center}\includegraphics[height=4in]{pitch-sensitive-neurons.pdf}\end{center}
+
+    Admittedly, this is a pretty crude notion and probably a million other people have already done careful experiments that explain pitch sensitivity in more nuance. I'm just wondering that if we had higher-resolution ways of getting STRFs that showed multiple sensitive frequencies, and we presented natural spectrally-rich and harmonically correlated stimuli (both with and without the fundamental frequency) to the ferrets, is it possible that we might find some neurons in A1 that are more pitch-sensitive than frequency-sensitive?
+
+*** Wavelet Feature Extraction
+
+    Wavelets can be used to express a huge variety of transformations, expressing bandpass information, describing latency, and performing very general (linear) transformations. It's possible that using NARF to fit wavelets might reveal very precise information about the exact auditory features to which a neuron is responding. 
+    
+*** Gammatone Features
+
+    Biologically plausible, these are basically just wavelets which express a center frequency, frequency band width, with peak amplitude phase locking or not. 
+
+** Peristimulus Time Histogram (RESPAVG)
+
+*** Bin Size
+
+    One question we have not addressed at all is how model fits differ when RESPAVG is binned at smaller intervals than 10ms (100Hz). Trying 5ms (200Hz), 3.33ms (300Hz), or even 2ms (500Hz) could give us more resolution into what is happening. 
+
+*** Averaging 
+
+    Our predictions are compared to the averaged response. Using an average is not a bad idea given sufficient quantities of data, but for sparse signals perhaps there is extra information that could be cleaned from the signal by /not/ averaging the trials and taking some performance metric across all the trials independently. For a linear system there it makes no difference if the responses are averaged or not, but for a nonlinear system or especially a sysetm with memory that might not be true.
+
+*** Gaussian Kernel Smoothing
+
+    For kicks, I tried a gaussian kernel smoother. With 10ms bin sizes, there wasn't much point in having more than 3 coefs or the smoothed responses would be 10's of milliseconds long. The effect of smoothing on performance was unquestionably negative.  [1 4 1] 
+
+*** Generalized Linear Model Smoothing
+
+    I am going to guess that at higher frequencies like 500Hz, we would do well to assume a poission exponential model of firing, interpolate between samples in RESPAVG using a generalized linear model to smooth out RESPAVG. 
+
+    Alternatively, we start with the 10Khz resolution for spike times, do the smoothing in that, and then integrate the results in each 2ms time bin to get a relatively smooth RESPAVG signal at a higher frequency. The only reason this two-step smoothing might be preferred is if a spike occurs close to a bin boundary, under this scheme it would be more fairly distributed between the two data points.
+
+
+** Compressors
    
-* Things to tackle next:
-  1. Make it so my edits don't mess up queued work
-  2. Do a code review of shboo3
+*** Logarithmic and Square Root
 
-* Questions we have asked and answered
-** What is best compressor?
-   log2b. But maybe that has changed!
+   The primary motivation for using a compressor nonlinearity is that we believe that neurons respond logarithmically to increasing volume rates. We also know that neurons can't fire faster than some limit, so adding a term to asymptotically approach that maximum rate of fire seems reasonable. But we haven't tested this ourselves, and I bet this could be estimated very easily. If we simply present the same bandpass stimulus at increasing volume levels, can we get a better estimate of the compressor? Maybe it's not described well by LOG2B at all, and the average rate of fire drops off at the higher volume levels. We already see many curves like this in the nonparametric nonlinearity curves, and correcting it /before/ the FIR filter could show benefits.
+   
+   Also, I'm not really clear on how an absolute sound intensity (say, 80dB as heard by the ferret) corresponds with the data we are getting from BAPHY. Is BAPHY normalizing the signals before giving them to NARF? Should the absolute sound intensity should be expressed directly by scaling the magnitude of the signal provided by load_stim_from_baphy so that the compressor is always working on data scaled in the same way (i.e. the same volume scale for all neurons)? Considering absolute intensity at the compressor stage might improve our fits, even if we do normalize before the FIR filter.
 
-** Is MSE picking up the MSES tokens during the cumulative curve plots?
-   No. But it will pick up extra tokens if you aren't careful about locking down all the other 'hold' tokens.
+   At one point we tried fitting the logarithm and square root along with the other coefficients, but it never seemed to work very well when combined with the FIR coefficients. 
+
+** Stateful Components
+
+*** Depression Filters
+
+    Currently the only module storing any kind of neural /state/ is the depression filter. The fact that it usually improves the fits suggests we should put more work  into finding other simple recursive filters that also have some time-varying state. However, there is a more troubling point to be made: the state of the depression filter is probably being estimated in a very poor way. The depression filter state is being found "open-loop", since it is estimated entirely from input data and there is no correction for actual spiking events that are occuring. From robotics experience, open loop models very poorly track the actual state of a dynamic system. 
+
+    But how can we fairly estimate both the internal state and model parameters at the same time? One of the simplest thing that we could try would be to use a Kalman filter with a very low weight for the (assumed noisy) neural observations. This would /mostly/ estimate the system state based purely on the STIM signal, but would still correct for model inaccuracies that would otherwise bring the state greatly out of sync with the actual RESPAVG signal.
+
+    A much slower but more flexible algorithm would be to use Expectation Maximization to estimate the state of the system in the context of a model. Perhaps this should only be done after the fitting is completely done.
+
+*** Formulation from Linear Feedback Control Theory
+
+    There is a huge amount of engineering control theory literature available for studying linear systems governed by ordinary differential equations of the form:
+    
+    \[ \dot{x} = Ax + Bu \]
+    \[ y = Cx + Du \]
+
+    The equations can be either discrete or continuous. Uppercase letters are matrices, lowercase letters are vectors. In block diagram form the above model looks like this:
+
+    #+LaTeX: \begin{center}\includegraphics[width=4in]{Typical_State_Space_model.png}\end{center}
+
+    These types of formulations are well researched and immediately applicable to work in neuroscience. If $u$ is the history of the last 10 STIM values, then matrix $B$ is effectively our linear filter. For models with depression terms, we could argue that depression's statefulness and is creating functionality somewhat like the $A$ matrix if the depression is done using first order exponentials. Finally, our nonparametric nonlinearity is somewhat similar to the effect $C$. Most systems don't have any feed-through terms $D$. Neural systems would never have this block unless we were stimulating neurons electrically and trying to avoid the confounding effect of our voltage stimulus on our measurement of spikes. 
+
+    I would guess that there may be some benefit to thinking about neural activity in terms of these matrices ABC. Perhaps there is a linear model for $C$ that would replace the effect of the NPNL and would be simpler. More generally, elements of matrices $A,B,C$ could be made simple functions of $x,u$ and slightly more complex versions of this could be studied. 
+
+** Linear Filters
+
+*** Finite Impulse Response (FIR) Filters
+
+    These are the real workhorse of the models, but sometimes I wonder how much I am really learning about a neuron. The most obvious piece of information we are getting from the FIR filters is the latency, but if there are inhibition/excitation pairs, we can also glean:
+    1. Strong excitation by itself means the neuron's activation represents a "sustained feature".
+    2. Strong excitation followed by strong inhibition means the neuron's activation represents a "sound onset feature".
+    3. Strong inhibition followed by excitation means the neuron's activation represents a "sound conclusion feature"
+
+    I'm wondering if we can constrain these a bit more to reduce the number of free parameters. Have we ever seen any important FIR coefficients beyond 70ms latency, for example? Usually anything beyond 50ms looks like depression effects aliasing onto the FIR filter.
+
+*** Volterra Filters
+
+    Second order filters are beating the simple linear FIR filters, and often the stateful depression filters. We have only been considering channel-to-channel interactions, not temporal interactions. Perhaps considering the 2nd order interactions of a signal with a slightly delayed version of itself would also improve performance.
+
+*** Inhibition/Excitation 
+
+    Hardly explored at all. A little work here could pay big dividends. 
+
+
+** Behavioral Conditions
+
+*** One model per behavior
+
+    Letting everything float. The easy way to do this is to have a keyword that blocks an entire behavior condition's stimfiles.
+
+*** One FIR filter Per Behavior
+
+    Hardly explored at all. We have the capability to study these in more depth via the "multiple parameter set" functionality of NARF.
+
+*** One NPNL Per Behavior
+
+    Hardly explored at all. We have the capability to study these in more depth via the "multiple parameter set" functionality of NARF.
+
+** Nonlinearities
+   
+   One persistent thing that I have noticed is the tradeoff in complexity between nonlinearity and filter.  Simple filters have complex nonlinearities. Complex nonlinearites make simpler filters.  This suggests that for sparse, clean filters, we should have better NPNLs. So far, enforcing sparsity on the FIR filter and smoothness on the nonlinearity is giving pretty good results. Also, the most important characteristic of the nonlinearity seems to be how well it extrapolates beyond the bounds of the estimation set data. 
+
+*** NPNL
+
+    Good performance. Ye olde "classic" standard, fast to compute and very good except for edges, which it systematically over-estimates on the low side and under-estimates on the high side.
+
+*** NPFNL
+
+    A gaussian window filter npnl with filter widths equal to 1/5th of nonlinearity's input domain span. Pretty fast and pretty good. Not sensitive to outliers during the prestim silence phase.  NPFNL with a zeros-flattened left side (anything left of the minimum) to get rid of U shaped things?
+
+*** SENL
+
+    Sparse gaussian mixture model which uses a small number of 1d gaussians (0.2 relative width) centered at 'representative' data points. Unfortunately, since it uses 1D gaussians, it generalizes toward zero as you move away from the known data points -- in other words, it will always extrapolate towards zero. Despite this, it did pretty well and is fast enough to be of some practical use. 
+
+    TODO: Figure
+
+*** Gaussian Mixtures
+
+    Probably the prettiest simple curves ever produced, gaussian mixture models uses four expectation-maximized 2D gaussians to create a nonparametric nonlinearity. The general reference implementation I downloaded from a friend is very slow, but perhaps could be improved through optimization. I would use this if it weren't computationally so demanding. It should probably be used more for single-pass fitters like boosting, though. 
+
+*** Explicit functions
+    
+    Exponentials, sigmoids, zero threshold, polynomials. 
+
+** Performance Metrics
+
+*** Correlation
+
+    At the end of the day, we have been focused about the correlation coefficient. It's great, it's convenient, it's understandable, but it's probably not the whole story. Probably everyone in this lab is familiar with Anscombe's Quartet, which all have the same mean, variance, regression line, and correlation:
+
+    #+LaTeX: \begin{center}\includegraphics[width=4in]{anscombes_quartet.png}\end{center}
+
+    Perhaps we need to start at saving other metrics in the NARF browser as well or plotting these correlation diagrams to double-check. 
+
+*** Mean Squared Error (L2 Loss Function)
+
+    Like correlation, MSE is sensitive to outliers. Not much else to say about this. 
+
+*** Absolute Error (L1 Loss Function)
+    
+    Just to reduce the effect of outliers so much. 
+
+*** Maximum Likelihood 
+
+    Ahh, finally a /real/ performance metric that is probabilistic in some sense!
+
+*** Sparsity Metrics
+
+    I chose a metric $d$ of the linear filter sparsity defined as the ratio of the $L_1$ norm to $L_2$ norm, squared. $d$ can vary from a minimum of 1 to a maximum of $n$, where $n$ is the number of parameters. It is thus a comparable metric regardless of how many degrees of freedom $n$ there are -- if the sparsity number $d=3.1$, then it has a dimensionality or complexity of about 3 strong coefficients, and all other coefficients are assumed to be zero. It cannot go below one, the limit at which all the mass of the 'mass' of the filter coefficients is concentrated into a single coefficient. 
+
+  The definition is very simple:
+
+  \begin{equation}
+  d=\left(\frac{\left\Vert c\right\Vert _{1}}{\left\Vert c\right\Vert _{2}}\right)^{2}
+  \end{equation}
+
+  where $\left\Vert c\right\Vert _{1}$ and $\left\Vert c\right\Vert _{2}$ are the one and two norms
+
+  \begin{equation}
+  \left\Vert c\right\Vert _{1}=|c_{1}|+|c_{2}|+...+|c_{n}|
+  \end{equation}
+
+  \begin{equation}
+  \left\Vert c\right\Vert _{2}=\sqrt{c_{1}^{2}+c_{2}^{2}+...+c_{n}^{2}}
+  \end{equation}
+ 
+  In practice, it seems to work appropriately well on the neural data so far. Probably other people have a proper name for this metric since it is so simple other people must be using it for other purposes as well.
+     
+** Fitters
+
+   Most of the time, we have been using single-step fitters. However, the new keyword system should allow us to create models which fit using different algorithms at different times. Also we should keep in mind that "/There is no globally best fitting routine, only fitting routines which work well for certain cells./"
+
+*** Annealing (anneal)
+
+*** Boosting (boost)
+
+    Boosting has been our bread and butter for searching through linear coefficients, and gives pretty sparse solutions. The only thing faster is linear least squares. 
+
+*** Line Search (fmin, fminu)
+
+    The *fmin* keyword and *fminu* both use matlab's line search algorithms underneath. The differences seem minor and related to the initialization of the search. Both are pretty robust, although do not converge very quickly. They typically iterate 10000 times or until convergence.
+
+*** Linear Least Squares (lsq)
+
+    Quick and prone to overfit, it also tends to give the very best results at high correllations (>0.6). 
+
+*** Genetic Algorithm (genetic)
+
+    This actually worked pretty well if you add enough generations and 
+   
+*** Nonlinear Least Squares (lsqn)
+
+    The *lsqn* keyword uses the nonlinear least squares method underneath. 
+
+*** Shrink after Jackknifing
+
+    Jackknifing and shrinking are more effective for the lower correlation neurons, as we would expect. Typically only cells with an R value below 0.35 or so see any real benefit from jackknifing. Jackknifing also seems to work better if there is no normalization /after/ the FIR filter. It is also more more reliable if there is no nonparametric nonlinearity after the FIR filter. 
+
+    We currently have 4 different implementations which implement jackknifing and shrinking:
+    1. *shboo1*:
+    2. *shboo2*:
+    3. *shboo3*:
+    4. *shboo4*:
+
+    Shboo3 has equivalent performance to boosting if there is no nonlinearity, and is /slightly/ more sparse. If there is a nonlinearity, shboo3 doesn't work as well. This suggests to me that shrinking works poorly for nonlinearly compensated systems. 
+    
+*** Automatic Relevancy Detection
+
+    I don't know much about it, but if ARD works for nonlinear systems, then this will necessarily be the path to follow. Shrinking just doesn't seem to work well for nonlinear systems.
+
+*** Sparse Bayes Fitter
+    
+    This is essentially just gradient desent with a fixed step size, but steps only in the most relevant directions. Since it can never work with sparsity metrics and weighted penalties, I'm inclined to retire it. 
+
+*** Sparse Fitters
+
+    Computationally extremely slow. 
+    
+    1. sp1boost
+    2. sp2boost
+    3. sp3boost
+    4. sp4boost
+    5. sp5boost
+
+*** Cheating Fitters
+
+    I know it is cheating, but a cheating fitter that picks the best sparseness penalty via binary search (peeking at the validation data) seems like a good way to get a clean, interpretable STRF and not worry too much about sparsity.
+
+** Initial Conditions
+
+   This is fairly unexplored territory. 
+
+*** All Zeros (init0)    
+
+    In many ways the ideal place to start from when shooting for sparse solutions from scratch, at high sparsity penalty levels it can prevent other coefficients after the first from growing to their proper magnitude. This occasionally sticks fitters in local minima. 
+
+*** Reverse Correlation (initrc)
+
+    This is a good place to start, although if you use early stopping in the boost algorithm it often leaves a fair amount of "noise" in the FIR coefficients as compared to starting from all-zero filter coefficients. 
+
+*** All Ones (initones)
+    
+    I mostly used this as a test. It underperforms initrc and init0, not suprisingly.
+
+*** All Zeros (init12)
+
+
+* Possible Research Questions
+
+*** Stimulus
+    1. What is the correlation and MSE between reconstructed envelopes and the envelopes used to generate the WAV? (If I recall correctly, the gammatone filter was correlated to about 0.97 with the envelope.)
+    2. How closely to STRFs derived from a FIR filter and multi-freq-channel inputs match to the TORC-derived STRFs?
+    3. Is the stimulus envelope still the only relevant feature to consider, or should we write code to add frequency or pitch feature channels?
+    4. Is it possible that a neuron is sensitive only to paired frequency stimuli in a boolean way (AND, OR, XOR)?
+    5. Can much of the FIR filter and compressor functionality be subsumed by a more general wavelet transformation?
+
+*** PSTHs
+    1. What do fits look like at 100Hz, 200Hz, 300Hz, and 500Hz sampling rates?
+    2. Does Generalized Linear Model Smoothing improve fits at higher sampling rates?
+    3. Does Gaussian Kernel Smoothing improve fits at higher sampling rates?
+    4. Is there any conceivable case where not averaging the responses together would be important? The only one that comes to mind is when computing inter-spike intervals and doing a performance metric based on the shape of the scaled ISI distribution. 
+
+*** Compressors
+    1. Does a sigmoidal compressing nonlinearity do better than SQRT or LOG?
+    2. Does a non-monotonic compressing nonlinearity have a beneficial effect on prediction?
+    3. Does an NPNL before the FIR filter have a beneficial effect on prediction?
+    4. Can compressor parameters be fit separately (perhaps /before/ the FIR filter is appended) to improve overall performance?
+    5. How is absolute sound intensity expressed in the envelope/WAV data we get from baphy? What does the average response vs volume level look like for the entire population of neurons so that we can best choose a single compressor to use by default?
+   
+*** Stateful Components
+    1. How much does fitting the depression filter parameters improve the scores? Can it be done simultaneously with the FIR filter or not? 
+
+*** Linear Filters
+    1. Appending the depression channel and studying its second-order effects with the linear model seems a good idea.
+    2. Adding a "delay channel" module and computing second order quantities based on 1, 2, or 3 unit time delays might also improve fits somewhat. 
+
+*** Output Nonlinearities
+
+*** Initial Conditions
+    1. Does using multiple fitters improve correlation scores? (Qboost followed by LSQ, for example)
+    2. If we 
+
+*** Performance Metrics
+
+*** Fitters
+    1. Does using correlation instead of MSE during shrinkage improve the end result?
+    2. Do sp#boost and shboo# fitters work better with NONL? (i.e. are they rendered useless by nonlinearities?)
+    3. Does dropping the first second of stimuli improv the fits of the stationary models?
+    4. If we do a jackknifed fit with the NONL, /then/ append the NPNL and shrink, is that more effective?
+
+* Model Possibility Tree
 

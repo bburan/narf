@@ -134,7 +134,6 @@
   1. Shboo3 is pretty close to boosting, but doesn't seem to beat it
   2. Shboo1 and Shboo2 don't beat boosting. 
 
-
 * Discussion with Stephen (May 13, 2013)  
    - Shboo3 has equivalent performance to boosting if there is no nonlinearity, and is /slightly/ more sparse
      If there is a nonlinearity, shboo3 doesn't work as well.
