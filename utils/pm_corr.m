@@ -20,6 +20,6 @@ else
             sparsities(end+1) = sparsity_metric(fir_mods{ii}{pp}.coefs);
         end
     end
-    corr = XXX{end}.score_train_corr;
+    corr = 1 - XXX{end}.score_train_corr;
     penalty = (META.sparsity_weight * sum(sparsities));
 end
