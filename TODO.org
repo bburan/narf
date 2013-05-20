@@ -1,52 +1,36 @@
-
-  1. The total number of spikes in each behavior respfile should be displayed?
-* Engineering
-
-** Avoiding Bugs
-   I've noticed the following bugs in our job queueing system so far.
-   1. Stephen and I have queued up the same work and end up overwriting each other redundantly
-   2. I forget to git push to my workers before starting the jobs
-   3. I edit my own code while the cluster is running, thus messes up just the jobs that run on my own machine.
-
-** Features
-   Better searching/sorting of semi-arbitrary keywords
-   Better scatter plot graphing
-
-- Clean up saved_analysis, saved_models, saved_images
-- Look at write permissions for images
-
 * Actions
-  1. [ ] Repair Narf Browser
+  1. [ ] Fix write permissions for images, models
+  2. [ ] Repair Narf Browser
 	 - [ ] Sparsity is not going into the DB
 	 - [ ] Antialiasing problem when saving images
 	 - [ ] Heat Map current display button in NARF
 	 - [ ] AND/OR/NOT query token filter, or 'In position 3' filter
 	 - [ ] Generic 'modelstring' query space
-  2. [ ] Default per-paramset, per-channel heatmap graph fns:
+	 - [ ] Arbitrary keyword substring stuff
+         - [ ] The total number of spikes in each behavior respfile should be displayed?
+  3. [ ] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [ ] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  3. [ ] Add functionality
+  4. [ ] Scatter plots with distributions
+  5. [ ] Add functionality
 	 - [ ] Loadstimfrombaphy should haev a "chop_beginning" parameter that removes the first N samples
-  4. [-] Refactor
+  6. [-] Refactor
 	 - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots". Grep through and remove any 'bullshit concats'
 	       V1 = [];   V2 = [];    for ii = 1:length(x.training_set),        sf = x.training_set{ii};       V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));        V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));    end    R = corrcoef(excise([V1 V2]));
-  5. [-] Repair Fitters 
+  7. [ ] Clean up saved_analysis, saved_models, saved_images
+  8. [-] Repair Fitters 
          - [ ] Remove, then re add test_set data by default to make fitters faster
          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  6. [ ] Add new functionality to the do_scatter_plot method
+  9. [ ] Add new functionality to the do_scatter_plot method
 	 - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
 	       Use grayish/blackish 
-  7. [ ] jackknifing needs to work with other performance metrics?
-  8. [ ] Profile the time spent during boosting and look for optimizations:
-     - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
-     - Write a FIR speed booster, which uses N vectors (one per FIR coef, which are a product with the stimulus). Each boost step, only 1 coef need be updated.
-     - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
-
-* Why an FPGA would kick ass for this stuff
-  - You could try all 300 coefficient boosting steps simultaneously
-  - This is an embarassingly parallel problem
+  10. [ ] jackknifing needs to work with other performance metrics?
+  11. [ ] Profile the time spent during boosting and look for optimizations:
+      - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
+      - Write a FIR speed booster, which uses N vectors (one per FIR coef, which are a product with the stimulus). Each boost step, only 1 coef need be updated.
+      - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
 
 * Irregularities that need fixing
   - Not all nonlinearities can accomodate NaNs in their code?
@@ -54,14 +38,19 @@
   - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
 
 * ENQUEUING MANAGER PROGRAM:
-  1. Should Batching should work like this?
+  1. Avoiding Bugs
+     I've noticed the following bugs in our job queueing system so far.
+      1. Stephen and I have queued up the same work and end up overwriting each other redundantly
+      2. I forget to git push to my workers before starting the jobs
+      3. I edit my own code while the cluster is running, thus messes up just the jobs that run on my own machine.
+  2. Should Batching should work like this?
      + Batch model scripts can share structure. right now all the batches have pretty much identical scripts!
      + When work is enqueued, it goes into the NARF table, which has a 'complete?' flag
      + Any number of PCs query the DB, try to get 'incomplete' flagged models. DB is atomic, handles conflicts and negates need for server.
      + They compute those models, then return values.
      + If desired, a local 'manager' on each PC can watch processes, handle timeouts, etc
      + Negates need for SSH credentials everywhere, too.
-  2. Or like this?
+  3. Or like this?
      + Do an SQL query to NarfResults to see what exists
      + Display models to be trained, already trained
      + Allow deletions of existing models
@@ -220,6 +209,7 @@
   52. [ ] IRRITATION: Why can't I resize windows?
   53. Stephen will do the init condition for FIRN coefs split into two filters of positive/negative coefs only    
   54. Write a termination condition that ends when "delta = 10^-5 * max-delta-found-so-far" for boosting
+  55. Why an FPGA would kick ass for this stuff(You could try all 300 coefficient boosting steps simultaneously, this is an embarassingly parallel problem)
 ** Crazyboost
    How's this for a fitter?
    Boosting works well, and tries every possible step before taking a new one.
