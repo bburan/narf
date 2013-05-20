@@ -22,6 +22,10 @@ if ~exist('weighted_avg', 'var')
     weighted_avg = false;
 end
 
+if ~exist('use_corr_during_jackknifes', 'var')
+    use_corr_during_jackknifes = false;
+end
+
 phi_init = pack_fittables(STACK);
 
 if isempty(phi_init)
