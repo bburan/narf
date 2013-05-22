@@ -38,6 +38,9 @@ function x = do_infer_respavg(mdl, x, stack, xxx)
         [T, S, C] = size(x.dat.(sf).(mdl.input));
         out = zeros([T, S, C]);
         
+       %% TODO: Use RESP for the inference and then create a new RESPAVG 
+       %% 
+        
         for c = 1:C,
             for s = 1:S
                 y = x.dat.(sf).(mdl.input)(:,s,c);
