@@ -182,3 +182,51 @@
    5. Inhibition Excitation
     
 ** Complexities:
+
+* Trying INFERP
+  
+  Now a comparison between:
+  - env100_log2b_firn_initrc_npfnl_mse_boost
+  - env100_inferp1_log2b_firno_initrc_npfnl_mse_boost
+
+  | cellid     | Boost | Inferp1 | Sparser? | Inferp wins? |
+  |------------+-------+---------+----------+--------------|
+  | por024b-b1 | .4867 |   .4679 | inferp   |              |
+  | por024b-b2 | .6010 |   .5920 | inferp   |              |
+  | por024b-c1 | .6954 |   .6769 | inferp   |              |
+  | por025a-b1 | .3255 |   .3271 | boost    | yes          |
+  | por025a-c1 | .4841 |   .4827 | inferp   |              |
+  | por025a-c2 | .2509 |   .2530 | inferp   | yes          |
+  | por025a-d1 | .3193 |   .2977 | boost    |              |
+  | por026a-b1 | .2310 |   .2258 | inferp   |              |
+  | por026a-d1 | .2352 |   .2604 | inferp   | yes          |
+  | por026b-a1 | .3021 |   .3166 | inferp   |              |
+  | por026b-a2 | .3021 |   .3166 | inferp   | yes          |
+  | por026b-b1 | .2796 |   .2732 | inferp   |              |
+  | por026b-b2 |   .24 |         |          |              |
+  | por026b-c1 |   .24 |         |          |              |
+  | por026b-c2 |   .23 |         |          |              |
+  | por026b-d1 |   .26 |         |          |              |
+  | por026c-a1 |   .80 |         |          |              |
+  | por026c-b1 |   .73 |         |          |              |
+  | por026c-c1 |   .50 |         |          |              |
+  | por026c-d1 |   .43 |         |          |              |
+  | por027a-a1 |   .08 |         |          |              |
+  | por027a-b1 |   .18 |         |          |              |
+  | por027a-c1 |   .42 |         |          |              |
+  | por027b-b1 |   .44 |         |          |              |
+  | por027b-c1 |   .36 |         |          |              |
+  | por028b-b1 |   .19 |         |          |              |
+  | por028b-c1 |   .26 |         |          |              |
+  | por028b-d1 |   .54 |         |          |              |
+  | por028d-a1 |   .61 |         |          |              |
+  | por028d-a2 |   .53 |         |          |              |
+  | por028d-b1 |   .74 |         |          |              |
+  | por028d-c2 |   .47 |         |          |              |
+  | por028d-d1 |   .53 |         |          |              |
+
+** Takaways?
+   - At 100Hz, there is a slight cleaning effect of the STRFs
+   - Probably at 200Hz infering would help more
+   - 
+

@@ -39,14 +39,12 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function nl = calc_sparse_nonlinearity(stack, xxx)
+function nl = calc_sparse_nonlinearity(mdl, x, stack, xxx)
     % Returns:
     %   X : X-axis points, taken emperically. 
     %   Z : Predicted curve at each value in X
     %   C : Gaussian control points (centers)
     %   Q : Precision of the control points (inv of variance)
-    mdl = stack{end};
-    x = xxx{end};
     nl = [];
     % Create the pred and resp vectors
     pred = []; 
@@ -125,11 +123,8 @@ function nl = calc_sparse_nonlinearity(stack, xxx)
     nl.F = @interpolomatic;
  end
 
-function x = do_se_nonlinearity(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-    nl = calc_sparse_nonlinearity(stack, xxx);
+function x = do_se_nonlinearity(mdl, x, stack, xxx)      
+    nl = calc_sparse_nonlinearity(mdl, x, stack, xxx);
     
     for sf = fieldnames(x.dat)', sf=sf{1};
         [T, S, C] = size(x.dat.(sf).(mdl.input_stim));
@@ -153,10 +148,11 @@ function plotthecurve(nl, xmin, xmax)
 
 end
 
-function do_plot_scatter_and_nonlinearity(stack, xxx)
-    mdl = stack{end};
-    
-    nl = calc_sparse_nonlinearity(stack, xxx(1:end-1));
+function do_plot_scatter_and_nonlinearity(sel, stack, xxx)
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx)
+    mdl = mdls{1};   
+   
+    nl = calc_sparse_nonlinearity(mdl, x, stack, xxx(1:end-1));
     hold on;
     do_plot_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
     
@@ -168,7 +164,7 @@ function do_plot_scatter_and_nonlinearity(stack, xxx)
     hold off;
 end
 
-function do_plot_smooth_scatter_and_nonlinearity(stack, xxx)
+function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)
     mdl = stack{end};
     
     nl = calc_sparse_nonlinearity(stack, xxx(1:end-1));

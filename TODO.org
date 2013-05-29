@@ -1,86 +1,168 @@
+* IMPROVED QUEUE MANAGER PROGRAM
+** Data Structures
+   - NarfResults
+     | Field      | Type             | Null | Key | Default           | Extra                       | Notes                             |
+     |------------+------------------+------+-----+-------------------+-----------------------------+-----------------------------------|
+     | id         | int(10) unsigned | NO   | PRI | NULL              | auto_increment              |                                   |
+     | cellid     | varchar(255)     | YES  | MUL | NULL              |                             |                                   |
+     | batch      | int(11)          | YES  | MUL | NULL              |                             |                                   |
+     | modelname  | text             | YES  | MUL | NULL              |                             |                                   |
+     | r_test     | double           | YES  |     | NULL              |                             |                                   |
+     | r_fit      | double           | YES  |     | NULL              |                             |                                   |
+     | score      | double           | YES  |     | NULL              |                             |                                   |
+     | sparsity   | double           | YES  |     | NULL              |                             |                                   |
+     | modelpath  | text             | YES  |     | NULL              |                             |                                   |
+     | modelfile  | text             | YES  |     | NULL              |                             |                                   |
+     | figurefile | text             | YES  |     | NULL              |                             |                                   |
+     | githash    | varchar(255)     | YES  |     | NULL              |                             |                                   |
+     | lastmod    | timestamp        | NO   |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP | When was the model last modified? |
+     
+     Add these:
+     | Field           | Type      | Null | Key | Default | Extra | Notes                                                                            |
+     |-----------------+-----------+------+-----+---------+-------+----------------------------------------------------------------------------------|
+     | respfiles       | text      |      |     |         |       | contents of XXX0                                                                 |
+     | lastVerified    | timestamp | YES  | ?   | ?       | ?     | When was the model/image/etc last checked for DB consistency?                    |
+     | lastFit         | timestamp |      |     |         |       | When was the model last fit                                                      |
+     | isHidden        | char(1)   | NO   |     |         |       | T or F                                                                           |
+     | isDeleted       | char(1)   | NO   |     |         |       | T or F                                                                           |
+     | estset          |           |      |     |         |       |                                                                                  |
+     | valset          |           |      |     |         |       |                                                                                  |
+     | est_l1          |           |      |     |         |       |                                                                                  |
+     | est_mse         |           |      |     |         |       |                                                                                  |
+     | est_corr        |           |      |     |         |       |                                                                                  |
+     | est_likelihood  |           |      |     |         |       |                                                                                  |
+     | est_aposteriori |           |      |     |         |       |                                                                                  |
+     | est_bic         |           |      |     |         |       |                                                                                  |
+     | jobStatus       |           |      |     |         |       | When created, set to 0. Shows Job system status so double-queuing doesn't occur. |
+     | sparsity        | text      |      |     |         |       |                                                                                  |
+     | smoothness      | text      |      |     |         |       |                                                                                  |
+
+   - NarfQuestions: For scientific queries
+     | Field         | Type      | Null | Key | Default | Extra | Notes                                                |
+     |---------------+-----------+------+-----+---------+-------+------------------------------------------------------|
+     | question      | text      |      |     |         |       | The question we asked.                               |
+     | answer        | text      |      |     |         |       | Our current answer.                                  |
+     | modeltree     | text      |      |     |         |       | A model keyword tree; all branches are compared      |
+     | batch         | int(11)   |      |     |         |       | Associated with a particular batch                   |
+     | XXX0          | text      |      |     |         |       | cellid, est_set, val_set, filecodes                  |
+     | summaryfigure | text      |      |     |         |       | Summarizes the answer to the question                |
+     | isAnswered    | char(1)   |      |     |         |       | When you have decided you have answered the question |
+     | lastmod       | timestamp |      |     |         |       |                                                      |
+     | datapartiton  | char(255) |      |     |         |       | all, perfile, perfilecode                            |
+
+   - NarfBatches
+     | batch         | varchar(255) |   |   |   |   | More generic names                                   |
+     | answer        | text         |   |   |   |   | Our current answer.                                  |
+     | modeltree     | text         |   |   |   |   | A model keyword tree; all branches are compared      |
+     | batch         | int(11)      |   |   |   |   | Associated with a particular batch                   |
+     | XXX0          | text         |   |   |   |   | cellid, est_set, val_set, filecodes                  |
+     | summaryfigure | text         |   |   |   |   | Summarizes the answer to the question                |
+     | isAnswered    | char(1)      |   |   |   |   | When you have decided you have answered the question |
+     | lastmod       | timestamp    |   |   |   |   |                                                      |
+
 * Actions
-  1. [ ] Fix write permissions for images, models
-  2. [ ] Repair Narf Browser
+  1. [ ] Make the narf-workers path different from my dev path
+  2. [ ] Fix write permissions for images, models
+  3. [ ] Try modifying the adding SQRT to of the RESPAVG 
+  4. [ ] A better queuing script
+	 - [ ] Sorts according to QUESTIONS 
+	 - [ ] Overwrite existing models?
+	 - [ ] Resume dead models?
+	 - [ ] Force git sync?
+	 - [ ] Force git clean?
+	 - [ ] Check for dead/jobs
+	 - [ ] Rerun analysis with current?
+	 - [ ] Do DB contents and Filesystem still sync up?
+	 - [ ] Does a check. If any models don't sync up, they will be enqueued to the jobs system.
+  5. [ ] Tool to start comparing models:
+	 - [ ] Specify models with a function
+	 - [ ] It tells you how many matching models were found, and how many were expected
+	 - [ ] Ability to extract parameters from every model
+	 - [ ] Calls your special analysis function
+	 - [ ] Hold out data 	 
+  6. [ ] Repair Narf Browser
 	 - [ ] Sparsity is not going into the DB
+	 - [ ] More metrics should go into the DB
+	 - [ ] Elitist browsing (Shows ONLY THE HIGHEST MODEL of each cell given current masks)
+	 - [ ] Comparison finders (Allows you to select two model structures for comparisons)
 	 - [ ] Antialiasing problem when saving images
 	 - [ ] Heat Map current display button in NARF
 	 - [ ] AND/OR/NOT query token filter, or 'In position 3' filter
 	 - [ ] Generic 'modelstring' query space
 	 - [ ] Arbitrary keyword substring stuff
          - [ ] The total number of spikes in each behavior respfile should be displayed?
-  3. [ ] Default per-paramset, per-channel heatmap graph fns:
+  7. [ ] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [ ] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  4. [ ] Scatter plots with distributions
-  5. [ ] Add functionality
+  8. [ ] Scatter plots with distributions
+  9. [ ] Add functionality
 	 - [ ] Loadstimfrombaphy should haev a "chop_beginning" parameter that removes the first N samples
-  6. [-] Refactor
-	 - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots". Grep through and remove any 'bullshit concats'
-	       V1 = [];   V2 = [];    for ii = 1:length(x.training_set),        sf = x.training_set{ii};       V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));        V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));    end    R = corrcoef(excise([V1 V2]));
-  7. [ ] Clean up saved_analysis, saved_models, saved_images
-  8. [-] Repair Fitters 
-         - [ ] Remove, then re add test_set data by default to make fitters faster
-         - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  9. [ ] Add new functionality to the do_scatter_plot method
-	 - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
-	       Use grayish/blackish 
-  10. [ ] jackknifing needs to work with other performance metrics?
-  11. [ ] Profile the time spent during boosting and look for optimizations:
-      - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
-      - Write a FIR speed booster, which uses N vectors (one per FIR coef, which are a product with the stimulus). Each boost step, only 1 coef need be updated.
-      - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
+  10. [ ] Refactor
+	  - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots". Grep through and remove any 'bullshit concats'
+		V1 = [];   V2 = [];    for ii = 1:length(x.training_set),        sf = x.training_set{ii};       V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));        V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));    end    R = corrcoef(excise([V1 V2]));
+  11. [ ] Clean up saved_analysis, saved_models, saved_images
+  12. [ ] Repair Fitters 
+          - [ ] Remove, then re add test_set data by default to make fitters faster
+          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
+  13. [ ] Add new functionality to the do_scatter_plot method
+	  - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
+		Use grayish/blackish 
+  14. [ ] jackknifing needs to work with other performance metrics?
+  15. [ ] Profile the time spent during boosting and look for optimizations:
+          - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
+          - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
+          - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
+  16. [ ] Possible features to extract (And what what is needed to detect them)
+          - Spatial location of source (Phase difference or  )
+          - Freq (STRF)
+          - Freq direction rising/falling (STRF with diagonal band)
+          - Pitch (STRF with harmonics)
+          - Timbre (STRF with harmonics)
+          - Vowels, Consonants 
+          - Onsets, offturns (STRF)
+  17. [ ] What if we use RESPAVG to compute the depression state, and fit the depression amounts?
+  18. [ ] NPNL with autocorrelation of last few ms
+  19. [ ] What are the covariances of the FIR coefs? (RCORR)
+  20. [ ] Instead of getting the full covariance matrix, just get per-parameter variances.
+	  Vary each parameter deterministically or stochastically
+	  Estimate the amount variance which decreases the MSE by a set amount
+	  This should let us determine the "relevancy" of each parameter
+	  Sort all the parameters, and take just the most relevant ones!
 
-* Irregularities that need fixing
+* FIXME: Irregularities
   - Not all nonlinearities can accomodate NaNs in their code?
   - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
   - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
 
-* ENQUEUING MANAGER PROGRAM:
-  1. Avoiding Bugs
-     I've noticed the following bugs in our job queueing system so far.
-      1. Stephen and I have queued up the same work and end up overwriting each other redundantly
-      2. I forget to git push to my workers before starting the jobs
-      3. I edit my own code while the cluster is running, thus messes up just the jobs that run on my own machine.
-  2. Should Batching should work like this?
-     + Batch model scripts can share structure. right now all the batches have pretty much identical scripts!
-     + When work is enqueued, it goes into the NARF table, which has a 'complete?' flag
-     + Any number of PCs query the DB, try to get 'incomplete' flagged models. DB is atomic, handles conflicts and negates need for server.
-     + They compute those models, then return values.
-     + If desired, a local 'manager' on each PC can watch processes, handle timeouts, etc
-     + Negates need for SSH credentials everywhere, too.
-  3. Or like this?
-     + Do an SQL query to NarfResults to see what exists
-     + Display models to be trained, already trained
-     + Allow deletions of existing models
-     + Display keyword selectors for models at the top
-     + Display keyword selectors for fitters at the top
-     + Display selectors for which cellids can be trained
-     + Checkbox management so that only certain models can be enqueued
+* FIXME: Unresolved Problems
+** Can fitters understand how to work on each paramset separately?
+   I wish they could. Right now, there is a subtle problem when we use a splitter on the FIR filter:
+   - Boosting slows down 5x. We have 5x24 = 120 parameters per boost step. 
+   - Fitting in one split regime is subtely interacting with fitting in another. Early stopping worsens this effect.
 
 * LOW PRIORITY CLEANUP
   1. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
   2. [ ] Plot a SINGLE paramset's SINGLE high-bandwidth channel as a spectrogram
   3. [ ] Replace all the 'true' and 'false' arguments with textual flags and varargin that are more descriptive
   4. [ ] It's not quite right to have the 'replot' command be part of the the 'plot_popup fn callback'. Needs to be re-thought
-  5. [ ] Can functions in the keywords directory be set so the 'current folder path' is NOT accidentally have access to other keyword directory functions?
+  5. [ ] Can functions in the keywords directory be set so the 'current folder path' is NOT accidentally giving access to other keyword directory functions?
   6. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
   7. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
   8. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  9. [X] Make Concat Second Order Terms work for any higher order nchoosek type stuff
   10. [ ] MODULE: Standardized single/multi channel gammatone filter
   11. [ ] MODULE: Standardized single/multi channel elliptic filter 
   12. [ ] FN: Cover an input space logarithmically with filters
 
 * THE GREAT NAME REPLACING PROPOSAL
-  1. [X] recalc_xxx -> calc_xxx
-  2. [ ] WHATEVER IS GOING INTO XXX{1} should be given to fit_single_model as well! When I'm not using BAPHY it should still be able to work.
-  3. [ ] "training set" -> "estimation set"
-  4. [ ] "test set" -> "Validation set"
-  5. [ ] META -> (Suggestion: Should this be MODELINFO, instead of just 'metadata'?)
-  6. [ ] STACK ->  (Suggestion: Should this be MODULES or MODS?)
-  7. [ ] MODULES (What would this become?)
+  1. [ ] WHATEVER IS GOING INTO XXX{1} should be given to fit_single_model as well! When I'm not using BAPHY it should still be able to work.
+  2. [ ] "training set" -> "estimation set"
+  3. [ ] "test set" -> "Validation set"
+  4. [ ] META -> (Suggestion: Should this be MODELINFO, instead of just 'metadata'?)
+  5. [ ] STACK ->  (Suggestion: Should this be MODULES or MODS?)
+  6. [ ] MODULES (What would this become?)
+  7. [ ] NarfResults -> NarfModels
   8. [ ] XXX -> (Suggestion: Should this be called "VC" for "ValueChain" or something?)
   9. [ ] FITTER (containing a list of available fitters?)
   10. [ ] Make a list of every function used purely for side effects, and rename it with a ! at the end
@@ -88,41 +170,22 @@
 	  Lots of hidden assumptions here which are a problem. Plot modules have access to AFTER data, too.
 
 * TECHNICALLY HARDER CHUNKS OF WORK
-  2. [ ] Inhibition/Excitiation model
-  3. [ ] Log Likelihood Fitter: (Any noise model, not just gaussian)
+  1. [ ] Inhibition/Excitiation model
+  2. [ ] Log Likelihood Fitter: (Any noise model, not just gaussian)
 	 Why: Noise model entropy is a metric of performance. (If best-fit noise distribution has low entropy, we know _more_ about the system) 
 	 Why: Likelihood is probably a better metric than MSE since large outliers may not affect it as much?
 	 MSE is biased towards gaussian noise models, and for real-life data sets the probability tails are always heavier than a gaussian.
 	 Subcomponents:
 	 - [ ] inter_spike_intervals computation module
          - [ ] bayesian_likelihood() perf metric module
-  4. [ ] GMM without slow EM step:
+  3. [ ] GMM without slow EM step:
 	 For each point, take K nearest neighbors. 
 	 Compute 2D gaussian for that point. 
 	 Flatten that 2D gaussian and push into SENL's 1D input
-  5. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
-  6. [ ] Use a single wavelet transform in place of downsampling + FIR filter
-  7. [ ] Write a crash course guide on using NARF
-  8. [ ] http://www.mathworks.com/matlabcentral/fileexchange/27662-evolve-top-and-bottom-envelopes-for-time-signals-i-e
-
-* Verification
-  - Do DB contents and Filesystem still sync up?
- 
-* DEFERRED
-** Stephen's boosting verification
-  1. A Shrinking step size is stupid simple. Is there a better way?
-  2. Can we retire the analysis/TSP files?
-  3. Can I retire the modules/exp_filter? 
-
-** SAFETY VERIFICATION PROGRAM:
-  1. Create a test/ directory with many test functions in it
-     Each test function:
-     - creates a default XXX{1}
-     - Puts a single module on the stack
-     - Recomputes XXX(1)
-     - Checks output vs predetermined values
-  2. Check that all modules work independently as expected
-  3. Checks that DB and modelfiles still sync up
+  4. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
+  5. [ ] Use a single wavelet transform in place of downsampling + FIR filter
+  6. [ ] Write a crash course guide on using NARF
+  7. [ ] http://www.mathworks.com/matlabcentral/fileexchange/27662-evolve-top-and-bottom-envelopes-for-time-signals-i-e
 
 * DISCARDED/ABANDONED IDEAS
   1. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things more easily in scripts)
@@ -217,4 +280,26 @@
    Then just take a step _any_ time it improves the score
    It would take many more steps each iteration.
    No guarantee it would converge, but maybe we could do it just to get started more quickly
-   
+** Can Jackknifes be stored in the same model file?
+  No, this should not be done.   
+
+** Stephen's boosting verification
+  1. A Shrinking step size is stupid simple. Is there a better way?
+  2. Can we retire the analysis/TSP files?
+  3. Can I retire the modules/exp_filter? 
+
+** SAFETY VERIFICATION PROGRAM:
+  1. Create a test/ directory with many test functions in it
+     Each test function:
+     - creates a default XXX{1}
+     - Puts a single module on the stack
+     - Recomputes XXX(1)
+     - Checks output vs predetermined values
+  2. Check that all modules work independently as expected
+  3. Checks that DB and modelfiles still sync up
+** Rewrite JOBS system
+    + Put a "Complete?" 
+    + Any number of PCs query the DB, try to get 'incomplete' flagged models. DB is atomic, handles conflicts and negates need for server.
+    + They compute those models, then return values.
+    + If desired, a local 'manager' on each PC can watch processes, handle timeouts, etc
+    + Negates need for SSH credentials everywhere, too.
