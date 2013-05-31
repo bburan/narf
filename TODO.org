@@ -1,16 +1,12 @@
-* Stephen's clever Narf Hack:
-  - Not the most composable solution, but it's quick and solves the problem!
-  - New Keyword that manually does the fits then combines them
-    save the xxx
-    for every stimfile in the training set
-       reset xxx(1) to just have that one stimfile
-       fit using boost
-       save the STACK params somewhere
-    endfor
-    Once you are done, groupe those saved STACK params as paramset
-    Adjust a splitter and unifier as appropriate
-    Now the model should recalc just fine and give a single fit
-    However, it won't be re-fittable 
+* More Bayesian Things to Try
+  probability distributions for each pixel of an STRF
+  Temporal jitter of a neuron spike
+  Try the per-sample log likelihood ratio
+
+* Blah
+  Error in ==> plot_model_summary at 89
+  print(fig, pngfile, '-dpng');
+  
 
 * IMPROVED QUEUE MANAGER PROGRAM
 ** Data Structures
@@ -73,16 +69,13 @@
      | lastmod       | timestamp    |   |   |   |   |                                                      |
  
 * Easy stuff for today
-  1. [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots". Grep through and remove any 'bullshit concats'
-	       V1 = [];   V2 = [];    for ii = 1:length(x.training_set),        sf = x.training_set{ii};       V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));        V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));    end    R = corrcoef(excise([V1 V2]));
-  2. [ ] Fix write permissions for images, models
-  3. [ ] COMPARE Models Functions
+  1. [ ] Fix write permissions for images, models
+  2. [ ] COMPARE Models Functions
 	 A function that takes N filenames
 	 It loads them up, checks that they have identical model structure
 	 Then it extracts any parameters that differ. 
-  4. [ ] Loadstimfrombaphy should haev a "chop_beginning" parameter that removes the first N samples
-  5. [ ] Clean up saved_analysis, saved_models, saved_images
-
+  3. [ ] Loadstimfrombaphy should have a "chop_beginning" parameter that removes the first N samples
+  4. [ ] Clean up saved_analysis, saved_models, saved_images
 	 
 * Actions
   1. [ ] A better queuing script
@@ -136,7 +129,8 @@
           - Timbre (STRF with harmonics)
           - Vowels, Consonants 
           - Onsets, offturns (STRF)
-  12. [ ] What if we use RESPAVG to compute the depression state, and fit the depression amounts?
+  12. [ ] What if we use RESPAVG to compute the depression state, and fit the depression amounts?\
+	  Would an exponential feed through too much?
   13. [ ] NPNL with autocorrelation of last few ms
   14. [ ] What are the covariances of the FIR coefs? (RCORR)
   15. [ ] Instead of getting the full covariance matrix, just get per-parameter variances.

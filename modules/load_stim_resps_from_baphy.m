@@ -211,10 +211,14 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         % SVD pad response with nan's in case reference responses
         % were truncated because of target overlap during behavior.
         % this is a kludge that may be fixed some day in loadspikeraster
-        if size(resp,1)<size(stim,1),
-            resp((end+1):size(stim,1),:,:)=nan;
-        elseif size(resp,1)>size(stim,1),
-            resp=resp(1:size(stim,1),:,:);
+        % 2013-05-31: Ivar wraps an if statement around this because this
+        % destroyed our ability to sample stim and resp at different rates
+        if (mdl.raw_resp_fs == mdl.raw_stim_fs)
+            if size(resp,1)<size(stim,1),
+                resp((end+1):size(stim,1),:,:)=nan;
+            elseif size(resp,1)>size(stim,1),
+                resp=resp(1:size(stim,1),:,:);
+            end
         end
         
         % SVD 2013-03-08 - if specified, pull out either estimation (fit) or
