@@ -1,3 +1,17 @@
+* Stephen's clever Narf Hack:
+  - Not the most composable solution, but it's quick and solves the problem!
+  - New Keyword that manually does the fits then combines them
+    save the xxx
+    for every stimfile in the training set
+       reset xxx(1) to just have that one stimfile
+       fit using boost
+       save the STACK params somewhere
+    endfor
+    Once you are done, groupe those saved STACK params as paramset
+    Adjust a splitter and unifier as appropriate
+    Now the model should recalc just fine and give a single fit
+    However, it won't be re-fittable 
+
 * IMPROVED QUEUE MANAGER PROGRAM
 ** Data Structures
    - NarfResults
@@ -51,36 +65,44 @@
      | datapartiton  | char(255) |      |     |         |       | all, perfile, perfilecode                            |
 
    - NarfBatches
-     | batch         | varchar(255) |   |   |   |   | More generic names                                   |
-     | answer        | text         |   |   |   |   | Our current answer.                                  |
-     | modeltree     | text         |   |   |   |   | A model keyword tree; all branches are compared      |
-     | batch         | int(11)      |   |   |   |   | Associated with a particular batch                   |
-     | XXX0          | text         |   |   |   |   | cellid, est_set, val_set, filecodes                  |
-     | summaryfigure | text         |   |   |   |   | Summarizes the answer to the question                |
-     | isAnswered    | char(1)      |   |   |   |   | When you have decided you have answered the question |
+     | batchname     | varchar(255) |   |   |   |   | More generic names                                   |
+     | cellid        | varchar(255) |   |   |   |   |                                                      |
+     | est_set       | text         |   |   |   |   |                                                      |
+     | val_set       | text         |   |   |   |   |                                                      |
+     | tags          | text         |   |   |   |   |                                                      |
      | lastmod       | timestamp    |   |   |   |   |                                                      |
-
-* Actions
-  1. [ ] Make the narf-workers path different from my dev path
+ 
+* Easy stuff for today
+  1. [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots". Grep through and remove any 'bullshit concats'
+	       V1 = [];   V2 = [];    for ii = 1:length(x.training_set),        sf = x.training_set{ii};       V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));        V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));    end    R = corrcoef(excise([V1 V2]));
   2. [ ] Fix write permissions for images, models
-  3. [ ] Try modifying the adding SQRT to of the RESPAVG 
-  4. [ ] A better queuing script
+  3. [ ] COMPARE Models Functions
+	 A function that takes N filenames
+	 It loads them up, checks that they have identical model structure
+	 Then it extracts any parameters that differ. 
+  4. [ ] Loadstimfrombaphy should haev a "chop_beginning" parameter that removes the first N samples
+  5. [ ] Clean up saved_analysis, saved_models, saved_images
+
+	 
+* Actions
+  1. [ ] A better queuing script
 	 - [ ] Sorts according to QUESTIONS 
+	 - [ ] Scatter plot comparison functionality
 	 - [ ] Overwrite existing models?
 	 - [ ] Resume dead models?
 	 - [ ] Force git sync?
 	 - [ ] Force git clean?
-	 - [ ] Check for dead/jobs
-	 - [ ] Rerun analysis with current?
-	 - [ ] Do DB contents and Filesystem still sync up?
-	 - [ ] Does a check. If any models don't sync up, they will be enqueued to the jobs system.
-  5. [ ] Tool to start comparing models:
+	 - [ ] Check for:
+	       - [ ] dead/jobs
+	       - [ ] DB contents and Filesystem still sync up
+	       - [ ] Everything is enqueued
+  2. [ ] Tool to start comparing models:
 	 - [ ] Specify models with a function
 	 - [ ] It tells you how many matching models were found, and how many were expected
 	 - [ ] Ability to extract parameters from every model
 	 - [ ] Calls your special analysis function
 	 - [ ] Hold out data 	 
-  6. [ ] Repair Narf Browser
+  3. [ ] Repair Narf Browser
 	 - [ ] Sparsity is not going into the DB
 	 - [ ] More metrics should go into the DB
 	 - [ ] Elitist browsing (Shows ONLY THE HIGHEST MODEL of each cell given current masks)
@@ -91,30 +113,22 @@
 	 - [ ] Generic 'modelstring' query space
 	 - [ ] Arbitrary keyword substring stuff
          - [ ] The total number of spikes in each behavior respfile should be displayed?
-  7. [ ] Default per-paramset, per-channel heatmap graph fns:
+  4. [ ] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [ ] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  8. [ ] Scatter plots with distributions
-  9. [ ] Add functionality
-	 - [ ] Loadstimfrombaphy should haev a "chop_beginning" parameter that removes the first N samples
-  10. [ ] Refactor
-	  - [ ] The same method for flattening in "NORMALIZE" should also be used for flattening in "scatter plots". Grep through and remove any 'bullshit concats'
-		V1 = [];   V2 = [];    for ii = 1:length(x.training_set),        sf = x.training_set{ii};       V1 = cat(1, V1, x.dat.(sf).(mdl.input1)(:));        V2 = cat(1, V2, x.dat.(sf).(mdl.input2)(:));    end    R = corrcoef(excise([V1 V2]));
-  11. [ ] Clean up saved_analysis, saved_models, saved_images
-  12. [ ] Repair Fitters 
-          - [ ] Remove, then re add test_set data by default to make fitters faster
-          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  13. [ ] Add new functionality to the do_scatter_plot method
-	  - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
-		Use grayish/blackish 
-  14. [ ] jackknifing needs to work with other performance metrics?
-  15. [ ] Profile the time spent during boosting and look for optimizations:
+  8. [ ] Repair Fitters 
+         - [ ] Remove, then re-add test_set data by default to make fitters faster
+         - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
+  9. [ ] Add new functionality to the do_scatter_plot method
+	 - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
+	       Use grayish/blackish 
+  10. [ ] Profile the time spent during boosting and look for optimizations:
           - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
           - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
           - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
-  16. [ ] Possible features to extract (And what what is needed to detect them)
+  11. [ ] Possible features to extract (And what what is needed to detect them)
           - Spatial location of source (Phase difference or  )
           - Freq (STRF)
           - Freq direction rising/falling (STRF with diagonal band)
@@ -122,10 +136,10 @@
           - Timbre (STRF with harmonics)
           - Vowels, Consonants 
           - Onsets, offturns (STRF)
-  17. [ ] What if we use RESPAVG to compute the depression state, and fit the depression amounts?
-  18. [ ] NPNL with autocorrelation of last few ms
-  19. [ ] What are the covariances of the FIR coefs? (RCORR)
-  20. [ ] Instead of getting the full covariance matrix, just get per-parameter variances.
+  12. [ ] What if we use RESPAVG to compute the depression state, and fit the depression amounts?
+  13. [ ] NPNL with autocorrelation of last few ms
+  14. [ ] What are the covariances of the FIR coefs? (RCORR)
+  15. [ ] Instead of getting the full covariance matrix, just get per-parameter variances.
 	  Vary each parameter deterministically or stochastically
 	  Estimate the amount variance which decreases the MSE by a set amount
 	  This should let us determine the "relevancy" of each parameter
@@ -135,6 +149,7 @@
   - Not all nonlinearities can accomodate NaNs in their code?
   - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
   - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
+  - Jackknifing doesn't work with performance metrics besides MSE right now?
 
 * FIXME: Unresolved Problems
 ** Can fitters understand how to work on each paramset separately?
@@ -160,10 +175,10 @@
   2. [ ] "training set" -> "estimation set"
   3. [ ] "test set" -> "Validation set"
   4. [ ] META -> (Suggestion: Should this be MODELINFO, instead of just 'metadata'?)
-  5. [ ] STACK ->  (Suggestion: Should this be MODULES or MODS?)
-  6. [ ] MODULES (What would this become?)
+  5. [ ] STACK -> (Suggestion: Should this be MODULES, MDLS, etc?)
+  6. [ ] MODULES (What would this become? )
   7. [ ] NarfResults -> NarfModels
-  8. [ ] XXX -> (Suggestion: Should this be called "VC" for "ValueChain" or something?)
+  8. [ ] XXX -> ??
   9. [ ] FITTER (containing a list of available fitters?)
   10. [ ] Make a list of every function used purely for side effects, and rename it with a ! at the end
   11. [ ] Name convention of STACK vs stack, XXX vs xxx and the difficulty in understanding which one we are looking at! 
@@ -303,3 +318,7 @@
     + They compute those models, then return values.
     + If desired, a local 'manager' on each PC can watch processes, handle timeouts, etc
     + Negates need for SSH credentials everywhere, too.
+** Improve BAPHY Interface
+   - Right now BAPHY has a complicated interface for a simple thing:
+     - All we really want is the stimulus and response(s)
+     - Selecting data ourselves, jackknifing it, hacking it out, etc are messy since half of it is done in Baphy and half in NARF
