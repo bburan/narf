@@ -41,9 +41,15 @@ end
 if ~all(areperfmetrics > fit_end_depth) || isempty(areperfmetrics)
     error('Model structure not splittable: performance metric must come after all modules with fittable fields.');
 end
-if any(has_splitters)
-    error('Model structure not splittable: No splitters/unifiers can exist before this.');
-end
+%if any(has_splitters)
+    % Normally we do not allow splitters to be split again 
+    % This would be confusing and bad. 
+    % However, there is some overlap of functionality; NPNLX uses paramsets
+    % but does not have any parameters    
+    % FIXME: For now, I'll just remove this warning and see if that fixes
+    % things
+%    error('Model structure not splittable: No splitters/unifiers with parameters can exist before this.');
+%end
 
 cached_xxx = XXX;
 cached_stack = STACK;
