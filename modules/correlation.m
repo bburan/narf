@@ -35,7 +35,7 @@ m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_correlation_inputs;
 m.plot_fns{1}.pretty_name = 'Correlation';
 
-function x = do_correlation(mdl, x, stack, xxx)    
+function x = do_correlation(mdl, x, stack, xxx)            
     % Compute the training set correlation, ignoring nans
     p = flatten_field(x.dat, x.training_set, mdl.input1);
     q = flatten_field(x.dat, x.training_set, mdl.input2); 
