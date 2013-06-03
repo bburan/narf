@@ -95,7 +95,7 @@ function x = do_bayesian_likelihood(mdl, x, stack, xxx)
             % FIXME: Sometimes scaled ISIs of 0 occur
             % I'm not sure what to do about this.
             % Right now I'll just 'modify' them to be slightly nonzero
-            sISIs(sISIs < 0) = 0; % FIXME
+            sISIs(sISIs < 0) = 10^-9; % FIXME
             
             if any(isnan(sISIs))
                 error('How did a scaled ISI become NaN?!');
@@ -140,7 +140,7 @@ function do_plot_scaled_isis(sel, stack, xxx)
     mdl = stack{end}{1};
      
     %sidxs = (xout.dat.(sel.stimfile).(mdl.scaled_ISIs) > 0);
-    tmp = xout.(mdl.scaled_ISIs)
+    tmp = xout.(mdl.scaled_ISIs);
     tmp(tmp < mdl.probcutoff) = NaN;
 %    hold on;
     hist(tmp, mdl.n_bins);

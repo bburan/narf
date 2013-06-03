@@ -3,8 +3,10 @@
   - Truncated Exponential (offset the ISIs less than some amount)
   - Truncated gamma
   - Truncated inv gaussian
-
+[-0.26953   -0.035156      1.4375     0.44336      0.5293   0.0019531           0    -0.17383    -0.09375   0.0019531    -0.39453   0.0058594;0.0078125  -0.0058594           0       0.125     -0.0625           0           0           0   0.0019531           0   0.0019531    -0.12109]
 * More Bayesian Things to Try
+  - Start with a very good MSE estimator
+  - Look at the distributions there!
   probability distributions for each pixel of an STRF
   Temporal jitter of a neuron spike
   Try the per-sample log likelihood ratio

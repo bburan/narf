@@ -21,7 +21,7 @@ m.input_time = 'resp_time';
 m.output = 'respavg';
 m.output_freq = 200;
 m.output_time = 'respavg_time';
-m.downsampler = @downsample; % Also try @decimate, or @conv_fn, or @resample
+m.downsampler = @decimate; % Also try @decimate, or @conv_fn, or @resample
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
