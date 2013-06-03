@@ -26,7 +26,7 @@ for ii = 1:length(estfiles)
     % FIXME: In a later version of baphy/narf, we should make explicit what
     % will be provided and what not
     if length(estfiles) == length(xxx{end}.filecodes)
-        xxxs{ii}{end}.filecodes    = {xxx{end}.filecodes{ii}};
+        xxxs{ii}{end}.filecodes    = xxx{end}.filecodes(ii);
     else
         xxxs{ii}{end}.filecodes    = xxx{end}.filecodes;
     end

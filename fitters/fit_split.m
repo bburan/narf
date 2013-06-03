@@ -77,10 +77,12 @@ STACK = cached_stack;
 
 % Merge all the splits together using the splitter/unifier paramset thing
 for ii = fit_start_depth:length(STACK)
-    for jj = 1:n_splits
-        STACK{ii}{jj} = stack_splits{jj}{ii}{1};
-        STACK{ii}{jj}.splitter = splitter;
-        STACK{ii}{jj}.unifier = unifier;
+    if isfield(STACK{ii}, 'fit_fields')
+        for jj = 1:n_splits        
+            STACK{ii}{jj} = stack_splits{jj}{ii}{1};
+            STACK{ii}{jj}.splitter = splitter;
+            STACK{ii}{jj}.unifier = unifier;
+        end
     end
 end
 
