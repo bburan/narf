@@ -1,12 +1,25 @@
+* Log Likelihood
+  - BIC
+  - Truncated Exponential (offset the ISIs less than some amount)
+  - Truncated gamma
+  - Truncated inv gaussian
+
 * More Bayesian Things to Try
   probability distributions for each pixel of an STRF
   Temporal jitter of a neuron spike
   Try the per-sample log likelihood ratio
 
-* Blah
+* Bug to fix
+  por032a-07-1/241/env100_log2b_firn_initrc_npfnl_mse_boostperfile  	bobcat  	16016  	 DELETE RESET  	DUMP 
+  27304 	ivar  	 dead(2013-05-31)  	15  	por032b-26-1/241/env100_log2b_firn_initrc_npfnl_mse_boostperfile  	bobcat  	909  	 DELETE RESET  	DUMP 
+  27305 	ivar  	 dead(2013-05-31)  	16  	por032b-26-2/241/env100_log2b_firn_initrc_npfnl_mse_boostperfile  	bobcat  	1853  	 DELETE RESET  	DUMP 
+  27409 	ivar  	 dead(2013-05-31)  	19  	por032a-07-1/241/env100_log2b_firn_initrc_npnl_mse_boostperfile  	capybara  	24839  	 DELETE RESET  	DUMP 
+  27416 	ivar  	 dead(2013-05-31)  	14  	por032b-26-1/241/env100_log2b_firn_initrc_npnl_mse_boostperfile  	microbat  	11748  	 DELETE RESET  	DUMP 
+  27417 	ivar  	 dead(2013-05-31)  	8  	por032b-26-2/241/env100_log2b_firn_initrc_npnl_mse_boostperfile  	hyrax  	24505  	 DELETE RESET  	DUMP 
+
+* Bug to fix regarding plotting
   Error in ==> plot_model_summary at 89
-  print(fig, pngfile, '-dpng');
-  
+  print(fig, pngfile, '-dpng');  
 
 * IMPROVED QUEUE MANAGER PROGRAM
 ** Data Structures

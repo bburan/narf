@@ -65,7 +65,7 @@ function x = do_inter_spike_intervals(mdl, x, stack, xxx)
                             tprev = time(t);
                         end
                     end 
-                end
+                end                              
             end
         end
     end

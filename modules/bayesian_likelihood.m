@@ -11,20 +11,22 @@ m.name = 'bayesian_likelihood';
 m.fn = @do_bayesian_likelihood;
 m.pretty_name = 'Bayesian Likelihood';
 m.editable_fields = {'stim', 'n_bins', 'raw_ISIs', 'scaled_ISIs', ...
-                     'time', 'train_BIC', 'test_BIC', 'train_ll', 'test_ll', 'cumstim'};
+                     'time', 'train_bic', 'test_bic', 'train_nlogl', 'test_nlogl', 'cstim'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.stim = 'stim';
 m.n_bins = 200;
 m.raw_ISIs = 'resp_ISIs';
+m.raw_spiketimes = 'resp_spiketimes';
 m.scaled_ISIs = 'scaled_resp_ISIs';
 m.time = 'stim_time';
-m.train_BIC  = 'score_test_bic';
-m.test_BIC  = 'score_test_bic';
-m.train_ll = 'score_train_ll';
-m.test_ll = 'score_train_ll';
-m.cumstim = 'cumstim'; % Cumulative stimulus
+m.train_bic  = 'score_train_bic';
+m.test_bic  = 'score_test_bic';
+m.train_nlogl = 'score_train_nlogl';
+m.test_nlogl = 'score_test_nlogl';
+m.probdist = 'exponential'; % Also try 'inversegaussian', 'gamma'
+m.cstim = 'cstim'; % Cumulative stimulus
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -33,14 +35,11 @@ end
 
 % Optional fields
 m.plot_fns = {};
-% m.plot_fns{1}.fn = @do_plot_raw_ISIs;
-% m.plot_fns{1}.pretty_name = 'Raw ISI Distribution';
-% m.plot_fns{2}.fn = @do_plot_scaled_ISIs;
-% m.plot_fns{2}.pretty_name = 'Scaled ISI Distribution';
-% m.plot_fns{3}.fn = @do_plot_raw_corr;
-% m.plot_fns{3}.pretty_name = 'Raw ISI AutoCorrelation';
-% m.plot_fns{4}.fn = @do_plot_scaled_corr;
-% m.plot_fns{4}.pretty_name = 'Time-Scaled ISI AutoCorrelation';
+m.plot_fns{1}.fn = @do_plot_scaled_isis;
+m.plot_fns{1}.pretty_name = 'Scaled ISI Distribution';
+m.plot_fns{2}.fn = @do_plot_scaled_autocorr;
+m.plot_fns{2}.pretty_name = 'Scaled ISI AutoCorrelation';
+
 % m.plot_fns{5}.fn = @do_plot_kolmorgorov;
 % m.plot_fns{5}.pretty_name = 'Kolmogorov-Smirnov Plot';
 
@@ -64,7 +63,18 @@ function x = do_bayesian_likelihood(mdl, x, stack, xxx)
         end
         
         if any(stim(:) < 0)
-            fprintf('WARNING: BIC detected negative numbers!\n');
+            % fprintf('WARNING: BIC/NLOGL detected negative numbers! Rectifying....\n');
+            stim(stim<0) = 0;
+        end
+        
+        if all(stim(:) == 0)
+            fprintf('WARNING: Skipping BIC/NLOGL calculation because stim is all zero...\n');  
+            x.(mdl.scaled_ISIs) = [];
+            x.(mdl.train_bic) = 0;
+            x.(mdl.test_bic) = 0;
+            x.(mdl.train_nlogl) = inf;
+            x.(mdl.test_nlogl) = inf;
+            return
         end
         
         [~, ~, ri] = size(x.dat.(sf).(mdl.raw_ISIs));
@@ -73,13 +83,26 @@ function x = do_bayesian_likelihood(mdl, x, stack, xxx)
         for s = 1:si
         	tmp = cumsum(abs(stim(:,s)));
             CDF = tmp ./ tmp(end);
-            x.dat.(sf).(mdl.cumstim)(:,s) = CDF;
+            x.dat.(sf).(mdl.cstim)(:,s) = CDF;
+           
+            % Build up the scaled inter-spike intervals distribution
+            v = x.dat.(sf).(mdl.raw_ISIs)(:,s);
+            idxs = v > 0;
+            spiketimes = x.dat.(sf).(mdl.raw_spiketimes)(idxs,s);
+            sISIs = diff(interp1([0; time], [0; CDF], spiketimes));
             
-            % Concatenate on the scaled inter-spike intervals
-            scaled_ISIs = cat(1, scaled_ISIs, ...
-                                 diff(interp1(time, CDF, x.dat.(sf).(mdl.raw_ISIs)(:,s))));
-        end        
-        
+            % FIXME: Sometimes scaled ISIs of 0 occur
+            % I'm not sure what to do about this.
+            % Right now I'll just 'modify' them to be slightly nonzero
+            sISIs(sISIs == 0) = 10^-9; % FIXME
+
+            if any(isnan(sISIs))
+                error('How did a scaled ISI become NaN?!');
+            end
+            
+            scaled_ISIs = cat(1, scaled_ISIs, sISIs);
+            
+        end
     end
     
     % Average lambda for the scaled ISIs
@@ -88,14 +111,47 @@ function x = do_bayesian_likelihood(mdl, x, stack, xxx)
 	% Where scaled ISIs fall on the unit poisson's cumulative density function
     z = 1 - exp(- l_avg * scaled_ISIs);
     
-    PD = fitdist(z','exponential');  % TODO: Also try gamma, inverse gaussian
-    k = 1;
-    n = length(isi_h); 
-       
-    x.(mdl.scaled_ISIs) = isi_h;
-    x.(mdl.BIC) = -2*(-PD.NLogL) + 2*k*log(n);
-    x.(mdl.loglikelihood) = PD.NLogL; % The Negative Log Likelihood
+    % Mathematically it's impossible to have z become less than zero, but
+    % occasionally numerical noise is bringing us there. I think. 
+    z(z < 0) = abs(z(z<0));
     
+    PD = fitdist(z, mdl.probdist);  % TODO: Also try gamma, inverse gaussian
+    k = 1;
+    n = numel(scaled_ISIs);
+    
+    x.(mdl.scaled_ISIs) = scaled_ISIs;
+    x.(mdl.train_bic) = -2*(-PD.NLogL) + 2*k*log(n);
+    x.(mdl.test_bic) = 0;
+    x.(mdl.train_nlogl) = - PD.NLogL;
+    x.(mdl.test_nlogl) = 0;
+    
+end
+
+function do_plot_scaled_isis(sel, stack, xxx)
+    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    xout = xxx{end};
+    mdl = stack{end}{1};
+     
+    %sidxs = (xout.dat.(sel.stimfile).(mdl.scaled_ISIs) > 0);
+    hist(xout.(mdl.scaled_ISIs), mdl.n_bins);
+ 
+    do_xlabel('Raw Inter-Spike Intervals [s]');
+    do_ylabel('# of neurons');
+end
+
+function do_plot_scaled_autocorr(sel, stack, xxx)
+    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    xout = xxx{end};
+    mdl = stack{end}{1};
+    
+    isis = xout.(mdl.scaled_ISIs);
+
+    plot(isis(2:end), isis(1:end-1), 'k.');
+ 
+    text(0.5,0.5, ['Spike Count:' num2str(length(xout.(mdl.scaled_ISIs)))]);
+    
+    do_xlabel('ISI at t(n) [s]');
+    do_ylabel('ISI at t(n-1) [s]');
 end
 
 % function do_plot_raw_ISIs(stack, xxx)

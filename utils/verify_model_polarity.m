@@ -36,6 +36,11 @@ for kk = 1:length(firmod_idxs)
     xs = D(:,1);
     ys = D(:,2);
     
+    if length(ys) == 1
+        fprintf('verify_model_polarity.m: All values equal. Skipping.\n');
+        return;
+    end
+    
     idx10 = ceil(length(ys) / 20);
     y1 = mean(ys(1:idx10));
     y2 = mean(ys(end-idx10:end));

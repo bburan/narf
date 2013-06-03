@@ -6,7 +6,7 @@ m = [];
 m.mdl = @downsample_matlab;
 m.name = 'downsample_matlab';
 m.fn = @do_downsampling;
-m.pretty_name = 'Use MATLAB''s downsample()';
+m.pretty_name = 'Downsample (MATLAB)';
 m.editable_fields = {'downsampled_freq', 'pre_ds_fn', 'post_ds_fn', ...
                      'input', 'input_time', 'output', 'output_time'};
 m.isready_pred = @isready_always;
@@ -31,9 +31,7 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_downsampling(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
+function x = do_downsampling(mdl, x, stack, xxx)
     
     [baphy_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy', true);
     
