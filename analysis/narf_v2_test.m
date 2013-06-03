@@ -15,7 +15,7 @@ MODULES = scan_directory_for_modules();
 %        'mse', ... % 'mse', ... %{'mses0', 'mses1', 'mses2', 'mses3', 'mses4', 'mses5', 'mses6', 'mses7', 'mses8', 'mses9', 'err10', 'err15', 'err20'}, 
 %        'boostperfile'}; % {'fmin', 'fminlsq', 'boost', 'fminu', 'qfmin', 'qlsq', 'qboost', 'lsqn', 'genetic', 'anneal', 'sb', 'sp1boost', 'sp2boost', 'sp3boost', 'sp4boost', 'sp5boost'}};
 
-mm = {'isi200', 'log2b', {{'firn'}, {'firn', 'npfnl'}}, {'llinv', 'llgam', 'llexp'}, 'boost'}; % , 'log2b', 'firn', 'bic', 'boost'};
+mm = {'isi200', 'log2b', 'firn', {'llexp0', 'llexp1', 'llexp2', 'llexp3', 'llexp4'}, 'boost'}; % , 'log2b', 'firn', 'bic', 'boost'};
 
 batch = 242;
 %cells = request_celldb_batch(batch, 'por023b-b1'); % 241

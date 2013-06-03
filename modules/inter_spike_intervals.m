@@ -14,7 +14,7 @@ m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.input  = 'resp';
-m.n_bins = 200;
+m.n_bins = 500;
 m.time   = 'resp_time';
 m.output = 'resp_ISIs'; % ISIs are measured from one spike to its previous
 m.output_time = 'resp_spiketimes';
@@ -88,6 +88,7 @@ function do_plot_isis(sel, stack, xxx)
  
     do_xlabel('Raw Inter-Spike Intervals [s]');
     do_ylabel('# of neurons');
+    
 end
 
 function do_plot_autocorrelation(sel, stack, xxx)

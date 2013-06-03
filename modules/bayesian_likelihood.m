@@ -11,12 +11,12 @@ m.name = 'bayesian_likelihood';
 m.fn = @do_bayesian_likelihood;
 m.pretty_name = 'Bayesian Likelihood';
 m.editable_fields = {'stim', 'n_bins', 'raw_ISIs', 'scaled_ISIs', ...
-                     'time', 'train_bic', 'test_bic', 'train_nlogl', 'test_nlogl', 'cstim'};
+                     'time', 'train_bic', 'test_bic', 'train_nlogl', 'test_nlogl', 'cstim', 'probdist', 'probcutoff'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.stim = 'stim';
-m.n_bins = 200;
+m.n_bins = 500;
 m.raw_ISIs = 'resp_ISIs';
 m.raw_spiketimes = 'resp_spiketimes';
 m.scaled_ISIs = 'scaled_resp_ISIs';
@@ -26,6 +26,7 @@ m.test_bic  = 'score_test_bic';
 m.train_nlogl = 'score_train_nlogl';
 m.test_nlogl = 'score_test_nlogl';
 m.probdist = 'exponential'; % Also try 'inversegaussian', 'gamma'
+m.probcutoff = 0.001; % Cutoff in seconds
 m.cstim = 'cstim'; % Cumulative stimulus
 
 % Overwrite the default module fields with arguments 
@@ -94,8 +95,8 @@ function x = do_bayesian_likelihood(mdl, x, stack, xxx)
             % FIXME: Sometimes scaled ISIs of 0 occur
             % I'm not sure what to do about this.
             % Right now I'll just 'modify' them to be slightly nonzero
-            sISIs(sISIs == 0) = 10^-9; % FIXME
-
+            sISIs(sISIs < 0) = 0; % FIXME
+            
             if any(isnan(sISIs))
                 error('How did a scaled ISI become NaN?!');
             end
@@ -105,15 +106,21 @@ function x = do_bayesian_likelihood(mdl, x, stack, xxx)
         end
     end
     
+    % Anything less than the cutoff should be NaN'd
+    scaled_ISIs(scaled_ISIs <= mdl.probcutoff) = NaN;   
+    
+    % Everything should also be shifted left to the cutoff
+    scaled_ISIs(:) = scaled_ISIs(:) - mdl.probcutoff;
+    
     % Average lambda for the scaled ISIs
-	l_avg = 1 / mean(scaled_ISIs);
+	l_avg = 1 / nanmean(scaled_ISIs);
     
 	% Where scaled ISIs fall on the unit poisson's cumulative density function
-    z = 1 - exp(- l_avg * scaled_ISIs);
+    z = 1 - exp(- l_avg * scaled_ISIs);      
     
     % Mathematically it's impossible to have z become less than zero, but
-    % occasionally numerical noise is bringing us there. I think. 
-    z(z < 0) = abs(z(z<0));
+    % occasionally numerical noise is bringing us there. I think.     
+    z(z < 0) = 10^-9;   
     
     PD = fitdist(z, mdl.probdist);  % TODO: Also try gamma, inverse gaussian
     k = 1;
@@ -133,8 +140,15 @@ function do_plot_scaled_isis(sel, stack, xxx)
     mdl = stack{end}{1};
      
     %sidxs = (xout.dat.(sel.stimfile).(mdl.scaled_ISIs) > 0);
-    hist(xout.(mdl.scaled_ISIs), mdl.n_bins);
- 
+    tmp = xout.(mdl.scaled_ISIs)
+    tmp(tmp < mdl.probcutoff) = NaN;
+%    hold on;
+    hist(tmp, mdl.n_bins);
+%     PDTMP = fitdist(xout.(mdl.scaled_ISIs), mdl.probdist);
+%     lam = 1 / PDTMP.mu;
+%     ts = linspace(0, max(xout.(mdl.scaled_ISIs)(:)), 500);
+%     plot(ts, 1/mdl.n_bins * lam * exp(-lam*ts), 'r-');
+%     hold off;
     do_xlabel('Raw Inter-Spike Intervals [s]');
     do_ylabel('# of neurons');
 end
@@ -144,11 +158,12 @@ function do_plot_scaled_autocorr(sel, stack, xxx)
     xout = xxx{end};
     mdl = stack{end}{1};
     
-    isis = xout.(mdl.scaled_ISIs);
+    isis = xout.(mdl.scaled_ISIs);   
+    isis(isis < mdl.probcutoff) = NaN;
 
     plot(isis(2:end), isis(1:end-1), 'k.');
  
-    text(0.5,0.5, ['Spike Count:' num2str(length(xout.(mdl.scaled_ISIs)))]);
+    text(0.5,0.5, ['Spike Count:' num2str(length(isis))]);
     
     do_xlabel('ISI at t(n) [s]');
     do_ylabel('ISI at t(n-1) [s]');
