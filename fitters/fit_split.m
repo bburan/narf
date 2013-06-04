@@ -41,8 +41,27 @@ end
 if ~all(areperfmetrics > fit_end_depth) || isempty(areperfmetrics)
     error('Model structure not splittable: performance metric must come after all modules with fittable fields.');
 end
+
+% FIXME: This is ugly and a hack and should be removed
+cached_splitters = {};
+cached_unifiers = {};
 if any(has_splitters)
-    error('Model structure not splittable: No splitters/unifiers with parameters can exist before this.');
+    % If it is just a NPFNL or equivalent, then cache it and restore it  
+    for ii = 1:length(STACK)
+        cached_splitters{ii} = [];
+        cached_unifiers{ii} = [];
+        if isfield(STACK{ii}{1}, 'splitter')                    
+            if ~isfield(STACK{ii}{1}, 'fit_fields')
+                cached_splitters{ii} = STACK{ii}{1}.splitter;
+                cached_unifiers{ii} = STACK{ii}{1}.unifier;
+                STACK{ii} = STACK{ii}(1);
+                STACK{ii}{1} = rmfield(STACK{ii}{1}, 'splitter');
+                STACK{ii}{1} = rmfield(STACK{ii}{1}, 'unifier');
+            else
+                error('Model structure not splittable: No splitters/unifiers with parameters can exist before this.');
+            end            
+        end
+    end    
 end
 
 cached_xxx = XXX;
@@ -82,6 +101,19 @@ for ii = fit_start_depth:length(STACK)
             STACK{ii}{jj} = stack_splits{jj}{ii}{1};
             STACK{ii}{jj}.splitter = splitter;
             STACK{ii}{jj}.unifier = unifier;
+        end
+    end
+end
+
+% Restore the cached splitters
+if ~isempty(cached_splitters)
+    for ii = 1:length(STACK)
+        if ~isempty(cached_splitters{ii})
+            STACK{ii}{1}.splitter = cached_splitters{ii};
+            STACK{ii}{1}.unifier = cached_unifiers{ii};
+            for jj = 1:length(cached_splitters{ii}(XXX{ii}))
+                STACK{ii}{jj} = STACK{ii}{1};
+            end
         end
     end
 end
