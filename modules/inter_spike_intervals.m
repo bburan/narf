@@ -101,8 +101,9 @@ function do_plot_autocorrelation(sel, stack, xxx)
 
     plot(isis(2:end), isis(1:end-1), 'k.');
  
-    text(0.5,0.5, ['Spike Count:' num2str(length(sidxs))]);
-    
+    R = corrcoef(isis(2:end), isis(1:end-1));
+    textLoc(sprintf('Spike Count:%d\nSelected Stimfile Corr=%f', ...
+                    nnz(sidxs), R(2,1)), 'NorthEast');
     do_xlabel('ISI at t(n) [s]');
     do_ylabel('ISI at t(n-1) [s]');
 end

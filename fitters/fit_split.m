@@ -111,7 +111,7 @@ if ~isempty(cached_splitters)
         if ~isempty(cached_splitters{ii})
             STACK{ii}{1}.splitter = cached_splitters{ii};
             STACK{ii}{1}.unifier = cached_unifiers{ii};
-            for jj = 1:length(cached_splitters{ii}(XXX{ii}))
+            for jj = 1:length(cached_splitters{ii}(XXX(1:ii)))
                 STACK{ii}{jj} = STACK{ii}{1};
             end
         end

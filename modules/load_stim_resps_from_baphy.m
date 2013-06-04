@@ -14,7 +14,7 @@ m.editable_fields = {'raw_stim_fs', 'raw_resp_fs', 'include_prestim', ...
                      'stimulus_format','stimulus_channel_count', ...
                      'output_stim', 'output_stim_time', ...
                      'output_resp', 'output_resp_time', 'output_respavg'};
-m.isready_pred = @isready_baphy;
+m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.raw_stim_fs = 100000;
@@ -73,10 +73,12 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         error('BAPHY gave %d cellids yet I want only 1.', length(cellids));
     end
     
-    % Create the 'dat' cell array and its entries
+    % Create the 'dat' cell array and its entries, if it doesn't exist
     len = length(files_to_load);
     %x.dat = cell(1, len);
-    x.dat=struct();
+    if ~isfield(x, 'dat')
+        x.dat=struct();
+    end
     for f_idx = 1:len;
         f = files_to_load{f_idx};
         

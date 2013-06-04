@@ -28,12 +28,8 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_smooth_respavg(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
+function x = do_smooth_respavg(mdl, x, stack, xxx)
 
-    x.training_set;
-    
     % Build the gaussian smoothing filter   
     % gf = gausswin(mdl.window_size);
     gf = mdl.window;
@@ -54,18 +50,18 @@ function x = do_smooth_respavg(stack, xxx)
     end
 end
 
-function do_plot_respavg(stack, xxx)
-    mdl = stack{end};
+function do_plot_respavg(sel, stack, xxx)
+    mdl = stack{end}{1};
     xold = xxx{end-1};
     xnew = xxx{end};
     
-    [sf, stim_idx, baphy_chan_idx] = get_baphy_plot_controls(stack);
-    chan_idx = popup2num(mdl.plot_gui.selected_chan_popup);
+    %[sf, stim_idx, baphy_chan_idx] = get_baphy_plot_controls(stack);
+    %chan_idx = popup2num(mdl.plot_gui.selected_chan_popup);
     
-    plot(xold.dat.(sf).(mdl.time), ...
-         xold.dat.(sf).(mdl.input)(:, stim_idx, chan_idx), 'k-', ...
-         xold.dat.(sf).(mdl.time), ...
-         xnew.dat.(sf).(mdl.output)(:, stim_idx, chan_idx), 'r-');
+    plot(xold.dat.(sel.stimfile).(mdl.time), ...
+         xold.dat.(sel.stimfile).(mdl.input)(:, sel.stim_idx, sel.chan_idx), 'k-', ...
+         xold.dat.(sel.stimfile).(mdl.time), ...
+         xnew.dat.(sel.stimfile).(mdl.output)(:, sel.stim_idx, sel.chan_idx), 'r-');
      
 end
 

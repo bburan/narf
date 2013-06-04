@@ -142,15 +142,22 @@ function do_plot_scaled_isis(sel, stack, xxx)
     %sidxs = (xout.dat.(sel.stimfile).(mdl.scaled_ISIs) > 0);
     tmp = xout.(mdl.scaled_ISIs);
     tmp(tmp < mdl.probcutoff) = NaN;
-%    hold on;
-    hist(tmp, mdl.n_bins);
-%     PDTMP = fitdist(xout.(mdl.scaled_ISIs), mdl.probdist);
-%     lam = 1 / PDTMP.mu;
-%     ts = linspace(0, max(xout.(mdl.scaled_ISIs)(:)), 500);
-%     plot(ts, 1/mdl.n_bins * lam * exp(-lam*ts), 'r-');
-%     hold off;
+    tmp(:) = tmp(:) - mdl.probcutoff;
+    %hold on;
+    %hist(tmp, mdl.n_bins);
+    histfit(tmp, mdl.n_bins, mdl.probdist)
+    %PDTMP = fitdist(xout.(mdl.scaled_ISIs), mdl.probdist);
+    %lam = 1 / PDTMP.mu;
+    %ts = linspace(0, max(xout.(mdl.scaled_ISIs)(:)), 500);
+    %plot(ts, length(tmp)/mdl.n_bins * lam * exp(-lam*ts), 'r-');
+    %hold off;
+
     do_xlabel('Raw Inter-Spike Intervals [s]');
     do_ylabel('# of neurons');
+    
+    textLoc(sprintf('train nlogl:%f\ntest nlogl:%f', ...
+                xout.(mdl.train_nlogl), xout.(mdl.test_nlogl)), 'NorthEast');
+    
 end
 
 function do_plot_scaled_autocorr(sel, stack, xxx)
@@ -163,7 +170,10 @@ function do_plot_scaled_autocorr(sel, stack, xxx)
 
     plot(isis(2:end), isis(1:end-1), 'k.');
  
-    text(0.5,0.5, ['Spike Count:' num2str(length(isis))]);
+    R = corrcoef(isis(2:end), isis(1:end-1));
+    
+    textLoc(sprintf('Spike Count:%d\nCorr=%f', ...
+                    length(isis), R(2,1)), 'NorthEast');
     
     do_xlabel('ISI at t(n) [s]');
     do_ylabel('ISI at t(n-1) [s]');
