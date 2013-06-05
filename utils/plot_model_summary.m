@@ -81,12 +81,14 @@ ax_text  = text('Interpreter', 'none', 'Position', [0.05, 0.45], ...
 celldir = [NARF_SAVED_IMAGES_PATH filesep num2str(META.batch) filesep XXX{1}.cellid];
 if ~exist(celldir)
     mkdir(celldir);
+    unix(['chmod 777 ' celldir]);
 end
 pngfile = [celldir filesep META.modelfile '.png'];
 set(gcf,'PaperPositionMode','auto');
 set(gcf,'InvertHardcopy','off');
 set(0,'defaultTextFontName', 'Arial');
 print(fig, pngfile, '-dpng');
+unix(['chmod 777 ' pngfile]);
 
 % SVD- Don't close figure so that it gets saved by queuerun.m as well
 %close(fig);

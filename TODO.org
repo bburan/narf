@@ -1,3 +1,9 @@
+* Careful!
+  When using the database, I must be careful not to overwrite any newer transactions
+  The way to do this will be to check the timestamp of the last update. If it's newer, use the new database entry or prompt user.
+  This should allow multiple people to know when they are accidentally editing the same thing simultaneously.
+  If that happens, rename the analysis automatically and submit that.
+
 * Report to Stephen on per-file split conclusions
   1. [ ] Manual verification of per-file splits.
 	 - [ ] If I manually train 5 models on each thing, then recombine them, do I get the same results?
