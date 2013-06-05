@@ -1,0 +1,36 @@
+function batch_244()
+
+
+narf_set_path; 
+
+batch = 244;
+cells = request_celldb_batch(batch);
+
+mm = {'env100', ...
+      'log2b', ...
+      'firno',...
+      'initrc',...
+      'nonl',...
+      'mse',...
+      {'boost','boostperfile'}};
+
+modulekeys = keyword_combos(mm);
+force = false;
+
+for ii = 1:length(cells)
+    for jj = 1:length(modulekeys)       
+        fprintf('Fitting cell "%s" [%d/%d] model [%d/%d] %s\n', ...
+            cells{ii}.cellid, ii, length(cells),  jj, length(modulekeys), ...
+            write_readably(modulekeys{jj})); 
+        
+        % For testing, use fit_single_model instead of enqueue_single_model
+        if 0,
+            fit_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
+                cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode);
+        else
+            enqueue_single_model(batch, cells{ii}.cellid, modulekeys{jj}, ...
+                             cells{ii}.training_set, cells{ii}.test_set,...
+                             cells{ii}.filecode, force);
+        end
+    end
+end

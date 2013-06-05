@@ -41,7 +41,7 @@ for nn = 1:length(rundata)
     test_set={};
     file_code={};
     
-    if rundata(nn).batch==241,
+    if ismember(rundata(nn).batch,[241,244])
         cellfiledata=dbgetscellfile('cellid',cellid,'runclassid',[42 8 103]);
         filecount=length(cellfiledata);
         

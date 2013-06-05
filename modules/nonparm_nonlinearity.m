@@ -66,23 +66,37 @@ function [phi,outbinserr] = init_nonparm_nonlinearity(mdl, x)
     rre=zeros(bincount,1);
     
     if nansum(resp)>0,
-        [ss,si1]=sort(pred);
+        [ps,si1]=sort(pred);
         tb=bincount;
         b=[];
         
-        while length(b)<bincount && tb<length(si1),
-            tb=tb+1;
-            edges1=round(linspace(1,length(si1)+1,tb));
-            [b,ui,uj]=unique(ss(edges1(1:(end-1)))');
+        if 0,
+            
+            edgesval=linspace(ps(1),ps(end)+1,tb+1);
+            ps=cat(1,ps,ps(end)+1);
+            edges1=zeros(size(edgesval));
+            edges1(1)=1;
+            for ii=2:length(edgesval),
+                edges1(ii)=max(find(ps<edgesval(ii)));
+            end
+            edges1=unique(edges1);
+            bincount=length(edges1)-1;
+        else
+            % scale edges based on number of samples
+            while length(b)<bincount && tb<length(si1),
+                tb=tb+1;
+                edges1=round(linspace(1,length(si1)+1,tb));
+                [b,ui,uj]=unique(ps(edges1(1:(end-1)))');
+            end
+            edgeend=edges1(end);
+            edges1=edges1(ui);
+            
+            if length(b)<bincount,
+                b=[b repmat(b(end),[1 bincount-length(b)])];
+                edges1=[edges1 repmat(edges1(end),[1 bincount-length(edges1)])];
+            end
+            edges1=[edges1 edgeend];
         end
-        edgeend=edges1(end);
-        edges1=edges1(ui);
-        
-        if length(b)<bincount,
-            b=[b repmat(b(end),[1 bincount-length(b)])];
-            edges1=[edges1 repmat(edges1(end),[1 bincount-length(edges1)])];
-        end
-        edges1=[edges1 edgeend];
         
         for bb=1:bincount,
             pp(bb)=mean(pred(si1(edges1(bb):(edges1(bb+1)-1))));
@@ -90,9 +104,10 @@ function [phi,outbinserr] = init_nonparm_nonlinearity(mdl, x)
             nn=sqrt(edges1(bb+1)-edges1(bb));
             if edges1(bb+1)>edges1(bb),
                 rre(bb)=std(resp(si1(edges1(bb):(edges1(bb+1)-1))))./...
-                    (nn+(nn==1));
+                        (nn+(nn==1));
             end
         end
+        
         pp(isnan(pp))=0;
         rr(isnan(rr))=0;
         

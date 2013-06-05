@@ -27,4 +27,5 @@ v = zeros(sum(lens), 1);
 jj = 1;
 for ii = 1:length(sfs),
     v(jj:jj+lens(ii)-1) = reshape(dat.(sfs{ii}).(field), [], 1);
+    jj=jj+lens(ii);
 end
