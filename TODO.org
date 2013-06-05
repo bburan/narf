@@ -1,55 +1,60 @@
-* Better downsampling
-  decimate
-  binning
-  etc
+* Report to Stephen on per-file split conclusions
+  1. [ ] Manual verification of per-file splits.
+	 - [ ] If I manually train 5 models on each thing, then recombine them, do I get the same results?
+	 - [ ] Is correlation being calculated properly?
+         - [ ] Are we splitting and unifying on the files trained upon?
+         - [ ] Is the training R^2 usually higher than the test?
+         - [ ] Does MSES have an effect?
+         - [ ] Normalization is done across files or not?
+  2. [ ] COMPARE Models Functions
+	 A function that takes N filenames
+	 It loads them up, checks that they have identical model structure
+	 Then it extracts any parameters that differ. 
 
-* Why is per-file boosting so crappy?
-  - Is correlation being calculated properly?
-  - Are we splitting and unifying on the files trained upon?
-  - Why is the training R^2 not improving? We should at least overfit better!
-  - Does MSES have an effect?
-  - Init0?
-  - Is the boosting fitter quitting to soon? (Try lsq)
-  - Normalization is done across files and could affect things subtly
-  
-* My options
-  - Figure out how to accomodate splits before the boostperfile
-  - Cache
-  - Make 
-
-* ADD
-  - Safety check so that these modules do not allow unifiers/splitters
-    - correlation
-    - MSE
-    - bayesian
-    - loader
-    - 
-
-* Brainstorm of improvements to log likelihood metric:
-  - [ ] Try decimate, or resample (@(x,n) abs(decimate(x,n)),  @(x,n) abs(resample(x,1,n))
-  - [ ] Try BIC instead of log likelihood
-  - [ ] Try using the gamma distribution or inverse gaussian
-  - [ ] Try truncating in different ways, try shifting or no shifting 
-
-[-0.26953   -0.035156      1.4375     0.44336      0.5293   0.0019531           0    -0.17383    -0.09375   0.0019531    -0.39453   0.0058594;0.0078125  -0.0058594           0       0.125     -0.0625           0           0           0   0.0019531           0   0.0019531    -0.12109]
-* More Bayesian Things to Try
-  - Start with a very good MSE estimator
-  - Look at the distributions there!
-  probability distributions for each pixel of an STRF
-  Temporal jitter of a neuron spike
-  Try the per-sample log likelihood ratio
-
-* Bug to fix
-  por032a-07-1/241/env100_log2b_firn_initrc_npfnl_mse_boostperfile  	bobcat  	16016  	 DELETE RESET  	DUMP 
-  27304 	ivar  	 dead(2013-05-31)  	15  	por032b-26-1/241/env100_log2b_firn_initrc_npfnl_mse_boostperfile  	bobcat  	909  	 DELETE RESET  	DUMP 
-  27305 	ivar  	 dead(2013-05-31)  	16  	por032b-26-2/241/env100_log2b_firn_initrc_npfnl_mse_boostperfile  	bobcat  	1853  	 DELETE RESET  	DUMP 
-  27409 	ivar  	 dead(2013-05-31)  	19  	por032a-07-1/241/env100_log2b_firn_initrc_npnl_mse_boostperfile  	capybara  	24839  	 DELETE RESET  	DUMP 
-  27416 	ivar  	 dead(2013-05-31)  	14  	por032b-26-1/241/env100_log2b_firn_initrc_npnl_mse_boostperfile  	microbat  	11748  	 DELETE RESET  	DUMP 
-  27417 	ivar  	 dead(2013-05-31)  	8  	por032b-26-2/241/env100_log2b_firn_initrc_npnl_mse_boostperfile  	hyrax  	24505  	 DELETE RESET  	DUMP 
-
-* Bug to fix regarding plotting
-  Error in ==> plot_model_summary at 89
-  print(fig, pngfile, '-dpng');  
+* Experiments:
+  1. [ ] Can an adaptive compressor be generated that will work clean up FIR fits?
+  2. [ ] Starting with a very good MSE-trained estimator, what is the noise distribution?
+	 [0  1  3  1  0  0  0 -1  0  0  0  0; -0 -0  1 -0 -0 -0 -0 -0 -0  -0.25 -0 -0]
+  3. [ ] For my favorite neuron, what is the best non-truncated distribution?
+	 {isi200v2, log4b, firno, init0, npfnl, {llexp0, llgam, llinv, lllogn, llweib}, boost}
+  4. [ ] For my favorite neuron, what is the best truncated noise distribution?
+  5. [ ] Can a really simple model like this do very well:
+	 Logfit (1 parm) + scale & delay amount per channel (2*n parms) + respavg-estimated stateful depression amount (2*n parms)
+  6. [ ] Which is the best non-truncated distribution with log-likelihood?
+	 Use {'ISI200v2', 'log2',   across the population
+  7. [ ] Is it better to bin, reload from baphy, resample, downsaple, decimate, convolve, smooth, or infer respavg?
+         Try decimate, or resample (@(x,n) abs(decimate(x,n)),  @(x,n) abs(resample(x,1,n))
+  8. [ ] Does MSES# and init0 improve the per-file boosts?
+  9. [ ] Is boosting quitting too soon? (i.e. does qboost or lsq improve things?)
+  10. [ ] How well do the different "inferp" keywords work?
+	  Can an inferp keyword smoothing be done on the fly or in a single pass at the end?
+  11. [ ] Which metric is working best without smoothing?
+	  {env200, log2b, firn, {err10, err15, err20, bic, ll*}, boost}?
+  12. [ ] Do other fitters improve performance over boost?
+  13. [ ] After training, can we get an idea of the STRF variance via reverse correlation?
+	  Start from RESPAVG signal at end
+	  Numerically zero-find to estimate the pre-NPNL stimulus, starting from the estimate from the forward pass
+	  For each filter coeff, push in the reverse-correlated distribution (several thousand points)
+	  Plot the histograms for each FIR coef as a line plot. 
+  14. [ ] Does chopping off the 1st second in load_stim_resps_from_baphy improve fits?
+  15. [ ] What if we use RESPAVG to compute the depression state, and fit the depression amounts to that?
+	  Would an exponential feed through too much?
+  16. [ ] Can I make a time-compensating autocorrelation NPNL?
+	  Idea: Do NPNL-like transform to autocorrelated ISI data?
+  17. [ ] Instead of getting the full covariance matrix, just get per-parameter variances.
+	  Vary each parameter deterministically or stochastically
+	  Estimate the amount variance which decreases the MSE by a set amount
+	  This should let us determine the "relevancy" of each parameter
+	  Sort all the parameters, and take just the most relevant ones!
+  18. [ ] How well do our basic model types compare? (firn, depn, firv2, inex)
+  19. [ ] GMM without slow EM step:
+	  For each point, take K nearest neighbors. 
+	  Compute 2D gaussian for that point. 
+	  Flatten that 2D gaussian and push into SENL's 1D input
+  20. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
+  21. [ ] Use a single wavelet transform in place of downsampling + FIR filter
+  22. [ ] How well does the MSECHEAT algorithm do?
+	  (Tries several different sparsity values in sequence, then picks the best one)
 
 * IMPROVED QUEUE MANAGER PROGRAM
 ** Data Structures
@@ -91,17 +96,18 @@
      | smoothness      | text      |      |     |         |       |                                                                                  |
 
    - NarfQuestions: For scientific queries
-     | Field         | Type      | Null | Key | Default | Extra | Notes                                                |
-     |---------------+-----------+------+-----+---------+-------+------------------------------------------------------|
-     | question      | text      |      |     |         |       | The question we asked.                               |
-     | answer        | text      |      |     |         |       | Our current answer.                                  |
-     | modeltree     | text      |      |     |         |       | A model keyword tree; all branches are compared      |
-     | batch         | int(11)   |      |     |         |       | Associated with a particular batch                   |
-     | XXX0          | text      |      |     |         |       | cellid, est_set, val_set, filecodes                  |
-     | summaryfigure | text      |      |     |         |       | Summarizes the answer to the question                |
-     | isAnswered    | char(1)   |      |     |         |       | When you have decided you have answered the question |
-     | lastmod       | timestamp |      |     |         |       |                                                      |
-     | datapartiton  | char(255) |      |     |         |       | all, perfile, perfilecode                            |
+     | Field        | Type      | Null | Key | Default | Extra | Notes                                                |
+     |--------------+-----------+------+-----+---------+-------+------------------------------------------------------|
+     | id           |           |      |     |         |       |                                                      |
+     | name         | char(255) |      |     |         |       |                                                      |
+     | question     | text      |      |     |         |       | The question we asked.                               |
+     | tags         | text      |      |     |         |       |                                                      |
+     | answer       | text      |      |     |         |       | Our current answer.                                  |
+     | status       | char(1)   |      |     |         |       | When you have decided you have answered the question |
+     | modeltree    | text      |      |     |         |       | A model keyword tree; all branches are compared      |
+     | batch        | int(11)   |      |     |         |       | Associated with a particular batch                   |
+     | summaryfig   | text      |      |     |         |       | Summarizes the answer to the question                |
+     | lastmod      | timestamp |      |     |         |       |                                                      |
 
    - NarfBatches
      | batchname     | varchar(255) |   |   |   |   | More generic names                                   |
@@ -110,18 +116,11 @@
      | val_set       | text         |   |   |   |   |                                                      |
      | tags          | text         |   |   |   |   |                                                      |
      | lastmod       | timestamp    |   |   |   |   |                                                      |
- 
-* Easy stuff for today
-  1. [ ] Fix write permissions for images, models
-  2. [ ] COMPARE Models Functions
-	 A function that takes N filenames
-	 It loads them up, checks that they have identical model structure
-	 Then it extracts any parameters that differ. 
-  3. [ ] Loadstimfrombaphy should have a "chop_beginning" parameter that removes the first N samples
-  4. [ ] Clean up saved_analysis, saved_models, saved_images
-	 
+
 * Actions
-  1. [ ] A better queuing script
+  1. [ ] Safety check so that these modules do not allow unifiers/splitters
+         - correlation, MSE, bayesian, loader, etc
+  2. [ ] A better queuing script
 	 - [ ] Sorts according to QUESTIONS 
 	 - [ ] Scatter plot comparison functionality
 	 - [ ] Overwrite existing models?
@@ -132,13 +131,14 @@
 	       - [ ] dead/jobs
 	       - [ ] DB contents and Filesystem still sync up
 	       - [ ] Everything is enqueued
-  2. [ ] Tool to start comparing models:
+  3. [ ] Tool to start comparing models:
 	 - [ ] Specify models with a function
 	 - [ ] It tells you how many matching models were found, and how many were expected
 	 - [ ] Ability to extract parameters from every model
 	 - [ ] Calls your special analysis function
 	 - [ ] Hold out data 	 
-  3. [ ] Repair Narf Browser
+  4. [ ] Clean up saved_analysis, saved_models, saved_images
+  5. [ ] Repair Narf Browser
 	 - [ ] Sparsity is not going into the DB
 	 - [ ] More metrics should go into the DB
 	 - [ ] Elitist browsing (Shows ONLY THE HIGHEST MODEL of each cell given current masks)
@@ -149,50 +149,35 @@
 	 - [ ] Generic 'modelstring' query space
 	 - [ ] Arbitrary keyword substring stuff
          - [ ] The total number of spikes in each behavior respfile should be displayed?
-  4. [ ] Default per-paramset, per-channel heatmap graph fns:
+  6. [ ] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [ ] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  8. [ ] Repair Fitters 
+  7. [ ] Repair Fitters 
          - [ ] Remove, then re-add test_set data by default to make fitters faster
          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  9. [ ] Add new functionality to the do_scatter_plot method
+  8. [ ] Add new functionality to the do_scatter_plot method
 	 - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
 	       Use grayish/blackish 
-  10. [ ] Profile the time spent during boosting and look for optimizations:
-          - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
-          - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
-          - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
-  11. [ ] Possible features to extract (And what what is needed to detect them)
-          - Spatial location of source (Phase difference or  )
+  9. [ ] Profile the time spent during boosting and look for optimizations:
+         - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
+         - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
+         - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
+  10. [ ] Possible features to extract (And what what is needed to detect them)
+          - Spatial location of source (Phase difference or not)
           - Freq (STRF)
           - Freq direction rising/falling (STRF with diagonal band)
           - Pitch (STRF with harmonics)
           - Timbre (STRF with harmonics)
           - Vowels, Consonants 
           - Onsets, offturns (STRF)
-  12. [ ] What if we use RESPAVG to compute the depression state, and fit the depression amounts?\
-	  Would an exponential feed through too much?
-  13. [ ] NPNL with autocorrelation of last few ms
-  14. [ ] What are the covariances of the FIR coefs? (RCORR)
-  15. [ ] Instead of getting the full covariance matrix, just get per-parameter variances.
-	  Vary each parameter deterministically or stochastically
-	  Estimate the amount variance which decreases the MSE by a set amount
-	  This should let us determine the "relevancy" of each parameter
-	  Sort all the parameters, and take just the most relevant ones!
-
-* FIXME: Irregularities
-  - Not all nonlinearities can accomodate NaNs in their code?
-  - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
-  - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
-  - Jackknifing doesn't work with performance metrics besides MSE right now?
-
-* FIXME: Unresolved Problems
-** Can fitters understand how to work on each paramset separately?
-   I wish they could. Right now, there is a subtle problem when we use a splitter on the FIR filter:
-   - Boosting slows down 5x. We have 5x24 = 120 parameters per boost step. 
-   - Fitting in one split regime is subtely interacting with fitting in another. Early stopping worsens this effect.
+  11. [ ] Fix Irregularities
+          - Not all nonlinearities can accomodate NaNs in their code, especially in stim
+          - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
+          - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
+          - Jackknifing doesn't work with performance metrics besides MSE right now?
+  12. [ ] Write a crash course guide on using NARF
 
 * LOW PRIORITY CLEANUP
   1. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
@@ -220,24 +205,6 @@
   10. [ ] Make a list of every function used purely for side effects, and rename it with a ! at the end
   11. [ ] Name convention of STACK vs stack, XXX vs xxx and the difficulty in understanding which one we are looking at! 
 	  Lots of hidden assumptions here which are a problem. Plot modules have access to AFTER data, too.
-
-* TECHNICALLY HARDER CHUNKS OF WORK
-  1. [ ] Inhibition/Excitiation model
-  2. [ ] Log Likelihood Fitter: (Any noise model, not just gaussian)
-	 Why: Noise model entropy is a metric of performance. (If best-fit noise distribution has low entropy, we know _more_ about the system) 
-	 Why: Likelihood is probably a better metric than MSE since large outliers may not affect it as much?
-	 MSE is biased towards gaussian noise models, and for real-life data sets the probability tails are always heavier than a gaussian.
-	 Subcomponents:
-	 - [ ] inter_spike_intervals computation module
-         - [ ] bayesian_likelihood() perf metric module
-  3. [ ] GMM without slow EM step:
-	 For each point, take K nearest neighbors. 
-	 Compute 2D gaussian for that point. 
-	 Flatten that 2D gaussian and push into SENL's 1D input
-  4. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
-  5. [ ] Use a single wavelet transform in place of downsampling + FIR filter
-  6. [ ] Write a crash course guide on using NARF
-  7. [ ] http://www.mathworks.com/matlabcentral/fileexchange/27662-evolve-top-and-bottom-envelopes-for-time-signals-i-e
 
 * DISCARDED/ABANDONED IDEAS
   1. [ ] FN: 'set_module_field' (finds module, sets field, so you can mess with things more easily in scripts)
@@ -359,3 +326,10 @@
    - Right now BAPHY has a complicated interface for a simple thing:
      - All we really want is the stimulus and response(s)
      - Selecting data ourselves, jackknifing it, hacking it out, etc are messy since half of it is done in Baphy and half in NARF
+** Make Fitters understand how to work on each paramset separately?
+          - I wish we could, but this is impossible. Right now, there is a subtle problem when we use a splitter on the FIR filter:
+          - Boosting slows down 5x. We have 5x24 = 120 parameters per boost step. 
+          - Fitting in one split regime is subtely interacting with fitting in another. Early stopping worsens this effect.
+          - However, this cannot be done. Perhaps we are trying to fit a nonlinearity across all models; we cannot fit each separately. 
+** Try this:
+ http://www.mathworks.com/matlabcentral/fileexchange/27662-evolve-top-and-bottom-envelopes-for-time-signals-i-e

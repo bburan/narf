@@ -87,3 +87,46 @@
 
 * Issues that need to be considered:
   1. The total number of spikes in each behavior respfile should be displayed?
+
+* Boosting per file beats boosting?
+  env100 log2b firn initrc npfnlx mse boost(perfile)
+  |          | test  | fit   |                 |
+  |----------+-------+-------+-----------------|
+  |          |       |       |                 |
+  |          |       |       |                 |
+  | 18b-c1   | boost | boost |                 |
+  | 18c-a1   | boost | boost |                 |
+  | 18c-a2   | boost | boost |                 |
+  | 19b-a1   | boost | boost |                 |
+  | 20a-c1   | boost | boost |                 |
+  | 22a-a1   | boost | boost |                 |
+  | 22a-c1   | boost | boost |                 |
+  | 28b-b1   | boost | boost |                 |
+  | 40a-16-1 | bpf   | bpf   |                 |
+  | 40a-16-2 | bpf   | boost |                 |
+  | 41a-10-1 | bpf   | boost |                 |
+  | 41a-14-1 | bpf   | bpf   |                 |
+  | 41a-16-1 | boost | boost | BPF Way worse   |
+  | 41a-16-2 | boost | boost |                 |
+  | 41a-31-1 | bpf   | bpf   |                 |
+  | 42a-16-1 | boost | boost |                 |
+  | 42a-16-2 | bpf   | boost |                 |
+  | 43a-14-1 | bpf   | boost |                 |
+  | 43a-15-1 | boost | boost |                 |
+  | 43a-16-1 | boost | boost | BPF WAAAY worse |
+  | 44a-10-1 | bpf   | bpf   |                 |
+  | 44a-10-2 | bpf   | bpf   |                 |
+  | 44a-14-1 | bpf   | boost |                 |
+  | 44a-16-1 | bpf   | boost |                 |
+  | 44a-16-2 | boost | boost |                 |
+  |          |       |       |                 |
+  | 50a-04-1 | boost | boost |                 |
+  | 50a-07-1 | bpf   | bpf   |                 |
+  | 50a-08-1 | bpf   | bpf   |                 |
+  | 50a-10-1 | boost | boost |                 |
+  | 50a-15-1 | bpf   | boost |                 |
+  | 50a-16-1 | boost | boost |                 |
+  | 50a-18-1 | bpf   | bpf   |                 |
+  | 51a-04-1 | bpf   | boost |                 |
+  | 51a-06-1 | bpf   |       |                 |
+  |          |       |       |                 |
