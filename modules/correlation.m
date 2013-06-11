@@ -37,8 +37,10 @@ m.plot_fns{1}.pretty_name = 'Correlation';
 
 function x = do_correlation(mdl, x, stack, xxx)            
     % Compute the training set correlation, ignoring nans
+        
     p = flatten_field(x.dat, x.training_set, mdl.input1);
     q = flatten_field(x.dat, x.training_set, mdl.input2); 
+    
     R = corrcoef(excise([p q]));
     if isnan(R)
         x.(mdl.train_score) = NaN; 
