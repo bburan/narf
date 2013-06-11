@@ -19,7 +19,8 @@ ta = -3;  % Text alignment vertical spacing
 
 if ~exist('parent_handle', 'var')
     parent_handle = figure('Menubar','none', 'Resize','off', ...
-       'Units','pixels', 'Position', [20 50 w h]);
+       'Units','pixels', 'Position', [20 50 w h],...
+       'Name', 'NARF Model Browser', 'NumberTitle', 'off');
 end
 
 db_results = [];

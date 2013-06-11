@@ -36,6 +36,7 @@ end
 
 % Optional fields
 m.plot_fns = {};
+m.auto_plot = @do_plot_scaled_isis;
 m.plot_fns{1}.fn = @do_plot_scaled_isis;
 m.plot_fns{1}.pretty_name = 'Scaled ISI Distribution';
 m.plot_fns{2}.fn = @do_plot_scaled_autocorr;

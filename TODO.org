@@ -1,22 +1,3 @@
-* Careful!
-  When using the database, I must be careful not to overwrite any newer transactions
-  The way to do this will be to check the timestamp of the last update. If it's newer, use the new database entry or prompt user.
-  This should allow multiple people to know when they are accidentally editing the same thing simultaneously.
-  If that happens, rename the analysis automatically and submit that.
-
-* Report to Stephen on per-file split conclusions
-  1. [ ] Manual verification of per-file splits.
-	 - [ ] If I manually train 5 models on each thing, then recombine them, do I get the same results?
-	 - [ ] Is correlation being calculated properly?
-         - [ ] Are we splitting and unifying on the files trained upon?
-         - [ ] Is the training R^2 usually higher than the test?
-         - [ ] Does MSES have an effect?
-         - [ ] Normalization is done across files or not?
-  2. [ ] COMPARE Models Functions
-	 A function that takes N filenames
-	 It loads them up, checks that they have identical model structure
-	 Then it extracts any parameters that differ. 
-
 * Experiments:
   1. [ ] Can an adaptive compressor be generated that will work clean up FIR fits?
   2. [ ] Starting with a very good MSE-trained estimator, what is the noise distribution?
@@ -102,18 +83,18 @@
      | smoothness      | text      |      |     |         |       |                                                                                  |
 
    - NarfQuestions: For scientific queries
-     | Field        | Type      | Null | Key | Default | Extra | Notes                                                |
-     |--------------+-----------+------+-----+---------+-------+------------------------------------------------------|
-     | id           |           |      |     |         |       |                                                      |
-     | name         | char(255) |      |     |         |       |                                                      |
-     | question     | text      |      |     |         |       | The question we asked.                               |
-     | tags         | text      |      |     |         |       |                                                      |
-     | answer       | text      |      |     |         |       | Our current answer.                                  |
-     | status       | char(1)   |      |     |         |       | When you have decided you have answered the question |
-     | modeltree    | text      |      |     |         |       | A model keyword tree; all branches are compared      |
-     | batch        | int(11)   |      |     |         |       | Associated with a particular batch                   |
-     | summaryfig   | text      |      |     |         |       | Summarizes the answer to the question                |
-     | lastmod      | timestamp |      |     |         |       |                                                      |
+     | Field      | Type         | Null | Key | Default | Extra | Notes                                                |
+     |------------+--------------+------+-----+---------+-------+------------------------------------------------------|
+     | id         |              |      |     |         |       |                                                      |
+     | name       | varchar(255) |      |     |         |       |                                                      |
+     | status     | varchar(255) |      |     |         |       | When you have decided you have answered the question |
+     | question   | text         |      |     |         |       | The question we asked.                               |
+     | answer     | text         |      |     |         |       | Our current answer.                                  |
+     | tags       | text         |      |     |         |       |                                                      |
+     | modeltree  | text         |      |     |         |       | A model keyword tree; all branches are compared      |
+     | batch      | varchar(255) |      |     |         |       | Associated with a particular batch                   |
+     | summaryfig | text         |      |     |         |       | Summarizes the answer to the question                |
+     | lastmod    | timestamp    |      |     |         |       |                                                      |
 
    - NarfBatches
      | batchname     | varchar(255) |   |   |   |   | More generic names                                   |
@@ -123,9 +104,36 @@
      | tags          | text         |   |   |   |   |                                                      |
      | lastmod       | timestamp    |   |   |   |   |                                                      |
 
+* Report to Stephen on per-file split conclusions
+  1. [ ] Manual verification of per-file splits.
+	 - [ ] If I manually train 5 models on each thing, then recombine them, do I get the same results?
+	 - [ ] Is correlation being calculated properly?
+	 - [ ] If we NAN out the respfiles instead of removing them completely, does that avoid the normalization bug problem?
+         - [ ] Are we splitting and unifying on the files trained upon?
+         - [ ] Is the training R^2 usually higher than the test?
+         - [ ] Does MSES have an effect?
+         - [ ] Normalization is done across files or not?
+  2. [ ] COMPARE Models Functions
+	 A function that takes N filenames
+	 It loads them up, checks that they have identical model structure
+	 Then it extracts any parameters that differ. 
+
+* Careful!
+  When using the database, I must be careful not to overwrite any newer transactions
+  The way to do this will be to check the timestamp of the last update. If it's newer, use the new database entry or prompt user.
+  This should allow multiple people to know when they are accidentally editing the same thing simultaneously.
+  If that happens, rename the analysis automatically and submit that.
+
+* Quick TOP TODO 
+  Add intelligence to boostperfile that
+  DOES split the normalization
+  DOES split any module that is not a performance metric or a loader
+  Put a breakpoint in boostperfile, check that the predictions are fine, then let the merge occur, then check the predictions again
+
 * Actions
   1. [ ] Safety check so that these modules do not allow unifiers/splitters
          - correlation, MSE, bayesian, loader, etc
+	 - Split normalization or not?
   2. [ ] A better queuing script
 	 - [ ] Sorts according to QUESTIONS 
 	 - [ ] Scatter plot comparison functionality
