@@ -62,7 +62,8 @@ if ~isempty(qdata) && qdata(1).complete<=0
         end
     return
 elseif ~isempty(qdata) && qdata(1).complete==2,
-    fprintf('Dead queue entry for %s already exists, skipping.\n', note);
+    fprintf('Dead queue entry for %s already exists. Resetting.\n', note);
+    dbsetqueue(qdata(1).id,0,0);
     return
 elseif ~isempty(qdata) && qdata(1).complete==1,
     fprintf('Resetting existing queue entry for %s\n', note);

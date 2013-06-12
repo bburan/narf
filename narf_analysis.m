@@ -322,9 +322,11 @@ handles.tags = uicontrol('Parent', center_panel, 'Style', 'edit', 'Units', 'pixe
         
         dbopen;
         [r, affected] = mysql(sql);
-        if affected ~= 1
-            error('Why was the SQL database not updated!!?');
-        end
+        % Commented out because sometimes you make NO changes to an entry,
+        % so then you get no results affected.
+%        if affected ~= 1 
+%            error('Why was the SQL database not updated!!?');
+        %end
         any_condition_changed_callback();
         update_query_results_table();
         %analyses_table_row_selected(findjobj(handles.analyses_table)); 
@@ -553,11 +555,14 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         
         force = get(handles.force, 'Value');
         
-        cells = request_celldb_batch(batch);
+        mm = eval(get(handles.modeltree, 'String'));
+        modulekeys = keyword_combos(mm);
         
-        for ii = 1:length(ret)
-            for jj = 1:length(models_found)                     
-                enqueue_single_model(sel_batch, cells{ii}.cellid, models_found{jj}, ...
+        cells = request_celldb_batch(sel_batch);
+        
+        for ii = 1:length(cells)
+            for jj = 1:length(modulekeys)                     
+                enqueue_single_model(sel_batch, cells{ii}.cellid, modulekeys{jj}, ...
                     cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, force);
             end
         end
