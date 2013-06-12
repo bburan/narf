@@ -23,7 +23,13 @@ end
 
 db_results = []; % Shared amongst local functions that need common SQL query results
 analyses_found = [];
+cellids_found = {};
+models_found = {};
 sel_analysis = [];
+sel_models = {};
+sel_batch = [];
+sel_cellids = {};
+sel_results = [];
 
 left_panel = uipanel('Parent', parent_handle, ...
     'Units','pixels', 'Position', [0 h-dh lw dh]);
@@ -98,7 +104,7 @@ handles.delete_analysis = uicontrol('Parent', left_panel, ...
          
          if strcmp(sel, 'Delete')
             sql = ['DELETE FROM NarfAnalysis WHERE id=' num2str(sel_analysis.id)];
-            mysql(sql);
+            dbopen; mysql(sql);
             any_condition_changed_callback();
          end         
      end        
@@ -117,38 +123,52 @@ hJT.setColumnSelectionAllowed(false);
 hJT.setRowSelectionAllowed(true);
 hJT.setSelectionMode(0); % Allow only a single row to be selected at once
 hJTcb = handle(hJT, 'CallbackProperties');
-set(hJTcb, 'MousePressedCallback', {@analyses_table_row_selected, gcf});
+set(hJTcb, 'MouseReleasedCallback', {@analyses_table_row_selected, gcf});
 set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
 
     function analyses_table_row_selected(a,~,~)
         r = a.getSelectedRows();
         sel_analysis = analyses_found(r+1);
         
-        % Update
         set(handles.name, 'String', sel_analysis.name);
         set(handles.status, 'String', sel_analysis.status);
         set(handles.short_desc, 'String', char(sel_analysis.question));
         set(handles.long_desc, 'String', char(sel_analysis.answer));
-        if isempty(sel_analysis.batch)
+        available_batches = get(handles.batch, 'String');
+        if isempty(sel_analysis.batch) || isempty(strcmp(available_batches, sel_analysis.batch))
             set(handles.batch, 'String', 'SELECT A BATCH');
         else
-            set(handles.batch, 'String', sel_analysis.batch);           
+            vec = strcmp(available_batches, sel_analysis.batch);
+            idx = 1:length(vec);
+            idx = idx(vec);
+            set(handles.batch, 'Value', idx);
+            if strcmp(sel_analysis.batch, 'SELECT A BATCH')
+                sel_batch = [];
+            else
+                sel_batch = str2num(sel_analysis.batch);
+            end
+            rebuild_batch_table();
         end
         set(handles.tags, 'String', char(sel_analysis.tags));
         if isempty(char(sel_analysis.modeltree))
             set(handles.modeltree, 'String', '');
             set(handles.modellist, 'String', 'DEFINE A MODELTREE ABOVE');
-            set(handles.modellist, 'Value', 1);
+            set(handles.modellist, 'Value', []);
         else
             set(handles.modeltree, 'String', char(sel_analysis.modeltree));
-            set(handles.modellist, 'Value', 1);
+            set(handles.modellist, 'Value', []);
             rebuild_modeltree();
         end
+        sel_models = {};
+        sel_cellids = {};
+        sel_results = [];
+        update_query_results_table();
     end
 
 
      function rebuild_status_filter()
          sql = ['SELECT DISTINCT status FROM NarfAnalysis AS sq'];
+         dbopen;
          ret = mysql(sql);
          statuses = cellstr(char(ret(:).status));
          set(handles.status_filter, 'String', cat(1, {'*'}, statuses));
@@ -156,6 +176,7 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
 
      function rebuild_tag_filter()
          sql = ['SELECT DISTINCT tags FROM NarfAnalysis AS sq'];
+         dbopen;
          ret = mysql(sql);
          tags = cellstr(char(ret(:).tags));
          % Split the tags by spaces or commas
@@ -190,6 +211,7 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
              sql = [sql whereand() 'tags LIKE "%' sel_tag '%"'];
          end
          
+         dbopen;
          analyses_found = mysql(sql);
          l = length(analyses_found);
          c = cell(l,3);
@@ -202,6 +224,15 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
          drawnow; 
      end 
 
+    function rebuild_batches_popup()
+        sql = ['SELECT DISTINCT batch FROM NarfBatches AS sq ORDER BY batch'];
+        dbopen;
+        ret = mysql(sql);       
+        batches = cellstr(char(ret(:).batch));
+        set(handles.batch, 'String', cat(1, {'SELECT A BATCH'}, batches));
+    end
+
+ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Center panel      
 uicontrol('Parent', center_panel, 'Style', 'text', 'Units', 'pixels',...
@@ -249,14 +280,19 @@ uicontrol('Parent', center_panel, 'Style', 'text', 'Units', 'pixels',...
 handles.tags = uicontrol('Parent', center_panel, 'Style', 'edit', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'unsorted, weird, goodresult, etc', ...
           'Position', [50+pad pad cw-50-pad*2 ts-pad], ...
-          'Callback', @analysis_changed_callback);   
+          'Callback', @analysis_changed_callback);
       
 	% Whenever the analysis changes, update the database. 
     function analysis_changed_callback(~,~,~)
+        %  Do nothing if no analysis is selected
+        if isempty(sel_analysis)
+            return;
+        end
         
         % Throw a popup message if somebody else has updated the analysis
         % between when you last read it.  
         sql = ['SELECT * FROM NarfAnalysis WHERE ID=' num2str(sel_analysis.id)]; 
+        dbopen;
         ret = mysql(sql);
         if length(ret) ~= 1
             error('Selected analysis ID number not found\n');
@@ -281,14 +317,16 @@ handles.tags = uicontrol('Parent', center_panel, 'Style', 'edit', 'Units', 'pixe
                'answer="' sql_sanitize(get(handles.long_desc, 'String')) '",' ...
                'tags="' sql_sanitize(get(handles.tags, 'String')) '", ' ...
                'modeltree="' sql_sanitize(get(handles.modeltree, 'String')) '", ' ...
-               'batch="' sql_sanitize(get(handles.batch, 'String')) '" ' ...
+               'batch="' sql_sanitize(popup2str(handles.batch)) '" ' ...
                'WHERE id=' num2str(sel_analysis.id)]; 
         
+        dbopen;
         [r, affected] = mysql(sql);
         if affected ~= 1
             error('Why was the SQL database not updated!!?');
         end
         any_condition_changed_callback();
+        update_query_results_table();
         %analyses_table_row_selected(findjobj(handles.analyses_table)); 
     end
       
@@ -308,80 +346,224 @@ handles.modeltree = uicontrol('Parent', right_panel, 'Style', 'edit', 'Units', '
         analysis_changed_callback();
         rebuild_modeltree();
     end
-handles.regen_modeltree = uicontrol('Parent', right_panel, ...
-          'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Regenerate Model List', ...
-          'Position', [rw-150-pad dh-(ts)-pad 150 ts], ...
-          'Callback', @rebuild_modeltree); 
-      
+
 handles.modellist = uicontrol('Parent', right_panel, 'Style', 'listbox', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', '', ...
           'Max', 3, 'Min', 1, ...
           'Position', [pad dh-ts*7+pad rw-pad*2 5*ts-pad], ...
-          'Callback', @any_condition_changed_callback);
+          'Callback', @modellist_callback);
+      
+    function modellist_callback(~,~,~)  
+        indexes = get(handles.modellist, 'Value');
+        models = get(handles.modellist, 'String');
+        sel_models = models(indexes);
+        update_query_results_table();
+    end
 
 handles.select_all_models = uicontrol('Parent', right_panel, ...
           'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Select All', ...
-          'Position', [pad dh-(ts*8) 100 ts], ...
-          'Callback', @any_condition_changed_callback); 
+          'Position', [rw-100-pad dh-(ts*1)-pad 100 ts], ...
+          'Callback', @sel_all_models_callback); 
       
-handles.select_none_models = uicontrol('Parent', right_panel, ...
-          'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Select None', ...
-          'Position', [100+pad dh-(ts*8) 100 ts], ...
-          'Callback', @any_condition_changed_callback); 
+    function sel_all_models_callback(~,~,~)
+        len = length(get(handles.modellist, 'String'));
+        set(handles.modellist, 'Value', 1:len);        
+        modellist_callback();
+    end      
       
 uicontrol('Parent', right_panel, 'Style', 'text', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Batch:', ...
-          'Position', [pad dh-(ts*9) 70 ts-pad]);
+          'Position', [pad dh-(ts*8) 50 ts-pad]);
       
 handles.batch = uicontrol('Parent', right_panel, 'Style', 'popupmenu', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', '*', ...
-          'Position', [70 dh-(ts*9) rw-200-pad ts]);
+          'HorizontalAlignment', 'left', 'String', 'SELECT A BATCH', ...
+          'Position', [50+pad dh-(ts*8) 200 ts], ...
+          'Callback', @batch_callback);
       
-handles.refresh_batch = uicontrol('Parent', right_panel, ...
+    function batch_callback(~,~,~)
+        bat = popup2str(handles.batch);        
+        sel_batch = str2num(bat);
+        analysis_changed_callback();
+        rebuild_batch_table();
+    end
+    
+handles.refresh_batches = uicontrol('Parent', right_panel, ...
           'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Refresh', ...
-          'Position', [rw-100-pad dh-(ts*9) 100 ts], ...
-          'Callback', @any_condition_changed_callback); 
+          'HorizontalAlignment', 'left', 'String', 'Refresh Batch', ...
+          'Position', [250+pad dh-(ts*8) 100 ts], ...
+          'Callback', @refresh_batch_callback); 
+      
+    function refresh_batch_callback(~,~,~)
+        if isempty(sel_batch)
+            return
+        end
+        dbopen;
+        sql = ['DELETE from NarfBatches WHERE batch="' num2str(sel_batch) '"'];
+        mysql(sql);
+        cells = request_celldb_batch(sel_batch);
+        for ii = 1:length(cells)
+            sqlinsert('NarfBatches', ...
+                      'batch',      num2str(sel_batch), ...
+                      'cellid',     cells{ii}.cellid, ...
+                      'est_set',    write_readably(cells{ii}.training_set), ...
+                      'val_set',    write_readably(cells{ii}.test_set), ...
+                      'filecodes',  write_readably(cells{ii}.filecode));
+        end
+        rebuild_batch_table();
+    end
 
-handles.batchs_table = uitable('Parent', right_panel, 'Enable', 'on', 'Units', 'pixels',...
+handles.batch_table = uitable('Parent', right_panel, 'Enable', 'on', 'Units', 'pixels',...
         'RowName', [], ...
-        'ColumnWidth', {40, rw-310, 100, 100, 60}, ...
-        'ColumnName', {'Show?', 'CellID', 'Est Set', 'Val Set', 'Filecodes'}, ...
-        'Position', [pad pad+ts rw-pad*2 dh-10*ts-pad]);
+        'ColumnWidth', {rw-400, 150, 150, 60}, ...
+        'ColumnName', {'CellID', 'Est Set', 'Val Set', 'Filecodes'}, ...
+        'Position', [pad pad+ts rw-pad*2 dh-9*ts-pad]);
 
+batch_JS = findjobj(handles.batch_table); 
+batch_JT = batch_JS.getViewport.getView;
+batch_JT.setNonContiguousCellSelection(false);
+batch_JT.setColumnSelectionAllowed(false);
+batch_JT.setRowSelectionAllowed(true);
+batch_JTcb = handle(batch_JT, 'CallbackProperties');
+set(batch_JTcb, 'MouseReleasedCallback', {@batch_table_row_selected, gcf});
+set(batch_JTcb, 'KeyPressedCallback', {@batch_table_row_selected, gcf});
+
+    function s = batch_table_row_selected(a, ~, ~)
+        r = a.getSelectedRows();
+        sel_cellids = cellids_found(r+1);
+        update_query_results_table();
+    end
+
+    function s = remove_crap(s)
+        s = regexprep(s, '''', '');
+        s = regexprep(s, '{', '');
+        s = regexprep(s, '}', '');
+        s = regexprep(s, ',$', '');
+    end
+    
+    function rebuild_batch_table(~,~,~)
+        sql = ['SELECT * from NarfBatches WHERE batch="' num2str(sel_batch) '" ORDER BY cellid'];
+        dbopen;
+        ret = mysql(sql);
+        dat = cell(length(ret), 4);
+        for ii = 1:length(ret)
+            dat{ii, 1} = remove_crap(ret(ii).cellid);
+            dat{ii, 2} = remove_crap(char(ret(ii).est_set));
+            dat{ii, 3} = remove_crap(char(ret(ii).val_set));
+            dat{ii, 4} = remove_crap(char(ret(ii).filecodes));
+        end
+        set(handles.batch_table, 'Data', dat);
+        cellids_found = cellstr(char(ret(:).cellid));
+        
+        update_query_results_table();
+    end
+    
 handles.select_all_cellids = uicontrol('Parent', right_panel, ...
           'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Select All', ...
-          'Position', [pad pad 100 ts], ...
-          'Callback', @any_condition_changed_callback); 
+          'Position', [rw-100-pad dh-(ts*8) 100 ts], ...
+          'Callback', @select_all_cellids_callback); 
 
-handles.select_none_cellids = uicontrol('Parent', right_panel, ...
-          'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Select None', ...
-          'Position', [100+pad pad 100 ts], ...
-          'Callback', @any_condition_changed_callback); 
+    function select_all_cellids_callback(~,~,~)
+        batch_JT.selectAll();
+        batch_table_row_selected(batch_JT);
+    end
       
     function rebuild_modeltree(~,~,~)
         try     
             mm = eval(get(handles.modeltree, 'String'));
             modulekeys = keyword_combos(mm);
-            models = {};
+            models_found = {};
             for ii = 1:length(modulekeys)
                 tmp = cellfun(@(n) sprintf('%s_', n), modulekeys{ii}, ...
                     'UniformOutput', false);
                 modelname = strcat(tmp{:});
                 modelname = modelname(1:end-1);
-                models{end+1} = modelname;
+                models_found{end+1} = modelname;
             end
-            set(handles.modellist, 'String', models);
+            set(handles.modellist, 'String', models_found);
+            update_query_results_table();
         catch            
             set(handles.modellist, 'String', {'ERROR IN MODELTREE EXPRESSION'});
         end 
-    end      
+    end
+
+uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Status Report', ...
+          'Position', [pad pad 150 ts], ...
+          'Callback', @status_report_callback);
+    
+    function yn = model_exists_in_db(bat, cellid, modelname, est_set, val_set, fcs) 
+        sql = ['SELECT * FROM NarfResults WHERE batch=' num2str(bat) ...
+               ' AND cellid="' cellid '" AND modelname="' modelname '"'];
+           
+        % TODO: Eventually this query should also test est, val, and fcs!
+        dbopen; ret = mysql(sql);
+        yn = (1 == length(ret));
+    end
+
+    function status_report_callback(~,~,~)
+%         questdlg('Are you sure you want to generate an analysis status report?', ...
+%                  'Status Report?', 'Yes', 'No', 'No');
+        
+        fprintf('\n-------------------------------------------------------------------------------\n');             
+        fprintf('Model/CellID Completion Matrix; an X indicates the model exists already.');
+        fprintf('\n-------------------------------------------------------------------------------\n');
+        fprintf('%-15s|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|6|7|8|9|0\n', 'CELLID');
+        
+        total = 0;
+        complete = 0;
+        for ii = 1:length(cellids_found)
+            fprintf('%-15s|', cellids_found{ii});
+            for jj = 1:length(models_found)       
+                if model_exists_in_db(sel_batch, cellids_found{ii}, models_found{jj})
+                    fprintf('X|');
+                    complete = complete+1;
+                else
+                    fprintf(' |');
+                end
+                total = total+1;
+            end
+            fprintf('\n');
+        end
+        
+        fprintf('-------------------------------------------------------------------------------\n');        
+        fprintf('CellIDs: %d\n', length(cellids_found));
+        fprintf('Models: %d\n', length(models_found));
+        fprintf('Status: [%d/%d] (complete/total), %d models not yet processed.\n', complete, total, total - complete);       
+        fprintf('-------------------------------------------------------------------------------\n');        
+
+    end
+
+handles.force = uicontrol('Parent', right_panel, 'Style', 'checkbox', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Force?', ...
+          'Position', [rw-220+pad pad 70-pad ts]);
+
+uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Enqueue Models', ...
+          'Position', [rw-150-pad pad 150-pad ts], ...
+          'Callback', @enqueue_models_callback);
       
+    function enqueue_models_callback(~,~,~)
+        reply = questdlg('Have you pushed your code to GIT? Are you sure you want to enqueue POSSIBLY MANY models? Have you run a status report first?', ...
+                 'STOP AND THINK A MOMENT!', 'Yes', 'No', 'No');
+        if strcmp(reply, 'No')
+            return;
+        end
+        
+        force = get(handles.force, 'Value');
+        
+        cells = request_celldb_batch(batch);
+        
+        for ii = 1:length(ret)
+            for jj = 1:length(models_found)                     
+                enqueue_single_model(sel_batch, cells{ii}.cellid, models_found{jj}, ...
+                    cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, force);
+            end
+        end
+             
+    end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Bottom Panel
 
@@ -424,21 +606,19 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'Position', [600 bh-ts 100 ts-pad], ...
           'Callback', @any_condition_changed_callback);
       
-uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Completion Report', ...
-          'Position', [w-400 bh-ts 200 ts-pad], ...
-          'Callback', @any_condition_changed_callback);
-      
-uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Enqueue Incomplete Models', ...
-          'Position', [w-200 bh-ts 200-pad ts-pad], ...
-          'Callback', @any_condition_changed_callback);
-      
 db_results_table = uitable('Parent', bottom_panel, ...
         'Enable', 'on',  'Units', 'pixels', 'RowName', [],...
-        'ColumnWidth', {50, 40, 60, 50, 70, 200, 100, 150, 70, 70, 70, 70}, ...
-        'ColumnName', {'ID', 'Batch', 'CellID', 'EstSet', 'ValSet', 'Model Name', 'Val R', 'Val NLL', 'Est R', 'Est NLL', 'Last Mod.', 'Notes'}, ...
-        'Position', [pad pad w bh-ts-pad*2]);
+        'ColumnWidth', {60, 40, 100, 300, ...
+                        10, 10, ...
+                        60, 60, 60, 60, ...
+                        60, 60, 60, ...
+                        150, 50}, ...
+        'ColumnName', {'ID', 'Batch', 'CellID', 'Modelname', ...
+                       'est_set', 'val_set', ...
+                       'val_corr', 'val_l1err', 'val_l2err', 'val_nlogl',...
+                       'est_corr', 'Sparse', 'Smooth', ...
+                       'Last Mod.', 'Note'}, ...
+        'Position', [pad pad w-pad*2 bh-ts-pad*2]);
 
 % Set up the DB Results table widget behavior
 hJScroll = findjobj(db_results_table); 
@@ -449,78 +629,66 @@ hJTable.setRowSelectionAllowed(true);
 % hJTablecb = handle(hJTable, 'CallbackProperties');
 % set(hJTablecb, 'MousePressedCallback', {@get_selected_row, gcf});
 % set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
-% 
-% % TODO: When the delete button is pressed, delete selected rows
-% 
-%     function get_selected_row(a,~,~)
-%         r = a.getSelectedRows();
-%         res = db_results(r+1);
-%     end
 
-    function sql = sql_query_builder()       
-        sql = 'SELECT * FROM NarfAnalysis';
-        
-        sel_batch  = popup2str(condition_handle(1));
-        sel_cellid = popup2str(condition_handle(2));
-        sel_token1 = popup2str(condition_handle(3));
-        sel_token2 = popup2str(condition_handle(4));
-        sel_token3 = popup2str(condition_handle(5));
-        sel_token4 = popup2str(condition_handle(6));
-        
-        isfirst = true;
-        function s = whereand()
-            if isfirst
-                isfirst = false;
-                s = ' WHERE ';
-            else 
-                s = ' AND ';
-            end
+    function s = interleave_pipes(c)
+        s = c{1};
+        for ii = 2:length(c)
+            s = cat(2, s, ['|' c{ii}]);
         end
-        
-        if ~isequal(sel_batch, '*')
-            sql = [sql whereand() 'batch=' sel_batch ''];
-        end
-        
-        if ~isequal(sel_cellid, '*')
-            sql = [sql whereand() 'cellid="', sel_cellid '"'];
-        end
-        
-        if ~isequal(sel_token1, '*')
-            sql = [sql whereand() 'modelname REGEXP "(^|[^[:alnum:]])' sel_token1 '([^[:alnum:]]|$)"'];
-        end    
     end
+
+    function sql = update_query_results_table()
+        if isempty(sel_batch) || isempty(sel_cellids) || isempty(sel_models)
+            db_results = [];
+            set(db_results_table, 'Data', {});
+            sel_results = [];
+            drawnow;
+            return
+        end        
         
-    function update_query_results_table()
+        sql = ['SELECT * FROM NarfResults WHERE batch=' num2str(sel_batch) ''];
+        sql = [sql ' AND cellid REGEXP "' interleave_pipes(sel_cellids) '"'];
+        sql = [sql ' AND modelname REGEXP "' interleave_pipes(sel_models) '"'];
+        
+        sortby = 'cellid';
+        sortdir = 'ASC';
+        sql = [sql ' ORDER BY ' sortby ' ' sortdir ' LIMIT 0, 500'];
+        
+        dbopen;
+        db_results = mysql(sql);       
+        
         l = length(db_results);
-        c = cell(l,8);
+        c = cell(l,12);
         for i = 1:l
             c{i,1} = db_results(i).id;
-            c{i,2} = db_results(i).batch;
-            c{i,3} = db_results(i).cellid;
+            c{i,2} = db_results(i).batch; 
+            c{i,3} = char(db_results(i).cellid);
             c{i,4} = char(db_results(i).modelname);
-            c{i,5} = db_results(i).r_test;
-            c{i,6} = db_results(i).r_fit;
-            c{i,7} = db_results(i).sparsity;
-            c{i,8} = db_results(i).lastmod;
+            %c{i,5} = char(db_results(i).est_set);
+            %c{i,6} = char(db_results(i).val_set);
+            %c{i,7} = db_results(i).val_corr;
+            %c{i,8} = db_results(i).val_l1err;
+            %c{i,9} = db_results(i).val_l2err;
+            %c{i,10} = db_results(i).val_nlogl;
+            %c{i,11} = db_results(i).est_corr;
+            %c{i,12} = db_results(i).sparsity;
+            %c{i,13} = db_results(i).smoothness;
+            c{i,14} = db_results(i).lastmod; 
+            %c{i,15} = char(db_results(i).notes);           
         end
         set(db_results_table, 'Data', c);
+        sel_results = [];
         drawnow;
     end
 
     function any_condition_changed_callback(~,~,~)
-%         rebuild_condition_options();
-%         dbopen; 
-%         db_results = mysql([sql_query_builder() ' ORDER BY ' sortby ' ' sortdir ' LIMIT 0, 1000']);
-%         update_query_results_table();        
-%         selected = [];
-%         axes(panax); cla;
         rebuild_status_filter();
         rebuild_tag_filter();
         rebuild_analyses_table();
-        fprintf('Callback called\n');
     end
 
-% Call the callback once to get things running
+% Call the callbacks once to get things running
+rebuild_batches_popup();
 any_condition_changed_callback();
 
 end

@@ -1093,3 +1093,25 @@ Ivar
   - When the jackknifed data is brought back together again, we have N_COEFS-1 wide gaps between the points
   - This is probably the right thing to do (in general), in retrospect. Lucky it turned out that way. 
   - However, even better is to just NAN out the RESPAVG, not the stimulus. This requires some 'special knowledge' of the signal, but I'll do it for now.
+
+   - NarfQuestions: For scientific queries
+     | Field      | Type         | Null | Key | Default | Extra | Notes                                                |
+     |------------+--------------+------+-----+---------+-------+------------------------------------------------------|
+     | id         |              |      |     |         |       |                                                      |
+     | name       | varchar(255) |      |     |         |       |                                                      |
+     | status     | varchar(255) |      |     |         |       | When you have decided you have answered the question |
+     | question   | text         |      |     |         |       | The question we asked.                               |
+     | answer     | text         |      |     |         |       | Our current answer.                                  |
+     | tags       | text         |      |     |         |       |                                                      |
+     | modeltree  | text         |      |     |         |       | A model keyword tree; all branches are compared      |
+     | batch      | varchar(255) |      |     |         |       | Associated with a particular batch                   |
+     | summaryfig | text         |      |     |         |       | Summarizes the answer to the question                |
+     | lastmod    | timestamp    |      |     |         |       |                                                      |
+
+   - NarfBatches
+     | batchname     | varchar(255) |   |   |   |   | More generic names                                   |
+     | cellid        | varchar(255) |   |   |   |   |                                                      |
+     | est_set       | text         |   |   |   |   |                                                      |
+     | val_set       | text         |   |   |   |   |                                                      |
+     | tags          | text         |   |   |   |   |                                                      |
+     | lastmod       | timestamp    |   |   |   |   |                                                      |
