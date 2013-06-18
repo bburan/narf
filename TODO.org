@@ -1,5 +1,4 @@
 * CURRENT
-  - [ ] Bar/Scatter Plotting of each model structur
   - [ ] BUG: When I edit/remove the tag that I was scanning, it bugs the tag dropdown
   - [ ] BUG: Narf Analysis GUI needs a smarter, standard callback to avoid these annoying bugs
   - [ ] Make a spike triggered average filter instead of a gammatone

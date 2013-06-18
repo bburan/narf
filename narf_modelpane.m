@@ -33,9 +33,12 @@ MODULES = scan_directory_for_modules();
 
 if ~exist('parent_handle','var')
     parent_handle = figure('Menubar','figure', 'Resize','off', 'MenuBar', 'none', ...              
-             'Units','pixels', 'Position', [20 50 1300 max(600, min(170*length(STACK)+40, 1100))]);
+             'Units','pixels', 'Position', [20 50 1300 max(800, min(170*length(STACK)+40, 1100))]);
     % 'ResizeFcn', @update_windowsize, ... Someday write this!
 end
+
+set(parent_handle, 'Resize','off', 'MenuBar', 'none', ...
+       'Name', 'NARF Modelpane', 'NumberTitle', 'off');
 
 pos = get(parent_handle, 'Position');
 w = pos(3); % Width of the parent panel

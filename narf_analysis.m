@@ -612,21 +612,111 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         end
     end
 
-% uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
-%           'HorizontalAlignment', 'left', 'String', 'View STRF', ...
-%           'Position', [400 bh-ts 100 ts-pad], ...
-%           'Callback', @any_condition_changed_callback);
-% 
-% uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
-%           'HorizontalAlignment', 'left', 'String', 'View CellDB', ...
-%           'Position', [500 bh-ts 100 ts-pad], ...
-%           'Callback', @any_condition_changed_callback);
-%       
-% uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
-%           'HorizontalAlignment', 'left', 'String', 'Inspect Model', ...
-%           'Position', [600 bh-ts 100 ts-pad], ...
-%           'Callback', @any_condition_changed_callback);
+uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'View STRF', ...
+          'Position', [400 bh-ts 100 ts-pad], ...
+          'Callback', @view_strf_button_callback);
+
+    function view_strf_button_callback(~, ~, ~)
+        if isempty(sel_results)
+            return
+        end
+        for ii = 1:length(sel_results)
+            [cfd, ~, ~] = dbgetscellfile('cellid', sel_results(ii).cellid);
+            for jj = 1:length(cfd);
+                % TODO: Replace magic number  1 with better description of TOR files
+                if (cfd(jj).runclassid == 1)
+                    figure;
+                    strf_offline2([cfd(jj).stimpath cfd(jj).stimfile], ...
+                        [cfd(jj).path cfd(jj).respfile], ...
+                        cfd(jj).channum, cfd(jj).unit);
+                end
+            end
+        end
+    end
+
+ 
+uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'View CellDB', ...
+          'Position', [500 bh-ts 100 ts-pad], ...
+          'Callback', @launch_celldb_in_browser);
+    
+    function launch_celldb_in_browser(~,~,~)
+        if isempty(sel_results)
+            return
+        end
+        for ii = 1:length(sel_results)
+            web(['http://hyrax.ohsu.edu/celldb/peninfo.php?penname=' ...
+                 sel_results(ii).cellid(1:6) '#' sel_results(ii).cellid(1:7)]);
+        end
+    end
+
+uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Inspect Model', ...
+          'Position', [600 bh-ts 100 ts-pad], ...
+          'Callback', @inspect_model_callback);
       
+    function inspect_model_callback(~,~,~)
+        if isempty(sel_results) || length(sel_results) > 1
+            return
+        end
+        load_model(char(sel_results(1).modelpath));
+        narf_modelpane();
+    end
+
+uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Scatter Plot', ...
+          'Position', [700 bh-ts 100 ts-pad], ...
+          'Callback', @scatter_plot_callback);
+      
+    function data = compute_data_matrix(~,~,~)
+        if isempty(db_results) || isempty(sel_batch) || isempty(sel_cellids) || isempty(sel_models)
+            return;
+        end
+        dbopen; 
+              
+        data = nan(length(sel_cellids), length(sel_models));        
+        for ii = 1:length(sel_models)
+            fprintf('Querying DB for model: %s\n', sel_models{ii});
+            for jj = 1:length(sel_cellids)
+                sql = ['SELECT * FROM NarfResults WHERE batch=' num2str(sel_batch) ''];
+                sql = [sql ' AND cellid REGEXP "' interleave_pipes(sel_cellids(jj)) '"'];
+                sql = [sql ' AND modelname REGEXP "' interleave_pipes(sel_models(ii)) '"'];
+                ret = mysql(sql); 
+                
+                if isempty(ret) 
+                    continue;
+                end
+                if length(ret) > 1
+                    error('More than one matching model found!');
+                end
+                
+                data(jj, ii) = ret(1).r_test;
+            end
+        end
+    end
+      
+    function scatter_plot_callback(~,~,~)
+        
+        data = compute_data_matrix();
+        % Query the DB and record a single data point
+        figure('Name', 'Validation Set Comparison', 'NumberTitle', 'off', ...
+               'Position', [10 10 900 900]);
+        plot_scatter(data, sel_models); 
+    end
+
+    uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Heat Map', ...
+          'Position', [800 bh-ts 100 ts-pad], ...
+          'Callback', @heatmap_plot_callback);
+      
+    function heatmap_plot_callback(~,~,~)
+        data = compute_data_matrix();
+        figure('Name', 'Heat Map Comparison', 'NumberTitle', 'off', ...
+               'Position', [10 10 900 900]);
+        heatmap(data', sel_cellids, sel_models,  '%2.0f', 'TickAngle', 90, 'ShowAllTicks', true); 
+    end
+
 db_results_table = uitable('Parent', bottom_panel, ...
         'Enable', 'on',  'Units', 'pixels', 'RowName', [],...
         'ColumnWidth', {60, 40, 100, 300, ...
