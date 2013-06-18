@@ -1,3 +1,28 @@
+* CURRENT
+  - [ ] Bar/Scatter Plotting of each model structur
+  - [ ] BUG: When I edit/remove the tag that I was scanning, it bugs the tag dropdown
+  - [ ] BUG: Narf Analysis GUI needs a smarter, standard callback to avoid these annoying bugs
+  - [ ] Make a spike triggered average filter instead of a gammatone
+  - [ ] Sort spikes by ISI times
+	1. Take STA/STC of each quartile.
+	2. Are they different? If so, proof that model is nonstationary.
+  - [ ] Plot STA distributions of sound intensities at each delay (i.e. make a heatmap)
+  - [ ] Try to remove systemic bias of input by having a positive and a negative input? How did that work in the triggered correlation thing?
+
+* Report to Stephen on per-file split conclusions
+  1. [ ] Manual verification of per-file splits.
+	 - [ ] If I manually train 5 models on each thing, then recombine them, do I get the same results?
+	 - [ ] Is correlation being calculated properly?
+	 - [ ] If we NAN out the respfiles instead of removing them completely, does that avoid the normalization bug problem?
+         - [ ] Are we splitting and unifying on the files trained upon?
+         - [ ] Is the training R^2 usually higher than the test?
+         - [ ] Does MSES have an effect?
+         - [ ] Normalization is done across files or not?
+  2. [ ] COMPARE Models Functions
+	 A function that takes N filenames
+	 It loads them up, checks that they have identical model structure
+	 Then it extracts any parameters that differ. 
+
 * Experiments:
   1. [ ] Can an adaptive compressor be generated that will work clean up FIR fits?
   2. [ ] Starting with a very good MSE-trained estimator, what is the noise distribution?
@@ -43,86 +68,10 @@
   22. [ ] How well does the MSECHEAT algorithm do?
 	  (Tries several different sparsity values in sequence, then picks the best one)
 
-* IMPROVED QUEUE MANAGER PROGRAM
-** Data Structures
-   - NarfResults
-     | Field      | Type             | Null | Key | Default           | Extra                       | Notes                             |
-     |------------+------------------+------+-----+-------------------+-----------------------------+-----------------------------------|
-     | id         | int(10) unsigned | NO   | PRI | NULL              | auto_increment              |                                   |
-     | cellid     | varchar(255)     | YES  | MUL | NULL              |                             |                                   |
-     | batch      | int(11)          | YES  | MUL | NULL              |                             |                                   |
-     | modelname  | text             | YES  | MUL | NULL              |                             |                                   |
-     | r_test     | double           | YES  |     | NULL              |                             |                                   |
-     | r_fit      | double           | YES  |     | NULL              |                             |                                   |
-     | score      | double           | YES  |     | NULL              |                             |                                   |
-     | sparsity   | double           | YES  |     | NULL              |                             |                                   |
-     | modelpath  | text             | YES  |     | NULL              |                             |                                   |
-     | modelfile  | text             | YES  |     | NULL              |                             |                                   |
-     | figurefile | text             | YES  |     | NULL              |                             |                                   |
-     | githash    | varchar(255)     | YES  |     | NULL              |                             |                                   |
-     | lastmod    | timestamp        | NO   |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP | When was the model last modified? |
-     
-     Add these:
-     | Field           | Type      | Null | Key | Default | Extra | Notes                                                                            |
-     |-----------------+-----------+------+-----+---------+-------+----------------------------------------------------------------------------------|
-     | respfiles       | text      |      |     |         |       | contents of XXX0                                                                 |
-     | lastVerified    | timestamp | YES  | ?   | ?       | ?     | When was the model/image/etc last checked for DB consistency?                    |
-     | lastFit         | timestamp |      |     |         |       | When was the model last fit                                                      |
-     | isHidden        | char(1)   | NO   |     |         |       | T or F                                                                           |
-     | isDeleted       | char(1)   | NO   |     |         |       | T or F                                                                           |
-     | estset          |           |      |     |         |       |                                                                                  |
-     | valset          |           |      |     |         |       |                                                                                  |
-     | est_l1          |           |      |     |         |       |                                                                                  |
-     | est_mse         |           |      |     |         |       |                                                                                  |
-     | est_corr        |           |      |     |         |       |                                                                                  |
-     | est_likelihood  |           |      |     |         |       |                                                                                  |
-     | est_aposteriori |           |      |     |         |       |                                                                                  |
-     | est_bic         |           |      |     |         |       |                                                                                  |
-     | jobStatus       |           |      |     |         |       | When created, set to 0. Shows Job system status so double-queuing doesn't occur. |
-     | sparsity        | text      |      |     |         |       |                                                                                  |
-     | smoothness      | text      |      |     |         |       |                                                                                  |
-
-* Report to Stephen on per-file split conclusions
-  1. [ ] Manual verification of per-file splits.
-	 - [ ] If I manually train 5 models on each thing, then recombine them, do I get the same results?
-	 - [ ] Is correlation being calculated properly?
-	 - [ ] If we NAN out the respfiles instead of removing them completely, does that avoid the normalization bug problem?
-         - [ ] Are we splitting and unifying on the files trained upon?
-         - [ ] Is the training R^2 usually higher than the test?
-         - [ ] Does MSES have an effect?
-         - [ ] Normalization is done across files or not?
-  2. [ ] COMPARE Models Functions
-	 A function that takes N filenames
-	 It loads them up, checks that they have identical model structure
-	 Then it extracts any parameters that differ. 
-
-* Careful!
-  When using the database, I must be careful not to overwrite any newer transactions
-  The way to do this will be to check the timestamp of the last update. If it's newer, use the new database entry or prompt user.
-  This should allow multiple people to know when they are accidentally editing the same thing simultaneously.
-  If that happens, rename the analysis automatically and submit that.
-
-* Quick TOP TODO 
-  Add intelligence to boostperfile that
-  DOES split the normalization
-  DOES split any module that is not a performance metric or a loader
-  Put a breakpoint in boostperfile, check that the predictions are fine, then let the merge occur, then check the predictions again
-
 * Actions
   1. [ ] Safety check so that these modules do not allow unifiers/splitters
          - correlation, MSE, bayesian, loader, etc
 	 - Split normalization or not?
-  2. [ ] A better queuing script
-	 - [ ] Sorts according to QUESTIONS 
-	 - [ ] Scatter plot comparison functionality
-	 - [ ] Overwrite existing models?
-	 - [ ] Resume dead models?
-	 - [ ] Force git sync?
-	 - [ ] Force git clean?
-	 - [ ] Check for:
-	       - [ ] dead/jobs
-	       - [ ] DB contents and Filesystem still sync up
-	       - [ ] Everything is enqueued
   3. [ ] Tool to start comparing models:
 	 - [ ] Specify models with a function
 	 - [ ] It tells you how many matching models were found, and how many were expected
@@ -328,3 +277,19 @@
           - However, this cannot be done. Perhaps we are trying to fit a nonlinearity across all models; we cannot fit each separately. 
 ** Try this:
  http://www.mathworks.com/matlabcentral/fileexchange/27662-evolve-top-and-bottom-envelopes-for-time-signals-i-e
+   Should also query the database to see if a job is queued already, and list a Q
+Add intelligence to boostperfile that
+	DOES split the normalization
+	DOES split any module that is not a performance metric or a loader
+	Put a breakpoint in boostperfile, check that the predictions are fine, then let the merge occur, then check the predictions again
+  2. [ ] A better queuing script
+	 - [ ] Sorts according to QUESTIONS 
+	 - [ ] Scatter plot comparison functionality
+	 - [ ] Overwrite existing models?
+	 - [ ] Resume dead models?
+	 - [ ] Force git sync?
+	 - [ ] Force git clean?
+	 - [ ] Check for:
+	       - [ ] dead/jobs
+	       - [ ] DB contents and Filesystem still sync up
+	       - [ ] Everything is enqueued

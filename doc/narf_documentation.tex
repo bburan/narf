@@ -1115,3 +1115,40 @@ Ivar
      | val_set       | text         |   |   |   |   |                                                      |
      | tags          | text         |   |   |   |   |                                                      |
      | lastmod       | timestamp    |   |   |   |   |                                                      |
+** Data Structures
+   - NarfResults
+     | Field      | Type             | Null | Key | Default           | Extra                       | Notes                             |
+     |------------+------------------+------+-----+-------------------+-----------------------------+-----------------------------------|
+     | id         | int(10) unsigned | NO   | PRI | NULL              | auto_increment              |                                   |
+     | cellid     | varchar(255)     | YES  | MUL | NULL              |                             |                                   |
+     | batch      | int(11)          | YES  | MUL | NULL              |                             |                                   |
+     | modelname  | text             | YES  | MUL | NULL              |                             |                                   |
+     | r_test     | double           | YES  |     | NULL              |                             |                                   |
+     | r_fit      | double           | YES  |     | NULL              |                             |                                   |
+     | score      | double           | YES  |     | NULL              |                             |                                   |
+     | sparsity   | double           | YES  |     | NULL              |                             |                                   |
+     | modelpath  | text             | YES  |     | NULL              |                             |                                   |
+     | modelfile  | text             | YES  |     | NULL              |                             |                                   |
+     | figurefile | text             | YES  |     | NULL              |                             |                                   |
+     | githash    | varchar(255)     | YES  |     | NULL              |                             |                                   |
+     | lastmod    | timestamp        | NO   |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP | When was the model last modified? |
+     
+     Add these:
+     | Field           | Type      | Null | Key | Default | Extra | Notes                                                                            |
+     |-----------------+-----------+------+-----+---------+-------+----------------------------------------------------------------------------------|
+     | respfiles       | text      |      |     |         |       | contents of XXX0                                                                 |
+     | lastVerified    | timestamp | YES  | ?   | ?       | ?     | When was the model/image/etc last checked for DB consistency?                    |
+     | lastFit         | timestamp |      |     |         |       | When was the model last fit                                                      |
+     | isHidden        | char(1)   | NO   |     |         |       | T or F                                                                           |
+     | isDeleted       | char(1)   | NO   |     |         |       | T or F                                                                           |
+     | estset          |           |      |     |         |       |                                                                                  |
+     | valset          |           |      |     |         |       |                                                                                  |
+     | est_l1          |           |      |     |         |       |                                                                                  |
+     | est_mse         |           |      |     |         |       |                                                                                  |
+     | est_corr        |           |      |     |         |       |                                                                                  |
+     | est_likelihood  |           |      |     |         |       |                                                                                  |
+     | est_aposteriori |           |      |     |         |       |                                                                                  |
+     | est_bic         |           |      |     |         |       |                                                                                  |
+     | jobStatus       |           |      |     |         |       | When created, set to 0. Shows Job system status so double-queuing doesn't occur. |
+     | sparsity        | text      |      |     |         |       |                                                                                  |
+     | smoothness      | text      |      |     |         |       |                                                                                  |

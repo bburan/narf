@@ -86,7 +86,8 @@ handles.new_analysis = uicontrol('Parent', left_panel, ...
           'status',    'uninitialized', ...
 	      'question',  'Please write a brief description or question here.', ...
 	      'answer',    'Please write a longer discussion or answer here. ', ...
-          'summaryfig', '');
+          'summaryfig', '', ...
+          'batch', 'SELECT A BATCH');
          any_condition_changed_callback();
      end
   
@@ -134,14 +135,18 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
         set(handles.status, 'String', sel_analysis.status);
         set(handles.short_desc, 'String', char(sel_analysis.question));
         set(handles.long_desc, 'String', char(sel_analysis.answer));
+        
         available_batches = get(handles.batch, 'String');
         if isempty(sel_analysis.batch) || isempty(strcmp(available_batches, sel_analysis.batch))
-            set(handles.batch, 'String', 'SELECT A BATCH');
+            set(handles.batch, 'Value', 1);
         else
             vec = strcmp(available_batches, sel_analysis.batch);
             idx = 1:length(vec);
             idx = idx(vec);
-            set(handles.batch, 'Value', idx);
+            if isempty(idx)
+                idx(1) = 1;
+            end
+            set(handles.batch, 'Value', idx(1));
             if strcmp(sel_analysis.batch, 'SELECT A BATCH')
                 sel_batch = [];
             else
@@ -149,6 +154,7 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
             end
             rebuild_batch_table();
         end
+        
         set(handles.tags, 'String', char(sel_analysis.tags));
         if isempty(char(sel_analysis.modeltree))
             set(handles.modeltree, 'String', '');
@@ -605,7 +611,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
             end
         end
     end
-% 
+
 % uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
 %           'HorizontalAlignment', 'left', 'String', 'View STRF', ...
 %           'Position', [400 bh-ts 100 ts-pad], ...
@@ -635,6 +641,8 @@ db_results_table = uitable('Parent', bottom_panel, ...
                        'Last Mod.', 'Note'}, ...
         'Position', [pad pad w-pad*2 bh-ts-pad*2]);
 
+pause(0.1); % Needed to avoid MATLAB GUI race condition...
+    
 % Set up the DB Results table widget behavior
 hJScroll = findjobj(db_results_table); 
 hJTable = hJScroll.getViewport.getView; 
@@ -651,9 +659,9 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
     end
 
     function s = interleave_pipes(c)
-        s = c{1};
+        s = ['^' c{1} '$'];
         for ii = 2:length(c)
-            s = cat(2, s, ['|' c{ii}]);
+            s = cat(2, s, ['|^' c{ii} '$']);
         end
     end
 
@@ -687,10 +695,12 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
             %c{i,5} = char(db_results(i).est_set);
             %c{i,6} = char(db_results(i).val_set);
             %c{i,7} = db_results(i).val_corr;
+            c{i,7} = db_results(i).r_test;
             %c{i,8} = db_results(i).val_l1err;
             %c{i,9} = db_results(i).val_l2err;
             %c{i,10} = db_results(i).val_nlogl;
             %c{i,11} = db_results(i).est_corr;
+            c{i,11} = db_results(i).r_fit;
             %c{i,12} = db_results(i).sparsity;
             %c{i,13} = db_results(i).smoothness;
             c{i,14} = db_results(i).lastmod; 
@@ -708,6 +718,7 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
     end
 
 % Call the callbacks once to get things running
+pause(0.1);
 rebuild_batches_popup();
 any_condition_changed_callback();
 
