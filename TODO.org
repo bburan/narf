@@ -1,10 +1,7 @@
 * CURRENT
-  - [X] Update DB query method to be faster
-  - [X] Preview window keeps track of new window, if any, and clicking changes most recent
   - [ ] Gammatone Resurrection
   - [ ] Function to build a matrix of parameters
   - [ ] BUG: When I edit/remove the tag that I was scanning, it bugs the tag dropdown
-  - [ ] BUG: Narf Analysis GUI needs a smarter, standard callback to avoid these annoying bugs
   - [ ] Make a spike triggered average filter instead of a gammatone
   - [ ] Sort spikes by ISI times
 	1. Take STA/STC of each quartile.
@@ -70,6 +67,9 @@
   21. [ ] Use a single wavelet transform in place of downsampling + FIR filter
   22. [ ] How well does the MSECHEAT algorithm do?
 	  (Tries several different sparsity values in sequence, then picks the best one)
+  23. [ ] Make a gain-changing filter, something like a FIR but with per-pixel gains? After all, by the time the signal reaches cortex, neural responses are likely
+  24. [ ] Do a FIR filter of the output of a FIR filter to get features
+  25. [ ] Test out making layered exponentials (exp of an exp of an exp, etc)
 
 * Actions
   1. [ ] Safety check so that these modules do not allow unifiers/splitters
@@ -82,17 +82,10 @@
 	 - [ ] Calls your special analysis function
 	 - [ ] Hold out data 	 
   4. [ ] Clean up saved_analysis, saved_models, saved_images
-  5. [ ] Repair Narf Browser
 	 - [ ] Sparsity is not going into the DB
 	 - [ ] More metrics should go into the DB
+	 - [ ] Total spike count should go into DB
 	 - [ ] Elitist browsing (Shows ONLY THE HIGHEST MODEL of each cell given current masks)
-	 - [ ] Comparison finders (Allows you to select two model structures for comparisons)
-	 - [ ] Antialiasing problem when saving images
-	 - [ ] Heat Map current display button in NARF
-	 - [ ] AND/OR/NOT query token filter, or 'In position 3' filter
-	 - [ ] Generic 'modelstring' query space
-	 - [ ] Arbitrary keyword substring stuff
-         - [ ] The total number of spikes in each behavior respfile should be displayed?
   6. [ ] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [ ] Nonrmalize channels
@@ -104,7 +97,7 @@
   8. [ ] Add new functionality to the do_scatter_plot method
 	 - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
 	       Use grayish/blackish 
-  9. [ ] Profile the time spent during boosting and look for optimizations:
+  9. [ ] Profile and look for optimizations:
          - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
          - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
          - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
@@ -122,9 +115,6 @@
           - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
           - Jackknifing doesn't work with performance metrics besides MSE right now?
   12. [ ] Write a crash course guide on using NARF
-  13. [ ] Make a gain-changing filter, something like a FIR but with per-pixel gains? After all, by the time the signal reaches cortex, neural responses are likely
-  14. [ ] Do a FIR filter of the output of a FIR filter to get features
-  15. [ ] Test out making layered exponentials (exp of an exp of an exp, etc)
 
 * LOW PRIORITY CLEANUP
   1. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
@@ -296,3 +286,8 @@ Add intelligence to boostperfile that
 	       - [ ] dead/jobs
 	       - [ ] DB contents and Filesystem still sync up
 	       - [ ] Everything is enqueued
+  5. [ ] Repair Narf Browser
+	 - [ ] Antialiasing problem when saving images
+	 - [ ] AND/OR/NOT query token filter, or 'In position 3' filter
+	 - [ ] Arbitrary keyword substring stuff
+         - [ ] The total number of spikes in each behavior respfile should be displayed?
