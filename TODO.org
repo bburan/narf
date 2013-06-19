@@ -1,10 +1,5 @@
 * Engineering:
-  1. [X] Gammatone Resurrection
-	 gta100: normal gammatone, decimate
-	 gtb100: gammatone envelope, decimate
-	 gtc100: ???
-         gtd100: ???
-  2. [ ] BUG: When I edit/remove the tag that I was scanning, it bugs the tag dropdown
+  2. [X] BUG: When I edit/remove the tag that I was scanning, it bugs the tag dropdown
   3. [-] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [X] Nonrmalize channels
@@ -61,13 +56,8 @@
          - [ ] Normalization is done across files or not?
   6. [ ] Starting with a very good MSE-trained estimator, what is the noise distribution?
 	 [0  1  3  1  0  0  0 -1  0  0  0  0; -0 -0  1 -0 -0 -0 -0 -0 -0  -0.25 -0 -0]
-  7. [ ] For my favorite neuron, what is the best non-truncated distribution?
-	 {isi200v2, log4b, firno, init0, npfnl, {llexp0, llgam, llinv, lllogn, llweib}, boost}
-  8. [ ] For my favorite neuron, what is the best truncated noise distribution?
   9. [ ] Can a really simple model like this do very well:
 	 Logfit (1 parm) + scale & delay amount per channel (2*n parms) + respavg-estimated stateful depression amount (2*n parms)
-  10. [ ] Which is the best non-truncated distribution with log-likelihood?
-	  Use {'ISI200v2', 'log2',   across the population
   11. [ ] Is it better to bin, reload from baphy, resample, downsaple, decimate, convolve, smooth, or infer respavg?
           Try decimate, or resample (@(x,n) abs(decimate(x,n)),  @(x,n) abs(resample(x,1,n))
   12. [ ] Does MSES# and init0 improve the per-file boosts?
