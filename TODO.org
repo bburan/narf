@@ -1,6 +1,6 @@
 * CURRENT
   - [X] Update DB query method to be faster
-  - [ ] Preview window keeps track of new window, if any, and clicking changes most recent
+  - [X] Preview window keeps track of new window, if any, and clicking changes most recent
   - [ ] Gammatone Resurrection
   - [ ] Function to build a matrix of parameters
   - [ ] BUG: When I edit/remove the tag that I was scanning, it bugs the tag dropdown

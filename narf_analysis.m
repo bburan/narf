@@ -30,6 +30,7 @@ sel_models = {};
 sel_batch = [];
 sel_cellids = {};
 sel_results = [];
+preview_fig = [];
 
 left_panel = uipanel('Parent', parent_handle, ...
     'Units','pixels', 'Position', [0 h-dh lw dh]);
@@ -517,12 +518,12 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         fprintf('\n-------------------------------------------------------------------------------\n');             
         fprintf('Model/CellID Completion Matrix; an X indicates the model exists already.');
         fprintf('\n-------------------------------------------------------------------------------\n');
-        fprintf('%-15s|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|6|7|8|9|0\n', 'CELLID');
+        fprintf('%-20s|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|6|7|8|9|0\n', 'CELLID');
         
         total = 0;
         complete = 0;
         for ii = 1:length(cellids_found)
-            fprintf('%-15s|', cellids_found{ii});
+            fprintf('%-20s|', cellids_found{ii});
             for jj = 1:length(models_found)       
                 if model_exists_in_db(sel_batch, cellids_found{ii}, models_found{jj})
                     fprintf('X|');
@@ -605,7 +606,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
     function preview_model_callback(~,~,~)
         if ~isempty(sel_results)
             for ii = 1:length(sel_results)
-                figure('Menubar', 'none');
+                preview_fig = figure('Menubar', 'none');
                 [I,map] = imread(char(sel_results(ii).figurefile),'png');  
                 imshow(I, map);
             end
@@ -764,6 +765,11 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
     function get_selected_row(a,~,~)
         r = a.getSelectedRows();
         sel_results = db_results(r+1);
+        if ~isempty(sel_results) && any(ishandle(preview_fig))
+            figure(preview_fig);
+            [I,map] = imread(char(sel_results(1).figurefile),'png');  
+            imshow(I, map);
+        end
     end
 
     function s = interleave_commas(c)
