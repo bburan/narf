@@ -1,42 +1,40 @@
 * Engineering:
-  2. [X] BUG: When I edit/remove the tag that I was scanning, it bugs the tag dropdown
-  3. [-] Default per-paramset, per-channel heatmap graph fns:
+  1. [X] Button to allow local testing of model/cellid pair
+  2. [-] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [X] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  4. [ ] Button to allow local testing of model/cellid pair
-  5. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
-  6. [ ] Safety check so that these modules do not allow unifiers/splitters
+  3. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
+  4. [ ] Safety check so that these modules do not allow unifiers/splitters
          - correlation, MSE, bayesian, loader, etc
 	 - Split normalization or not?
-  7. [ ] During insert into DB, take a bunch of metrics
+  5. [ ] During insert into DB, take a bunch of metrics
 	 - [ ] Sparsity is not going into the DB
 	 - [ ] More metrics should go into the DB
 	 - [ ] Total spike count should go into DB
 	 - [ ] Elitist browsing (Shows ONLY THE HIGHEST MODEL of each cell given current masks)
-  8. [ ] Repair Fitters 
+  6. [ ] Repair Fitters 
          - [ ] Remove, then re-add test_set data by default to make fitters faster
          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  9. [ ] Profile and look for optimizations:
+  7. [ ] Profile and look for optimizations:
          - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
          - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
          - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
-  10. [ ] Possible features to extract (And what what is needed to detect them)
-          - Spatial location of source (Phase difference or not)
-          - Freq (STRF)
-          - Freq direction rising/falling (STRF with diagonal band)
-          - Pitch (STRF with harmonics)
-          - Timbre (STRF with harmonics)
-          - Vowels, Consonants 
-          - Onsets, offturns (STRF)
-  11. [ ] Fix Irregularities
-          - Not all nonlinearities can accomodate NaNs in their code, especially in stim
-          - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
-          - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
-          - Jackknifing doesn't work with performance metrics besides MSE right now?
-  12. [ ] Write a crash course guide on using NARF 
-  
+  8. [ ] Possible features to extract (And what what is needed to detect them)
+         - Spatial location of source (Phase difference or not)
+         - Freq (STRF)
+         - Freq direction rising/falling (STRF with diagonal band)
+         - Pitch (STRF with harmonics)
+         - Timbre (STRF with harmonics)
+         - Vowels, Consonants 
+         - Onsets, offturns (STRF)
+  9. [ ] Fix Irregularities
+         - Not all nonlinearities can accomodate NaNs in their code, especially in stim
+         - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
+         - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
+         - Jackknifing doesn't work with performance metrics besides MSE right now?
+  10. [ ] Write a crash course guide on using NARF 
   
 * Experiments:
   1. [ ] Can an adaptive compressor be generated that will work clean up FIR fits?

@@ -37,9 +37,11 @@ if ~exist('parent_handle','var')
     % 'ResizeFcn', @update_windowsize, ... Someday write this!
 end
 
-set(parent_handle, 'Resize','off', 'MenuBar', 'none', ...
+if isprop(parent_handle, 'Menubar')
+    set(parent_handle, 'Resize','off', 'Menubar', 'none', ...
        'Name', 'NARF Modelpane', 'NumberTitle', 'off');
-
+end
+   
 pos = get(parent_handle, 'Position');
 w = pos(3); % Width of the parent panel
 h = pos(4); % Height of the parent panel

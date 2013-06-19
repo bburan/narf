@@ -19,6 +19,8 @@ if ~exist('parent_handle', 'var')
     parent_handle = figure('Menubar','none', 'Resize','off', ...
        'Units','pixels', 'Position', [20 50 w h],...
        'Name', 'NARF Analysis Browser', 'NumberTitle', 'off');
+   drawnow;
+   pause(0.1);
 end
 
 db_results = []; % Shared amongst local functions that need common SQL query results
@@ -119,6 +121,7 @@ handles.refresh_analysis = uicontrol('Parent', left_panel, ...
 
 % Configure the analyses table selection to update the center and right panels
 drawnow;
+pause(0.1);
 hJS = findjobj(handles.analyses_table); 
 hJT = hJS.getViewport.getView;
 hJT.setNonContiguousCellSelection(false);
@@ -511,7 +514,7 @@ handles.select_all_cellids = uicontrol('Parent', right_panel, ...
 
 uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Status Report', ...
-          'Position', [pad pad 150 ts], ...
+          'Position', [pad pad 100 ts], ...
           'Callback', @status_report_callback);
     
     function yn = model_exists_in_db(bat, cellid, modelname, est_set, val_set, fcs) 
@@ -555,6 +558,35 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         fprintf('Status: [%d/%d] (complete/total), %d models not yet processed.\n', complete, total, total - complete);       
         fprintf('-------------------------------------------------------------------------------\n');        
 
+    end
+
+uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Fit Model Now', ...
+          'Position', [100+pad pad 100 ts], ...
+          'Callback', @fit_selected_now);
+      
+    function fit_selected_now(~,~,~)        
+        if length(sel_models) ~= 1 || length(sel_cellids) ~= 1               
+            warndlg('Only a single model and cellid must be selected.');
+        end
+        
+        reply = questdlg('Are you sure you want to fit the selected model to the selected cellid, on this machine only, immediately?', ...
+                 'Fit this model now?', 'Yes', 'No', 'No');
+        if strcmp(reply, 'No')
+            return;
+        end
+        
+        mm = eval(get(handles.modeltree, 'String'));
+        modulekeys = keyword_combos(mm);
+        
+        cells = request_celldb_batch(sel_batch, sel_cellids{1});       
+        ii=1;
+        
+        indexes = get(handles.modellist, 'Value');        
+        jj=indexes(1);
+        
+	    fit_single_model(sel_batch, cells{ii}.cellid, modulekeys{jj}, ...
+           cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, true);        
     end
 
 handles.force = uicontrol('Parent', right_panel, 'Style', 'checkbox', 'Units', 'pixels',...
