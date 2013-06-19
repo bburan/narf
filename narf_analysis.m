@@ -680,8 +680,8 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
             fprintf('Querying DB for model: %s\n', sel_models{ii});
             for jj = 1:length(sel_cellids)
                 sql = ['SELECT * FROM NarfResults WHERE batch=' num2str(sel_batch) ''];
-                sql = [sql ' AND cellid REGEXP "' interleave_pipes(sel_cellids(jj)) '"'];
-                sql = [sql ' AND modelname REGEXP "' interleave_pipes(sel_models(ii)) '"'];
+                sql = [sql ' AND cellid in (' interleave_commas(sel_cellids(jj)) ')'];
+                sql = [sql ' AND modelname in (' interleave_commas(sel_models(ii)) ')'];
                 ret = mysql(sql); 
                 
                 if isempty(ret) 
@@ -766,13 +766,12 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
         sel_results = db_results(r+1);
     end
 
-    function s = interleave_pipes(c)
-        s = ['^' c{1} '$'];
+    function s = interleave_commas(c)
+        s = ['"' c{1} '"']; 
         for ii = 2:length(c)
-            s = cat(2, s, ['|^' c{ii} '$']);
+            s = cat(2, s, [', "' c{ii} '"']);
         end
     end
-
     function sql = update_query_results_table()
         if isempty(sel_batch) || isempty(sel_cellids) || isempty(sel_models)
             db_results = [];
@@ -781,18 +780,19 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
             drawnow;
             return
         end        
-        
+         
         sql = ['SELECT * FROM NarfResults WHERE batch=' num2str(sel_batch) ''];
-        sql = [sql ' AND cellid REGEXP "' interleave_pipes(sel_cellids) '"'];
-        sql = [sql ' AND modelname REGEXP "' interleave_pipes(sel_models) '"'];
-        
+        sql = [sql ' AND cellid in (' interleave_commas(sel_cellids) ')'];
+        sql = [sql ' AND modelname in (' interleave_commas(sel_models) ')'];      
+
         sortby = 'cellid';
         sortdir = 'ASC';
         sql = [sql ' ORDER BY ' sortby ' ' sortdir ' LIMIT 0, 500'];
         
         dbopen;
+        tic;
         db_results = mysql(sql);       
-        
+        toc
         l = length(db_results);
         c = cell(l,12);
         for i = 1:l
@@ -816,7 +816,7 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
         end
         set(db_results_table, 'Data', c);
         sel_results = [];
-        drawnow;
+        drawnow;        
     end
 
     function any_condition_changed_callback(~,~,~)
