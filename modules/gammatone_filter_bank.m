@@ -65,7 +65,7 @@ function x = do_gammatone_filter(mdl, x, stack, xxx)
                 end
             end
         end
-        x.dat.(sf).(mdl.output) = permute(ret, [1,3,2]); 
+        x.dat.(sf).(mdl.output) = abs(permute(ret, [1,3,2])); 
     end
 end
 

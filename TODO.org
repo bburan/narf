@@ -3,31 +3,31 @@
 	 gta100: normal gammatone, decimate
 	 gtb100: gammatone envelope, decimate
 	 gtc100: ???
-  3. [ ] Button to allow local testing of model/cellid pair
-  4. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
-  5. [ ] BUG: When I edit/remove the tag that I was scanning, it bugs the tag dropdown
-  6. [ ] Safety check so that these modules do not allow unifiers/splitters
-         - correlation, MSE, bayesian, loader, etc
-	 - Split normalization or not?
-  7. [ ] Clean up saved_analysis, saved_models, saved_images
-  8. [ ] During insert into DB, take a bunch of metrics
-	 - [ ] Sparsity is not going into the DB
-	 - [ ] More metrics should go into the DB
-	 - [ ] Total spike count should go into DB
-	 - [ ] Elitist browsing (Shows ONLY THE HIGHEST MODEL of each cell given current masks)
-  9. [-] Default per-paramset, per-channel heatmap graph fns:
+         gtd100: ???
+  2. [ ] BUG: When I edit/remove the tag that I was scanning, it bugs the tag dropdown
+  3. [-] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [X] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  10. [ ] Repair Fitters 
-          - [ ] Remove, then re-add test_set data by default to make fitters faster
-          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  11. [ ] Profile and look for optimizations:
-          - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
-          - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
-          - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
-  12. [ ] Possible features to extract (And what what is needed to detect them)
+  4. [ ] Button to allow local testing of model/cellid pair
+  5. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
+  6. [ ] Safety check so that these modules do not allow unifiers/splitters
+         - correlation, MSE, bayesian, loader, etc
+	 - Split normalization or not?
+  7. [ ] During insert into DB, take a bunch of metrics
+	 - [ ] Sparsity is not going into the DB
+	 - [ ] More metrics should go into the DB
+	 - [ ] Total spike count should go into DB
+	 - [ ] Elitist browsing (Shows ONLY THE HIGHEST MODEL of each cell given current masks)
+  8. [ ] Repair Fitters 
+         - [ ] Remove, then re-add test_set data by default to make fitters faster
+         - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
+  9. [ ] Profile and look for optimizations:
+         - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
+         - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
+         - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
+  10. [ ] Possible features to extract (And what what is needed to detect them)
           - Spatial location of source (Phase difference or not)
           - Freq (STRF)
           - Freq direction rising/falling (STRF with diagonal band)
@@ -35,18 +35,13 @@
           - Timbre (STRF with harmonics)
           - Vowels, Consonants 
           - Onsets, offturns (STRF)
-  13. [ ] Fix Irregularities
+  11. [ ] Fix Irregularities
           - Not all nonlinearities can accomodate NaNs in their code, especially in stim
           - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
           - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
           - Jackknifing doesn't work with performance metrics besides MSE right now?
-  14. [ ] TODOs and FIXMEs around code need to be addressed!
-  15. [ ] Write a crash course guide on using NARF 
-
-* Books
-  Wavelets
-  Generalized Linear Models
-  Generalized Additive models
+  12. [ ] Write a crash course guide on using NARF 
+  
   
 * Experiments:
   1. [ ] Can an adaptive compressor be generated that will work clean up FIR fits?
@@ -109,6 +104,13 @@
   27. [ ] Make a gain-changing filter, something like a FIR but with per-pixel gains? After all, by the time the signal reaches cortex, neural responses are likely
   28. [ ] Do a FIR filter of the output of a FIR filter to get features
   29. [ ] Test out making layered exponentials (exp of an exp of an exp, etc)
+
+* Books
+  Wavelets
+  Generalized Linear Models
+  Generalized Additive models
+  Bayesian model comparison
+  Bayesian neural modeling
 
 * LOW PRIORITY CLEANUP
   1. [ ] Grep for TODO's, FIXME's, etc in existing files and add them to this list
@@ -223,63 +225,45 @@
   53. Stephen will do the init condition for FIRN coefs split into two filters of positive/negative coefs only    
   54. Write a termination condition that ends when "delta = 10^-5 * max-delta-found-so-far" for boosting
   55. Why an FPGA would kick ass for this stuff(You could try all 300 coefficient boosting steps simultaneously, this is an embarassingly parallel problem)
-** Crazyboost
-   How's this for a fitter?
-   Boosting works well, and tries every possible step before taking a new one.
-   That's good and deterministic, but maybe we could speed things up by randomly sorting the steps (so as not to be biased towards early values)
-   Then just take a step _any_ time it improves the score
-   It would take many more steps each iteration.
-   No guarantee it would converge, but maybe we could do it just to get started more quickly
-** Can Jackknifes be stored in the same model file?
-  No, this should not be done.   
-
-** Stephen's boosting verification
-  1. A Shrinking step size is stupid simple. Is there a better way?
-  2. Can we retire the analysis/TSP files?
-  3. Can I retire the modules/exp_filter? 
-
-** SAFETY VERIFICATION PROGRAM:
-  1. Create a test/ directory with many test functions in it
-     Each test function:
-     - creates a default XXX{1}
-     - Puts a single module on the stack
-     - Recomputes XXX(1)
-     - Checks output vs predetermined values
-  2. Check that all modules work independently as expected
-  3. Checks that DB and modelfiles still sync up
-** Rewrite JOBS system
-    + Put a "Complete?" 
-    + Any number of PCs query the DB, try to get 'incomplete' flagged models. DB is atomic, handles conflicts and negates need for server.
-    + They compute those models, then return values.
-    + If desired, a local 'manager' on each PC can watch processes, handle timeouts, etc
-    + Negates need for SSH credentials everywhere, too.
-** Improve BAPHY Interface
-   - Right now BAPHY has a complicated interface for a simple thing:
-     - All we really want is the stimulus and response(s)
-     - Selecting data ourselves, jackknifing it, hacking it out, etc are messy since half of it is done in Baphy and half in NARF
+  56. Crazyboost
+      How's this for a fitter?
+      Boosting works well, and tries every possible step before taking a new one.
+      That's good and deterministic, but maybe we could speed things up by randomly sorting the steps (so as not to be biased towards early values)
+      Then just take a step _any_ time it improves the score
+      It would take many more steps each iteration.
+      No guarantee it would converge, but maybe we could do it just to get started more quickly
+  57. Can Jackknifes be stored in the same model file? (No, this should not be done.)
+  58. SAFETY VERIFICATION PROGRAM:
+    + Create a test/ directory with many test functions in it
+      Each test function:
+      - creates a default XXX{1}
+      - Puts a single module on the stack
+      - Recomputes XXX(1)
+      - Checks output vs predetermined values
+    + Check that all modules work independently as expected
+    + Checks that DB and modelfiles still sync up
+  59. Rewrite JOBS system
+      + Put a "Complete?" 
+      + Any number of PCs query the DB, try to get 'incomplete' flagged models. DB is atomic, handles conflicts and negates need for server.
+      + They compute those models, then return values.
+      + If desired, a local 'manager' on each PC can watch processes, handle timeouts, etc
+      + Negates need for SSH credentials everywhere, too.
+  60. Improve BAPHY Interface
+      - Right now BAPHY has a complicated interface for a simple thing:
+      - All we really want is the stimulus and response(s)
+      - Selecting data ourselves, jackknifing it, hacking it out, etc are messy since half of it is done in Baphy and half in NARF
 ** Make Fitters understand how to work on each paramset separately?
-          - I wish we could, but this is impossible. Right now, there is a subtle problem when we use a splitter on the FIR filter:
-          - Boosting slows down 5x. We have 5x24 = 120 parameters per boost step. 
-          - Fitting in one split regime is subtely interacting with fitting in another. Early stopping worsens this effect.
-          - However, this cannot be done. Perhaps we are trying to fit a nonlinearity across all models; we cannot fit each separately. 
+   - I wish we could, but this is impossible. Right now, there is a subtle problem when we use a splitter on the FIR filter:
+   - Boosting slows down 5x. We have 5x24 = 120 parameters per boost step. 
+   - Fitting in one split regime is subtely interacting with fitting in another. Early stopping worsens this effect.
+   - However, this cannot be done. Perhaps we are trying to fit a nonlinearity across all models; we cannot fit each separately. 
 ** Try this:
- http://www.mathworks.com/matlabcentral/fileexchange/27662-evolve-top-and-bottom-envelopes-for-time-signals-i-e
+   http://www.mathworks.com/matlabcentral/fileexchange/27662-evolve-top-and-bottom-envelopes-for-time-signals-i-e
    Should also query the database to see if a job is queued already, and list a Q
-Add intelligence to boostperfile that
-	DOES split the normalization
-	DOES split any module that is not a performance metric or a loader
-	Put a breakpoint in boostperfile, check that the predictions are fine, then let the merge occur, then check the predictions again
-  2. [ ] A better queuing script
-	 - [ ] Sorts according to QUESTIONS 
-	 - [ ] Scatter plot comparison functionality
-	 - [ ] Overwrite existing models?
-	 - [ ] Resume dead models?
-	 - [ ] Force git sync?
-	 - [ ] Force git clean?
-	 - [ ] Check for:
-	       - [ ] dead/jobs
-	       - [ ] DB contents and Filesystem still sync up
-	       - [ ] Everything is enqueued
+   Add intelligence to boostperfile that
+   DOES split the normalization
+   DOES split any module that is not a performance metric or a loader
+   Put a breakpoint in boostperfile, check that the predictions are fine, then let the merge occur, then check the predictions again
   5. [ ] Repair Narf Browser
 	 - [ ] Antialiasing problem when saving images
 	 - [ ] AND/OR/NOT query token filter, or 'In position 3' filter

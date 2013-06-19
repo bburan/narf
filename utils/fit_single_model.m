@@ -29,8 +29,8 @@ if isempty(MODULES)
     MODULES = scan_directory_for_modules(NARF_MODULES_PATH);
 end
 
-if ~exist([NARF_SAVED_MODELS_PATH filesep cellid], 'dir')
-    mkdir([NARF_SAVED_MODELS_PATH filesep cellid]);
+if ~exist([NARF_SAVED_MODELS_PATH filesep num2str(batch) filesep cellid], 'dir')
+    mkdir([NARF_SAVED_MODELS_PATH filesep num2str(batch) filesep cellid]);
 end
 
 if ~exist('strict_git_logging','var'),
