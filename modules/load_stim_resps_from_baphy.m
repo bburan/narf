@@ -130,7 +130,9 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
                   mdl.stimulus_channel_count, 0, mdl.include_prestim);
         end
         
-        stim = permute(stim, [2 3 1]);
+        if strcmp(mdl.stimulus_format, 'wav')
+            stim = squeeze(stim);
+        end
         
         % TODO: Right now the envelope returned by baphy is not necessarily
         % positive semidefinite, and when run through a square root
@@ -138,6 +140,7 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         % should be fixed on the baphy side, but for now let's just
         % add a workaround here.
         if strcmp(mdl.stimulus_format, 'envelope')
+            stim = permute(stim, [2 3 1]);
             stim = abs(stim);
         end
         

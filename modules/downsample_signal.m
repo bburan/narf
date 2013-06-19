@@ -59,11 +59,10 @@ function x = do_downsampling(mdl, x, stack, xxx)
 end
 
 function do_plot_downsampled(sel, stack, xxx)
-    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
-    mdls = stack{end};
-    xouts = {xxx{end}};
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
     
     hold on;
+    sel.chan_idx = [];
     do_plot(xouts, mdls{1}.output_time, mdls{1}.output, ...
             sel, 'Time [s]', 'Respavg [-]');
     hold off;     

@@ -118,6 +118,7 @@ handles.refresh_analysis = uicontrol('Parent', left_panel, ...
           'Callback', @any_condition_changed_callback); 
 
 % Configure the analyses table selection to update the center and right panels
+drawnow;
 hJS = findjobj(handles.analyses_table); 
 hJT = hJS.getViewport.getView;
 hJT.setNonContiguousCellSelection(false);
@@ -428,6 +429,7 @@ handles.batch_table = uitable('Parent', right_panel, 'Enable', 'on', 'Units', 'p
         'ColumnName', {'CellID', 'Est Set', 'Val Set', 'Filecodes'}, ...
         'Position', [pad pad+ts rw-pad*2 dh-9*ts-pad]);
 
+drawnow;
 batch_JS = findjobj(handles.batch_table); 
 batch_JT = batch_JS.getViewport.getView;
 batch_JT.setNonContiguousCellSelection(false);
@@ -766,6 +768,7 @@ db_results_table = uitable('Parent', bottom_panel, ...
                        'Last Mod.', 'Note'}, ...
         'Position', [pad pad w-pad*2 bh-ts-pad*2]);
 
+drawnow;
 pause(0.1); % Needed to avoid MATLAB GUI race condition...
     
 % Set up the DB Results table widget behavior
@@ -811,10 +814,9 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
         sortdir = popup2str(handles.sortdir);
         sql = [sql ' ORDER BY ' sortby ' ' sortdir ' LIMIT 0, 500'];
         
-        dbopen;
-        tic;
+        dbopen;        
         db_results = mysql(sql);       
-        toc
+        
         l = length(db_results);
         c = cell(l,12);
         for i = 1:l
@@ -853,6 +855,3 @@ rebuild_batches_popup();
 any_condition_changed_callback();
 
 end
-
-
-
