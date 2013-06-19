@@ -17,7 +17,7 @@ texty = 0.95;  % 0.9=Top
 
 axmin = -0.2;
 axmax = 0.9;
-axmin = min(X(:));
+axmin = min(min(X(:)), 0);
 axmax = max(X(:));
 
 bins = linspace(axmin, axmax, 20);
