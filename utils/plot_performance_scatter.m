@@ -19,7 +19,7 @@ modelcount=length(umodelnames);
 preddata=cell(modelcount,1);
 keepidx=zeros(modelcount,1);
 for ii=1:modelcount,
-    sql=['SELECT NarfResults.r_test as r1,n1.r_test as r2,',...
+    sql=['SELECT NarfResults.',ordinate,' as r1,n1.',ordinate,' as r2,',...
          ' n1.cellid,n1.modelname',...
          ' FROM NarfResults INNER JOIN NarfResults n1',...
          ' ON NarfResults.cellid=n1.cellid',...
@@ -49,7 +49,7 @@ ff=min(ff(ff>20));
 if ~isempty(ff),
     name1(ff)=char(10);
 end
-minax=-0.3
+minax=-0.3;
 maxax=1;
 for pidx=1:modelcount,
     vals=preddata{pidx};

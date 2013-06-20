@@ -174,6 +174,7 @@ function x = do_load_wehr(mdl, x, stack, xxx)
             end
             %si=log2(si+2);
             
+            
             if SR<SRint,
                 ri=resample(ri,SR,SRint);
                 dsi=resample(dsi,SR,SRint);
@@ -185,8 +186,8 @@ function x = do_load_wehr(mdl, x, stack, xxx)
                 end
             end
             
-            % trim possible artifact off end of r.
-            ri=ri(1:(end-50),:);
+            % trim possible artifact, last 0.75 sec of r
+            ri=ri(1:(end-round(0.75*SR)),:);
             
             % make sure stim and resp are the same length
             if length(ri)>length(si),
@@ -197,10 +198,10 @@ function x = do_load_wehr(mdl, x, stack, xxx)
                 dsi=dsi(1:length(ri),:);
             end
             
-            %remove possible artifacts from onset
-            ri=ri(11:end);
-            si=si(11:end,:);
-            dsi=dsi(11:end);
+            %remove possible artifacts from 0.1 sec onset
+            ri=ri(round(0.1*SR)+1:end);
+            si=si(round(0.1*SR)+1:end,:);
+            dsi=dsi(round(0.1*SR)+1:end);
             
             % remove linear trend
             %ri=detrend(ri);

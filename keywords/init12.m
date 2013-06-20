@@ -34,7 +34,9 @@ for ii = 1:length(mod_idxs) % For each match
             strf = cellxcdataloaded(stim, resp, params);
             h=zeros(size(strf(1).h));
             h(ii,:)=strf(1).h(ii,:);
-            
+            if ii==2,
+                h(ii,:)=-h(ii,:);
+            end
             STACK{idx}{jj}.coefs = h;
             STACK{idx}{jj}.num_dims = size(h, 1);
             
