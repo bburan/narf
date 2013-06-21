@@ -1,8 +1,10 @@
 function parent_handle = narf_analysis(parent_handle)
 % A GUI to edit the contents of the MySQL NarfAnalysis table
 
+global MODULES;
 narf_set_path;
 dbopen;
+MODULES = scan_directory_for_modules();   
 
 h = 800;  % Total window height
 w = 1200; % Total window width
@@ -420,11 +422,11 @@ handles.refresh_batches = uicontrol('Parent', right_panel, ...
     function refresh_batch_callback(~,~,~)
         if isempty(sel_batch)
             return
-        end
+        end        
+        cells = request_celldb_batch(sel_batch);
         dbopen;
         sql = ['DELETE from NarfBatches WHERE batch="' num2str(sel_batch) '"'];
         mysql(sql);
-        cells = request_celldb_batch(sel_batch);
         for ii = 1:length(cells)
             sqlinsert('NarfBatches', ...
                       'batch',      num2str(sel_batch), ...
