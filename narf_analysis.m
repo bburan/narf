@@ -792,7 +792,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         hold on;
         bar(1:length(sel_models), nanmean(data), 'r'); 
         plot(1:length(sel_models), data, 'k.');
-        errorbar(1:length(sel_models), nanmean(data), nanvar(data), max(data), 'xk');
+        errorbar(1:length(sel_models), nanmean(data), nanvar(data), max(data) - nanmean(data), 'xk');
         hold off;
         set(gca,'XTick', 1:length(sel_models));
         set(gca,'XTickLabel', sel_models);
