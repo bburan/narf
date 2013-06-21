@@ -1,24 +1,26 @@
 function logfit()
 
-global MODULES STACK;
+global MODULES STACK META;
 
 append_module(MODULES.nonlinearity.mdl(struct('phi', [-2 -log(0+10^-2)], ...
                                               'nlfn', @nl_log, ...
                                               'fit_fields', {{'phi'}})));
-append_module(MODULES.fir_filter.mdl(struct('num_coefs', 1)));
-append_module(MODULES.correlation);
-META.perf_metric = @pm_corr;
+append_module(MODULES.fir_filter.mdl(struct('num_coefs', 1, 'fit_fields', {{}})));
+append_module(MODULES.mean_squared_error);
+META.perf_metric = @pm_mse;
+
 % There may be multiple channels, so do the correlation with each
-ll = size(STACK{end-2}{1}.coefs, 2);
-themax = 0; 
-thephi = pack_fittables();
+ll = size(STACK{end-1}{1}.coefs, 1);
+thebst = nan; 
+thephi = pack_fittables(STACK);
 for ii = 1:ll
-    STACK{end-2}{1}.coefs = zeros(1, ll);
-    STACK{end-2}{1}.coefs(1, ii) = 1;
+    STACK{end-1}{1}.coefs = zeros(ll, 1);
+    STACK{end-1}{1}.coefs(ii, 1) = 1;
+    calc_xxx(2);
     fit_fminlsq();
-    if themax < META.perf_metric()
-        themax = META.perf_metric();
-        thephi = pack_fittables();
+    if isnan(thebst) || thebst < META.perf_metric()
+        thebst = META.perf_metric();
+        thephi = pack_fittables(STACK);
     end
 end
 unpack_fittables(thephi);
