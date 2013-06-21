@@ -791,6 +791,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                'Position', [10 10 900 300]);
         hold on;
         bar(1:length(sel_models), nanmean(data), 'r'); 
+        plot(1:length(sel_models), data, 'k.');
         errorbar(1:length(sel_models), nanmean(data), nanvar(data), max(data), 'xk');
         hold off;
         set(gca,'XTick', 1:length(sel_models));
@@ -798,25 +799,6 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         set(gca,'CameraUpVector',[-1,0,0]);
     end
 
-    uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Raster Plot', ...
-          'Position', [1000 bh-ts 100 ts-pad], ...
-          'Callback', @raster_plot_callback);
-      
-    function raster_plot_callback(~,~,~)
-        data = compute_data_matrix();
-        if isempty(data)
-            return;
-        end
-        figure('Name', 'Raster Plot Comparison', 'NumberTitle', 'off', ...
-               'Position', [10 10 900 300]);
-        hold on;
-        plot(1:length(sel_models), data, 'k.');
-        hold off;
-        set(gca,'XTick', 1:length(sel_models));
-        set(gca,'XTickLabel', sel_models);
-        set(gca,'CameraUpVector',[-1,0,0]);
-    end
 db_results_table = uitable('Parent', bottom_panel, ...
         'Enable', 'on',  'Units', 'pixels', 'RowName', [],...
         'ColumnWidth', {60, 40, 100, 300, ...
