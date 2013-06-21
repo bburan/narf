@@ -1,12 +1,13 @@
-function initrc ()
+function init10 ()
 % Initializes all FIR filters via reverse correlation.
 
 global STACK XXX;
 
 [~, mod_idxs] = find_modules(STACK, 'fir_filter');
 
-% Initialize coefs to all ones
-for ii = 1:length(mod_idxs) % For each match
+
+ii=1; % only initialize first fir filter.  Others kept at zero.
+
     for jj = 1:length(STACK{mod_idxs{ii}}) % For each paramset
         if isfield(STACK{mod_idxs{ii}}{jj}, 'fit_fields') && ...
                 any(strcmp('coefs', STACK{mod_idxs{ii}}{jj}.fit_fields))
@@ -32,12 +33,11 @@ for ii = 1:length(mod_idxs) % For each match
             params.sfscount    = 5;
             params.sfsstep     = 3;
             strf = cellxcdataloaded(stim, resp, params);
-            STACK{idx}{jj}.coefs = strf(1).h;
-            STACK{idx}{jj}.num_dims = size(strf(1).h, 1);
+            h=strf(1).h;
+            STACK{idx}{jj}.coefs = h;
+            STACK{idx}{jj}.num_dims = size(h, 1);
             
         end
     end
-end
 
 calc_xxx(mod_idxs{1});
-

@@ -13,6 +13,12 @@ global STACK XXX;
 
 [~, firmod_idxs] = find_modules(STACK, 'fir_filter');
 
+% if there are mulitple filters, this is a more complex-form model
+% and not to be messed with here.
+if length(firmod_idxs)>1,
+    return
+end
+
 for kk = 1:length(firmod_idxs)
     idx = firmod_idxs{kk};
     

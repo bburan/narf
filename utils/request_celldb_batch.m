@@ -18,6 +18,34 @@ if ~exist('batch', 'var'),
    error('syntax error: request_celldb_batch(batch) parameters required');
 end
 
+if batch==243,
+    celllist={...
+        'out121012_002_002',...
+        'out121112_004_003_E',...
+        'out121112_004_003_I',...
+        'out121112_004_005_E',...
+        'out121112_004_005_I',...
+        'out121412_007_002',...
+        'out121812_002_003',...
+        'out121812_002_005',...
+        'out121812_004_003',...
+        'out121812_004_005',...
+        'out122012_002_001_E',...
+        'out122012_002_001_I',...
+        'out122012_003_001',...
+        'out122012_007_001_E',...
+        'out122012_007_001_I'};
+    ret=cell(length(celllist),1);
+    for ii=1:length(celllist),
+        ret{ii}=struct();
+        ret{ii}.cellid=celllist{ii};
+        ret{ii}.training_set={[celllist{ii} '_est']};
+        ret{ii}.test_set={[celllist{ii} '_val']};
+        ret{ii}.filecode={};
+    end
+    return
+end
+
 dbopen;
 if exist('cellid','var'),
     sql = ['SELECT * from sRunData WHERE batch=', num2str(batch),...
@@ -32,6 +60,7 @@ if length(rundata) == 0,
    return
 end
 
+
 for nn = 1:length(rundata)
     cellid = rundata(nn).cellid;
     
@@ -40,6 +69,7 @@ for nn = 1:length(rundata)
     train_set={};
     test_set={};
     file_code={};
+    rawid=[];
     
     if ismember(rundata(nn).batch,[241,244])
         cellfiledata=dbgetscellfile('cellid',cellid,'runclassid',[42 8 103]);
@@ -91,6 +121,8 @@ for nn = 1:length(rundata)
         for ii=1:length(useidx),
             train_set{ii}=[cellfiledata(useidx(ii)).stimfile,'_est'];
             test_set{ii}=[cellfiledata(useidx(ii)).stimfile,'_val'];
+            rawid(ii)=cellfiledata(useidx(ii)).rawid;
+            
             if activefile(useidx(ii)),
                 file_code{ii}=['A',num2str(acounter)];
                 acounter=acounter+1;
@@ -115,10 +147,12 @@ for nn = 1:length(rundata)
         if length(cellfiledata)==1,
             train_set{1}=[cellfiledata.stimfile,'_est'];
             test_set{1}=[cellfiledata.stimfile,'_val'];
-        else
+            rawid(1)=cellfiledata.rawid;
+       else
             for ii=1:length(times(1).fileidx),
                 if times(1).stop(ii)>times(1).start(ii),
                     train_set{end+1}=basename(params.stimfiles{times(1).fileidx(ii)});
+                    rawid(end+1)=cellfiledata(ii).rawid;
                 end
             end
             
@@ -135,5 +169,6 @@ for nn = 1:length(rundata)
     ret{nn}.training_set = train_set;
     ret{nn}.test_set = test_set;
     ret{nn}.filecode = file_code;
+    ret{nn}.training_rawid = rawid;
 end
 
