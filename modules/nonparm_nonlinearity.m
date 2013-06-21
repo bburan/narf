@@ -56,6 +56,10 @@ function [phi,outbinserr] = init_nonparm_nonlinearity(mdl, x)
         resp=cat(1,resp,x.dat.(sf).(mdl.input_resp)(:));
     end
     
+    if (length(pred) ~= length(resp))
+        error('Length of pred and resp must be equal!');
+    end
+    
     keepidx=find(~isnan(resp));
     pred=pred(keepidx);
     resp=resp(keepidx);

@@ -42,62 +42,46 @@
   - [ ] Improve Metric
   - [ ] Improve fitter
   - [ ] Improve Feature Extraction
-  
-* Experiments:
-  2. [ ] How well do our basic model types compare? (firn, depn, firv2, inex)
-  4. [ ] Try to remove systemic bias of input by having a positive and a negative input? How did that work in the triggered correlation thing?
-  5. [ ] Sort spikes by ISI times
-	 1. Take STA/STC of each quartile.
-	 2. Are they different? If so, proof that model is nonstationary.
-  6. [ ] Make a spike-triggered average filter bank instead of a gammatone
-         - [ ] Plot STA distributions of sound intensities at each delay (i.e. make a heatmap)
-  7. [ ] Manual verification of per-file splits.
-	 - [ ] If I manually train 5 models on each thing, then recombine them, do I get the same results?
-	 - [ ] Is correlation being calculated properly?
-	 - [ ] If we NAN out the respfiles instead of removing them completely, does that avoid the normalization bug problem?
-         - [ ] Are we splitting and unifying on the files trained upon?
-         - [ ] Is the training R^2 usually higher than the test?
-         - [ ] Does MSES have an effect?
-         - [ ] Normalization is done across files or not?
-  8. [ ] Starting with a very good MSE-trained estimator, what is the noise distribution?
-	 [0  1  3  1  0  0  0 -1  0  0  0  0; -0 -0  1 -0 -0 -0 -0 -0 -0  -0.25 -0 -0]
-  9. [ ] Can a really simple model like this do very well:
+
+  5. [ ] Can a really simple model like this do very well:
 	 Logfit (1 parm) + scale & delay amount per channel (2*n parms) + respavg-estimated stateful depression amount (2*n parms)
-  10. [ ] Is it better to bin, reload from baphy, resample, downsaple, decimate, convolve, smooth, or infer respavg?
-          Try decimate, or resample (@(x,n) abs(decimate(x,n)),  @(x,n) abs(resample(x,1,n))
-  11. [ ] Does MSES# and init0 improve the per-file boosts?
-  12. [ ] Is boosting quitting too soon? (i.e. does qboost or lsq improve things?)
-  13. [ ] How well do the different "inferp" keywords work?
-	  Can an inferp keyword smoothing be done on the fly or in a single pass at the end?
-  14. [ ] Which metric is working best without smoothing?
-	  {env200, log2b, firn, {err10, err15, err20, bic, ll*}, boost}?
-  15. [ ] Do other fitters improve performance over boost?
-  16. [ ] After training, can we get an idea of the STRF variance via reverse correlation?
-	  Start from RESPAVG signal at end
-	  Numerically zero-find to estimate the pre-NPNL stimulus, starting from the estimate from the forward pass
-	  For each filter coeff, push in the reverse-correlated distribution (several thousand points)
-	  Plot the histograms for each FIR coef as a line plot. 
-  17. [ ] Does chopping off the 1st second in load_stim_resps_from_baphy improve fits?
-  18. [ ] What if we use RESPAVG to compute the depression state, and fit the depression amounts to that?
-	  Would an exponential feed through too much?
-  19. [ ] Can I make a time-compensating autocorrelation NPNL?
-	  Idea: Do NPNL-like transform to autocorrelated ISI data?
-  20. [ ] Instead of getting the full covariance matrix, just get per-parameter variances.
-	  Vary each parameter deterministically or stochastically
-	  Estimate the amount variance which decreases the MSE by a set amount
-	  This should let us determine the "relevancy" of each parameter
-	  Sort all the parameters, and take just the most relevant ones!
-  21. [ ] GMM without slow EM step:
-	  For each point, take K nearest neighbors. 
-	  Compute 2D gaussian for that point. 
-	  Flatten that 2D gaussian and push into SENL's 1D input
-  22. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
-  23. [ ] Use a single wavelet transform in place of downsampling + FIR filter
-  24. [ ] How well does the MSECHEAT algorithm do?
+  6. [ ] Is it better to bin, reload from baphy, resample, downsaple, decimate, convolve, smooth, or infer respavg?
+         Try decimate, or resample (@(x,n) abs(decimate(x,n)),  @(x,n) abs(resample(x,1,n))  
+* Experiments:
+  1. [ ] Probabilistic FIR filters
+	 + Per-coefficient probabilistic distributions to replace FIR filters
+	 + After training, can we get an idea of the STRF variance via reverse correlation?
+	   - Start from RESPAVG signal at end
+	   - Numerically zero-find to estimate the pre-NPNL stimulus, starting from the estimate from the forward pass
+	   - For each filter coeff, push in the reverse-correlated distribution (several thousand points)
+	   - Plot the histograms for each FIR coef as a line plot. 
+  2. [ ] Non-Parametric Wavelets for feature extraction
+	 + Make a spike-triggered average filter bank instead of a gammatone
+         + Plot STA distributions of sound intensities at each delay (i.e. make a heatmap)
+  3. [ ] Non-Parametric activity-scaled auto-correlation to find time-varying response
+	 + Idea: Do NPNL-like transform to autocorrelated ISI data
+	 + Idea: Sort spikes by ISI times
+	    - Take STA/STC of each quartile.
+	    - Are they different? If so, we have proof that model is nonstationary.
+  4. [ ] Estimating Time-Varying State
+	 + What if we use RESPAVG to compute the depression state, and fit the depression amounts to that?
+  5. [ ] Can I make a time-compensating autocorrelation NPNL?
+  6. [ ] Sparsifying based on relevancy of coefficients	 
+	 Vary each parameter deterministically or stochastically
+	 Estimate the amount variance which decreases the MSE by a set amount
+	 This should let us determine the "relevancy" of each parameter
+	 Sort all the parameters, and take just the most relevant ones!
+  8. [ ] GMM without slow EM step:
+	 For each point, take K nearest neighbors. 
+	 Compute 2D gaussian for that point. 
+	 Flatten that 2D gaussian and push into SENL's 1D input
+  9. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
+  11. [ ] How well does the MSECHEAT algorithm do?
 	  (Tries several different sparsity values in sequence, then picks the best one)
-  25. [ ] Make a gain-changing filter, something like a FIR but with per-pixel gains? After all, by the time the signal reaches cortex, neural responses are likely
-  26. [ ] Do a FIR filter of the output of a FIR filter to get features
-  27. [ ] Test out making layered exponentials (exp of an exp of an exp, etc)
+  12. [ ] Make a gain-changing filter, something like a FIR but with per-pixel gains? After all, by the time the signal reaches cortex, neural responses are likely
+  13. [ ] Do a FIR filter of the output of a FIR filter to get features
+  14. [ ] Test out making layered exponentials (exp of an exp of an exp, etc)
+  15. [ ] Try to remove systemic bias of input by having a positive and a negative input? How did that work in the triggered correlation thing?
 
 * Books
   Wavelets
@@ -266,3 +250,11 @@
   10. [ ] Add new functionality to the do_scatter_plot method
 	  - [ ] Instead of plotting a scatter plot as points, use a fine-grid HEAT MAP
 		Use grayish/blackish 
+  4. [ ] Manual verification of per-file splits.
+	 - [ ] If I manually train 5 models on each thing, then recombine them, do I get the same results?
+	 - [ ] Is correlation being calculated properly?
+	 - [ ] If we NAN out the respfiles instead of removing them completely, does that avoid the normalization bug problem?
+         - [ ] Are we splitting and unifying on the files trained upon?
+         - [ ] Is the training R^2 usually higher than the test?
+         - [ ] Does MSES have an effect?
+         - [ ] Normalization is done across files or not?
