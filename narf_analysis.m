@@ -606,17 +606,17 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         if strcmp(reply, 'No')
             return;
         end
-        
+        thebatch = sel_batch;        
         force = get(handles.force, 'Value');
         
         mm = eval(get(handles.modeltree, 'String'));
         modulekeys = keyword_combos(mm);
         
-        cells = request_celldb_batch(sel_batch);
+        cells = request_celldb_batch(thebatch);
         
         for ii = 1:length(cells)
             for jj = 1:length(modulekeys)                     
-                enqueue_single_model(sel_batch, cells{ii}.cellid, modulekeys{jj}, ...
+                enqueue_single_model(thebatch, cells{ii}.cellid, modulekeys{jj}, ...
                     cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, force);
             end
         end
