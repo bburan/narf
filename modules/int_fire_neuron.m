@@ -9,7 +9,7 @@ m.name = 'int_fire_neuron';
 m.fn = @do_int_fire_neuron;
 m.pretty_name = 'Integrate-and-fire neuron';
 m.editable_fields = {'input_stim1', 'input_stim2', 'input_resp', 'time',...
-                     'output', 'Vrest', 'V0', 'gL'};
+                     'output', 'Vrest', 'V0', 'gL','rectify_inputs','subsample'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
@@ -19,14 +19,18 @@ m.input_resp = 'respavg';
 m.time = 'stim_time';
 m.output = 'stim';
 m.Vrest=0;
-m.V0=[50 -50];
-m.gL=50;
+m.V0=[40 -20];
+m.gL=25;
+m.rectify_inputs=0;
+m.subsample=10;
 
 % Optional fields
 m.plot_fns = {};
 m.auto_plot = @do_plot_irn_output;
 m.plot_fns{1}.fn = @do_plot_irn_output; 
-m.plot_fns{1}.pretty_name = 'IRN Output';
+m.plot_fns{1}.pretty_name = 'IRN Input/Output';
+m.plot_fns{2}.fn = @do_plot_irn_input; 
+m.plot_fns{2}.pretty_name = 'IRN Inputs';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -51,6 +55,10 @@ function x = do_int_fire_neuron(mdl, x, stack, xxx)
          % Compute the size of the INPUT
          gE=x.dat.(sf).(mdl.input_stim1);
          gI=x.dat.(sf).(mdl.input_stim2);
+         if mdl.rectify_inputs,
+             gE(gE<0)=0;
+             gI(gI<0)=0;
+         end
          
          % Compute the size of the INPUT
          [T, S] = size(gE);
@@ -60,14 +68,23 @@ function x = do_int_fire_neuron(mdl, x, stack, xxx)
          % Filter!
          V(1,:)=Vrest;
          for tt = 2:T
-             dV= (-gE(tt,:).*(V(tt-1,:)-V0(1)) - gI(tt,:).*(V(tt-1,:)-V0(2)) ...
-                - gL*(V(tt-1,:)-Vrest))./(fs./2);
-             V(tt,:)=V(tt-1,:)+dV;
+             tV=V(tt-1,:);
+             for ii=1:mdl.subsample,
+                 
+                 dV= (-gE(tt,:).*(tV-V0(1)) - gI(tt,:).*(tV-V0(2)) ...
+                      - gL*(tV-Vrest))./(fs./2)./mdl.subsample;
+                 tV=tV+dV;
+             end
+             V(tt,:)=tV;
+             %V(tt,V(tt,:)>max(V0))=max(V0);
+             %V(tt,V(tt,:)<min(V0))=min(V0);
+             
+             %if (V(tt,1)>10000),
              %if tt>50,
              %    sfigure(2)
              %plot([V(1:tt,1) gE(1:tt,1) gI(1:tt,1)]);
              %fprintf('%10.3f %10.3f %10.3f %10.3f \n',[dV(1) V(tt,1) gE(tt,1) gI(tt,1)]);
-             %pause
+             %keyboard
              %end
          end
          
@@ -81,8 +98,17 @@ end
 function do_plot_irn_output(sel, stack, xxx)
     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
     sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
-    do_plot(xouts, mdls{1}.time, mdls{1}.output, ...
+    do_plot(xouts, mdls{1}.time, ...
+            {mdls{1}.input_stim1 mdls{1}.input_stim2 mdls{1}.output}, ...
             sel, 'Time [s]', 'IRN Output [-]');
+end
+
+function do_plot_irn_input(sel, stack, xxx)
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
+    
+    do_plot(xouts, mdls{1}.time, {mdls{1}.input_stim1 mdls{1}.input_stim2} , ...
+            sel, 'Time [s]', 'IRN Inputs [-]');
 end
 
 end
