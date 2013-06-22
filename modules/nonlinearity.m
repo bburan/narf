@@ -46,17 +46,17 @@ m.plot_fns{1}.pretty_name = 'Output Channels (All)';
 m.plot_fns{2}.fn = @do_plot_single_default_output;
 m.plot_fns{2}.pretty_name = 'Output Channel (Single)';
 
-%m.plot_fns{1}.fn = @do_plot_smooth_scatter_and_nonlinearity; 
-%m.plot_fns{1}.pretty_name = 'Stim/Resp Smooth Scatter';
+m.plot_fns{3}.fn = @do_plot_scatter_and_nonlinearity; 
+m.plot_fns{3}.pretty_name = 'Stim/Resp Scatter';
+
+m.plot_fns{4}.fn = @do_plot_smooth_scatter_and_nonlinearity; 
+m.plot_fns{4}.pretty_name = 'Stim/Resp Smooth Scatter';
 
 %m.plot_fns{1}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), false);
 %m.plot_fns{1}.pretty_name = 'Nonlinearity';
 
 %m.plot_fns{4}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), true);
 %m.plot_fns{4}.pretty_name = 'Nonlinearity + Histogram';
-
-%m.plot_fns{5}.fn = @do_plot_scatter_and_nonlinearity; 
-%m.plot_fns{5}.pretty_name = 'Stim/Resp Scatter';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -80,25 +80,30 @@ function x = do_nonlinearity(mdl, x, stack, xxx)
     end
 end
 
-function do_plot_scatter_and_nonlinearity(stack, xxx)
- 
-    hold on;
-    do_plot_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
+function do_plot_scatter_and_nonlinearity(sel, stack, xxx)
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    
+    do_plot_scatter(sel, {xxx}, mdls{1}.input_stim, mdls{1}.input_resp);
     xlims = xlim();
     xs = linspace(xlims(1), xlims(2), 100);
-    plot(xs, mdl.nlfn(mdl.phi, xs));
-    hold off
+    hold on;    
+    plot(xs, mdls{1}.nlfn(mdls{1}.phi, xs));
+    hold off;
+  
+    do_xlabel('Input');
+    do_ylabel('Output');
+    
 end
 
-function do_plot_smooth_scatter_and_nonlinearity(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    hold on;
-    do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
+function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)    
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    
+    do_plot_scatter(sel, {xxx}, mdls{1}.input_stim, mdls{1}.input_resp, 100);
     xlims = xlim();
     xs = linspace(xlims(1), xlims(2), 100);
-    plot(xs, mdl.nlfn(mdl.phi, xs));
-    hold off
+    hold on;
+    plot(xs, mdls{1}.nlfn(mdls{1}.phi, xs));
+    hold off;   
 end
 
 end

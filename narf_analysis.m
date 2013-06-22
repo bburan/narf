@@ -1,8 +1,10 @@
 function parent_handle = narf_analysis(parent_handle)
 % A GUI to edit the contents of the MySQL NarfAnalysis table
 
+global MODULES;
 narf_set_path;
 dbopen;
+MODULES = scan_directory_for_modules();   
 
 h = 800;  % Total window height
 w = 1200; % Total window width
@@ -19,6 +21,8 @@ if ~exist('parent_handle', 'var')
     parent_handle = figure('Menubar','none', 'Resize','off', ...
        'Units','pixels', 'Position', [20 50 w h],...
        'Name', 'NARF Analysis Browser', 'NumberTitle', 'off');
+   drawnow;
+   pause(0.1);
 end
 
 db_results = []; % Shared amongst local functions that need common SQL query results
@@ -119,6 +123,7 @@ handles.refresh_analysis = uicontrol('Parent', left_panel, ...
 
 % Configure the analyses table selection to update the center and right panels
 drawnow;
+pause(0.1);
 hJS = findjobj(handles.analyses_table); 
 hJT = hJS.getViewport.getView;
 hJT.setNonContiguousCellSelection(false);
@@ -417,11 +422,11 @@ handles.refresh_batches = uicontrol('Parent', right_panel, ...
     function refresh_batch_callback(~,~,~)
         if isempty(sel_batch)
             return
-        end
+        end        
+        cells = request_celldb_batch(sel_batch);
         dbopen;
         sql = ['DELETE from NarfBatches WHERE batch="' num2str(sel_batch) '"'];
         mysql(sql);
-        cells = request_celldb_batch(sel_batch);
         for ii = 1:length(cells)
             sqlinsert('NarfBatches', ...
                       'batch',      num2str(sel_batch), ...
@@ -511,7 +516,7 @@ handles.select_all_cellids = uicontrol('Parent', right_panel, ...
 
 uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Status Report', ...
-          'Position', [pad pad 150 ts], ...
+          'Position', [pad pad 100 ts], ...
           'Callback', @status_report_callback);
     
     function yn = model_exists_in_db(bat, cellid, modelname, est_set, val_set, fcs) 
@@ -555,6 +560,35 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         fprintf('Status: [%d/%d] (complete/total), %d models not yet processed.\n', complete, total, total - complete);       
         fprintf('-------------------------------------------------------------------------------\n');        
 
+    end
+
+uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Fit Model Now', ...
+          'Position', [100+pad pad 100 ts], ...
+          'Callback', @fit_selected_now);
+      
+    function fit_selected_now(~,~,~)        
+        if length(sel_models) ~= 1 || length(sel_cellids) ~= 1               
+            warndlg('Only a single model and cellid must be selected.');
+        end
+        
+        reply = questdlg('Are you sure you want to fit the selected model to the selected cellid, on this machine only, immediately? While it is running, please do not click on any of the GUI buttons.', ...
+                 'Fit this model now?', 'Yes', 'No', 'No');
+        if strcmp(reply, 'No')
+            return;
+        end
+        
+        mm = eval(get(handles.modeltree, 'String'));
+        modulekeys = keyword_combos(mm);
+        
+        cells = request_celldb_batch(sel_batch, sel_cellids{1});       
+        ii=1;
+        
+        indexes = get(handles.modellist, 'Value');        
+        jj=indexes(1);
+        
+	    fit_single_model(sel_batch, cells{ii}.cellid, modulekeys{jj}, ...
+           cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, false);        
     end
 
 handles.force = uicontrol('Parent', right_panel, 'Style', 'checkbox', 'Units', 'pixels',...
@@ -757,8 +791,9 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                'Position', [10 10 900 300]);
         hold on;
         bar(1:length(sel_models), nanmean(data), 'r'); 
-        errorbar(1:length(sel_models), nanmean(data), nanvar(data), 'xk');
-        hold off;           
+        plot(1:length(sel_models), data, 'k.');
+        errorbar(1:length(sel_models), nanmean(data), nanvar(data), max(data) - nanmean(data), 'xk');
+        hold off;
         set(gca,'XTick', 1:length(sel_models));
         set(gca,'XTickLabel', sel_models);
         set(gca,'CameraUpVector',[-1,0,0]);

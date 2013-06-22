@@ -51,6 +51,10 @@ function npfnl = calc_npfnl(mdl, x)
         resp = cat(1, resp, x.dat.(sf).(mdl.input_resp)(:));
     end
     
+    if (length(pred) ~= length(resp))
+        error('Length of pred and resp must be equal!');
+    end
+    
     % Remove entries with NaNs in resp.
     keepidx=find(~isnan(resp));
     pred=pred(keepidx);

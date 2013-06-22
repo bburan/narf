@@ -33,7 +33,9 @@ end
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_filtered_stim; 
- m.plot_fns{1}.pretty_name = 'Filtered Stimulus vs Time';
+m.plot_fns{1}.pretty_name = 'Output Channels vs Time';
+m.plot_fns{2}.fn = @do_plot_channels_as_heatmap;
+m.plot_fns{2}.pretty_name = 'Output Channels (Heatmap)';
 % m.plot_fns{2}.fn = @do_plot_gammatone_filter_as_colormap;
 % m.plot_fns{2}.pretty_name = 'Gammatonegram';
 % m.plot_fns{3}.fn = @do_plot_filtered_spectrogram;
