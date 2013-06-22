@@ -138,7 +138,18 @@ for nn = 1:length(rundata)
         
     else
         % figure out what files to use for what stage of the analysis
-        [cellfiledata, times, params] = cellfiletimes(cellid, rundata(nn).batch);
+        %[cellfiledata, times, params] = cellfiletimes(cellid, rundata(nn).batch);
+        % get all valid files
+        cellfiledata=dbbatchcells(rundata(nn).batch,cellid);
+        
+        % sort so that file with max reps is at the end of the list
+        % and will be used for validation/test
+        ss=[cat(1,cellfiledata.stimspeedid),...
+            cat(1,cellfiledata.repcount),...
+            -cat(1,cellfiledata.resplen)];
+        [~,sortcell]=sortrows(ss);
+        cellfiledata=cellfiledata(sortcell);
+        
         runclassids=cat(cellfiledata.runclassid);
         if sum(runclassids~=103)==0,
             cellfiledata=cellfiledata(1);
@@ -149,18 +160,11 @@ for nn = 1:length(rundata)
             test_set{1}=[cellfiledata.stimfile,'_val'];
             rawid(1)=cellfiledata.rawid;
        else
-            for ii=1:length(times(1).fileidx),
-                if times(1).stop(ii)>times(1).start(ii),
-                    train_set{end+1}=basename(params.stimfiles{times(1).fileidx(ii)});
-                    rawid(end+1)=cellfiledata(ii).rawid;
-                end
+            for ii=1:length(cellfiledata)-1,
+                train_set{end+1}=cellfiledata(ii).stimfile;
+                rawid(end+1)=cellfiledata(ii).rawid;
             end
-            
-            for ii=1:length(times(3).fileidx),
-                if times(3).stop(ii)>times(3).start(ii),
-                    test_set{end+1}=basename(params.stimfiles{times(3).fileidx(ii)});
-                end
-            end
+            test_set{1}=cellfiledata(end).stimfile;
         end
     end
     
