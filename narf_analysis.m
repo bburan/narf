@@ -253,7 +253,8 @@ uicontrol('Parent', center_panel, 'Style', 'text', 'Units', 'pixels',...
           'Position', [pad dh-(ts*1)-pad 50 ts-pad]);
       
 handles.name = uicontrol('Parent', center_panel, 'Style', 'edit', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', '', ...
+          'HorizontalAlignment', 'left', 'String', '', ...  
+          'Max', 1, 'Min', 1, ...
           'Position', [50+pad dh-(ts*1)-pad 200 ts], ...
           'Callback', @analysis_changed_callback);
       
@@ -422,7 +423,8 @@ handles.refresh_batches = uicontrol('Parent', right_panel, ...
     function refresh_batch_callback(~,~,~)
         if isempty(sel_batch)
             return
-        end        
+        end
+        enable_or_disable_children(parent_handle, 'off');
         cells = request_celldb_batch(sel_batch);
         dbopen;
         sql = ['DELETE from NarfBatches WHERE batch="' num2str(sel_batch) '"'];
@@ -436,6 +438,7 @@ handles.refresh_batches = uicontrol('Parent', right_panel, ...
                       'filecodes',  write_readably(cells{ii}.filecode));
         end
         rebuild_batch_table();
+        enable_or_disable_children(parent_handle, 'on');
     end
 
 handles.batch_table = uitable('Parent', right_panel, 'Enable', 'on', 'Units', 'pixels',...
@@ -467,7 +470,7 @@ set(batch_JTcb, 'KeyPressedCallback', {@batch_table_row_selected, gcf});
         s = regexprep(s, ',$', '');
     end
     
-    function rebuild_batch_table(~,~,~)
+    function rebuild_batch_table(~,~,~)        
         sql = ['SELECT * from NarfBatches WHERE batch="' num2str(sel_batch) '" ORDER BY cellid'];
         dbopen;
         ret = mysql(sql);
@@ -481,7 +484,7 @@ set(batch_JTcb, 'KeyPressedCallback', {@batch_table_row_selected, gcf});
         set(handles.batch_table, 'Data', dat);
         cellids_found = cellstr(char(ret(:).cellid));
         
-        update_query_results_table();
+        update_query_results_table();        
     end
     
 handles.select_all_cellids = uicontrol('Parent', right_panel, ...
@@ -532,6 +535,7 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
 %         questdlg('Are you sure you want to generate an analysis status report?', ...
 %                  'Status Report?', 'Yes', 'No', 'No');
         
+        enable_or_disable_children(parent_handle, 'off');
         fprintf('\n-------------------------------------------------------------------------------\n');             
         fprintf('Model/CellID Completion Matrix; an X indicates the model exists already.');
         fprintf('\n-------------------------------------------------------------------------------\n');
@@ -560,6 +564,7 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         fprintf('Status: [%d/%d] (complete/total), %d models not yet processed.\n', complete, total, total - complete);       
         fprintf('-------------------------------------------------------------------------------\n');        
 
+        enable_or_disable_children(parent_handle, 'on');
     end
 
 uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
@@ -577,7 +582,7 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         if strcmp(reply, 'No')
             return;
         end
-        
+        enable_or_disable_children(parent_handle, 'off');
         mm = eval(get(handles.modeltree, 'String'));
         modulekeys = keyword_combos(mm);
         
@@ -587,8 +592,14 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         indexes = get(handles.modellist, 'Value');        
         jj=indexes(1);
         
-	    fit_single_model(sel_batch, cells{ii}.cellid, modulekeys{jj}, ...
-           cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, false);        
+        try 
+            fit_single_model(sel_batch, cells{ii}.cellid, modulekeys{jj}, ...
+            cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, false);     
+        catch err
+            enable_or_disable_children(parent_handle, 'on');    
+            rethrow(err);
+        end
+        
     end
 
 handles.force = uicontrol('Parent', right_panel, 'Style', 'checkbox', 'Units', 'pixels',...
@@ -606,6 +617,7 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         if strcmp(reply, 'No')
             return;
         end
+        enable_or_disable_children(parent_handle, 'off');
         thebatch = sel_batch;        
         force = get(handles.force, 'Value');
         
@@ -620,6 +632,7 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                     cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, force);
             end
         end
+        enable_or_disable_children(parent_handle, 'on');
              
     end
 
@@ -730,6 +743,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         end
         dbopen; 
               
+        enable_or_disable_children(parent_handle, 'off');
         data = nan(length(sel_cellids), length(sel_models));        
         for ii = 1:length(sel_models)
             fprintf('Querying DB for model: %s\n', sel_models{ii});
@@ -749,6 +763,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                 data(jj, ii) = ret(1).r_test;
             end
         end
+        enable_or_disable_children(parent_handle, 'on');
     end
       
     function scatter_plot_callback(~,~,~)        
@@ -782,20 +797,41 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'Position', [900 bh-ts 100 ts-pad], ...
           'Callback', @bar_plot_callback);
       
+    function enable_or_disable_children(stuff, value)
+        for ii = 1:length(stuff)
+            h = stuff(ii);
+            if isprop(h, 'Enable')
+                set(h, 'Enable', value);
+                drawnow;
+            end
+            children = get(stuff, 'children');
+            if ~isempty(children);
+                for jj = 1:length(children)
+                    enable_or_disable_children(children(jj), value);                    
+                end
+            end
+        end
+    end
+      
     function bar_plot_callback(~,~,~)
         data = compute_data_matrix();
         if isempty(data)
             return;
         end
+        % Sort the data
+        D = [nanmean(data)' data'];
+        [sD, idxs] = sortrows(D, -1);
+        data = sD(:, 2:end)';
         figure('Name', 'Bar Plot Comparison', 'NumberTitle', 'off', ...
                'Position', [10 10 900 300]);
         hold on;
-        bar(1:length(sel_models), nanmean(data), 'r'); 
-        plot(1:length(sel_models), data, 'k.');
-        errorbar(1:length(sel_models), nanmean(data), nanvar(data), max(data) - nanmean(data), 'xk');
+        len = length(sel_models);
+        bar(1:len, nanmean(data), 'r'); 
+        plot(1:len, data, 'k.');
+        errorbar(1:len, nanmean(data), nanvar(data), max(data) - nanmean(data), 'xk');
         hold off;
-        set(gca,'XTick', 1:length(sel_models));
-        set(gca,'XTickLabel', sel_models);
+        set(gca,'XTick', 1:len);
+        set(gca,'XTickLabel', sel_models(idxs));
         set(gca,'CameraUpVector',[-1,0,0]);
     end
 
@@ -830,7 +866,7 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
         r = a.getSelectedRows();
         sel_results = db_results(r+1);
         if ~isempty(sel_results) && any(ishandle(preview_fig))
-            figure(preview_fig);
+            sfigure(preview_fig);
             [I,map] = imread(char(sel_results(1).figurefile),'png');  
             imshow(I, map);
         end
