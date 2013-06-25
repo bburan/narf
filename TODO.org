@@ -1,6 +1,3 @@
-* Left off last Friday
-
-
 * Engineering:
   1. [-] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
@@ -38,6 +35,10 @@
          - Jackknifing doesn't work with performance metrics besides MSE right now?
   9. [ ] Write a crash course guide on using NARF 
 
+* Discussions with Stephen
+  - Boosting termination conditions checked and possibly improved
+    - Termination condition not absolute, but relative to initial starting point
+
 * Cycle of Improvements
   - [ ] Improve compressors
   - [ ] Improve core of models
@@ -50,6 +51,7 @@
 	 Logfit (1 parm) + scale & delay amount per channel (2*n parms) + respavg-estimated stateful depression amount (2*n parms)
   6. [ ] Is it better to bin, reload from baphy, resample, downsaple, decimate, convolve, smooth, or infer respavg?
          Try decimate, or resample (@(x,n) abs(decimate(x,n)),  @(x,n) abs(resample(x,1,n))  
+
 * Experiments:
   1. [ ] Variable step boosting
   2. [ ] Probabilistic FIR filters
@@ -262,3 +264,4 @@
          - [ ] Is the training R^2 usually higher than the test?
          - [ ] Does MSES have an effect?
          - [ ] Normalization is done across files or not?
+Didn't work well: test/train scatter plot with dot coloring by cellid or model type

@@ -668,11 +668,16 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Preview Model', ...
           'Position', [300 bh-ts 100 ts-pad], ...
           'Callback', @preview_model_callback);
+    function clear_preview_fig_handle(f,~)
+        preview_fig = [];
+        close(f);
+    end
       
     function preview_model_callback(~,~,~)
         if ~isempty(sel_results)
             for ii = 1:length(sel_results)
-                preview_fig = figure('Menubar', 'none');
+                preview_fig = figure('Menubar', 'none', ...
+                                     'CloseRequestFcn', @clear_preview_fig_handle);
                 [I,map] = imread(char(sel_results(ii).figurefile),'png');  
                 imshow(I, map);
             end
@@ -736,13 +741,13 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'Position', [700 bh-ts 100 ts-pad], ...
           'Callback', @scatter_plot_callback);
       
-    function data = compute_data_matrix(~,~,~)
+    function data = compute_data_matrix(fieldstoget)
         if isempty(db_results) || isempty(sel_batch) || isempty(sel_cellids) || isempty(sel_models)
             data = [];
             return;
         end
-        dbopen; 
-              
+        dbopen;                
+        
         enable_or_disable_children(parent_handle, 'off');
         data = nan(length(sel_cellids), length(sel_models));        
         for ii = 1:length(sel_models)
@@ -760,14 +765,16 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                     error('More than one matching model found!');
                 end
                 
-                data(jj, ii) = ret(1).r_test;
+                for kk = 1:length(fieldstoget)
+                    data(jj, ii, kk) = ret(1).(fieldstoget{kk});
+                end
             end
         end
         enable_or_disable_children(parent_handle, 'on');
     end
       
     function scatter_plot_callback(~,~,~)        
-        data = compute_data_matrix();
+        data = compute_data_matrix({'r_test'});
         if isempty(data)
             return;
         end
@@ -783,13 +790,13 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'Callback', @heatmap_plot_callback);
       
     function heatmap_plot_callback(~,~,~)
-        data = compute_data_matrix();
+        data = compute_data_matrix({'r_test'});
         if isempty(data)
             return;
         end
         figure('Name', 'Heat Map Comparison', 'NumberTitle', 'off', ...
                'Position', [10 10 900 900]);
-        heatmap(data', sel_cellids, sel_models,  '%2.0f', 'TickAngle', 90, 'ShowAllTicks', true); 
+        heatmap(data', sel_cellids, sel_models,  '', 'TickAngle', 90, 'ShowAllTicks', true); 
     end
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
@@ -814,7 +821,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
     end
       
     function bar_plot_callback(~,~,~)
-        data = compute_data_matrix();
+        data = compute_data_matrix({'r_test'});
         if isempty(data)
             return;
         end
@@ -835,6 +842,49 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         set(gca,'CameraUpVector',[-1,0,0]);
     end
 
+    uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Rank Plot', ...
+          'Position', [1000 bh-ts 100 ts-pad], ...
+          'Callback', @elite_plot_callback);
+      
+    function elite_plot_callback(~,~,~)
+        data = compute_data_matrix({'r_fit', 'r_test'});
+        if isempty(data)
+            return;
+        end
+        
+        vals = data(:,:,2);
+        num_neurons = size(data,1);
+        
+        len = length(sel_models);
+        val_rank = zeros(size(vals));
+        for ii = 1:size(vals, 1) 
+            [~, idxs] = sort(vals(ii,:), 2, 'descend');
+            val_rank(ii,idxs) = 1:len;
+        end
+        
+        score = nanmean(val_rank);
+        [~, order] = sort(score, 'ascend');
+        
+        Ys = zeros(len);
+        for ii = 1:len
+            Ys(ii,:) = hist(val_rank(:, order(ii)), 1:len);
+        end
+        
+        figure('Name', 'Est/Val Comparison', 'NumberTitle', 'off', ...
+               'Position', [10 10 1000 500]);
+        bar(Ys,'stacked');
+        set(gca,'XTick', 1:length(sel_models));
+        set(gca,'XTickLabel', sel_models(order));
+        set(gca,'CameraUpVector',[-1,0,0]);
+        legend(cellfun(@num2str, num2cell(1:len), 'UniformOutput', false), ...
+            'Location','EastOutside');
+        title(sprintf('Val. Set Ranking of Models (Blue is good) [%d cellids]', num_neurons));
+        axis tight;
+        %xlabel('CellID');
+        %ylabel('Rankings'); 
+    end
+
 db_results_table = uitable('Parent', bottom_panel, ...
         'Enable', 'on',  'Units', 'pixels', 'RowName', [],...
         'ColumnWidth', {60, 40, 100, 300, ...
@@ -850,7 +900,6 @@ db_results_table = uitable('Parent', bottom_panel, ...
         'Position', [pad pad w-pad*2 bh-ts-pad*2]);
 
 drawnow;
-pause(0.1); % Needed to avoid MATLAB GUI race condition...
     
 % Set up the DB Results table widget behavior
 hJScroll = findjobj(db_results_table); 
