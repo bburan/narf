@@ -1,93 +1,106 @@
 function m = nonparm_nonlinearity(args)
 % Applies a nonparametric static nonlinear function to the input. 
-%
-%
-% You may of course define your own functions. 
 
 % Module fields that must ALWAYS be defined
 m = [];
 m.mdl = @nonparm_nonlinearity;
 m.name = 'nonparm_nonlinearity';
-m.fn = @do_nonlinearity;
+m.fn = @do_np_nonlinearity;
 m.pretty_name = 'Nonparametric Nonlinearity';
 m.editable_fields = {'input_stim', 'input_resp', 'time', 'output', 'bincount'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.auto_init = @auto_init_nonparm_nonlinearity;
+m.get_parms = @init_nonparm_nonlinearity;
 m.input_stim = 'stim';
 m.input_resp = 'respavg';
 m.time = 'stim_time';
 m.output = 'stim';
 m.bincount = 20;
-m.phi={zeros(m.bincount,1),zeros(m.bincount,1)};
-m.outbinserr=zeros(m.bincount,1);
 
 % Optional fields
 m.plot_fns = {};
+m.auto_plot = @do_plot_smooth_scatter_and_nonlinearity;
 m.plot_fns{1}.fn = @do_plot_smooth_scatter_and_nonlinearity; 
 m.plot_fns{1}.pretty_name = 'Stim/Resp Smooth Scatter';
+m.plot_fns{2}.fn = @do_plot_scatter_and_nonlinearity; 
+m.plot_fns{2}.pretty_name = 'Stim/Resp Scatter';
+m.plot_fns{3}.fn = @do_plot_all_default_outputs;
+m.plot_fns{3}.pretty_name = 'Output Channels (All)';
+m.plot_fns{4}.fn = @do_plot_single_default_output;
+m.plot_fns{4}.pretty_name = 'Output Channel (Single)';
 
-m.plot_fns{2}.fn = @(stack, xxx) do_plot_signal(stack, xxx, stack{end}.time, stack{end}.output);
-m.plot_fns{2}.pretty_name = 'Output vs Time';
-
-m.plot_fns{3}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), false);
-m.plot_fns{3}.pretty_name = 'Nonlinearity';
-
-m.plot_fns{4}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), true);
-m.plot_fns{4}.pretty_name = 'Nonlinearity + Histogram';
-
-m.plot_fns{5}.fn = @do_plot_scatter_and_nonlinearity; 
-m.plot_fns{5}.pretty_name = 'Stim/Resp Scatter';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
     m = merge_structs(m, args);
 end
 
-function mm = auto_init_nonparm_nonlinearity(stack, xxx)
-    % NOTE: Unlike most plot functions, auto_init functions get a 
-    % STACK and XXX which do not yet have this module or module's data
-    % added to them. 
-    mm = m;
+% ------------------------------------------------------------------------
+% Methods
+
+function [phi,outbinserr] = init_nonparm_nonlinearity(mdl, x)
+    % calculate nonparm_nonlinearity parameters
     
-    x = xxx{end};
-    
+        
     % find out parameters:
     pred=[]; resp=[];
     for sf = x.training_set,
         sf=sf{1};
-        pred=cat(1,pred,x.dat.(sf).(mm.input_stim)(:));
-        resp=cat(1,resp,x.dat.(sf).(mm.input_resp)(:));
+        % It's an error if there is more than one channel:
+        if size(x.dat.(sf).(mdl.input_stim)(:), 3) > 1 || ...
+           size(x.dat.(sf).(mdl.input_resp)(:), 3) > 1,
+            error('NPNL is a 1D method!');
+        end
+        pred=cat(1,pred,x.dat.(sf).(mdl.input_stim)(:));
+        resp=cat(1,resp,x.dat.(sf).(mdl.input_resp)(:));
+    end
+    
+    if (length(pred) ~= length(resp))
+        error('Length of pred and resp must be equal!');
     end
     
     keepidx=find(~isnan(resp));
     pred=pred(keepidx);
     resp=resp(keepidx);
     
-    bincount=mm.bincount;
+    bincount=mdl.bincount;
     pp=zeros(bincount,1);
     rr=zeros(bincount,1);
     rre=zeros(bincount,1);
     
     if nansum(resp)>0,
-        [ss,si1]=sort(pred);
+        [ps,si1]=sort(pred);
         tb=bincount;
         b=[];
         
-        while length(b)<bincount && tb<length(si1),
-            tb=tb+1;
-            edges1=round(linspace(1,length(si1)+1,tb));
-            [b,ui,uj]=unique(ss(edges1(1:(end-1)))');
+        if 0,
+            
+            edgesval=linspace(ps(1),ps(end)+1,tb+1);
+            ps=cat(1,ps,ps(end)+1);
+            edges1=zeros(size(edgesval));
+            edges1(1)=1;
+            for ii=2:length(edgesval),
+                edges1(ii)=max(find(ps<edgesval(ii)));
+            end
+            edges1=unique(edges1);
+            bincount=length(edges1)-1;
+        else
+            % scale edges based on number of samples
+            while length(b)<bincount && tb<length(si1),
+                tb=tb+1;
+                edges1=round(linspace(1,length(si1)+1,tb));
+                [b,ui,uj]=unique(ps(edges1(1:(end-1)))');
+            end
+            edgeend=edges1(end);
+            edges1=edges1(ui);
+            
+            if length(b)<bincount,
+                b=[b repmat(b(end),[1 bincount-length(b)])];
+                edges1=[edges1 repmat(edges1(end),[1 bincount-length(edges1)])];
+            end
+            edges1=[edges1 edgeend];
         end
-        edgeend=edges1(end);
-        edges1=edges1(ui);
-        
-        if length(b)<bincount,
-            b=[b repmat(b(end),[1 bincount-length(b)])];
-            edges1=[edges1 repmat(edges1(end),[1 bincount-length(edges1)])];
-        end
-        edges1=[edges1 edgeend];
         
         for bb=1:bincount,
             pp(bb)=mean(pred(si1(edges1(bb):(edges1(bb+1)-1))));
@@ -95,66 +108,58 @@ function mm = auto_init_nonparm_nonlinearity(stack, xxx)
             nn=sqrt(edges1(bb+1)-edges1(bb));
             if edges1(bb+1)>edges1(bb),
                 rre(bb)=std(resp(si1(edges1(bb):(edges1(bb+1)-1))))./...
-                    (nn+(nn==1));
+                        (nn+(nn==1));
             end
         end
+        
         pp(isnan(pp))=0;
         rr(isnan(rr))=0;
         
         rr(:)=gsmooth(rr(:),1);
-        %[pp(:,dd),rr(:,dd)]
+        % [pp(:,dd),rr(:,dd)]
     end
-    mm.phi={pp,rr};
-    mm.outbinserr=rre;
+    
+    phi={pp,rr};
+    outbinserr=rre;
     
  end
 
-function x = do_nonlinearity(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-    for sf = fieldnames(x.dat)', sf=sf{1};
+function x = do_np_nonlinearity(mdl, x, stack, xxx)    
+    [phi, ~] = init_nonparm_nonlinearity(mdl, x);
+    fns = fieldnames(x.dat);
+    for ii = 1:length(fns)
+        sf = fns{ii};
         [T, S, C] = size(x.dat.(sf).(mdl.input_stim));
-        y = zeros(T, S, C);
-        
-        % TODO: If a scalar-valued function, use this
-        %y = arrayfun(@(in) mdl.nlfn(mdl.phi, in), x.dat.(sf).(mdl.input_stim));
-        
-        % Otherwise use the much faster vector valued functions
-        y = raw_nl(mdl.phi, x.dat.(sf).(mdl.input_stim)(:));      
-        
-        % TODO: Find a better solution than this hacky way of zeroing nans
-        % so that optimization continue in the presence of singularities
-        y(isnan(y)) = 0;
-        
+        y = raw_nl(phi, x.dat.(sf).(mdl.input_stim)(:));                      
+        y(isnan(y)) = 0; % TODO: Find better solution than zeroing to avoid singularities        
         x.dat.(sf).(mdl.output) = reshape(y,[T,S,C]);
     end
-
 end
 
-function do_plot_scatter_and_nonlinearity(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
+function help_plot_npnl(sel, mdls, xins, xouts)
+    for ii = 1:length(mdls)
+        [phi,outbinserr] = init_nonparm_nonlinearity(mdls{ii}, xins{ii}{end});
+        xouts{ii}.dat.(sel.stimfile).npnlstim = phi{1};
+        xouts{ii}.dat.(sel.stimfile).npnlpred = phi{2};
+        xouts{ii}.dat.(sel.stimfile).temperr  = outbinserr;
+    end
     
-    hold on;
-    do_plot_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
-    xlims = xlim();
-    %xs = linspace(xlims(1), xlims(2), 100);
-    %plot(xs, raw_nl(mdl.phi, xs));
-    errorbar(mdl.phi{1},mdl.phi{2},mdl.outbinserr);
-    hold off
+    hold on;    
+    do_plot(xouts, 'npnlstim', 'npnlpred', ...
+            sel, 'NPNL Input [-]', 'RespAvg Prediction [Hz]');   
+	hold off;
 end
 
-function do_plot_smooth_scatter_and_nonlinearity(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    hold on;
-    do_plot_avg_scatter(stack, xxx(1:end-1), mdl.input_stim, mdl.input_resp);
-    xlims = xlim();
-    %xs = linspace(xlims(1), xlims(2), 100)';
-    %plot(xs, raw_nl(mdl.phi, xs));
-    errorbar(mdl.phi{1},mdl.phi{2},mdl.outbinserr);
-    hold off
+function do_plot_scatter_and_nonlinearity(sel, stack, xxx)    
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp);  
+    help_plot_npnl(sel, mdls, xins, xouts);
+end
+
+function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100); 
+    help_plot_npnl(sel, mdls, xins, xouts);
 end
 
 end

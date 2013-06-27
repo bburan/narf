@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2985"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="tree.svg">
+  <defs
+     id="defs2987" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#ffffff"
+     borderopacity="0.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="0"
+     inkscape:zoom="1.979899"
+     inkscape:cx="-513.63069"
+     inkscape:cy="879.78946"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1145"
+     inkscape:window-x="-2"
+     inkscape:window-y="-3"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata2990">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="-731.42859"
+       y="175.21933"
+       id="text2993"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="175.21933"
+         id="tspan3019">env100</tspan><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="195.21933"
+         id="tspan2997">env200</tspan><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="215.21933"
+         id="tspan2999">env300</tspan><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="235.21933"
+         id="tspan3003">env400</tspan><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="255.21933"
+         id="tspan3001">env500</tspan><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="275.21933"
+         id="tspan3005">env200n (noprestim)</tspan><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="295.21933"
+         id="tspan3009">gt100</tspan><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="315.21933"
+         id="tspan3011">gt200</tspan><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="335.21933"
+         id="tspan3013">gt300</tspan><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="355.21933"
+         id="tspan3015">gt400</tspan><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="375.21933"
+         id="tspan3017">gt500</tspan><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="395.21933"
+         id="tspan3023" /><tspan
+         sodipodi:role="line"
+         x="-731.42859"
+         y="415.21933"
+         id="tspan3007" /></text>
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="-425.7793"
+       y="121.50661"
+       id="text3025"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3027"
+         x="-425.7793"
+         y="121.50661">Sampling Rate: 100, 200, 300, 400, 500</tspan><tspan
+         sodipodi:role="line"
+         x="-425.7793"
+         y="141.50661"
+         id="tspan3029">Feature: Envelope, gammatone</tspan><tspan
+         sodipodi:role="line"
+         x="-425.7793"
+         y="161.50661"
+         id="tspan3054">Channels: 1, 2, all10, all20,  </tspan><tspan
+         sodipodi:role="line"
+         x="-425.7793"
+         y="181.50661"
+         id="tspan3031">Start: Prestim, noprestim, drop1sec</tspan><tspan
+         sodipodi:role="line"
+         x="-425.7793"
+         y="201.50661"
+         id="tspan3052" /></text>
+  </g>
+</svg>

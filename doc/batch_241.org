@@ -1,0 +1,132 @@
+* Questions
+  1. Which neurons have differences when NPNLX floats for each respfiles?
+     | Cellid        |
+     |---------------|
+     | por018b-c1    |
+     | por018c-c1    |
+     | por019b-a1    |
+     | por022a-a1    |
+     | por022a-c1    |
+     | por023b-b1    |
+     | por027a-a1    |
+     | por027b-b2    |
+     | por027b-c1    |
+     | por053a-06-01 |
+
+  2. Does r_test improve for per-file FIR training?
+     | Cellid     | 2nd Token: Min/mean/max | NL      | Note                                | Hypothesis                                     |
+     |------------+-------------------------+---------+-------------------------------------+------------------------------------------------|
+     | por018b-c1 |                         |         | Passives higher R, actives lower R  | Inhibited during listening because irrelevant. |
+     |            | log2b: 0.15<0.19<0.23   |         |                                     |                                                |
+     |            | zzA1: 0.12<0.15<0.19    | Flat    |                                     |                                                |
+     |            | zzA2: 0.09<0.13<0.20    | Flat    |                                     |                                                |
+     |            | zzP1: 0.20<0.27<0.33    | Hump    |                                     |                                                |
+     |            | zzP2: 0.17<0.25<0.29    | Hump    |                                     |                                                |
+     |            | zzP3: 0.05<0.21<0.25    | Hump    |                                     |                                                |
+     | por018c-c1 |                         |         | Passives higher R, actives lower R  | Inhibited during listening because irrelevant. |
+     |            | log2b: 0.12<0.14<0.16   |         |                                     |                                                |
+     |            | zzA1: 0.06<0.11<0.16    | Flat    |                                     |                                                |
+     |            | zzA2: 0.01<0.05<0.16    | Flat    |                                     |                                                |
+     |            | zzP1: 0.12<0.27<0.36    | Notch   |                                     |                                                |
+     |            | zzP2: 0.24<0.29<0.32    | Notch   |                                     |                                                |
+     |            | zzP3: 0.20<0.25<0.28    | Sigmoid |                                     |                                                |
+     | por019b-a1 |                         |         | Passives higher R, actives lower R  | Inhibited during listening because irrelevant. |
+     |            | log2b: 0.08<0.16<0.21   |         |                                     |                                                |
+     |            | zzA1: 0.08<0.15<0.21    | Wavy    |                                     |                                                |
+     |            | zzA2: 0.07<0.11<0.16    | Wavy    |                                     |                                                |
+     |            | zzP1: 0.29<0.38<0.43    | Notch   |                                     |                                                |
+     |            | zzP2: 0.38<0.44<0.49    | Notch   |                                     |                                                |
+     |            | zzP3: 0.13<0.23<0.29    | Notch   |                                     |                                                |
+     | por022a-a1 |                         |         | No change in R_test                 | Gain increases during listening.               |
+     |            | log2b: 0.20<0.38<0.41   |         |                                     |                                                |
+     |            | zzA1: 0.32<0.39<0.41    | Notch   | Increased overall activity          |                                                |
+     |            | zzP1: 0.23<0.38<0.46    | Notch   |                                     |                                                |
+     |            | zzP2: 0.31<0.41<0.44    | Notch   |                                     |                                                |
+     | por022a-c1 |                         |         |                                     |                                                |
+     |            | log2b: 0.12<0.25<0.29   |         | No change in R_test                 | Behavior not relevant to neural activity       |
+     |            | zzA1: 0.18<0.25<0.29    | Hump    |                                     |                                                |
+     |            | zzA2: 0.15<0.25<0.29    | Hump    |                                     |                                                |
+     |            | zzP1: 0.04<0.18<0.30    | Hump    |                                     |                                                |
+     |            | zzP2: 0.15<0.27<0.29    | Hump    |                                     |                                                |
+     |            | zzP3: 0.17<0.28<0.33    | Hump    |                                     |                                                |
+     | por023b-b1 |                         |         |                                     |                                                |
+     |            | log2b: 0.34<0.40<0.44   |         | No change in R_test                 | Gain increases during listening.               |
+     |            | zzA1: 0.30<0.40<0.43    | Sigmoid | Increased activity in active tests. |                                                |
+     |            | zzA2: 0.40<0.45<0.48    | Sigmoid |                                     |                                                |
+     |            | zzP1: 0.26<0.30<0.34    | Sigmoid | Ferret still listening here?        |                                                |
+     |            | zzP2: 0.43<0.50<0.52    | Sigmoid |                                     |                                                |
+     |            | zzP3: 0.31<0.41<0.43    | Sigmoid |                                     |                                                |
+     | por027a-a1 |                         |         | No change in R_test                 | Gain increases during listening.               |
+     |            | log2b: 0.34<0.35<0.36   |         |                                     |                                                |
+     |            | zzA1: 0.34<0.35<0.35    | Linear  |                                     |                                                |
+     |            | zzP1: 0.33<0.34<0.34    | Linear  |                                     |                                                |
+     |            | zzP2: 0.28<0.31<0.33    | Linear  |                                     |                                                |
+     | por027b-b2 |                         |         |                                     |                                                |
+     |            | log2b: 0.16<0.18<0.20   |         | No change in R_test                 | CONFUSING! Gain decreases during listening?    |
+     |            | zzA1: 0.23<0.25<0.27    | Linear  |                                     |                                                |
+     |            | zzA2: 0.11<0.12<0.13    | Linear  |                                     |                                                |
+     |            | zzP1: 0.12<0.16<0.20    | Sigmoid |                                     |                                                |
+     |            | zzP2: 0.34<0.35<0.36    | Sigmoid |                                     |                                                |
+     |            | zzP3: 0.17<0.24<0.30    | Sigmoid |                                     |                                                |
+     | por027b-c1 |                         |         | Passives higher, Actives lower      | Gain decreases during listening.               |
+     |            | log2b: 0.17<0.18<0.19   |         |                                     |                                                |
+     |            | zzA1: 0.08<0.12<0.15    | Linear  |                                     |                                                |
+     |            | zzA2: 0.08<0.09<0.13    | Linear  |                                     |                                                |
+     |            | zzP1: 0.19<0.21<0.23    | Linear  |                                     |                                                |
+     |            | zzP2: 0.20<0.25<0.28    | Linear  |                                     |                                                |
+     |            | zzP3: 0.28<0.33<0.35    | Sigmoid |                                     |                                                |
+
+  3. Do FIR coefs change when trained per-respfile?
+
+     The FIR coefs are too noisy for my eyeball to pick out any reliable differences.
+ 
+* If I had to make any conclusions, I would say...
+  1. ...that some cells are inhibited during active behaviors, decreasing their spike count. This in turn makes fits more difficult and produces lower r_test values.
+  2. ...that some cells have their gain changed during active behaviors. Three had gains that increased, and two had gains that decreased.
+  3. ...that training the FIR coefs separately for each respfile wasn't actually a very useful thing because it's so hard to know if two FIRs are different because of a scientific reason instead of just random fitting noise.
+
+* Issues that need to be considered:
+  1. The total number of spikes in each behavior respfile should be displayed?
+
+* Boosting per file beats boosting?
+  env100 log2b firn initrc npfnlx mse boost(perfile)
+  |          | test  | fit   |                 |
+  |----------+-------+-------+-----------------|
+  |          |       |       |                 |
+  |          |       |       |                 |
+  | 18b-c1   | boost | boost |                 |
+  | 18c-a1   | boost | boost |                 |
+  | 18c-a2   | boost | boost |                 |
+  | 19b-a1   | boost | boost |                 |
+  | 20a-c1   | boost | boost |                 |
+  | 22a-a1   | boost | boost |                 |
+  | 22a-c1   | boost | boost |                 |
+  | 28b-b1   | boost | boost |                 |
+  | 40a-16-1 | bpf   | bpf   |                 |
+  | 40a-16-2 | bpf   | boost |                 |
+  | 41a-10-1 | bpf   | boost |                 |
+  | 41a-14-1 | bpf   | bpf   |                 |
+  | 41a-16-1 | boost | boost | BPF Way worse   |
+  | 41a-16-2 | boost | boost |                 |
+  | 41a-31-1 | bpf   | bpf   |                 |
+  | 42a-16-1 | boost | boost |                 |
+  | 42a-16-2 | bpf   | boost |                 |
+  | 43a-14-1 | bpf   | boost |                 |
+  | 43a-15-1 | boost | boost |                 |
+  | 43a-16-1 | boost | boost | BPF WAAAY worse |
+  | 44a-10-1 | bpf   | bpf   |                 |
+  | 44a-10-2 | bpf   | bpf   |                 |
+  | 44a-14-1 | bpf   | boost |                 |
+  | 44a-16-1 | bpf   | boost |                 |
+  | 44a-16-2 | boost | boost |                 |
+  |          |       |       |                 |
+  | 50a-04-1 | boost | boost |                 |
+  | 50a-07-1 | bpf   | bpf   |                 |
+  | 50a-08-1 | bpf   | bpf   |                 |
+  | 50a-10-1 | boost | boost |                 |
+  | 50a-15-1 | bpf   | boost |                 |
+  | 50a-16-1 | boost | boost |                 |
+  | 50a-18-1 | bpf   | bpf   |                 |
+  | 51a-04-1 | bpf   | boost |                 |
+  | 51a-06-1 | bpf   |       |                 |
+  |          |       |       |                 |

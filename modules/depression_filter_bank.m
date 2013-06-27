@@ -8,13 +8,14 @@ m.name = 'depression_filter_bank';
 m.fn = @do_depression_filter;
 m.pretty_name = 'Depression Filter Bank';
 m.editable_fields = {'num_channels', 'strength', 'tau', ...
-                     'input', 'time', 'output' };
+                     'pedestal', 'input', 'time', 'output' };
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.num_channels = 2;
 m.strength = [0 0.2];  % as fraction of stimulus max magnitude
 m.tau = [0 100];  % in ms
+m.pedestal = 0;  % as fraction of stimulus max magnitude
 m.raw_stim_freq = 100000;
 m.input = 'stim';
 m.time = 'stim_time';
@@ -26,29 +27,66 @@ if nargin > 0
 end
 
 % Optional fields
+m.plot_gui_create_fn = @create_chan_selector_gui;
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_filtered_stim;
-m.plot_fns{1}.pretty_name = 'Filtered Stimulus vs Time';
-m.plot_fns{2}.fn = @do_plot_filtered_stim_heatmap;
-m.plot_fns{2}.pretty_name = 'Filtered Stimulus Heatmap';
+m.plot_fns{1}.fn = @do_plot_all_default_outputs;
+m.plot_fns{1}.pretty_name = 'Filtered Stimuli (All)';
+m.plot_fns{2}.fn = @do_plot_single_default_output;
+m.plot_fns{2}.pretty_name = 'Filtered Stimuli (Single)';
+m.plot_fns{3}.fn = @do_plot_channels_as_heatmap;
+m.plot_fns{3}.pretty_name = 'Filtered Stimuli (Heatmap)';
 
 % Finally, define the 'methods' of this module, as if it were a class
-function x = do_depression_filter(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
+function x = do_depression_filter(mdl, x, stack, xxx)
     
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    stimmax=x.stimminmax(2,:);
-    %keyboard
-    % Exotic way to loop over field names using ' and {1}...
+    if ~isfield(mdl,'pedestal'),
+        mdl.pedestal=0;
+    end
+    
+    [load_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy',true);
+    if isempty(load_mod),
+        [load_mod, ~] = find_modules(stack, 'load_stim_resps_wehr',true);
+    end
+    load_mod = load_mod{1}; % We assume only 1 paramset
+    
+    % calculate global mean level of each channel for scaling dep
+    stimmax=[];
+    T=0;
+    for sf = fieldnames(x.dat)', sf = sf{1};
+        if T==0,
+            stimmax=nansum(nansum(x.dat.(sf).(mdl.input),1),2);
+        else
+            stimmax=stimmax+nansum(nansum(x.dat.(sf).(mdl.input),1),2);
+        end
+        
+        T=T+sum(sum(~isnan(x.dat.(sf).(mdl.input)(:,:,1)),1),2);
+    end
+    stimmax=stimmax./T;
+
+    % Now actually compute depression
     for sf = fieldnames(x.dat)', sf = sf{1};
         [T, S, N] = size(x.dat.(sf).(mdl.input));
-        ret = zeros(T, S, N*m.num_channels);
+        ret = zeros(T, S, N*mdl.num_channels);
         for s = 1:S
             stim_in=squeeze(x.dat.(sf).(mdl.input)(:,s,:))';
-            depresp=depression_bank(stim_in,(1./stimmax(:))*mdl.strength,...
-                                    mdl.tau.*baphy_mod.raw_stim_fs./1000,1)';
-            depresp=permute(depresp,[1 3 2]);
+            
+            if mdl.pedestal>0,
+                thresh = mdl.pedestal./stimmax(:);
+                for n=1:N,
+                    stim_in(n,stim_in(n,:)<thresh(n))=thresh(n);
+                end
+                extrabins = round(load_mod.raw_stim_fs*0.5);
+                stim_in = cat(2,repmat(thresh,[1 extrabins]),stim_in);
+            end
+            
+            depresp=depression_bank(stim_in, (1./stimmax(:))*mdl.strength,...
+                                    mdl.tau .* load_mod.raw_stim_fs/1000, 1);
+            depresp=permute(depresp',[1 3 2]);
+            
+            if mdl.pedestal>0,
+                depresp = depresp((extrabins+1):end,:,:);
+            end
+            
             ret(:,s,:) = depresp;
         end
         
@@ -56,42 +94,36 @@ function x = do_depression_filter(stack, xxx)
     end
 end
 
-% Plot the filter responses
-function do_plot_filtered_stim(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-
-    % Find the GUI controls
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
-    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
-    chan_idx = get(baphy_mod.plot_gui.selected_stim_chan_popup, 'Value');
-    dat = x.dat.(sf);
-    stepsize=baphy_mod.stimulus_channel_count;
-    plot(dat.(mdl.time), ...
-         squeeze(dat.(mdl.output)(:,stim_idx,chan_idx:stepsize:end)));
-    
-    axis tight;
-end
-
-% Plot heatmap of the filter responses
-function do_plot_filtered_stim_heatmap(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-    
-   % Find the GUI controls
-    baphy_mod = find_module(stack, 'load_stim_resps_from_baphy');
-    c = cellstr(get(baphy_mod.plot_gui.selected_stimfile_popup, 'String'));
-    sf = c{get(baphy_mod.plot_gui.selected_stimfile_popup, 'Value')};
-    stim_idx = get(baphy_mod.plot_gui.selected_stim_idx_popup, 'Value');
-    dat = x.dat.(sf);
-    chancount=size(dat.(mdl.output),4);
-    imagesc(dat.(mdl.time),1:chancount, ...
-         squeeze(dat.(mdl.output)(:,stim_idx,:))');
-    
-    axis tight;
-    axis xy
-end
+% % Plot the filter responses
+% function do_plot_filtered_stim(stack, xxx)
+%     mdl = stack{end};
+%     x = xxx{end};
+% 
+%     % Find the GUI controls
+%     [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
+%     chan_idx = get(load_mod.plot_gui.selected_stim_chan_popup, 'Value');
+%     dat = x.dat.(sf);
+%     stepsize=load_mod.stimulus_channel_count;
+%     plot(dat.(mdl.time), ...
+%          squeeze(dat.(mdl.output)(:,stim_idx,chan_idx:stepsize:end)));
+%     
+%     axis tight;
+% end
+% 
+% % Plot heatmap of the filter responses
+% function do_plot_filtered_stim_heatmap(stack, xxx)
+%     mdl = stack{end};
+%     x = xxx{end};
+%     
+%    % Find the GUI controls   
+%     [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
+%     dat = x.dat.(sf);
+%     chancount=size(dat.(mdl.output),4);
+%     imagesc(dat.(mdl.time),1:chancount, ...
+%          squeeze(dat.(mdl.output)(:,stim_idx,:))');
+%     
+%     axis tight;
+%     axis xy
+% end
 
 end

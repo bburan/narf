@@ -14,6 +14,16 @@
 
 This document was written to clarify and document design decisions made regarding the Neural Activity Regression Framework (NARF) implemented in the Brain, Hearing and Behavior Laboratory of the Oregon Health and Science University (OHSU), under the supervision of Prof. Stephen David. As such, it is intended for developers rather and is very much a work in progress. 
 
+\section{TODO}
+
+
+% If your fonts in generated saved figures aren't working properly in Kubuntu 12.04, do this:
+sudo apt-get install xfonts-100dpi xfonts-75dpi
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install oracle-java7-installer
+% LOGOUT/LOGIN Required!
+
 \section{Problem and Approach}
 
 \subsection{The Problem}
@@ -551,3 +561,594 @@ See the TODO.org file in NARF's main directory.
 %%   5. Why is it 'stimpath' and 'stimfile' but 'path' and 'respfile'. it should be 'resppath'?
 %%   7. Why is loadspikeraster the only thing that cares about the 'options' struct?
 %%   8. Where should the line be drawn between analysis in the DB, partitionining things for your search within the DB, holding out data, etc?
+
+
+  1. [X] How can sane initial conditions for optimization be automatically arrived at without extra script-writing?
+	 Auto-initialization of model params is done by allowing modules to update their design based on the data by calling the optional 'auto_init' method.
+	 Arg 1 is the STACK, not including the model itself. 
+	 Arg 2 is the XXX data input, not including the model's output data itself. 
+  2. [X] How can jack-knifing be integrated in to the optimization routine to prevent over-fitting?
+	 Split the big long RESP and STIM vectors in fit_with_lsqcurvefit into 10 chunks
+	 Take groups of 9 of those chunks, run lsqcurvefit, then test on remaining chunk
+	 Take weighted average of all jackknifed solutions, weighting each by inverse variance? Or just mean, if we assume they all have same variance?
+	 Return weighted average.
+  3. [X] How should optimization constraints be incorporated in the design?
+	 Probably the easiest way is to define a structure which may be used by pack/unpack to create upper and lower bounds, which are then passed to the optimization routine
+	 opt_hints = struct('alpha', [-1 3], 'beta', [0 inf]); % Constrain alpha from -1 to 3 and beta from 0 to infinity. 
+  4. [X] How should models be automatically generated in a quick and scriptable way?
+	 See analysis/test_likely_candidates.m
+  5. [X] How can design internal degrees of freedom be detected and corrected during optimization?
+	 (Probably they cannot!)
+  6. [X] There needs to be a place to store information about a whole model. 
+	 For example, 'model name' and 'fitter' are two examples of fields that don't really belong in a module.
+  7. [X] There is no best fitting routine, only fitting routines which work better for different cells. Allow them all a chance to run by making them module parameters.
+  8. [X] Can jackknifing or the equivalent be applied to ANY fitting routine as a higher level function
+	 If we only have one data file, how can we hold out some fraction of the stimuli so that we can do training/test on a single data file?
+	 Solution:
+	 - Fit routines use a 'score'
+	 - The stack gives the score
+	 - The score needs to be calculated from a jackknife
+	 - How can data be jackknifed without modifying the stack?
+	 - Immediately after the loading, zero a chunk of the stim and respavg (save the original, of course)
+	 - Do a fit with whatever routine you want
+  9. [X] N-step fitter (train FIR in common, train NL across each separately)
+	 Surprisingly difficult to make several models need to be fit all on the same data. yet ALSO need to run on different behavioral states. 
+         1. Violates my implicit expectation of 1 fitter -> 1 model. Now I have 1 fitter-> many models.
+	 2. Now that training_set{} may be edited, it shouldn't really be copied from one XXX{1} to XXX{2} and so on.
+	 Solution ideas: 
+	 - Quick hack: five new fitters added
+	   NL1, trains on all, but only trains NL on 1st
+	   NL2, trains FIR on all, but only trains NL on 
+  4. [X] Nonparametric Nonlinearity (NPNL) linearizes anything. 
+	 It is very much data-driven, which is great. 
+	 On the other hand, it fits itself to linearize almost anything, so we somehow learn less than a simple, parameter-driven model. 
+	 How can we balance complexity in the FIR or complexity in the NL?
+	 ANSWER: Sparseness needs to be modeled on the FIR side, Smoothness on the NL side. 
+  5. [X] How can LSQ curve fit use sparseness and smoothness metrics?
+	 You can cheat and destroy the module system by looking later in the STACK for the MSE element. 
+	 If the MSE module exists and has nonzero weights, add a bogus zero element the LSQ target vector, and a bogus LSQ prediction vector element with a value of the sqrt(smoothness_penalty).	  
+
+* Notes on Hyrax
+
+1. If the scheduler crashes (indicated by new jobs not starting and or a last tick warning at the bottom of the queue status screen):
+  log in to hyrax
+  run matlab
+  >> baphy_set_path
+  >> narf_set_path    % assuming you've pulled the latest narf as of this evening
+  >> dbqueuemaster
+  enter your password when prompted to permit sudo. 
+That should take care of everything.   It just occurred to me that it might be easiest in general to run the scheduler in a window on the actual hyrax machine so that anyone interested can take a look to see what it's up to.
+
+2. Monitor queue from home via reverse tunnel through umd.edu:
+  - open firewall back door by surfing here:  http://kamzik.org/rr22307.php
+  - enter user "lbhb" password "feartheferret"  This will open the back door to the IP of your current computer for a month.
+  - surf to http://bhangra.isr.umd.edu:19888   -- this is equivalent to http://hyrax.ohsu.edu/
+Hi Stephen,
+
+The data from batches 240 and 242 are in. Unfortunately, batches 233 and 241 had problems and haven't been run through fully yet. First, I noted a few weird things in the batch files, which may be my fault:
+
+1. In batch 240, the following cellid's had identical training and test sets: por023a-c2, por031a-09-1, por31a-19-1
+2. In batch 240, relative to the data I took last time, por028d-b1 was removed (despite it being an excellent cell), and por028d-c1 was not removed (despite it being a crap cell). I think that was probably done backwards.
+3. In batch 242, the following cellid's had identical training and test sets: por025a-c1, por025a-d1, por026a-d1, por026b-a2, por026b-b2, por026b-c2.
+
+In this experiment, I varied:
+- Including a prestim silence or not.
+- Adding a penalty for smooth FIR coefficients or not. 
+- Using the nonparametric nonlinearity or a sparse empirical nonlinearity (essentially a gaussian mixture model)
+- Using boosting or a fminsearch + lsqcurvefit, the best two search methods on average so far. 
+
+The questions I was trying to answer were:
+
+1. Does the prestim silence improve the average quality of the fits generated?   
+   Yes. Only 9 of the 38 neurons had fits that were improved by removing the prestim silence. Interestingly, every single time the fit was improved by removing the prestim silence, the nonlinear saturation was low, as the following data table shows. Rows are sorted by sorted by nonlinearity saturation level. 
+     | CELLID       | Init? | COMP  | NL   | BEST FITTER | R^2 | STRF      | Saturation | NOTE            |
+     |--------------+-------+-------+------+-------------+-----+-----------+------------+-----------------|
+     | por028d-d1   | yes   | l2    | npnl | fminlsq     | .24 | 1-Crap    | High       |                 |
+     | por025a-c1   | yes   | log2b | npnl | boost       | .32 | 5-Perfect | High       |                 |
+     | por028b-d1   | yes   | log2b | senl | boost       | .33 | 5-Perfect | High       |                 |
+     | por031a-09-1 | yes   | l2    | npnl | fminlsq     | .06 | 2-Noisy   | Linear     |                 |
+     | por026c-c1   | yes   | log2b | npnl | boost       | .52 | 5-Perfect | Linear     |                 |
+     | por023a-b1   | yes   | log2b | npnl | boost       | .56 | 5-Perfect | Linear     |                 |
+     | por026a-d1   | yes   | log2b | npnl | boost       | .15 | 3-OK      | Linear     | Late resp.      |
+     | por027a-b1   | yes   | log2b | senl | fminlsq     | .28 | 3-OK      | Linear     | Late resp.      |
+     | por027b-b1   | yes   | l2    | npnl | boost       | .21 | 3-OK      | Linear     |                 |
+     | por025a-c2   | no    | log2b | senl | fminlsq     | .10 | 1-Crap    | Low        |                 |
+     | por026a-b1   | yes   | log2b | senl | fminlsq     | .36 | 2-Noisy   | Low        |                 |
+     | por026c-a1   | no    | l2    | senl | fminlsq     | .35 | 3-OK      | Low        |                 |
+     | por026b-b2   | yes   | log2b | senl | fminlsq     | .53 | 3-OK      | Low        |                 |
+     | por026c-d2   | yes   | l2    | npnl | boost       | .11 | 4-Clean   | Low        |                 |
+     | por026b-b1   | yes   | log2b | senl | fminlsq     | .38 | 4-Clean   | Low        |                 |
+     | por025a-d1   | yes   | log2b | npnl | fminlsq     | .50 | 4-Clean   | Low        |                 |
+     | por025a-b1   | yes   | log2b | senl | fminlsq     | .54 | 4-Clean   | Low        |                 |
+     | por024a-b1   | yes   | log2b | npnl | fminlsq     | .47 | 5-Perfect | Low        |                 |
+     | por023a-c2   | no    | l2    | senl | boost       | .16 | 4-Clean   | Low        | Late resp.      |
+     | por027b-b1   | yes   | l2    | npnl | boost       | .17 | 4-Clean   | Low        | Late resp.      |
+     | por028d-a2   | no    | log2b | npnl | boost       | .21 | 4-Clean   | Low        | Late resp.      |
+     | por026b-a2   | no    | log2b | senl | boost       | .30 | 4-Clean   | Low        | Late resp.      |
+     | por026b-d1   | no    | log2b | senl | boost       | .28 | 5-Perfect | Low        | Late resp.      |
+     | por024b-b1   | no    | l2    | senl | boost       | .30 | 2-Noisy   | Low        |                 |
+     | por026c-a1   | yes   | log2b | senl | boost       | .67 | 5-Perfect | Low        | Exceptional.    |
+     | por028d-a2   | no    | l2    | npnl | fminlsq     | .32 | 2-Noisy   | Low        |                 |
+     | por028b-d1   | yes   | l2    | npnl | boost       | .36 | 3-OK      | Notch      | Late resp.      |
+     | por028d-d1   | yes   | log2b | npnl | boost       | .32 | 3-Clean   | Notch      |                 |
+     | por024a-c1   | no    | l2    | senl | fminlsq     | .12 | 2-Noisy   | Sigmoid    |                 |
+     | por024a-a1   | yes   | log2b | npnl | fminlsq     | .31 | 3-OK      | Sigmoid    |                 |
+     | por027a-a1   | yes   | l2    | npnl | fminlsq     | .13 | 4-Clean   | Sigmoid    |                 |
+     | por028b-c1   | yes   | log2b | senl | boost       | .21 | 5-Perfect | Sigmoid    |                 |
+     | por026b-a1   | yes   | l2    | senl | boost       | .56 | 5-Perfect | Sigmoid    |                 |
+     | por026b-c1   | yes   | log2b | npnl | boost       | .20 | 4-Clean   | Sigmoid    | Late resp.      |
+     | por024b-c1   | yes   | l2    | npnl | fminlsq     | .49 | 4-Clean   | Sigmoid    | Late resp.      |
+     | por026c-d1   | yes   | l2    | senl | boost       | .18 | 4-Clean   | Sigmoid    | Unusually late. |
+     | por026c-b1   | yes   | log2b | npnl | fminlsq     | .34 | 3-OK      | U          |                 |
+     | por028b-b1   | yes   | log2b | senl | boost       | .19 | 4-Clean   | U          |                 |
+ 
+2. Does smoothness seem to help our fits, on average?
+   Only in certain cases. Although 15/38 cells had best models which had been smoothed, only 5 of those smoothed results were clearly better than the best unsmoothed model.
+   The method by which I tested this was to smooth the average response with FIR filter with coefficients: [1 4 1]. This is a weak low-pass filter or smoothing kernel. It was only applied to the training set, so that smooth FIR coeficients would naturally occur. The training set was left untouched, so that it would still be a fair comparison with non-smoothed results. 
+   The following table, sorted by R^2 value, shows that smooth results tended to help more for the poorly correlating results, presumably because it reduced overfitting. Although I expected it to also be more important to smooth coefficients found via FMINLSQ than boosting, this doesn't appear to be the case. Boosting can apparently also generate fits which benefit from some mild smoothing.
+     | CELLID       | Init? | COMP  | NL   | BEST FITTER | R^2 | STRF      | Saturation | NOTE            |
+     |--------------+-------+-------+------+-------------+-----+-----------+------------+-----------------|
+     | por026c-a1   | yes   | log2b | senl | boost       | .67 | 5-Perfect | Low        | Exceptional.    |
+     | por026b-a1   | yes   | l2    | senl | boost       | .56 | 5-Perfect | Sigmoid    |                 |
+     | por023a-b1   | yes   | log2b | npnl | boost       | .56 | 5-Perfect | Linear     |                 |
+     | por025a-b1   | yes   | log2b | senl | fminlsq     | .54 | 4-Clean   | Low        |                 |
+     | por026b-b2   | yes   | log2b | senl | fminlsq     | .53 | 3-OK      | Low        |                 |
+     | por026c-c1   | yes   | log2b | npnl | boost       | .52 | 5-Perfect | Linear     |                 |
+     | por025a-d1   | yes   | log2b | npnl | fminlsq     | .50 | 4-Clean   | Low        |                 |
+     | por024b-c1   | yes   | l2    | npnl | fminlsq     | .49 | 4-Clean   | Sigmoid    | Late resp.      |
+     | por024a-b1   | yes   | log2b | npnl | fminlsq     | .47 | 5-Perfect | Low        |                 |
+     | por026b-b1   | yes   | log2b | senl | fminlsq     | .38 | 4-Clean   | Low        |                 |
+     | por028b-d1   | yes   | l2    | npnl | boost       | .36 | 3-OK      | Notch      | Late resp.      |
+     | por026a-b1   | yes   | log2b | senl | fminlsq     | .36 | 2-Noisy   | Low        |                 |
+     | por026c-a1   | no    | l2    | senl | fminlsq     | .35 | 3-OK      | Low        |                 |
+     | por026c-b1   | yes   | log2b | npnl | fminlsq     | .34 | 3-OK      | U          |                 |
+     | por028b-d1   | yes   | log2b | senl | boost       | .33 | 5-Perfect | High       |                 |
+     | por028d-a2   | no    | l2    | npnl | fminlsq     | .32 | 2-Noisy   | Low        |                 |
+     | por025a-c1   | yes   | log2b | npnl | boost       | .32 | 5-Perfect | High       |                 |
+     | por028d-d1   | yes   | log2b | npnl | boost       | .32 | 3-Clean   | Notch      |                 |
+     | por024a-a1   | yes   | log2b | npnl | fminlsq     | .31 | 3-OK      | Sigmoid    |                 |
+     | por024b-b1   | no    | l2    | senl | boost       | .30 | 2-Noisy   | Low        |                 |
+     | por026b-a2   | no    | log2b | senl | boost       | .30 | 4-Clean   | Low        | Late resp.      |
+     | por026b-d1   | no    | log2b | senl | boost       | .28 | 5-Perfect | Low        | Late resp.      |
+     | por027a-b1   | yes   | log2b | senl | fminlsq     | .28 | 3-OK      | Linear     | Late resp.      |
+     | por028d-d1   | yes   | l2    | npnl | fminlsq     | .24 | 1-Crap    | High       |                 |
+     | por027b-b1   | yes   | l2    | npnl | boost       | .21 | 3-OK      | Linear     |                 |
+     | por028d-a2   | no    | log2b | npnl | boost       | .21 | 4-Clean   | Low        | Late resp.      |
+     | por028b-c1   | yes   | log2b | senl | boost       | .21 | 5-Perfect | Sigmoid    |                 |
+     | por026b-c1   | yes   | log2b | npnl | boost       | .20 | 4-Clean   | Sigmoid    | Late resp.      |
+     | por028b-b1   | yes   | log2b | senl | boost       | .19 | 4-Clean   | U          |                 |
+     | por026c-d1   | yes   | l2    | senl | boost       | .18 | 4-Clean   | Sigmoid    | Unusually late. |
+     | por027b-b1   | yes   | l2    | npnl | boost       | .17 | 4-Clean   | Low        | Late resp.      |
+     | por023a-c2   | no    | l2    | senl | boost       | .16 | 4-Clean   | Low        | Late resp.      |
+     | por026a-d1   | yes   | log2b | npnl | boost       | .15 | 3-OK      | Linear     | Late resp.      |
+     | por027a-a1   | yes   | l2    | npnl | fminlsq     | .13 | 4-Clean   | Sigmoid    |                 |
+     | por024a-c1   | no    | l2    | senl | fminlsq     | .12 | 2-Noisy   | Sigmoid    |                 |
+     | por026c-d2   | yes   | l2    | npnl | boost       | .11 | 4-Clean   | Low        |                 |
+     | por025a-c2   | no    | log2b | senl | fminlsq     | .10 | 1-Crap    | Low        |                 |
+     | por031a-09-1 | yes   | l2    | npnl | fminlsq     | .06 | 2-Noisy   | Linear     |                 |
+
+3. Does the sparse nonlinearity work better than the nonparametric nonlinearity?
+   In some cases, yes. The key difference, when there is one, seems to be in how well the nonlinearity extrapolates beyond the bounds of the training set data. 
+   A little more work here could really pay big dividends, I believe. 
+
+4. Which is more important, sparsity or smoothness?
+   Sparsity is probably more fundamental and could probably achieve many of the same effects as smoothness. But that's just intuition and I haven't quantified it yet.   
+
+Unless you have something pressing or an intuition you want to try, I'm going to concentrate on finding better nonparametric nonlinearities, especially in regards to how to extrapolate better beyond the edges of our data. That can have a pretty big effect on FIR coefficient cleanliness, as well as the correlation performance. 
+
+After that is nailed down, I think the next approach would be to concentrate only on sparse fitters and stronger shrinkage methods. If we solidify the model structure as having a parameter-free compressor and nonparametric nonlinearity, we can just concentrate on the STRF and start running experiments to see just how sparse the FIR filter can become before performance significantly degrades. Studying this too much before the nonlinearity is better optimized could yield premature conclusions.
+
+One other thought I had: should we also be considering a nonparametric compressor of some sort, or none at all? A log compressor makes sense biologically, but does it have any real effect given the nonparametric nonlinearity's ability to account for nearly any smooth nonlinearity, mathematically speaking?
+
+
+Ivar
+  7. [X] Why doesn't SB fitter seem to respect smoothness penalties?
+	 Because it steps in the direction which best describes the data, which may have nothing to do with sparsity
+
+  5. [ ] Replace 'model groups' abstraction with a list of arbitrary nested model-perturbing functions and associated keywords
+	 Why: In the future, more information should be stored in the META structure:
+         META.fitter = ...;  % Fitting tools are not specific to a single module, but are actually more global
+	 META.scorer = ...;  % Performance metrics are likewise not really modules
+	 Why: It would allow mutation of multiple parts of the stack, simultaneously. 
+	 Why: Fitters need to have their own arbitrary string to describe their actions, and this is OUTSIDE of the normal module keyword system
+  8. [ ] Fitters need to be composable
+	 1. Fit the FIR coefs with reverse correlation first
+	 2. Then fit the FIR coefs with Boosting
+	 3. Then fit the NL part with fminlsq
+	 4. Then have a loop where you do one boosting step and one lsq step.
+* Discussion with Stephen
+
+** Solved problem: How to initialize complex models in complex ways
+   No other way around it; defining a new keyword function is the only truly flexible way to do this. 
+   Some complex keywords can even add and initialize a model in the same step.
+   Our never-ending task is to isolate the functionality of each keyword in the most logical and recombinable manner.
+   But that's not a hard problem, since we can always refactor functionality we find ourselves cut-and-pasting.
+
+** Unsolved problem: How should we accomodate our need to be able to study a model
+   Although right now we are just looking at FIR and NPNL and how they vary when trained on one/multiple files.
+   We can't just train five models, because we want the REST of the model to use all the same data.
+   We can anticipate that we will be doing this all/individual separation of data for almost every computational module.
+   
+*** Option 1: Use wiring to connect many simple modules which use inputs that are all- or per- file
+    Pros: 
+    + Using 'wiring' to solve the problem can be done algorithmically, and doesn't change the modules.
+    + A module which 'splits' a signal by respfile channel 
+    + No change to existing modules
+    Cons:
+    - Makes comparison graphing more difficult
+    - Confuses the idea of a 'model structure' with the 'experimental structure' 
+    - Increased number of modules
+    - Tree navigation required to some extent.
+    - Looks like a bookkeeping nightmare having to name all those signals programmatically
+
+*** Option 2: Make the all-/per- file analysis local to each module.
+    Pros:
+    + Fewer modules are created, improving fitting/plotting speed
+    + The all-/per-file comparison is so much easier because the data is local
+    + No changes to gui code
+    + You can graph all or per simultaneously
+    Cons:
+    - Changes to EVERY SINGLE module that wants to implement this.      
+    - Data structures become more complex
+
+*** Discussion
+    It has to be Option 2: change every single module to accomodate this all/per file experimental thing. 
+    This is the only option because it would be very bad to confuse the experimental structure with the model structure. 
+    Our experiment may bei asking how a module's parameters look in various behavior states, but that's not the same thing as having branches in a model.
+    We also have a real need to train part of the model on everything, and another part only on specific respfiles.
+    Keeping track of if we are looking at the Inhibition or Excitation FIR filter when you have 8 Respfiles would be too confusing...that's 16 FIR filters, plus splitters/joiners!
+
+*** Proposed Solution:
+    What we really need is a uniform abstraction that can be applied to any module.
+
+    1. Manage module fields for both all-file or per-file cases
+    2. Manage module plotting for all- or per- cases
+    3. Align training/test set pairs when using a particular parameter set grouping
+    4. Remains customizable in the event that we need to create different groupings (say, active1 vs active2 vs passive behaviors) 
+
+    The way to achieve this uniform abstraction is to change the functional interface of each module:
+
+    1. Every module function interface now accepts:
+       - the module parameter set to use
+       - the respfiles/data to act upon
+       - previous STACK
+       - previous XXX
+
+    2. Modules now have an optional flag
+       - When true, arguments to functions are given
+       - The respfile cell array is specified by some 'experimental respfile selector function'
+
+    3. The default function of a modules no longer works on ALL data, but only on the respfile argument.
+
+    4. Plot functions of modules no longer works on ALL data, but only on the respfile cell array argument.
+       Modules no longer plot directly to their output
+       Instead, they accept an argument of where to plot, 
+       They also receive the module fields to use when plotting
+
+** PROBLEM: Each model structure will have a different way of defining sparsity
+     Some models have 1 FIR filter, some have per-file filters, some have IN/EX filters
+  Therefore, don't build it in to the MSE module...it is instead part of a fitter.
+  
+* SPLIT PARAMETER SETS
+ SUMMARY OF CHANGES:
+  1) [ ] Jackknifing is a generic FITTER function keyword and requires no special work.
+         - Besides, we need to do jackknifing even on split models.
+  2) [ ] Peeking at another module's data without using EXTRACT_MODULE_PARAMS() is now STRICTLY FORBIDDEN
+         - You provide the index number, which you found previously with find_modules()
+  3) [ ] STACK is now a 2x deep cell array. XXX has no change.
+  4) [ ] Modules all have a 'splitter' fn and a 'unifier' fn
+	 - The splitter function is called when append_module() is done
+	 - The splitter accounts for data conditions
+	   {[mdl1, dat1], [mdl2, dat2]} = splitter(STACK, XXX)
+	 - The unifier brings back multiple data conditions
+	   XXX{N+1} = unifier(x1{n+1), x2{n+1});
+  5) [ ] recalc_XXX now 
+	   1. calls mdl.fn() on each split parameter set
+	   2. calls mdl.unify() on the XXX results of all of those
+  6) [ ] Whatever calls plot hooks in narf_modelpane now
+	   1. calls splitter() to get the group parameter sets
+	   2. Creates a pack of axes()
+	   3. Calls the selected plot function on each one
+  7) [ ] Pack and unpack_fittables now understand split parameters
+
+* Should I put selected GUI info  in the XXX data struct?
+    Pros:
+    + No extra argument    
+    Cons:
+    - Confuses GUI state and XXX data
+    - Need to go through XXX data  
+    - Could accidentally overwrite XXX data
+    BAD IDEA!
+* Module Interface Changes
+  - DO functions now get passed four arguments instead of two:
+    | mdl   | Module parameter set                                                   |
+    | x     | default xxx data to work on                                            |
+    | stack | The whole stack. It's STRONGLY ENCOURAGED you don't actually use this. |
+    | xxx   | The whole xxx. It's STRONGLY ENCOURAGED you not use this.              |
+
+  - PLOT functions now get passed six arguments
+    | selected | Struct containing plot_gui selections                            |
+    | stack    | The whole stack up to this point, including alternate param sets |
+    | xxx      | The whole xxx up to N+1 with the unified results                 |
+
+  - These can easily be computed from stack and xxx
+    | mdls   | cell array of module parameter sets for this module |
+    | xprevs | cell array of split inputs                          |
+    | xnexts | cell array of outputs before the unify              |
+ 
+  - Selected struct has these fields
+    | selected.stimfile    | Selected stimfile              |
+    | selected.stim_idx    | Selected stim idx              |
+    | selected.chan_idx    | Default selected channel idx   |
+    | selected.parmset_idx | Default selected parameter set (or this parmset) |
+
+  - The selected struct is built by walking the NARFGUI array and merging fields
+
+  - When a plot-gui is changed, it triggers a REFRESH_GUI from that point
+    Model the logic on the recalc_xxx and it should be fine
+
+  - Only remaining questions is should I
+    1. Plot per parameter set and encapsulate loops?
+    2. Plot entire thing
+
+    I guess it makes more sense to plot the whole damn thing
+    If I just want to plot part of it, I do: 
+
+  - For encapsulation at some point, we may want to remove global defaults:
+    1. We should pass a handle to the plot axes to the plot functions
+
+* Meta-Methods
+** I need a generic plotting method which takes
+  - A function that plots a single line
+  - x axis vector-valued cell array {x1, x2, x3}
+  - y axis matrix-valued cell array {Y1, Y2, Y3}
+  - fieldnames (Assumed to be parameter set names)
+  - channames (assumed to be channels and corresponding with Y's 2nd dimension)
+
+** It should also:
+   - Colors indicate channel: b, g, r, c, m, 
+   - Line types:    -, --, -., :, o-, x-,
+   - Automatic legend, X axis, Y axis, etc
+   - plot(dat.(mdl.output_stim_time), ...
+       dat.(mdl.output_stim)(:, sel.stim_idx, sel.chan_idx), 'k-');
+
+* Have the FIR module be MIMO, and then SUM the outputs
+  Is it useful to do this to simplify plot routines? Or not?
+  99% of the time I want the summing, so let's include it. 
+
+* Bayesian perspective
+  You have a model structure, which is the TYPE of module in the (STACK)
+  You have several model parameter sets (Sideways sets of parameters in STACK)
+  Each of those has a likelihood/data chain (XXX)
+  Now that we can have multiple parameter sets, we can even have ENSEMBLE models
+  (Use a gaussian random splitter, and a mean unifier or one that discards outliers)
+  
+A true bayesian would allow parameter sets to vary across the WHOLE stack.
+There's no reason we couldn't do this with a tree-shaped STACK.
+It would be like encompassing multiple models in the same file, all working on the same data.
+The downside would be that aggregating data for plotting would be a bitch.
+Training would also be a bitch. 
+For now, being able to localize changes to a single module is good enough. 
+Besides, we already have enough rope to hang ourselves with.
+
+* Why the plot functions have to change so much:
+  Because right now in EVERY single plot function, we check the status of a GUI that may not exist
+  For better flexibility, we should allow plotting to occur programmatically
+  This can only occur if plot functions are GIVEN the GUI status as an argument
+* SUMMARY OF CHANGES:
+  1) [X] Jackknifing is a generic FITTER function keyword and requires no special work.
+         - Besides, we need to do jackknifing even on split models.
+  2) [X] STACK is now a 2x deep cell array. XXX has no change.
+  3) [X] Modules all have a 'splitter' fn and a 'unifier' fn
+	 - The splitter function is called when append_module() is done
+	 - The splitter accounts for data conditions
+	   {[mdl1, dat1], [mdl2, dat2]} = splitter(STACK, XXX)
+	 - The unifier brings back multiple data conditions
+	   XXX{N+1} = unifier(x1{n+1), x2{n+1});
+  4) [X] Pack and unpack_fittables now understand split parameters
+  5) [X] Peeking at another module's data without using EXTRACT_MODULE_PARAMS() is now STRICTLY FORBIDDEN
+         - You provide the index number, which you found previously with find_modules()
+	 - {cellarrayofparams} = Extract_module_params(module_index, param) 
+  6) [X] recalc_XXX now 
+	   1. calls mdl.fn() on each split parameter set
+	   2. calls mdl.unifier() on the XXX results of all of those
+  7) [X] Whatever calls plot hooks in narf_modelpane now
+  8) [X] Substantial work in utils/
+	 All the functions which use STACK should now be more or less workable!	  
+  9) [X] There are three splitter implementations available:
+	 1. per-respfile
+	 2. per-filecode category
+	 3. all-files (No splitter provided)
+  10) [X] There is one generic unifier
+          1. Per-respfile merger
+  11) [X] STACK{}.gh is now its own structure: NARFGUI
+	  - [X] Ensure no more *.gh things exist
+	  - [X] Ensure that all the plot_gui's now are in NARFGUI
+	  - [X] get_baphy_plot_controls should become irrelevant now
+  12) [-] Substantial work in pretty much every module which touches STACK naively
+	  - [X] load-stim-from-baphy
+	  - [X] normalizer
+	  - [X] FIR
+	  - [X] LOG2b
+	  - [X] NPNL
+	  - [ ] NPFNL
+	  - [ ] Other?
+Hi Stephen, 
+
+I just thought I would update you on NARFv2. It's pretty much like NARFv1 but with some programmatic interface changes that streamline the modules a bit better and let us do a few things we couldn't do before:
+
+1. Plotting via scripts is now far more controllable. This was not possible at all before, strangely enough, since I had focused on plotting from the GUI.
+
+2. Each module can have multiple 'parameter sets' of data. In other words, the FIR module can now have multiple sets of coefficients which work on different parts of the data, or even on the same data if you want. The function which splits up the data and passes it to each parameter set is called a 'splitter', and the one which brings the data back together again is called the 'unifier'. I intended this to solve our problem of needing to do per-respfile or per-behavioral condition fits for just part of the model. However, this could be interesting for doing something like 'consensus' or 'ensemble' modules, which each could be trained on some jackknifed subset of the data. We could then throw out the worst FIR coefs (which were sensitive to outliers), and average the rest of the values to make a prediction. 
+
+3. Arbitrary initialization of any part of the model, at any step in the fitting process, is possible with a keyword system. If you want to do two-step fitting routines, this should become much simpler now. 
+
+4. Modules are smart enough to plot their multiple parameter sets in the same plot window for easy viewing (i.e., multiple NPNLs can be shown on the same axes plot, or multiple FIR filters can be shown on the same FIR coefs plot).
+
+5. Keywords can be combined in a clever recursive fashion to allow us to test combinationss in an extremely complex way. We now have plenty of rope to hang ourselves with.
+
+6. We can go into the details of the changes; it is slightly more painful to mess with STACK manually now, but on the other hand the added functionality is probably worth it. This isn't a huge problem -- you should be using "append_module" to build a model whenever possible anyway. 
+
+7. Plotting routines are standardized and work for multiple parameter sets and multiple channels. I added intelligent legends and labels for the NARF newbies as well.
+
+The only remaining things to do before I push the code back in are:
+
+1. Fixing some awkwardness with plotting multiple parameter sets in the narf_modelpane gui
+
+2. Finishing testing the splitter/unifier code for the minimum relevant modules (FIR, NPNL, NPFNL)
+
+3. Testing that the boosting fitter still works as intended (probably fine).
+
+4. Check that I didn't break the job system in anyway (probably fine).
+
+I'd guess it will take me another 2 days to finish those, but it may be more or less, depending on how smart I am feeling. 
+
+I'll be here next week on Monday and Tuesday. Whether I can come in this Friday depends on how much I get done Wed/Thu of this week. 
+
+
+Ivar
+
+
+* Talking Points for Stephen
+** Multiple paramsets
+  - I'm allowing load-stim-from-baphy to have them too
+    - Why: Perhaps someday we will want to integrate data from MULTIPLE cellids
+    - We can do this by hacking out a strange 'splitter & unifier' for loadstimfrombaphy
+    - Allowing such aggregation of data doesn't increase baphy's or narf's complexity
+** Recalculating
+  - There is more 'recalcing' going on than before during plotting
+  - It sounds goofy, but plot functions now recalc all the data, instead of just calling plot functions 
+** Plotting
+   - Right now there's no GUI selection for module paramset, but there will be soon
+
+* Questions for Stephen
+  - I notice that more jacknifes (10 instead of 5) will mean more jackknifes will share data.
+    As we have more and more jackknifes, they will converge on being almost exactly the same, except for 1 data point's effect
+    Therefore, predictions will also tend to be pretty much identical as if we hadn't jackknifed at all?
+    However, if we only have 2-4 jackknifes, they share no data
+    The prediction in one may be pretty different from the prediction in the other. 
+    That seems closer to what we are looking for: if each predicts the other poorly, we are clearly not sparse enough.
+    Maybe that's still true for more jackknifes, but it just escapes my intuition?
+
+* Options
+** Overwrite the test_set file with the held-out data, and use correlation's test_set result to pick the winner
+*** Strategy:    
+    1. Fitter removes the test-set data and replaces it with the held-out data (Which is NAN every where else)
+    2. Complete duplication of the STACK in a local cache so that we can pull out coefs at the end
+    3. Each jackknife generates a prediction
+       1) These predictions are stored in an XXX struct, since we DO need to keep them around, if only to aggregate the results
+       2) The predictions are made by overwriting the test set.
+    4. Each jackknife's predictions are merged. Specifically, meaning that:    
+       1) Predictions must be stored in a special array of XXX structures, one for each jackknife
+       2) Every element of XXX from 2 onward needs to have merging occur IFF it is a fittable_field one
+       3) The non-NAN elements are merged
+    5. Computing the MSE is going to be a bitch, because:
+       1) If I 'calc_xxx', I lose the merged data in one swell foop!
+       2) Do I propogate everything down until it reaches the MSE thing? Or what?
+       3) The MSE needs to work on the test set data. 
+    6. The test-set performance is cached in many XXX, so aggregated data cannot be fed through modules in the normal way
+       We _could_ move the MSE into META, since it's part of the performance metric, after all.
+       BUT, then there's no good place to view it in the GUI, and I want to allow user-defined modules
+       1) I could mark performance metric modules somehow and feed them the data, then recompute
+       2) I could make sparsemse module
+    7. Then, the fitter restores the test set data when done
+*** Problems:
+    1. It's VERY LIKELY it interacts poorly with the splitter functions, since they use test set info?
+
+** Other options  
+  1. Insert a module that 'masks' out data? How on EARTH would I jackknife by doing that, though? It buys me nothing.
+  2. Create a 'held-out' data set which are understood by all modules, and use paramsets to jackknife
+     - Confounds the splitter and jackknifing
+     - Paramsets would have to be multiplied (2 paramsets x 10 jackknifes = 20 paramsets)
+     - Would require splitters and unifiers be daisy-chained.
+   
+* THE PROBLEMS: 
+** It's hard to add jackknifing and maintain simultaneous support for
+     - multiple FIR filters
+     - multiple paramsets
+     - arbitrary performance metrics
+     - fitting NPNL on the training data, and using it to predict the held-out data 
+     - gui
+** In other words
+   1. If there are multiple parameter sets used to compute the held-out prediction, then anything you push into the model is ephemeral and a single recalc could wipe it out.
+   2. It's hard to compute the 'correlation' without making this very specific to a particular model type.
+   3. It's hard to do this without accidentally having the NPNL adjust its fit to the held-out data.
+
+
+* How about this for an experiment?
+  - Learn what a particular neuron does, what 'feature' it responds to
+  - Remove that discrimination
+  - Play the featureless sound back (Animal can't do the task) 
+  - Play the featureless sound back with bogus stimulation (Animal can't do task)
+  - Play the feauterless sound back with good stimulation (Animal can do the task)
+  - Proof: that sound feature is represented by that part of the sound
+
+* Decisions on Jackknifing that could be modified:
+  - Instead of taking the mean, take the single best held-out predictor
+    - Problem: doing that means you will always INCLUDE the outliers!
+  - Maybe take the 'worst' held-out prediction?
+* Found one problem:
+  - Jackknifing is a dumb algorithm that just NANs out the data. This is simpler than playing with indexes and easier to reconstruct at the end.
+  - However, when the FIR filter encounters NANs, it doesn't know what to do, and so the next NCOEFS-1 data points are also NAN
+  - When the jackknifed data is brought back together again, we have N_COEFS-1 wide gaps between the points
+  - This is probably the right thing to do (in general), in retrospect. Lucky it turned out that way. 
+  - However, even better is to just NAN out the RESPAVG, not the stimulus. This requires some 'special knowledge' of the signal, but I'll do it for now.
+
+   - NarfQuestions: For scientific queries
+     | Field      | Type         | Null | Key | Default | Extra | Notes                                                |
+     |------------+--------------+------+-----+---------+-------+------------------------------------------------------|
+     | id         |              |      |     |         |       |                                                      |
+     | name       | varchar(255) |      |     |         |       |                                                      |
+     | status     | varchar(255) |      |     |         |       | When you have decided you have answered the question |
+     | question   | text         |      |     |         |       | The question we asked.                               |
+     | answer     | text         |      |     |         |       | Our current answer.                                  |
+     | tags       | text         |      |     |         |       |                                                      |
+     | modeltree  | text         |      |     |         |       | A model keyword tree; all branches are compared      |
+     | batch      | varchar(255) |      |     |         |       | Associated with a particular batch                   |
+     | summaryfig | text         |      |     |         |       | Summarizes the answer to the question                |
+     | lastmod    | timestamp    |      |     |         |       |                                                      |
+
+   - NarfBatches
+     | batchname     | varchar(255) |   |   |   |   | More generic names                                   |
+     | cellid        | varchar(255) |   |   |   |   |                                                      |
+     | est_set       | text         |   |   |   |   |                                                      |
+     | val_set       | text         |   |   |   |   |                                                      |
+     | tags          | text         |   |   |   |   |                                                      |
+     | lastmod       | timestamp    |   |   |   |   |                                                      |
+** Data Structures
+   - NarfResults
+     | Field      | Type             | Null | Key | Default           | Extra                       | Notes                             |
+     |------------+------------------+------+-----+-------------------+-----------------------------+-----------------------------------|
+     | id         | int(10) unsigned | NO   | PRI | NULL              | auto_increment              |                                   |
+     | cellid     | varchar(255)     | YES  | MUL | NULL              |                             |                                   |
+     | batch      | int(11)          | YES  | MUL | NULL              |                             |                                   |
+     | modelname  | text             | YES  | MUL | NULL              |                             |                                   |
+     | r_test     | double           | YES  |     | NULL              |                             |                                   |
+     | r_fit      | double           | YES  |     | NULL              |                             |                                   |
+     | score      | double           | YES  |     | NULL              |                             |                                   |
+     | sparsity   | double           | YES  |     | NULL              |                             |                                   |
+     | modelpath  | text             | YES  |     | NULL              |                             |                                   |
+     | modelfile  | text             | YES  |     | NULL              |                             |                                   |
+     | figurefile | text             | YES  |     | NULL              |                             |                                   |
+     | githash    | varchar(255)     | YES  |     | NULL              |                             |                                   |
+     | lastmod    | timestamp        | NO   |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP | When was the model last modified? |
+     
+     Add these:
+     | Field           | Type      | Null | Key | Default | Extra | Notes                                                                            |
+     |-----------------+-----------+------+-----+---------+-------+----------------------------------------------------------------------------------|
+     | respfiles       | text      |      |     |         |       | contents of XXX0                                                                 |
+     | lastVerified    | timestamp | YES  | ?   | ?       | ?     | When was the model/image/etc last checked for DB consistency?                    |
+     | lastFit         | timestamp |      |     |         |       | When was the model last fit                                                      |
+     | isHidden        | char(1)   | NO   |     |         |       | T or F                                                                           |
+     | isDeleted       | char(1)   | NO   |     |         |       | T or F                                                                           |
+     | estset          |           |      |     |         |       |                                                                                  |
+     | valset          |           |      |     |         |       |                                                                                  |
+     | est_l1          |           |      |     |         |       |                                                                                  |
+     | est_mse         |           |      |     |         |       |                                                                                  |
+     | est_corr        |           |      |     |         |       |                                                                                  |
+     | est_likelihood  |           |      |     |         |       |                                                                                  |
+     | est_aposteriori |           |      |     |         |       |                                                                                  |
+     | est_bic         |           |      |     |         |       |                                                                                  |
+     | jobStatus       |           |      |     |         |       | When created, set to 0. Shows Job system status so double-queuing doesn't occur. |
+     | sparsity        | text      |      |     |         |       |                                                                                  |
+     | smoothness      | text      |      |     |         |       |                                                                                  |

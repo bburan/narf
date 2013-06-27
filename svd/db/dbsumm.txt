@@ -1,9 +1,0 @@
-Data file listing for batch(es) 10:
-33 93G97A free.4xcrf (33 )    1-1926   1926 (0) g97a.rev.imsm                           
-                                               psth.g97a.free.asc*DEL*
-
-181 m0015  free      (455)    1-0     56289 (0) m0015.free.000.imsm                     
-                                               m0015.free.000.resp.mat
-
-180 m0018  free      (454)    1-0     52901 (0) m0018.free.imsm                         
-                                               m0018.free.resp.mat

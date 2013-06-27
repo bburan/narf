@@ -71,9 +71,9 @@ end
 % Prepare the new signal matrix
 dims_new = dims_old;
 if isequal(floor(dims_old(dim)/nwin), dims_old(dim)/nwin)
-    dims_new(dim) = dims_old(dim) / nwin;
+    dims_new(dim) = floor(dims_old(dim) / nwin);
 else
-    dims_new(dim) = (dims_old(dim) / nwin); % + 1;  % TODO: Why didn't this work?
+    dims_new(dim) = floor((dims_old(dim) / nwin)) + 1;  
 end
 newsig = zeros(dims_new);
 

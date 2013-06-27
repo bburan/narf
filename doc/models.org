@@ -1,0 +1,317 @@
+OBSERVATIONS ON VARIOUS MODELS
+
+* General Model Structure.
+  1. MODEL COMPRESSOR: Any nonlinearity before the FIR filter a "compressor". 
+  2. FIR FILTER: Has sufficient coefficients to cover the past 100ms of history and span the input dimensions
+  3. NONLINEARITY: A global nonlinearity on the output of the FIR filter. 
+  4. FITTER: Whatever method is used to find the free parameters
+  5. PERFORMANCE METRIC: Whatever measurement is used to determine a 'good' fit.
+
+* Jan 22, 2013 - Compressor studies
+  We have been considering fits using:
+  1) No compression
+  2) logarithms with a constant offset ($log(x+10^-offset)$), where offset=1, 2, 3, 4, 5, or is fit via optimization
+  3) nth-root filters, where n=1.5,2,2.5,3,4,5, or is fit via optimization
+
+  Looking at preliminary results for 18 cells, we can make the following statements:
+  1) Compression helps almost always.
+  2) However, fitting the compressor via optimization failed to reach peak performance in every case and often prevented convergence. 
+  3) For every good fitting nth-root compressor, there is always a better-fitting log compressor.
+  4) For some strange reason, even numbered nth-root compressors (2,4,6) perform more poorly than odd ones (3,5,7, etc). This is weird. 
+  5) The best log fit varies between log(x+10^-1) and log(x+10^-4). I presume these account for different spontaneous rates of fire.
+
+  Hypotheses:
+  1) Log compressors are beating the nth-root ones because they predict a nonzero firing rate even when there is no stimulus. 
+
+  Future Experimental Options:
+  1) Define a sqrt compressor with a nonzero firing rate for no stimulus. Phi = [zerorate, exponent]
+     -> Decided it's a waste of time. Established scientific theory already says that we aren't really expecting this nonlinearity. 
+  2) Define a logarithmic compressor which uses base 2, 3, 4, 5, 6 instead of e. Phi = [zerorate, exponent] 
+     -> Decided not necessary, since FIR scaling can effectively transform one log base into another. They only differ by a constant factor. Remember: Log_a (x) / log_a(b) = log_b (x)
+  3) Try a sigmoidal compressor to account for firing rate saturation. 
+     -> TODO
+* Jan 22, 2013 - Fitting Routines
+  There is no "Best Fitting Routine", there are only fitting routines that work better in some circumstances than others.
+
+  Five routines were tried: 
+  1) fminsearch
+  2) least squares,
+  3) jackknifed lsq, 
+  4) fminsearch with a smoothing weight, which has a penalty proportional to the RMS magnitude of the FIR filter coefs
+  5) fminsearch followed by lsq
+
+  Observations from testing on 18 cells:
+  1) Lsqcurvefit() by itself fails to converge occasionally but is fast
+  2) fminsearch() followed by lsqcurvefit() was always the best choice for cells with strong responses
+  3) smoothed MSE fitter or Jackknifed fitter resulted in higher test scores for some cells with weaker responses (presumably because they avoided overfitting).
+  4) Probably the best approach is to fit the model multiple times using different approaches, and take the one with the highest test score, and save it.
+
+  Future Experiments
+  1) Fit each element independently before doing the global final fit (could be done in auto-init)
+  2) Bayesian likelihood fits
+   
+* Jan 25, 2013 - Update
+  COMPRESSORS: Seems like Log1, log2, log3, log4 pretty much span the input range across 30 cells.
+  FITTERS: fminlsq is the overall winner. Multi-step approaches did not help.
+  LEVEL SHIFTING, LACK OF ATTENTION, OR MY EYE PLAYING TRICKS ON ME?: I swear to god that in many of these sound files, in stimulus #1, the very first edge (right after the sound begins) looks like it not neurally tracked like the others.
+  FIR: Probably I should put fitting the FIR baseline back in, since it looks like it helps in many cases to clean up the filter visually.
+** Why we can't pick the model with the best test set fit:
+   Each fitting method will still have some 'noise' in the parameters
+   Choosing a fitting method will choose one set of noise over another
+   If we do ANY selection of model parameters based on TEST SET performance, we are picking a set of noise and that is a no-no
+   However, we could of course pick the model with the best TRAINING SET performance, that would be fine.
+   
+* Feb 11, 2013 - Analysis Batch 240 Notes
+  "Best" values chosen with my eye for qualitative considerations like simplicity and smoothness. 
+  Sort with m-x org-table-sort-lines if desired.
+
+** STRF numbers have the following meaning:
+    5=Excellent STRF. Consistent across nearly all trials, little energy outside expected 20-30ms band.
+    4=Good. Clear signal, but noisier
+    3=Fair. More energy in 0 coef suggesting something unmodeled. 
+    2=Poor. Maybe a signal here somewhere?
+    1=Crap. I can't see anything useful here.
+
+** The "Saturation Level" column:
+    low    (The NL and its derivative are increasing)
+    linear (The NL is approximately linear) 
+    high   (The NL is increasing but its derivative is negative)
+    notch  (There is a point of inflection)
+
+** DATA table
+  | CELLID     | COMP   | NL       | BEST FITTER     | R^2 | STRF | NOTES                                             | Saturation level |
+  |------------+--------+----------+-----------------+-----+------+---------------------------------------------------+------------------|
+  | por025a-b1 | log2   | step     | fminlsq         | .55 |    5 |                                                   | Low              |
+  | por025a-c1 | nocomp | npnl     | fminlsq/boost   | .34 |    5 | Depressing (.35)                                  | High             |
+  | por025a-c2 | log2   | sig      | twostep         | .14 |    3 |                                                   | Low              |
+  | por025a-d1 | log2   | sig/step | fminlsq         | .49 |    4 |                                                   | Low              |
+  | por026a-b1 | log2   | step     | slsq            | .37 |  3.5 |                                                   | Low              |
+  | por026a-d1 | log2   | npnl     | gene            | .16 |    2 | Lots energy at 30, 60-80ms!?                      | Notch            |
+  | por026b-a1 | log2   | npnl     | sboost          | .57 |    5 |                                                   | Sigmoid          |
+  | por026b-a2 | log2   | npnl     | fminlsq/twostep | .28 |    3 |                                                   | Linear           |
+  | por026b-b1 | log2   | npnl     | boost           | .37 |    5 | Depressing (.39)                                  | Sigmoid          |
+  | por026b-b2 | log2   | sig      | fminlsq         | .52 |    3 | Good R^2, but weird STRF.                         | Low              |
+  | por026b-c1 | log2   | npnl     | sboost          | .20 |    5 |                                                   | Linear           |
+  | por026b-c2 | nocomp | sig      | twostep         | .30 |    3 |                                                   | Low              |
+  | por026b-d1 | nocomp | npnl     | boost           | .30 |    5 | Excellent STRF.                                   | Notch            |
+  | por026c-a1 | log2   | step     | slsq            | .37 |    2 | Step clearly wrong choice.                        | Low              |
+  | por026c-b1 | log2   | npnl     | fminlsq         | .34 |    3 | U-shaped NL.                                      | Notch            |
+  | por026c-b2 |        |          |                 |     |    1 | Garbage                                           | Garbage          |
+  | por026c-c1 | nocomp | npnl     | sboost          | .52 |    5 | Depressing (.53)                                  | Linear/High      |
+  | por026c-d1 | nocomp | npnl     | boost           | .15 |    4 | Good if not overfit.                              | Notch            |
+  | por026c-d2 | log2   | sig      | boost           | .15 |    3 | Good if not overfit.                              | Low              |
+  | por027a-a1 | log2   | npnl     | boost           | .13 |    4 | Good if not overfit.                              | Sigmoid          |
+  | por027a-b1 | log2   | sig      | ?               | .25 |    3 | Differential!?                                    | Linear           |
+  | por027a-c1 | log2   | npnl     | boost           | .23 |    5 | Depressing (.23)                                  | High             |
+  | por027b-b1 | log2   | npnl     | slsq            | .17 |    3 |                                                   | Low              |
+  | por027b-c1 | nocomp | npnl     | ?               | .21 |    2 |                                                   | Sigmoid          |
+  | por028b-b1 | log2   | npnl     | sgene           | .23 |    4 | U-shaped NL.                                      | Notch            |
+  | por028b-c1 | log2   | npnl     | sboost          | .20 |    4 | Strange NL.                                       | Sigmoid          |
+  | por028b-d1 | log2   | npnl     | slsq            | .29 |    5 | Depressing (.36) Good if not overfit.             | High             |
+  | por028d-a1 | log2   | npnl     | fminlsq         | .25 |    2 | Strange NL.                                       | High             |
+  | por028d-a2 | log2   | npnl     | sgene           | .18 |    3 |                                                   |                  |
+  | por028d-b1 | log2   | npnl     | sboost          | .65 |    5 | Perfect. Boosts are cleaner, slsq more realistic. | Sigmoid          |
+  | por028d-c1 |        |          |                 |     |      | Garbage                                           |                  |
+  | por028d-c2 | log2   | step     | boost           | .12 |    2 | Plausible. Strong at 20, 70ms.                    | Low              |
+  | por028d-d1 |        |          |                 |     |      |                                                   |                  |
+
+** Observations
+  - Nearly perfect: por028d-b1, por026b-a1
+  - For "low" saturation levels, steps and sigs work better than NPNLs
+    Neurons I thought were depressing last time may really just be saturating
+    (por026b-b1, por026c-c1, por028b-d1, por025a-c1, por027a-c1, por028d-a1 )
+  - Boosting avoids overfitting when R^2 < 0.3. For higher values, slsq or fminlsq wins.
+  - Boosting gives 'sharp edges' on the response. Does this reflect reality?
+  - U-shaped NL: por026c-b1, por028b-b1
+  - Notched NL: por026b-d1, por026c-d1, por026a-d1  (All on same day?)
+  - Late FIRs: por028d-c2, por026a-d1, (Probably due to depression)
+  - Many times the sigmoid fits the upper or lower part, but not both. 
+  - There is a tradeoff between FIR complexity and NL complexity
+    por026c-c1 is a good example. 
+    If log2 added, FIR is noisier but output is very linear. 
+    If it's not there, FIR is cleaner but NL is curved.
+    If there is simple NL (like a step or sigmoid), the FIR has more noise. 
+    If there is a complex NL (like a NPNL), the FIR is simpler.
+  - Annealing fitter is slow and not very good.
+  - Genetic algorithm fitter is fast, but not very good.
+  - Shrinkage fitters don't seem to help tremendously for non-boosting fitters
+    Probably this is because non-boosting fitters are finding wildly different NLs.
+    Wildly different NLs cannot be shrunk properly because they are nonlinear. 
+  - Twostep fits more consistently than most algorithms.
+    But, it never does as well as fitting the NL and FIR at the same time.
+    
+** Conclusions
+   Stick with the NPNL, it is a good general case and is easy to understand.
+   The best fitters are fminlsq, boost, slsq, and twostep.
+   
+** Going forward, what is needed?
+   Log2 + Offset before the depression filter
+   A 3-step fitter:
+   A metric of FIR sparsity (L0 "norm": number of nonzero terms)
+   A metric of FIR magnitude (L1 norm: Sum of abs values
+   A metric of NL smoothness
+   A check of homoskedasticity (How much is the variance changing for the nonlinearity along the abscissa)
+   Playing around with the number of NPNL bins, extrapolation, and smoothness.
+   Simulated annealing doesn't work well.
+   Plot both test and training data for the NPNL.
+   A stronger shrinkage filter
+   A way to compare NPNLs for multiple data sets.
+   A histogram heat map of model performance for each cell
+   A Tikhonov matrix for regression: diagonals are variance of each coef. 2nd diagonals would add some correlation from one FIR coef to the next (smoothness?). 
+   Automatic Relevancy Determination (ARD)
+   Automatic Smoothness Determination (ASD)
+   
+* Feb 14, 2013 - Preliminary observations
+  The simulations I started yesterday aren't complete, but a few things are readily noticable. 
+
+** Observations
+   1. Changing the number of bins of NPNL doesn't seem to help much because it systematically does poorly at the edges.
+      Binning results in the minimum side of curve ALWAYS overestimating, and the top edge ALWAYS underestimating
+   2. The new Sparse Empirical Nonlinearity is beating the NPNL in most cases. When it's not, it does nearly as well. 
+      In light of observation #1, this isn't really surprising. It's nice to see it confirmed, however.
+   3. The new Sparse Bayesian fitter is essentially a boosting algorithm, and works great too.
+      It essentially steps with variable size. It also only steps ONLY toward the most relevant few dimensions. 
+      
+** Going forward
+   A post-fitter operation that makes solutions more sparse, either by shrinking or zeroing them (the extreme case of shrinking).
+
+* Feb 19, 2013 - Batches 240 and 242
+  Batch 241 didn't work, but 240 and 242 are largely completed. 
+** Stephen
+   1. Correct: por023a-c2, por031a-09-1, por31a-19-1 have train=test set problem
+   2. Remove: por028d-c1
+   3. Add: por028d-b1
+
+** BATCH 240 DATA (INIT = Initial silence?)
+  | CELLID       | Init? | COMP  | NL   | BEST FITTER | R^2 | STRF      | Saturation | NOTE         |
+  |--------------+-------+-------+------+-------------+-----+-----------+------------+--------------|
+  | por031a-09-1 | yes   | l2    | npnl | fminlsq     | .06 | 2-Noisy   | Linear     |              |
+  | por026c-d2   | yes   | l2    | npnl | boost       | .11 | 4-Clean   | Low        |              |
+  | por027a-a1   | yes   | l2    | npnl | fminlsq     | .13 | 4-Clean   | Sigmoid    |              |
+  | por026a-d1   | yes   | log2b | npnl | boost       | .15 | 3-OK      | Linear     | Late resp. |
+  | por027b-b1   | yes   | l2    | npnl | boost       | .17 | 4-Clean   | Low        | Late resp. |
+  | por026b-c1   | yes   | log2b | npnl | boost       | .20 | 4-Clean   | Sigmoid    | Late resp. |
+  | por028d-a2   | no    | log2b | npnl | boost       | .21 | 4-Clean   | Low        | Late resp. |
+  | por028d-d1   | yes   | l2    | npnl | fminlsq     | .24 | 1-Crap    | High       |              |
+  | por024a-a1   | yes   | log2b | npnl | fminlsq     | .31 | 3-OK      | Sigmoid    |              |
+  | por025a-c1   | yes   | log2b | npnl | boost       | .32 | 5-Perfect | High       |              |
+  | por026c-b1   | yes   | log2b | npnl | fminlsq     | .34 | 3-OK      | U          |              |
+  | por024a-b1   | yes   | log2b | npnl | fminlsq     | .47 | 5-Perfect | Low        |              |
+  | por025a-d1   | yes   | log2b | npnl | fminlsq     | .50 | 4-Clean   | Low        |              |
+  | por026c-c1   | yes   | log2b | npnl | boost       | .52 | 5-Perfect | Linear     |              |
+  | por023a-b1   | yes   | log2b | npnl | boost       | .56 | 5-Perfect | Linear     |              |
+  | por025a-c2   | no    | log2b | senl | fminlsq     | .10 | 1-Crap    | Low        |              |
+  | por024a-c1   | no    | l2    | senl | fminlsq     | .12 | 2-Noisy   | Sigmoid    |              |
+  | por023a-c2   | no    | l2    | senl | boost       | .16 | 4-Clean   | Low        | Late resp. |
+  | por028b-b1   | yes   | log2b | senl | boost       | .19 | 4-Clean   | U          |              |
+  | por028b-c1   | yes   | log2b | senl | boost       | .21 | 5-Perfect | Sigmoid    |              |
+  | por027a-b1   | yes   | log2b | senl | fminlsq     | .28 | 3-OK      | Linear     | Late resp. |
+  | por026b-d1   | no    | log2b | senl | boost       | .28 | 5-Perfect | Low        | Late resp. |
+  | por026b-a2   | no    | log2b | senl | boost       | .30 | 4-Clean   | Low        | Late resp. |
+  | por028b-d1   | yes   | log2b | senl | boost       | .33 | 5-Perfect | High       |              |
+  | por026c-a1   | no    | l2    | senl | fminlsq     | .35 | 3-OK      | Low        |              |
+  | por026a-b1   | yes   | log2b | senl | fminlsq     | .36 | 2-Noisy   | Low        |              |
+  | por026b-b1   | yes   | log2b | senl | fminlsq     | .38 | 4-Clean   | Low        |              |
+  | por026b-b2   | yes   | log2b | senl | fminlsq     | .53 | 3-OK      | Low        |              |
+  | por025a-b1   | yes   | log2b | senl | fminlsq     | .54 | 4-Clean   | Low        |              |
+  | por026b-a1   | yes   | l2    | senl | boost       | .56 | 5-Perfect | Sigmoid    |              |
+
+** BATCH 242 DATA
+  | CELLID     | INIT | COMP  | NL   | BEST FITTER | R^2 | STRF      | Saturation | NOTE            |
+  |------------+------+-------+------+-------------+-----+-----------+------------+-----------------|
+  | por024b-b1 | no   | l2    | senl | boost       | .30 | 2-Noisy   | Low        |                 |
+  | por024b-c1 | yes  | l2    | npnl | fminlsq     | .49 | 4-Clean   | Sigmoid    | Late resp.      |
+  | por026c-a1 | yes  | log2b | senl | boost       | .67 | 5-Perfect | Low        | Exceptional.    |
+  | por026c-d1 | yes  | l2    | senl | boost       | .18 | 4-Clean   | Sigmoid    | Unusually late. |
+  | por027b-b1 | yes  | l2    | npnl | boost       | .21 | 3-OK      | Linear     |                 |
+  | por028b-d1 | yes  | l2    | npnl | boost       | .36 | 3-OK      | Notch      | Late resp.      |
+  | por028d-a2 | no   | l2    | npnl | fminlsq     | .32 | 2-Noisy   | Low        |                 |
+  | por028d-d1 | yes  | log2b | npnl | boost       | .32 | 3-Clean   | Notch      |                 |
+
+** BATCH 242:
+   por025a-c1, por025a-d1, por026a-d1, por026b-a2, por026b-b2, por026b-c2,  has test=train
+
+** Observations:
+   1. SENL isn't generalizing properly at boundaries. Try again!
+   2. SENL gaussians aren't wide enough
+   3. Smoothing RESPAVG via the module's [1 4 1] kernel helps more for low-quality signals, but hurts higher quality ones. 
+   4. Sparseness is probably more important than smoothness, since boosting yields sparse results nearly as good as fminlsq. 
+   5. Every single time discarding the initial silence yielded a better model was a set when the saturation was LOW.
+** Next Steps:
+   1. An MSE metric or which makes single-sample bins and discards outliers 4 or 5 STDEVS from the NL curve
+   2. A NPNL with non-uniform bins and better extrapolation for ends
+   3. A sparse LSQ fitter
+   4. A way of generating these tables automatically, not manually.
+
+* Feb 21, 2013 - Improved nonparametric nonlinearities (GMM)
+  The results aren't fully in yet because the gaussian mixture model (GMM) nonlinearity is extremely slow, and because it occasionally fails to initialize the K-means clustering. 
+  However, for cells that DID complete, the analysis results are very promising.
+
+** BATCH 240 DATA. All cells use prestim silence, log2b compression. Tried three fitters: lsq, fminlsq, boost
+  | CELLID     | BEST NL | BEST FITTER | GMM R^2 | NPNL R^2 | % DIFF | Better STRF? | NOTE                        |
+  |------------+---------+-------------+---------+----------+--------+--------------+-----------------------------|
+  | por025a-b1 | gmm6    | lsq         |    .548 |     .534 |      3 | Slightly     |                             |
+  | por025a-c1 | npnl    | boost       |    .329 |     .329 |      0 | No           |                             |
+  | por025a-c2 | gmm3    | lsq         |    .118 |     .098 |     20 | Slightly     | Incomplete                  |
+  | por025a-d1 | gmm6    | fminlsq     |    .502 |     .499 |      1 | Slightly     |                             |
+  | por026a-b1 | gmm6    | fminlsq     |    .343 |     .302 |     14 | Yes          |                             |
+  | por026a-d1 | npnl    | boost       |    .109 |     .153 |    -29 | Yes          | Unlucky GMM overfit.        |
+  | por026b-a1 | gmm6    | boost       |    .564 |     .554 |      2 | Yes          |                             |
+  | por026b-a2 | gmm3    | fminlsq     |    .277 |     .277 |      0 | No           | Incomplete                  |
+  | por026b-b2 | gmm6    | boost       |    .617 |     .372 |     66 | Slightly     | (Probably needs depression) |
+  | por026b-c1 | gmm6    | lsq         |    .199 |     .198 |      1 | No           | Incomplete                  |
+  | por026b-c2 | gmm3    | lsq         |    .302 |     .220 |     37 | Slightly     | Incomplete                  |
+  | por026b-d1 | npnl    | fminlsq     |    .284 |     .271 |      5 | Yes          | Incomplete                  |
+   #+TBLFM: $6= (round (100 * (($4 - $5) / $5)))
+
+** OBSERVATIONS:
+   1. Looks like in almost every case, GMMs either match performance (improving by only <5%) or clearly win (15 to 66% improvement). 
+   2. Also, in general, the STRFs also look cleaner with the GMM model. 
+   3. gmm6 is occasionally overfitting. gmm3 is better. Probably trying gmm3, gmm4, gmm5, gmm6 is the best idea.
+
+** Next steps:
+   1. Try a 2D sparse bayesian instead of the broken 1D sparse bayesian method I tried.
+      (Unfortunately, this would require rewriting the sparsebayes implementation. It has no support for multidimensional targets.
+   2. Correct the GMM initialization bug. 
+   3. Rewrite the GMM methods to avoid finding Kmeans from the beginning each time. Start from the PREVIOUS step?
+* Feb 25, 2013 - Full coverage planning for 240 and 242
+  Some results for batches 240, 241, and 242 are in, but I'll let Brian analyze them. 
+  
+  Today it seems more important for me to plan out some combinatorics which will fully cover our 'confusion space' right now. We don't know:
+  1. What nonparametnric nonlinearity is working? 
+  2. What amount of sparseness truly helps?
+  3. Which fitter (besides fminlsq, which was our old standby) works best in this new regime.
+
+  I would love to use fminlsq, but it doesn't play well with a sparseness/smoothness penalty. 
+  At least, I can't figure out how to wrap matlab's stupid lsqcurvefit such that it treats the sparseness in the right way. 
+
+** Combinatorics: 6x4x6 = 144 models per cellid. 67 Cellids. 9648 models! Oof...
+ 
+*** Compressor
+    1. log2b: log2 with baseline so positive semidefinite.
+*** FIR Filter 
+    1. firn: Normalization on inputs, normalization on output
+*** Nonlinearity
+    1. npnl: Ye olde "classic" standard, fast to compute and very good except for edges.
+    2. npfnl: Filter-based npnl five deviations wide. Relatively untested.
+    3. npfnl3: Filter-based npnl three deviations wide. Relatively untested. 
+    4. senl: Sparse gaussian mixture model which uses a small number of 1d gaussians (0.2 width) centered at 'representative' data points.
+    5. senl3: Sparse gaussian mixture model with slightly wider gaussians (0.3 width)
+    6. gmm4: Gaussian mixture model which uses four expectation-maximized 2D gaussians to create a nonparametric nonlinearity. 
+*** Fitters
+    1. fmin: Basic line search built in to matlab
+    2. fminlsq: Same, plus a lsqcurvefit() at end
+    3. boost: A simple boosting implementation.
+    4. sb: Sparse bayesian boosting. Kind of like nonlinear gradient descent, but with sparse steps that only go in some directions.
+*** Performance metrics
+    1. mse  : Performance metric is mean squared error, with no smoothness or sparseness penalty.
+    2. mses2: Same as MSE, but a sparseness penalty of 10^-2. Strong sparseness penalty
+    3. mses3: Same as MSE, but a sparseness penalty of 10^-3. 
+    4. mses4: Same as MSE, but a sparseness penalty of 10^-4. 
+    5. mses5: Same as MSE, but a sparseness penalty of 10^-5. 
+    6. mses6: Same as MSE, but a sparseness penalty of 10^-6. Weak sparseness penalty  
+
+** Going forward
+   1. Try a new performance metric than MSE. A blend of L1 and L2 norms is probably a good idea to reduce the effect of outliers. 
+   2. Try to develop an lsq fitter which deals with sparseness.
+   3. New batch which makes training set with TSP only, and with SPN only, then compares NPNLs.

@@ -1,0 +1,130 @@
+#+title: Batch #240 Eyeball Check 
+#+date: Simulation taken on Feb 25-27, 2013
+#+author: Ivar Thorson, Brian Jones
+* Overview Summary
+
+  The goal of this experiment is to answer the following questions. 
+
+  1. Which of the many nonparametric nonlinearities is performing the best on average?
+     /It's REALLY hard to say. But SENL and SENL3 combined were probably the best./
+     
+  2. Which of the many fitters is performing the best on average? 
+     /Boosting, followed closely by the sparse bayes fitter./
+
+  3. Which of the sparseness penalties are performing the best on average?
+     /If I had to pick, probably the weight of 10^-4 or 10^-5 (mses4 or mses5), but it is not good for everything./
+
+  4. Are there any mitigating qualitative factors that need to be considered?
+     /Many cells seem to show things that a depression filter should take care of./
+
+  5. For Batch #240 (Center/Surround), are there a few categories of patterns we can discern when observing best FIR filter coefficients?
+     /Most cells have a strong excitory response in the second 10ms bin, and only care about the center band. This accounts for about half the cells. Other patterns are too varied to make any conclusions yet./
+
+  6. For Batch #242 (Left/Right), are there a few categories of patterns we can discern when observing best FIR filter coefficients?
+
+* Sparseness Penalty
+
+  Ivar chose a metric $d$ of the linear filter sparsity defined as the ratio of the $L_1$ norm to $L_2$ norm, squared. $d$ can vary from a minimum of 1 to a maximum of $n$, where $n$ is the number of parameters. It is thus a comparable metric regardless of how many degrees of freedom $n$ there are -- if the sparsity number $d=3.1$, then it has a dimensionality or complexity of about 3 strong coefficients, and all other coefficients are assumed to be zero. It cannot go below one, the limit at which all the mass of the 'mass' of the filter coefficients is concentrated into a single coefficient. 
+
+  The definition is very simple:
+
+  \begin{equation}
+  d=\left(\frac{\left\Vert c\right\Vert _{1}}{\left\Vert c\right\Vert _{2}}\right)^{2}
+  \end{equation}
+
+  where $\left\Vert c\right\Vert _{1}$ and $\left\Vert c\right\Vert _{2}$ are the one and two norms
+
+  \begin{equation}
+  \left\Vert c\right\Vert _{1}=|c_{1}|+|c_{2}|+...+|c_{n}|
+  \end{equation}
+
+  \begin{equation}
+  \left\Vert c\right\Vert _{2}=\sqrt{c_{1}^{2}+c_{2}^{2}+...+c_{n}^{2}}
+  \end{equation}
+ 
+  In practice, it seems to work appropriately well on the neural data so far. Probably other people have a proper name for this metric since it is so simple other people must be using it for other purposes as well.
+     
+
+* Model structure
+** Loader
+   The same loader was used in every case: *env100*, which loads the stimulus envelope at 100Hz and includes a 0.5s prestim silence.
+** Compressor
+    1. *log2b*: log2 with baseline so that the output is positive semidefinite.
+** FIR Filter 
+    1. *firn*: Normalization on inputs, normalization on output.
+** Nonlinearity
+    1. *npnl*: Ye olde "classic" standard, fast to compute and very good except for edges.
+    2. *npfnl*: Gaussian window filter npnl with filter widths equal to 1/5th of nonlinearity's input domain span. Relatively untested.
+    3. *npfnl3*: Gaussian window filter npnl three deviations wide. Relatively untested. 
+    4. *senl*: Sparse gaussian mixture model which uses a small number of 1d gaussians (0.2 relative width) centered at 'representative' data points.
+    5. *senl3*: Sparse gaussian mixture model with slightly wider gaussians (0.3 relative width).
+    6. *gmm4*: Gaussian mixture model which uses four expectation-maximized 2D gaussians to create a nonparametric nonlinearity. 
+** Fitters
+    1. *fmin*: Basic line search built in to matlab called fminsearch(), iterated 10000 times or until convergence.
+    2. *fminlsq*: First an fminsearch(), followed by lsqcurvefit(), iterated ??? times or until convergence.
+    3. *boost*: A simple boosting implementation. 200 steps taken.
+    4. *sb*: Sparse bayesian boosting. Kind of like nonlinear gradient descent, but with sparse steps that only go in some directions. 200 steps taken.
+** Performance metrics
+    1. *mse*  : Performance metric is mean squared error, with no smoothness or sparseness penalty.
+    2. *mses2*: Same as MSE, but a sparseness penalty of 10^-2. (Strong sparseness penalty)
+    3. *mses3*: Same as MSE, but a sparseness penalty of 10^-3. 
+    4. *mses4*: Same as MSE, but a sparseness penalty of 10^-4. 
+    5. *mses5*: Same as MSE, but a sparseness penalty of 10^-5. 
+    6. *mses6*: Same as MSE, but a sparseness penalty of 10^-6. (Weak sparseness penalty)
+
+* Batch 240 Results:
+
+  Checklist for each cell:
+  1. Does the training set equal the test set? Discard as invalid if so.
+  2. Is the complete row filled out on the heat map?
+  3. Scatter plot tok4: is there a dominating nonlinearity?
+  4. Scatter plot tok5: is there a dominating fitter?
+
+  When evaluating FIR filters:
+  - Penalize noise and appearance
+  - Penalize large coefficients scattered around 'randomly'
+  - Penalize non-sparse things
+  - Penalize slightly large coefficients in first time bin, strongly if in last time bin
+  
+  Possible stereotypes:
+  - Single channel interest only
+  - Inhibition/excitation
+  - Offset inhibition/excitation
+  - Which channel is being excited
+
+** Data table
+ | Cell ID      | NL     | Fitter  | MSE# |  R^2 |     S | Satu-    | Cen.            | Sur.        | Category               | Notes                        |                                                          |              |                  |                                    |                                                                        |
+ |              |        |         |      |      |       | ration   |                 |             |                        |                              | STRF (Hz)                                                | Best Fq (Hz) | Center Stim (Hz) | % Overlap of Excitatory Portion of | Notes on STRF                                                          |
+ |              |        |         |      |      |       |          |                 |             |                        |                              |                                                          |              |                  |       STRF Relative to Center Stim |                                                                        |
+ |--------------+--------+---------+------+------+-------+----------+-----------------+-------------+------------------------+------------------------------+----------------------------------------------------------+--------------+------------------+------------------------------------+------------------------------------------------------------------------|
+ | por023a-b1   | npnl   | boost   |    5 | .566 |  3.05 | Linear   | +3              | None        | Center only            |                              | +1850->2800                                              |         2366 | 1000->2000       |                                 20 |                                                                        |
+ | por023a-c2   | senl3  | fminlsq |    5 | .141 |  7.54 | Low      | +5,-6,+7        | -2,-3,+8    | Leading Surr           |                              | NA                                                       |           NA | 1000->2000       |                                 NA |                                                                        |
+ | por024a-a1   | npnl   | boost   |    6 | .306 |  5.40 | Sigmoid  | +2,+3,-6        | +2          | Simul                  | Depression candidate         | +950->1600,-2100->3100,+3200->4250                       |         1167 | 1200->2400       |                                 80 | 2nd Weaker +peak outside Center, Strong -peak %20 overlap Center       |
+ | por024a-b1   | senl3  | fminlsq |    6 | .452 |  7.58 | Low      | +2,+3,-4        | None        | Center only            |                              | +1350->1850,+2100->2800,-3200->3900                      |         1544 | 1200->2400       |                                100 | 2nd Stronger +peak outside Center                                      |
+ | por024a-c1   | senl3  | sb      |    3 | .116 | 10.11 | Invert U | +4,-6           | +4,-5,-8    | Simul                  | Depression candidate         | -950->1300,+1350->2000,-2600->3500,-4600->6000           |         1490 | 1200->2400       |                                100 | Strong -peak %20 overlap Center                                        |
+ | por025a-b1   | senl   | sb      | None | .542 |  7.93 | Low      | +2,+3,-4,-6     | None        | Center only            | Depression candidate         | +1100->1700                                              |         1342 | 950->1600        |                                 90 | Clean single +peak                                                     |
+ | por025a-c1   | npfnl  | sb      | None | .339 |  6.83 | Sigmoid  | +2              | None        | Center only            |                              | +850->1350                                               |         1088 | 950->1600        |                                 90 | Clean single +peak                                                     |
+ | por025a-c2   | npfnl  | sb      | None | .150 |  14.1 | Low      | +2,-4           | -1,+2,+3,-4 | UGLY                   | Depression candidate         | +500->800 +900->1200                                     |          600 | 950->1600        |                                 30 | 2nd Weaker +peak %100 Center, appears bilobed, all peaks preceed 20ms  |
+ | por025a-d1   | npfnl  | boost   |    4 | .496 |  2.55 | Low      | +2,-5           | None        | Center only            | Depression candidate         | +900->1500                                               |         1167 | 950->1600        |                                100 | Clean single peak                                                      |
+ | por026a-b1   | npfnl  | boost   |    3 | .379 |  2.03 | Low      | +2,-7           | None        | Center only            | Depression candidate         | +1000->2600,-2000->3100,+3100->8000                      |         1257 | 1000->1600       |                                 60 | 2nd Strong -peak ouside Center, 2nd bilobed +peak outside center       |
+ | por026a-d1   | npnl   | boost   | None | .152 |  7.92 | Linear   | -3,-4,+8,+11    | +2,-7,-9    | Leading Surr           | Center/Surr offset           | -450->650,-700->1050,+1000-2050,-2350->3450,+4700->8000  |         1342 | 1000->1600       |                                 70 | Multiple peaks, many preceed 20ms                                      |
+ | por026b-a1   | gmm4   | boost   |    4 | .561 |  3.05 | Sigmoid  | +3              | -3          | Simul                  |                              | +980->1550,-2100-3700,+4400->8000                        |         1251 | 800->1100        |                                 30 | Bilobed +peak with %30 overlap with Center at 50ms                     |
+ | por026b-a2   | senl   | boost   |    5 | .283 |  4.99 | Low      | +3,-6           | -3, +7      | Simul                  | Depression candidate         | +880->1550,-2800-3970                                    |         1126 | 800->1100        |                                 40 |                                                                        |
+ | por026b-b1   | senl   | boost   |    5 | .371 |  2.90 | Linear   | +2,-4           | None        | Center only            | Depression candidate         | +850->1700,-2250-3250                                    |         1208 | 800->1100        |                                 40 |                                                                        |
+ | por026b-b2   | senl   | boost   |    5 | .646 |  6.18 | Low      | +1,+2,-4,-6     | +1,-4       | Simul                  | Depression candidate         | NA                                                       |           NA | 800->1100        |                                 NA |                                                                        |
+ | por026b-c1   | npfnl  | boost   | None | .200 |  3.22 | Linear   | +2              | None        | Center only            | Wavy NL.                     | +350->880,+1000->1300,-1150->1550,-2650->2800,+3050-4000 |          666 | 800->1100        |                                 20 | Multiple peaks, strongest +peak broadly tuned                          |
+ | por026b-c2   | senl3  | boost   |    5 | .352 |  2.79 | Low      | +5              | None        | Center only            |                              | +700->1000,+1000->1400,+1400->1850,+2600->3800           |         3002 | 800->1100        |                                 50 | Trilobed +peak ranging from 700->1850, 2nd Strong +peak outside Center |
+ | por026b-d1   | npfnl  | boost   |    3 | .295 |  2.38 | Low      | -3              | +5          | Center +/Surr - Offset |                              | -480->750,-775->1200,-2450->3100,+4900->7000,+750->1700  |         1342 | 800->1100        |                                50? | Bilobed -peak %90 at Center, bilobed +peak 60ms delay %50 at Center    |
+ | por026c-a1   | senl3  | fminlsq |    3 | .670 |  2.43 | Low      | +2              | None        | Center only            |                              | +800->1700                                               |         1200 | 600->900         |                                 10 | Clean single +peak                                                     |
+ | por026c-b1   | senl3  | boost   | None | .536 |  7.59 | Low      | +2,+3,+4,-7,-10 | +4,-10      | Simul                  | Depression candidate         | +900->1280,+1350->2850,+500-710                          |         1587 | 600->900         |                                 10 | Multiple +peaks ouside Center at <20ms                                 |
+ | por026c-c1   | npnl   | boost   |    4 | .529 |  2.21 | Linear   | +3              | None        | Center only            |                              | +550->750,+840->1240,-5600->7100                         |         1043 | 600->900         |                                 60 | Bilobed +peak overlaps Center, Strongest +peak outside Center          |
+ | por026c-d2   | senl   | boost   |    2 | .187 |  1.00 | Low      | +2              | None        | Center only            |                              | +650->1500,-2150->4500,+5200->9450,-6200->16000          |         1119 | 600->900         |                                 40 | Bilobed +peak overlaps Center, Strongest +peak outside Center          |
+ | por027a-a1   | senl   | boost   |    6 | .130 |  5.27 | Linear   | +2,+3,-6,-7     | None        | Center only            | Depression candidate,Wavy NL | +820->1800,-3100->4250                                   |         1088 | 950->1350        |                                 40 | Broad +peak overlaps Center, Strongest +peak overlaps Center           |
+ | por027a-b1   | npfnl3 | boost   |    4 | .270 |  2.07 | Linear   | +2              | None        | Center only            |                              | +970->2350,-2600->4570                                   |         1714 | 950->1350        |                                 40 | Broad +peak overlaps Center, Strongest +peak outside Center            |
+ | por027b-b1   | npnl   | fmin    |    4 | .229 |  6.73 | Linear   | +1,+2           | +1          | Leading Surr           |                              | +1150->1650,+250->350                                    |         1390 | 1100->1700       |                                100 | Strong +peak overlaps Center, Weak +peak outside Center                |
+ | por028b-b1   | senl3  | boost   |    4 | .188 |  3.34 | U        | -3              | +3          | Simul                  |                              | +1900->3150,-2900->4250,-1050->1300                      |         2349 | 1100->1400       |                                  0 | Weak -peak overlaps Center                                             |
+ | por028b-c1   | senl   | boost   |    5 | .211 |  2.68 | Sigmoid  | +2              | -4          | Leading Cent           | Wavy NL                      | +910->1440,+3100->4100,-2400->3100                       |         1167 | 1100->1400       |                                 70 | Strongest +peak overlaps Center                                        |
+ | por028b-d1   | npnl   | boost   |    4 | .345 |  4.83 | Linear   | +2,-6           | +1,+3,-7    | Leading Surr?          | Depression candidate         | +940->1480                                               |         1208 | 1100->1400       |                                 80 | Clean single +peak                                                     |
+ | por028d-a2   | npfnl  | boost   |    6 | .262 |  3.61 | Low      | -5              | +2,-8       | Leading Surr           |                              | +1125->1775                                              |         1350 | 1800->2200       |                                  0 | Clean single +peak outside Center                                      |
+ | por028d-d1   | npnl   | boost   |    4 | .311 |  5.66 | U?       | +2,-6,-9        | +2,-11      | Simul                  | Depression candidate         | +1080->2270,-880->1125                                   |         1342 | 1800->2200       |                                 25 | Strongest +peak outside Center                                         |
+ | por031a-09-1 | npnl   | boost   |    5 | .031 |  2.65 | Linear   | +5              | None        | Center only            |                              | NA                                                       |         8463 | 4000->5700       |                                  0 | Tor_tuning map would not allow me to measure STRF range                |
