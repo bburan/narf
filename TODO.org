@@ -1,3 +1,10 @@
+* Reports
+  - Sparsity of NPFNL better than NPNL needs to be proven.
+  - Splitter that holds out 10% of data in the boosting?
+  - Termination condition not absolute, but relative to initial starting point
+  - Boosting termination conditions checked and possibly improved
+  - Last N times the held out data has gone up 
+
 * Engineering:
   1. [-] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
@@ -36,8 +43,6 @@
   9. [ ] Write a crash course guide on using NARF 
 
 * Discussions with Stephen
-  - Boosting termination conditions checked and possibly improved
-    - Termination condition not absolute, but relative to initial starting point
 
 * Cycle of Improvements
   - [ ] Improve compressors
