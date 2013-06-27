@@ -100,6 +100,34 @@ end
 
 if isfield(params,'specialbatch'),
     switch lower(params.specialbatch),
+      case 'voc',
+        
+        % spn / center-surround
+        keepfiles=zeros(size(cellfiledata));
+        cleanfiles=zeros(size(cellfiledata));
+        keepcellids={};
+        for ii=1:length(cellfiledata),
+            parms=dbReadData(cellfiledata(ii).rawid);
+            if isfield(parms,'Ref_Subsets') && parms.Ref_Subsets~=5,
+                keepfiles(ii)=1;
+                keepcellids=union(keepcellids,cellfiledata(ii).cellid);
+            end
+        end
+        
+        for ii=1:length(cellfiledata),
+            parms=dbReadData(cellfiledata(ii).rawid);
+            if ismember(cellfiledata(ii).cellid,keepcellids) &&...
+                    ((isfield(parms,'Ref_SNR') && parms.Ref_SNR>=100) ...
+                     || ~isfield(parms,'Ref_SNR')),
+                cleanfiles(ii)=1;
+            end
+        end
+        
+        keepidx=find(cleanfiles);
+        cellfileids=cellfileids(keepidx);
+        cellfiledata=cellfiledata(keepidx);
+        cellids=keepcellids;
+        
       case 'cs',
         
         % spn / center-surround
@@ -121,7 +149,7 @@ if isfield(params,'specialbatch'),
         cellfileids=cellfileids(keepidx);
         cellfiledata=cellfiledata(keepidx);
         cellids=keepcellids;
-      case 'lr',
+       case 'lr',
         
         % spn / left-right same spectral features batch
         keepfiles=zeros(size(cellfiledata));

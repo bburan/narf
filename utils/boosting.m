@@ -71,10 +71,29 @@ s = objfn(x);
 l = length(x_0);
 n = 0;  % Step number
 s_delta = s;
-
 while ~termfn(n, x, stepsize, s_delta)    
     x_next = x;  % x_next holds best stepping direction so far
     s_next = s;
+    
+    global XXX
+    thismse=[XXX{end}.score_train_mse XXX{end}.score_test_mse];
+    thiscorr=[XXX{end}.score_train_corr XXX{end}.score_test_corr];
+    
+    if n==0, mse1=[1 1]; mse0=thismse; corr1=thiscorr;  end
+    mse1(n+2,:)=thismse./mse0;
+    corr1(n+2,:)=thiscorr;
+    fprintf('r_fit:    %8.4f      r_test:   %8.4f\n',thiscorr);
+    fprintf('mse_fit:  %12.8f  mse_test:  %12.8f\n',thismse);
+    fprintf('msen_fit: %12.8f  msen_test: %12.8f\n',...
+            mse1(n+1,:)-mse1(n+2,:));
+    if strcmp(XXX{1}.cellid,'oni009b-a1'),
+        sfigure(1);clf;
+        subplot(2,1,1);plot(mse1);legend('fit','test');
+        title('normalized mse');
+        subplot(2,1,2);plot(corr1);drawnow;
+        title('corr coef');
+    end
+    
     
     % Try to take a step along every dimension
     fprintf('Boosting');
@@ -109,24 +128,26 @@ while ~termfn(n, x, stepsize, s_delta)
     end
         
     % If the search point has not changed, step size is too big.
-     if all(x == x_next)
-         stepsize = stepsize / stepscale;
-         fprintf('Decreased stepsize to %d\n', stepsize);
-     else        
+    if all(x == x_next)
+        stepsize = stepsize / stepscale;
+        fprintf('Decreased stepsize to %d\n', stepsize);
+    else        
         % Compute the improvement in score
         s_delta = s - s_next;
-    
+        
         % Compute the direction of the step;
         dirs = 1:l;
         dir = dirs(x ~= x_next);
-                
+        
         % Take a step in the best direction
         x = x_next; 
-        s = s_next;
+        % svd -- recalc error to reflect x_next in XXX
+        s = objfn(x);
         
         % Print the improvement after stepping
         fprintf('coef# %3d, delta: %d, score:%d\n', dir, s_delta, s);
         n = n + 1;
+        
      end
     
 end
