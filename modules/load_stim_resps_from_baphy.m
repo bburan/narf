@@ -139,7 +139,10 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         % compressor results in complex numbers being developed. This
         % should be fixed on the baphy side, but for now let's just
         % add a workaround here.
-        if strcmp(mdl.stimulus_format, 'envelope')
+        if strcmp(mdl.stimulus_format, 'envelope') ||...
+                strcmpi(mdl.stimulus_format, 'gamma') ||...
+                strcmpi(mdl.stimulus_format, 'specgram') ||...
+                strcmpi(mdl.stimulus_format, 'specgramv'),
             stim = permute(stim, [2 3 1]);
             stim = abs(stim);
         end
@@ -212,6 +215,8 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             options.tag_masks={'Reference'};
             [resp, tags] = loadspikeraster(respfile, options);
         end
+        
+        %keyboard
         
         % SVD pad response with nan's in case reference responses
         % were truncated because of target overlap during behavior.
