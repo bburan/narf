@@ -35,6 +35,10 @@
          - Jackknifing doesn't work with performance metrics besides MSE right now?
   9. [ ] Write a crash course guide on using NARF 
 
+* Discussions with Stephen
+  - Boosting termination conditions checked and possibly improved
+    - Termination condition not absolute, but relative to initial starting point
+
 * Cycle of Improvements
   - [ ] Improve compressors
   - [ ] Improve core of models
@@ -47,35 +51,37 @@
 	 Logfit (1 parm) + scale & delay amount per channel (2*n parms) + respavg-estimated stateful depression amount (2*n parms)
   6. [ ] Is it better to bin, reload from baphy, resample, downsaple, decimate, convolve, smooth, or infer respavg?
          Try decimate, or resample (@(x,n) abs(decimate(x,n)),  @(x,n) abs(resample(x,1,n))  
+
 * Experiments:
-  1. [ ] Probabilistic FIR filters
+  1. [ ] Variable step boosting
+  2. [ ] Probabilistic FIR filters
 	 + Per-coefficient probabilistic distributions to replace FIR filters
 	 + After training, can we get an idea of the STRF variance via reverse correlation?
 	   - Start from RESPAVG signal at end
 	   - Numerically zero-find to estimate the pre-NPNL stimulus, starting from the estimate from the forward pass
 	   - For each filter coeff, push in the reverse-correlated distribution (several thousand points)
 	   - Plot the histograms for each FIR coef as a line plot. 
-  2. [ ] Non-Parametric Wavelets for feature extraction
+  4. [ ] Non-Parametric Wavelets for feature extraction
 	 + Make a spike-triggered average filter bank instead of a gammatone
          + Plot STA distributions of sound intensities at each delay (i.e. make a heatmap)
-  3. [ ] Non-Parametric activity-scaled auto-correlation to find time-varying response
+  5. [ ] Non-Parametric activity-scaled auto-correlation to find time-varying response
 	 + Idea: Do NPNL-like transform to autocorrelated ISI data
 	 + Idea: Sort spikes by ISI times
 	    - Take STA/STC of each quartile.
 	    - Are they different? If so, we have proof that model is nonstationary.
-  4. [ ] Estimating Time-Varying State
+  6. [ ] Estimating Time-Varying State
 	 + What if we use RESPAVG to compute the depression state, and fit the depression amounts to that?
-  5. [ ] Can I make a time-compensating autocorrelation NPNL?
-  6. [ ] Sparsifying based on relevancy of coefficients	 
+  7. [ ] Can I make a time-compensating autocorrelation NPNL?
+  8. [ ] Sparsifying based on relevancy of coefficients	 
 	 Vary each parameter deterministically or stochastically
 	 Estimate the amount variance which decreases the MSE by a set amount
 	 This should let us determine the "relevancy" of each parameter
 	 Sort all the parameters, and take just the most relevant ones!
-  8. [ ] GMM without slow EM step:
+  9. [ ] GMM without slow EM step:
 	 For each point, take K nearest neighbors. 
 	 Compute 2D gaussian for that point. 
 	 Flatten that 2D gaussian and push into SENL's 1D input
-  9. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
+  10. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
   11. [ ] How well does the MSECHEAT algorithm do?
 	  (Tries several different sparsity values in sequence, then picks the best one)
   12. [ ] Make a gain-changing filter, something like a FIR but with per-pixel gains? After all, by the time the signal reaches cortex, neural responses are likely
@@ -258,3 +264,4 @@
          - [ ] Is the training R^2 usually higher than the test?
          - [ ] Does MSES have an effect?
          - [ ] Normalization is done across files or not?
+Didn't work well: test/train scatter plot with dot coloring by cellid or model type
