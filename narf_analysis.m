@@ -963,7 +963,7 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
             %c{i,10} = db_results(i).val_nlogl;
             %c{i,11} = db_results(i).est_corr;
             c{i,11} = db_results(i).r_fit;
-            %c{i,12} = db_results(i).sparsity;
+            c{i,12} = db_results(i).sparsity;
             %c{i,13} = db_results(i).smoothness;
             c{i,14} = db_results(i).lastmod; 
             %c{i,15} = char(db_results(i).notes);           

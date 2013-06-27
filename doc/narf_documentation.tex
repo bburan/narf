@@ -103,6 +103,7 @@ The structure which holds the list of functions $f_1, f_2, ...$ is therefore cal
 \subsection{Module Fields}
 
 If \textbf{F()} is a function to be used in the NARF architecture, it must satisfy a few core requirements to be used properly. These features are:
+
 \begin{enumerate}
 \item \textbf{F()} must be placed in a directory where NARF can find it. 
 \item \textbf{F()} must return a default struct \textbf{m}
@@ -154,6 +155,37 @@ editable.
 m to overwrite the default values of m.
 \end{enumerate}
 \end{enumerate}
+
+
+** Module fields that must ALWAYS be defined
+   m.mdl
+   m.name 
+   m.fn 
+   m.pretty_name 
+   m.editable_fields 
+   m.isready_pred 
+   
+** Module fields that are specific to THIS MODULE
+   m.input = 'stim'; 
+   m.time  = 'stim_time';
+   m.output = 'stim';
+   
+** Optional module fields
+   m.plot_in_summary = @omefun;
+   m.plot_fns = {};
+   m.plot_fns{1}.fn = @(stack, xxx) do_plot_channel_vs_time(stack, xxx, m.time, m.output);
+   m.plot_fns{1}.pretty_name = 'Channel vs Time';
+   m.plot_fns{2}.fn = @(stack, xxx) do_plot_channels_as_heatmap(stack, xxx, m.output);
+   m.plot_fns{2}.pretty_name = 'Channel vs Time (Heatmap)';
+   m.plot_gui_create_fn = @create_chan_selector_gui;
+   
+** Boilerplate that I hate
+   
+   % Overwrite the default module fields with arguments 
+   if nargin > 0
+   m = merge_structs(m, args);
+   end
+   
 
 \subsection{XXX data structure}
 

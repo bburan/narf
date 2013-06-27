@@ -49,7 +49,7 @@
 
     While helping Daniela with her homework, I learned about how some neurons are pitch-sensitive and essentially fire in a way that suggests they can reconstruct a missing or attenuated fundamental frequency of a natural sound from its harmonics. I immediately imagined this phenomenon occurring as some sort of second-order effect resulting from combinations of frequency-sensitive neurons. Graphically, it would be something like this:
     
-    #+LaTeX: \begin{center}\includegraphics[height=5in]{pitch-sensitive-neurons.pdf}\end{center}
+    #+LaTeX: \begin{center}\includegraphics[height=5in]{figures/pitch-sensitive-neurons.pdf}\end{center}
 
     Admittedly, this is a pretty crude notion and probably a million other people have already done careful experiments that explain pitch sensitivity in more nuance. I'm just wondering that if we had higher-resolution ways of getting STRFs that showed multiple sensitive frequencies, and we presented natural spectrally-rich and harmonically correlated stimuli (both with and without the fundamental frequency) to the ferrets, is it possible that we might find some neurons in A1 that are more pitch-sensitive than frequency-sensitive? Would the latencies of such neurons compared to the latency of purely frequency-sensitive neurons tell us anything about their connectivity?
 
@@ -110,7 +110,7 @@
 
     The equations can be either discrete or continuous. Uppercase letters are matrices, lowercase letters are vectors. In block diagram form, the above model looks like this:
 
-    #+LaTeX: \begin{center}\includegraphics[width=4in]{Typical_State_Space_model.png}\end{center}
+    #+LaTeX: \begin{center}\includegraphics[width=4in]{figures/Typical_State_Space_model.png}\end{center}
 
     These types of formulations are well researched and immediately applicable to physical systems of all kinds, including neural models. For simple systems ABCD have constant elements, but in general models the elements of ABCD can be functions of other variables. If $u$ is the history of the last 10 STIM values, then matrix $B$ is effectively our linear filter, assuming it has constant elements. For models with depression terms, we could argue that depression's statefulness and is creating functionality somewhat like the $A$ matrix, assuming that depression was modeled using first-order exponentials. Finally, the nonparametric nonlinearity is somewhat similar to the effect of matrix $C$. Most systems don't have any feed-through terms $D$. Neural systems would never have this block unless we were stimulating neurons electrically and trying to avoid the confounding effect of applied voltage stimulus on the measurement of spikes. 
 
@@ -180,7 +180,7 @@
 
     At the end of the day, we have been focused about the correlation coefficient. It's great, it's convenient, it's understandable, but it's not the whole story. It's just a single number being used to describe systems with lots of variance. Probably everyone in this lab is familiar with Anscombe's Quartet, which all have the same mean, variance, regression line, and correlation:
 
-    #+LaTeX: \begin{center}\includegraphics[width=4in]{anscombes_quartet.png}\end{center}
+    #+LaTeX: \begin{center}\includegraphics[width=4in]{figures/anscombes_quartet.png}\end{center}
 
     Perhaps we need to start at saving other metrics in the NARF browser as well or plotting these correlation diagrams to double-check. Or, automatically detecting and excluding very rare points from the correlation process before computing the final correlation could also give a more accurate metric about the model performance.
 

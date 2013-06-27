@@ -1,0 +1,209 @@
+#+TITLE: Model Survey
+#+LaTeX_CLASS: ivararticle
+#+OPTIONS: toc:nil
+
+* Overview
+
+  Across a population of neurons, there will be some aspects of a mathematical model which improve our predictions of the activity of most neurons. There will also be some aspects that can improve predictions of some neurons, yet worsen predictions for others. After all, not all neurons will necessarily be completely average, and some degree of variation in function from neuron to neuron is to be expected. We therefore break the problem of comparing neural models into two parts: models that improve prediction scores in general across all neurons, and models that improve prediction scores for specific neurons only. 
+ 
+  When examining which mathematical models are "best overall", using some aggregate metric of performance like the "mean correlation" is probably fine. The interpretation is likewise fairly straightforward; we plot the population mean performance for each model and examine which neurons have the best performance. In this report, we mostly use bar plots for these types of comparisons. 
+
+  When determining models that improve our predictions only for a limited set of neurons, we are put in a difficult position: we must find models that describe some subgroup of neurons /significantly better/ despite the fact that this model has lower /average/ predictive performance for most other neurons. One point that has yet to be resolved is determining whether a subgroups is due to some physical effect or just natural, random variation of function amongst the population. 
+
+  Our goal will be to somehow isolate clusters of neurons which have similar characteristics; this is a first step toward determining the directions of 'principal model variations' that can quantify differences of function in cell to cell. 
+   
+  As a first step, some sort of rank plot may help exaggerate differences between different models. In these type of plots, models that perform well appear mostly red and blue; they work very well for some subset of neurons in blue, yet they work poorly for most other neurons. 
+   
+  Interesting to note about this type of plot is that MORE variations on similar models can actually help us cluster models better, because the informative model variations will "pop out" more as they marginally beat out other similar models.    
+     
+  Regardless, for simplicity it will probably be most profitable not to study subsets of neurons too much until we have raised the average performance as high as we can. 
+
+* Model Structure
+
+** General Model Structure
+   
+   Based on a combination of arguments from neural physiology and computational convenience, we have been categorizing modules that make up a model into six different categories:
+
+  1. FEATURE: A signal extracted from audio stream and used as the input to the model.
+  2. COMPRESSOR: A monotonic nonlinearity intended to represent the spike-rate compression effects resulting from the finite limit at which a neuron can fire. 
+  3. FILTER: A finite impulse response, depression filter, or
+  4. NONLINEARITY: A nonlinear transformation to the output of the FIR filter. 
+  5. METRIC: The performance measurement used to determine how 'good' a model is.
+  6. FITTER: The algorithm by which the free parameters are fit. 
+
+  Since there are a potentially bewildering number of combinations of modules and keywords that we can use to create neural models, we'll start from a fixed model structure and begin to perturb each keyword in various directions, noting the effect on total model performance. 
+
+  \footnotesize
+  |              |   # | Model Structure                              | Keywords                                         |
+  |--------------+-----+----------------------------------------------+--------------------------------------------------|
+  | Feature      | 241 | =[???]_log2b_firno_initrc_nonl_mse_boost=    | env100, env100n                                  |
+  | Compressor   | 241 | =env100_[???]_firno_initrc_nonl_mse_boost=   | nocp, cp1, cp2, cp3, log1b, log2b, log3b, log4b, |
+  |              |     |                                              | log5b, logfit, root2, root3, root4, root5        |
+  | Filter       | 241 | =env100_log2b_[???]_initrc_nonl_mse_boost=   | firno,firn,fir2n,firn2np,irn,irnr,               |
+  |              |     |                                              | firnpr,firnv2,depn,depno,depped,inex             |
+  | Nonlinearity | 241 | =env100_log2b_firno_initrc_[???]_mse_boost=  |                                                  |
+  | Metric       | 241 | =env100_log2b_firno_initrc_nonl_[???]_boost= |                                                  |
+  | Fitter       | 241 | =env100_log2b_firno_[???]_nonl_mse_[???]=    |                                                  |
+
+* Survey Keyword Description
+
+  One of the intents of this survey was to consider many different model keywords. The following is a brief summary of each keyword. 
+
+**  Feature Extraction Keywords
+
+*** env100
+    The default. 
+*** env100n  
+    No prestim.    
+
+*** rcwavelet
+    A wavelet derived by reverse correlation
+
+*** gt1
+    Single Gamma Tone
+
+*** gt2
+    A pair of gamma tones in the two best channels.
+
+*** gtbank
+    Gammatone bank
+
+** Compressor Keywords
+   In the following, let $x$ be the input to the compressor module and $y$ be the output of that module. 
+*** nocp
+    No compression. Not much to say here. 
+    \[ y = x \]
+*** cp1
+    An upside-down exponential. $\phi$ parameters are fit to maximize. If multiple channels are present, the MSE of /one/ of the channels is minimized. There is no attempt to balance the fit amongst channels since it was assumed that the sensitivity of a neuron would probably be in a single input channel.
+    \[ y =\phi _{2} - (\phi_{2} - \phi_{1}) e^{\phi_{3}\cdot\vert{}x{}\vert} \]
+*** cp2 
+    Sigmoidal compression
+*** cp3 
+    The inverse of a quadratic polynomial:    
+    \[ y = \frac{1}{\phi_{1} \cdot{} x^{2} + \phi_{2}\cdot{}\vert{}x\vert{} + \phi_{3}}\]  
+    Parameters are fit. 
+*** log1b    
+*** log2b
+*** log3b  
+*** log4b
+*** log5b
+*** log1nb
+*** log2nb
+*** log3nb
+*** log4nb
+*** log5nb
+*** logfit
+*** root2
+*** root3
+*** root4
+*** root5
+
+** Survey of Filters
+*** delay1
+*** delay2
+*** delay3
+*** delay4
+*** depn
+*** depno
+*** depped
+*** firno
+*** firn
+*** fir2n
+*** firn2np
+*** firnpr
+*** firnv2
+*** inex 
+*** irn
+*** irnr
+
+** Survey of Nonlinearities
+*** nonl
+*** npnl
+*** npfnl
+*** npfnl0
+*** senl
+
+** Survey of Performance Metrics
+*** err10
+    TODO: Is the absolute val being done BEFORE or AFTER the subtraction? The former is bad, the latter is good. 
+*** err15
+*** mse
+*** mses4
+*** mses5
+*** mses6
+*** mses7
+*** mses8
+*** mses9
+*** mses10
+*** mses11
+*** mses12
+
+
+** Survey of Fitters and Initial Conditions
+*** boost
+*** anneal
+*** boostperfile
+*** fmin
+*** fminu
+*** genetic
+*** fminlsq
+*** qboost
+*** qfmin
+*** qlsq
+*** sb
+
+** Survey of Initial Conditions
+
+*** initrc
+    Initializes to reverse correlation
+*** init0
+    Initializes to 0's
+
+** Surveys Not Tested
+
+   These things were not tested
+   1. Does smoothing respavg improve the quality of fits? (=inferp1=, etc)
+   2. Is this analysis also valid at higher sampling rates (200hz?)?
+
+* Discussion
+
+** Compressors
+   Looking at the simple bar plots, we can say from the data that compression almost always helps; every compressor outperforms the =nocp= tag on average. 
+   TODO: Figure
+   
+   It is disappointing that trying to fit the compressors initially produces such poor results. Whether this is a result of the parameterization, interaction with the FIR filter, or simply noisy data is hard to determine. 
+
+   Future suggestions for compressors include:
+   1) Start with a good default compressor. After fitting once, refit the compressor, then refit the filter again. 
+   2) Re-parameterize the log filters so they are easier to fit, since really they have just a single parameter.    
+   3) Define a sqrt compressor with a nonzero firing rate for no stimulus.
+  
+   Ideas that were considered but were then abandoned include:
+   1) Define a logarithmic compressor which uses base 2, 3, 4, 5, 6 instead of e. Phi = [zerorate, exponent]. Abandoned since later scaling or normalization can effectively transform one log base into another, since they only differ by a constant factor. Remember: $\log_{a}(x)/\log_{a}(b) = \log_{b}(x)$
+
+** Initial Conditions
+
+   Future suggestions for initial conditions include:
+   1) A sparse prior with just a handful of nonzero coefficients in the 10-40ms range. 
+   2) An inv gaussian prior
+
+** Fitters
+   
+   There is a tradeoff in complexity between nonlinearity and filter; simple filters have complex nonlinearities, and complex nonlinearites make simpler filters. On the other hand, this duality is convenient because we can enforce a 'smoothness' penalty on the nonlinearity and a "sparseness" penalty on the filter and get something that is easily interpreted. 
+
+   Shboo3 has equivalent performance to boosting if there is no nonlinearity, and is /slightly/ more sparse. If there is a nonlinearity, shboo3 doesn't work as well. This suggests to me that shrinking works poorly for nonlinearly compensated systems; they are pretty much restricted to purely linear parameters. 
+
+
+     
+* Future work
+
+
+** Other Compressors
+*** cpnpnl
+    Use an NPNL as a compressor...?
+*** Log2c
+    Included both compressed and uncompressed signals. Works well, but doubles the number of FIR coefs so is not really a fair comparison. 
+
+** Obsolete? 
+*** env100rr
+    Square root.    
