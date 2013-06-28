@@ -21,8 +21,6 @@ if ~exist('parent_handle', 'var')
     parent_handle = figure('Menubar','none', 'Resize','off', ...
        'Units','pixels', 'Position', [20 50 w h],...
        'Name', 'NARF Analysis Browser', 'NumberTitle', 'off');
-   drawnow;
-   pause(0.1);
 end
 
 db_results = []; % Shared amongst local functions that need common SQL query results
@@ -122,8 +120,6 @@ handles.refresh_analysis = uicontrol('Parent', left_panel, ...
           'Callback', @any_condition_changed_callback); 
 
 % Configure the analyses table selection to update the center and right panels
-drawnow;
-pause(0.1);
 hJS = findjobj(handles.analyses_table); 
 hJT = hJS.getViewport.getView;
 hJT.setNonContiguousCellSelection(false);
@@ -898,8 +894,6 @@ db_results_table = uitable('Parent', bottom_panel, ...
                        'est_corr', 'Sparse', 'Smooth', ...
                        'Last Mod.', 'Note'}, ...
         'Position', [pad pad w-pad*2 bh-ts-pad*2]);
-
-drawnow;
     
 % Set up the DB Results table widget behavior
 hJScroll = findjobj(db_results_table); 
