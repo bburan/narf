@@ -1,4 +1,4 @@
-function [nlogl, penalty] = pm_nlogl()
+function [nlogl, penalty, val_nlogl] = pm_nlogl()
 % pm_nlogl()
 %
 % Performance metric: 
@@ -9,8 +9,10 @@ function [nlogl, penalty] = pm_nlogl()
 
 global XXX META STACK;
 
+nlogl = XXX{end}.score_train_nlogl; 
+val_nlogl = XXX{end}.score_test_nlogl; 
+
 if ~isfield(META, 'sparsity_weight')
-    nlogl = XXX{end}.score_train_nlogl; 
     penalty = 0;
 else    
     [fir_mods, fir_idxs] = find_modules(STACK, 'fir_filter');
@@ -20,6 +22,5 @@ else
             sparsities(end+1) = sparsity_metric(fir_mods{ii}{pp}.coefs);
         end
     end
-    nlogl = XXX{end}.score_train_nlogl;
     penalty = (META.sparsity_weight * sum(sparsities));
 end

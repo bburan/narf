@@ -1,35 +1,42 @@
+* Iterative boosting
+  - Quick & dirty boost algorithm that fits each module separately. 
+  - Pack and unpack accept optional arguments to pack only a particular number
+    - Requires changing interface to fit algorithms?
+  - Provide a "Coefficient mask" that fits only certain params?
+
 * NEXT STEPS:
-  - Termination condition not absolute, but relative to initial starting point
-  - Boosting with 10% hold-out data (cross validation)
-  - Sparsity of NPFNL better than NPNL needs to be proven.
-  - Boosting termination conditions checked and possibly improved
-  - boostnrefitcp
-  - Last N times the held out data has gone up 
-  - pfs (post-fit-shrink based on effect)
+  - [X] Termination condition not absolute, but relative to initial starting point
+  - [X] Find out why err10, err15 not working (Interference from some plotting code SVD inserted while debugging)
+  - [ ] Boosting variant: Cheat and stop whenever the validation set error goes up.
+  - [ ] Boosting variant: Fit each module separately
+  - [ ] Boosting variant: terminate when last N times the 10% held out data error has gone up 
+  - [ ] pfs (post-fit-shrink based on effect)
+  - [ ] Put sparsity metric stuff into the DB so NPFNL vs NPNL can be compared on that axis
 
 * Engineering:
-  1. [-] Default per-paramset, per-channel heatmap graph fns:
+  1. [ ] TALK WITH STEPHEN, AND WHEN THE QUEUE IS EMPTY, DO THE VALIDATION/TEST  and EST/TRAINING  set naming replacements!
+  2. [-] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [X] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  2. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
-  3. [ ] Safety check so that these modules do not allow unifiers/splitters
+  3. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
+  4. [ ] Safety check so that these modules do not allow unifiers/splitters
          - Correlation, MSE, bayesian, loader, etc
 	 - Split normalization or not?
-  4. [ ] During insert into DB, take a bunch of metrics
+  5. [ ] During insert into DB, take a bunch of metrics
 	 - [ ] Sparsity is not going into the DB
 	 - [ ] More metrics should go into the DB
 	 - [ ] Total spike count should go into DB
 	 - [ ] Elitist browsing (Shows ONLY THE HIGHEST MODEL of each cell given current masks)
-  5. [ ] Repair Fitters 
+  6. [ ] Repair Fitters 
          - [ ] Remove, then re-add test_set data by default to make fitters faster
          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  6. [ ] Profile and look for optimizations:
+  7. [ ] Profile and look for optimizations:
          - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
          - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
          - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
-  7. [ ] Possible features to extract (And what what is needed to detect them)
+  8. [ ] Possible features to extract (And what what is needed to detect them)
          - Spatial location of source (Phase difference or not)
          - Freq (STRF)
          - Freq direction rising/falling (STRF with diagonal band)
@@ -37,12 +44,12 @@
          - Timbre (STRF with harmonics)
          - Vowels, Consonants 
          - Onsets, offturns (STRF)
-  8. [ ] Fix Irregularities
+  9. [ ] Fix Irregularities
          - Not all nonlinearities can accomodate NaNs in their code, especially in stim
          - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
          - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
          - Jackknifing doesn't work with performance metrics besides MSE right now?
-  9. [ ] Write a crash course guide on using NARF 
+  10. [ ] Write a crash course guide on using NARF 
 
 * Experiments:
   1. [ ] Variable step boosting
