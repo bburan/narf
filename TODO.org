@@ -5,8 +5,9 @@
   - Provide a "Coefficient mask" that fits only certain params?
 
 * NEXT STEPS:
-  - [X] Termination condition not absolute, but relative to initial starting point
-  - [X] Find out why err10, err15 not working (Interference from some plotting code SVD inserted while debugging)
+  - [ ] Fix bug: 
+	OK: {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {'inex', 'init10'}}, 'nonl', 'mse', 'boost'} 
+	Not OK: {'env100', 'log2b', {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {{'inex', 'init10'}}}, 'nonl', 'mse', 'boost'}
   - [ ] Boosting variant: Cheat and stop whenever the validation set error goes up.
   - [ ] Boosting variant: Fit each module separately
   - [ ] Boosting variant: terminate when last N times the 10% held out data error has gone up 
