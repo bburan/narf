@@ -1,18 +1,19 @@
-* Iterative boosting
-  - Quick & dirty boost algorithm that fits each module separately. 
-  - Pack and unpack accept optional arguments to pack only a particular number
-    - Requires changing interface to fit algorithms?
-  - Provide a "Coefficient mask" that fits only certain params?
-
 * NEXT STEPS:
+  - [X] Boosting variant: Fit each module separately 
+	- [X] qlsqi
+	- [X] fminlsqi
+	- [X] qboosti
+  - [ ] Display the time taken to fit things in the narf browser!
+  - [ ] Put sparsity metric stuff into the DB so NPFNL vs NPNL can be compared on that axis
+  - [ ] Boosting Variant: variable step size boosting
+  - [ ] Boosting variant: Cheat and stop whenever the validation set error goes up.
+  - [ ] Boosting variant: terminate when last N times the 10% held out data error has gone up 
   - [ ] Fix bug: 
 	OK: {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {'inex', 'init10'}}, 'nonl', 'mse', 'boost'} 
 	Not OK: {'env100', 'log2b', {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {{'inex', 'init10'}}}, 'nonl', 'mse', 'boost'}
-  - [ ] Boosting variant: Cheat and stop whenever the validation set error goes up.
-  - [ ] Boosting variant: Fit each module separately
-  - [ ] Boosting variant: terminate when last N times the 10% held out data error has gone up 
   - [ ] pfs (post-fit-shrink based on effect)
-  - [ ] Put sparsity metric stuff into the DB so NPFNL vs NPNL can be compared on that axis
+
+  - [ ] What are the error bounds on all of our filters and predictions? Without error bounds, we are not doing science. 
 
 * Engineering:
   1. [ ] TALK WITH STEPHEN, AND WHEN THE QUEUE IS EMPTY, DO THE VALIDATION/TEST  and EST/TRAINING  set naming replacements!
@@ -53,44 +54,43 @@
   10. [ ] Write a crash course guide on using NARF 
 
 * Experiments:
-  1. [ ] Variable step boosting
-  2. [ ] Probabilistic FIR filters
+  1. [ ] Probabilistic FIR filters
 	 + Per-coefficient probabilistic distributions to replace FIR filters
 	 + After training, can we get an idea of the STRF variance via reverse correlation?
 	   - Start from RESPAVG signal at end
 	   - Numerically zero-find to estimate the pre-NPNL stimulus, starting from the estimate from the forward pass
 	   - For each filter coeff, push in the reverse-correlated distribution (several thousand points)
 	   - Plot the histograms for each FIR coef as a line plot. 
-  3. [ ] Can a really simple model like this do very well:
+  2. [ ] Can a really simple model like this do very well:
 	 Logfit (1 parm) + scale & delay amount per channel (2*n parms) + respavg-estimated stateful depression amount (2*n parms)
-  4. [ ] Non-Parametric Wavelets for feature extraction
+  3. [ ] Non-Parametric Wavelets for feature extraction
 	 + Make a spike-triggered average filter bank instead of a gammatone
          + Plot STA distributions of sound intensities at each delay (i.e. make a heatmap)
-  5. [ ] Non-Parametric activity-scaled auto-correlation to find time-varying response
+  4. [ ] Non-Parametric activity-scaled auto-correlation to find time-varying response
 	 + Idea: Do NPNL-like transform to autocorrelated ISI data
 	 + Idea: Sort spikes by ISI times
 	    - Take STA/STC of each quartile.
 	    - Are they different? If so, we have proof that model is nonstationary.
-  6. [ ] Estimating Time-Varying State
+  5. [ ] Estimating Time-Varying State
 	 + What if we use RESPAVG to compute the depression state, and fit the depression amounts to that?
-  7. [ ] Can I make a time-compensating autocorrelation NPNL?
-  8. [ ] Sparsifying based on relevancy of coefficients	 
+  6. [ ] Can I make a time-compensating autocorrelation NPNL?
+  7. [ ] Sparsifying based on relevancy of coefficients	 
 	 Vary each parameter deterministically or stochastically
 	 Estimate the amount variance which decreases the MSE by a set amount
 	 This should let us determine the "relevancy" of each parameter
 	 Sort all the parameters, and take just the most relevant ones!
-  9. [ ] GMM without slow EM step:
+  8. [ ] GMM without slow EM step:
 	 For each point, take K nearest neighbors. 
 	 Compute 2D gaussian for that point. 
 	 Flatten that 2D gaussian and push into SENL's 1D input
-  10. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
-  11. [ ] How well does the MSECHEAT algorithm do?
+  9. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
+  10. [ ] How well does the MSECHEAT algorithm do?
 	  (Tries several different sparsity values in sequence, then picks the best one)
-  12. [ ] Make a gain-changing filter, something like a FIR but with per-pixel gains? After all, by the time the signal reaches cortex, neural responses are likely
-  13. [ ] Do a FIR filter of the output of a FIR filter to get features
-  14. [ ] Test out making layered exponentials (exp of an exp of an exp, etc)
-  15. [ ] Try to remove systemic bias of input by having a positive and a negative input? How did that work in the triggered correlation thing?
-  16. [ ] Is it better to bin, reload from baphy, resample, downsaple, decimate, convolve, smooth, or infer respavg?
+  11. [ ] Make a gain-changing filter, something like a FIR but with per-pixel gains? After all, by the time the signal reaches cortex, neural responses are likely
+  12. [ ] Do a FIR filter of the output of a FIR filter to get features
+  13. [ ] Test out making layered exponentials (exp of an exp of an exp, etc)
+  14. [ ] Try to remove systemic bias of input by having a positive and a negative input? How did that work in the triggered correlation thing?
+  15. [ ] Is it better to bin, reload from baphy, resample, downsaple, decimate, convolve, smooth, or infer respavg?
           Try decimate, or resample (@(x,n) abs(decimate(x,n)),  @(x,n) abs(resample(x,1,n))  
 
 * Books
@@ -269,3 +269,6 @@
          - [ ] Normalization is done across files or not?
 Didn't work well: test/train scatter plot with dot coloring by cellid or model type
   9. [ ] FITTER (containing a list of available fitters?)
+  - Pack and unpack accept optional arguments to pack only a particular number
+    - Requires changing interface to fit algorithms?
+  - Provide a "Coefficient mask" that fits only certain params?
