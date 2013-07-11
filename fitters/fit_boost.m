@@ -56,7 +56,7 @@ function stop = term_fn(n,x,s,d)
         stop = 2;
         return
     end
-    if (d < min_scoredelta)
+    if (d < min_scoredelta) && ~relative_delta
         stop = 3;
         return
     end
