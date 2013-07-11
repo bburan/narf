@@ -1,4 +1,4 @@
-function [bicinv, penalty] = pm_bic()
+function [bicinv, penalty, val_bicinv] = pm_bic()
 % pm_bic()
 %
 % Performance metric: 
@@ -9,10 +9,13 @@ function [bicinv, penalty] = pm_bic()
 
 global XXX META STACK;
 
+bic = XXX{end}.score_train_bic; 
+bicinv = 1/bic;
+val_bic = XXX{end}.score_test_bic; 
+val_bicinv = 1/val_bic; 
+
 if ~isfield(META, 'sparsity_weight')
-    bic = XXX{end}.score_train_bic; 
-    penalty = 0;
-    bicinv = 1/bic;
+    penalty = 0;   
 else    
     [fir_mods, fir_idxs] = find_modules(STACK, 'fir_filter');
     sparsities = [];
@@ -21,7 +24,5 @@ else
             sparsities(end+1) = sparsity_metric(fir_mods{ii}{pp}.coefs);
         end
     end
-    bic = XXX{end}.score_train_bic;
-    penalty = (META.sparsity_weight * sum(sparsities));
-    bicinv = 1/bic;
+    penalty = (META.sparsity_weight * sum(sparsities));    
 end

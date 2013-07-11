@@ -1,4 +1,4 @@
-function [termcond, n_iters] = fit_boost(max_n_steps, min_stepsize, min_scoredelta)
+function [termcond, n_iters] = fit_boost(max_n_steps, min_stepsize, min_scoredelta, relative_delta)
 % [termcond, n_iters] = fit_boost(n_steps, minstepsize, min_scoredelta)
 %
 % A generic NARF Fitting Routine which uses a boosting algorithm. Works
@@ -19,6 +19,9 @@ function [termcond, n_iters] = fit_boost(max_n_steps, min_stepsize, min_scoredel
 %                       than this amount on each step.
 %                       Default: 10^-12
 %
+%    relative_delta     When true, the min_scoredelta will act relative to
+%                       the average of the first five delta steps. 
+%
 % RETURNS:
 %    n_steps            The number of boosting steps taken.
 
@@ -38,7 +41,13 @@ if ~exist('min_scoredelta', 'var'),
     min_scoredelta = 10^-12;
 end
 
-function stop = term_fn(n,x,s,d)
+if ~exist('relative_delta', 'var'),
+    relative_delta = false;
+end
+
+first5_deltas = nan(5,1); % First delta never used
+
+function stop = term_fn(n,x,s,d)    
     if (n > max_n_steps)
         stop = 1;
         return
@@ -47,10 +56,21 @@ function stop = term_fn(n,x,s,d)
         stop = 2;
         return
     end
-    if (d < min_scoredelta)
+    if (d < min_scoredelta) && ~relative_delta
         stop = 3;
         return
     end
+    if relative_delta        
+        idx = find(isnan(first5_deltas), 1);
+        if ~isempty(idx)
+            first5_deltas(idx) = d;
+        else
+           if (d / mean(first5_deltas(2:end))) < min_scoredelta
+                stop = 4;
+                return
+           end
+        end
+    end     
     stop = false;   
 end
 

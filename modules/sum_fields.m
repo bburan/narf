@@ -28,10 +28,7 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_sum_fields(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
-
+function x = do_sum_fields(mdl, x, stack, xxx)    
     % Sum the fields together
     for sf = fieldnames(x.dat)', sf=sf{1};
         x.dat.(sf).(mdl.output) = x.dat.(sf).(mdl.inputs{1});

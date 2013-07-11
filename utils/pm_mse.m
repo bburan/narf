@@ -1,4 +1,4 @@
-function [mse, penalty] = pm_mse()
+function [mse, penalty, val_mse] = pm_mse()
 % pm_mse()
 %
 % Performance metric: MSE with optional sparseness penalty
@@ -9,8 +9,10 @@ function [mse, penalty] = pm_mse()
 
 global XXX META STACK;
 
+mse = XXX{end}.score_train_mse; 
+val_mse = XXX{end}.score_test_mse; 
+
 if ~isfield(META, 'sparsity_weight')
-    mse = XXX{end}.score_train_mse; 
     penalty = 0;
 else    
     [fir_mods, fir_idxs] = find_modules(STACK, 'fir_filter');
@@ -20,6 +22,5 @@ else
             sparsities(end+1) = sparsity_metric(fir_mods{ii}{pp}.coefs);
         end
     end
-    mse = XXX{end}.score_train_mse;
     penalty = (META.sparsity_weight * sum(sparsities));
 end

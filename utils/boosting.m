@@ -75,25 +75,22 @@ while ~termfn(n, x, stepsize, s_delta)
     x_next = x;  % x_next holds best stepping direction so far
     s_next = s;
     
-    global XXX
-    thismse=[XXX{end}.score_train_mse XXX{end}.score_test_mse];
-    thiscorr=[XXX{end}.score_train_corr XXX{end}.score_test_corr];
+    % We cannot assume that the performance metric will be MSE in every
+    % case; therefore you should query META.perf_metric() directly or pass
+    % it from some function that is already calling perf_metric(). We'll
+    % take the former case to avoid complicating the interface.    
+    global META;
+    [~,~,val_s] = META.perf_metric();
+    fprintf('pm_est:  %12.8f  pm_val:  %12.8f\n', s, val_s);
+   
     
-    if n==0, mse1=[1 1]; mse0=thismse; corr1=thiscorr;  end
-    mse1(n+2,:)=thismse./mse0;
-    corr1(n+2,:)=thiscorr;
-    fprintf('r_fit:    %8.4f      r_test:   %8.4f\n',thiscorr);
-    fprintf('mse_fit:  %12.8f  mse_test:  %12.8f\n',thismse);
-    fprintf('msen_fit: %12.8f  msen_test: %12.8f\n',...
-            mse1(n+1,:)-mse1(n+2,:));
-    if strcmp(XXX{1}.cellid,'oni009b-a1'),
-        sfigure(1);clf;
-        subplot(2,1,1);plot(mse1);legend('fit','test');
-        title('normalized mse');
-        subplot(2,1,2);plot(corr1);drawnow;
-        title('corr coef');
-    end
-    
+%     if strcmp(XXX{1}.cellid,'oni009b-a1'),
+%         sfigure(1);clf;
+%         subplot(2,1,1);plot(mse1);legend('fit','test');
+%         title('normalized mse');
+%         subplot(2,1,2);plot(corr1);drawnow;
+%        title('corr coef');
+%     end
     
     % Try to take a step along every dimension
     fprintf('Boosting');

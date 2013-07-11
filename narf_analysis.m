@@ -596,6 +596,7 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
             rethrow(err);
         end
         
+        enable_or_disable_children(parent_handle, 'on');    
     end
 
 handles.force = uicontrol('Parent', right_panel, 'Style', 'checkbox', 'Units', 'pixels',...
