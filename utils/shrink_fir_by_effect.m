@@ -7,10 +7,10 @@ function shrink_fir_by_effect(N_fraction)
 % metric. 
 
 if ~exist('N_fraction', 'var')
-    N_fraction = 0.001;
+    N_fraction = 0.05;
 end
 
-global STACK META;
+global STACK META XXX;
 
 [~, mod_idxs] = find_modules(STACK, 'fir_filter');
 
@@ -68,6 +68,8 @@ end
 
 fprintf('Picking magic ad-hoc power...\n');
 
+init_perf = XXX{end}.score_train_corr;
+
 % Trade a drop in performance for as much sparsity as we can handle
 for aa = 0.00:0.01:5    
     % OPTION #2: Scale all coefficients
@@ -81,7 +83,7 @@ for aa = 0.00:0.01:5
     end
     
     calc_xxx(idx);
-    perf = META.perf_metric();
+    perf = XXX{end}.score_train_corr;
     fprintf('%f: Scored: %f\n', aa, perf);
     
     if (abs(init_perf - perf)/init_perf > N_fraction)
