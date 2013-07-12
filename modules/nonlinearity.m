@@ -52,6 +52,9 @@ m.plot_fns{3}.pretty_name = 'Stim/Resp Scatter';
 m.plot_fns{4}.fn = @do_plot_smooth_scatter_and_nonlinearity; 
 m.plot_fns{4}.pretty_name = 'Stim/Resp Smooth Scatter';
 
+m.plot_fns{5}.fn = @do_plot_channels_as_heatmap; 
+m.plot_fns{5}.pretty_name = 'Output Channels (Heatmap)';
+
 %m.plot_fns{1}.fn = @(stack, xxx) do_plot_nonlinearity(stack, xxx, stack{end}.input_stim, @(x) stack{end}.nlfn(stack{end}.phi, x), false);
 %m.plot_fns{1}.pretty_name = 'Nonlinearity';
 
@@ -105,5 +108,30 @@ function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)
     plot(xs, mdls{1}.nlfn(mdls{1}.phi, xs));
     hold off;   
 end
+
+function do_plot_channels_as_heatmap(sel, stack, xxx)
+
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));  
+    ii=1;  % assuming just a single data set for now...
+    h = imagesc(xouts{ii}.dat.(sel.stimfile).(mdls{1}.time)(:),...
+                1:size(xouts{ii}.dat.(sel.stimfile).(mdls{1}.output),3),...
+                squeeze(xouts{ii}.dat.(sel.stimfile).(mdls{1}.output)(:, sel.stim_idx, :))');
+    do_xlabel('Time [s]');
+    do_ylabel('Output [-]');
+    
+    set(gca,'YDir','normal');
+    axis xy tight;
+    
+end
+
+
+
+
+
+
+
+
+
+
 
 end
