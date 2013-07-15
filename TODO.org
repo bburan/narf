@@ -1,6 +1,28 @@
 * HIGH LEVEL GOALS:
   - What can we do to produce more interpretable, clean, physically plausible results?
 
+* Figures to show
+  1. No compressor, no output nonlinearity, straight envelope
+  2. Improved compressor.
+  3. Added depression
+  4. Added output nonlinearity
+  5. Meta clustering analysis by model types
+     
+* Analysis
+  |          | Best NPNL | Best Other |
+  | cp1free  | npnl      | zthresh    |
+  | cp3free  | npnl      | zthresh    |
+  | log2b    | npfnl0    | sig        |
+  | nocp     | npfnl0    | sig        |
+  | root2    | npfnl0    | sig        |
+  | rootfree | npfnl0    | zthresh    |
+  | logfree  | npfnl0    | zthresh    |
+
+* Fast iterative fitters
+  qlsqi 157
+  qboosti 549
+  boosti 648
+
 * Engineering:
   1. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
 	 - [ ] Reduce function that is applied to each META/XXX/STACK and returns something

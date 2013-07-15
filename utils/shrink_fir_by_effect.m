@@ -7,7 +7,7 @@ function shrink_fir_by_effect(N_fraction)
 % metric. 
 
 if ~exist('N_fraction', 'var')
-    N_fraction = 0.05;
+    N_fraction = 0.1;
 end
 
 global STACK META XXX;
@@ -27,7 +27,7 @@ for ii = 1:length(mod_idxs)
         
         for kk = 1:length(coefs{ii}{jj}(:))
             % Perturb coefficient by 1%
-            STACK{idx}{jj}.coefs(kk) = 1.01 * STACK{idx}{jj}.coefs(kk);
+            STACK{idx}{jj}.coefs(kk) = 1.001 * STACK{idx}{jj}.coefs(kk);
             calc_xxx(idx);
             
             % Estimate the relative effect on the output and save it
