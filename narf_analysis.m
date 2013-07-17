@@ -880,6 +880,24 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         axis tight;
         %xlabel('CellID');
         %ylabel('Rankings'); 
+    end   
+
+    uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Run Script', ...
+          'Position', [1100 bh-ts 100-pad ts-pad], ...
+          'Callback', @runscript_callback);
+      
+    function runscript_callback(~,~,~)
+        global NARF_SCRIPTS_PATH;
+        [filename, pathname] = uigetfile('*.m', ...
+                                     'Select Script', NARF_SCRIPTS_PATH);                              
+                                 
+        warning off MATLAB:dispatcher:nameConflict;
+        addpath(pathname);
+        fn = str2func(filename(1:end-2));
+        fn(sel_batch, sel_cellids, sel_models);
+        rmpath(pathname);
+        warning on MATLAB:dispatcher:nameConflict;
     end
 
 db_results_table = uitable('Parent', bottom_panel, ...
@@ -916,12 +934,7 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
         end
     end
 
-    function s = interleave_commas(c)
-        s = ['"' c{1} '"']; 
-        for ii = 2:length(c)
-            s = cat(2, s, [', "' c{ii} '"']);
-        end
-    end
+
     function sql = update_query_results_table()
         if isempty(sel_batch) || isempty(sel_cellids) || isempty(sel_models)
             db_results = [];
