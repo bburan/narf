@@ -2,13 +2,7 @@
   - What can we do to produce more interpretable, clean, physically plausible results?
   - How can we make these inter-model comparisons more straightforward? 
     1. Update "insert into DB" fn to also compute BIC, AIC, Mutual Info, etc. 
-    2. Automatic clustering of models by modelname/performance
     3. Better plotting methods: bar/quartile
-
-* GRANT WORK 
-  1. [X] Heatmap to show 2x2 interactions averages
-  2. [ ] Training plan
-  3. [ ] Equation for cp1free, cp3free
 
 * Engineering:
   1. [ ] Bar plots that show median and decatiles
@@ -23,7 +17,6 @@
 	 - [ ] Reduce function that is applied to each META/XXX/STACK and returns something
 	 - [ ] PLOT function that takes the returned something and runs it
   7. [ ] Scripts
-	 - [ ] Run "Plot_sparsity" scripts at end and remove all but the top N coefficients 
 	 - [ ] Make a plot of the fitters in the time-to-fit and performance metric
 	 - [ ] Script to parametrize FIR filters 
 	 - [ ] Fix bug: 
@@ -301,3 +294,4 @@ Didn't work well: test/train scatter plot with dot coloring by cellid or model t
   - Provide a "Coefficient mask" that fits only certain params?
   - [ ] What are the error bounds on all of our filters and predictions? Without error bounds, we are not doing science. 
   4. [ ] XXX, META (Modelinfo?), STACK
+	 - [ ] Run "Plot_sparsity" scripts at end and remove all but the top N coefficients 
