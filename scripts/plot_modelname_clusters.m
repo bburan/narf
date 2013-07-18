@@ -1,10 +1,12 @@
-function plot_modelname_clusters(batch, cellids, modelnames)
+function plot_modelname_clusters(batch, cellids, modelnames, N)
 % For all modelnames
 %  1. Calculate the avg loss to best-model performance if it were dropped    
 %  2. Eliminate the least-impactful model by this metric
 %  3. When a given number of categories has been reached, stop. 
 
-N = 5; % Number of clusters to find
+if ~exist('N', 'var')
+    N = 5; % Number of clusters to find
+end
 
 if N >= length(modelnames)
     error('There is no point in trying to cluster when comparing less than five modelnames.');
