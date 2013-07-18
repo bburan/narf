@@ -53,39 +53,57 @@ end
 % Create an objective function for optimizing modelname choices
 function perf = obj_fn(indexes)    
     top_scores = max(scores(:,indexes), [], 2); % Find best score for each cellid
-    perf = mean(top_scores); % TODO: Also try simple sum instead of mean here
+    perf = nanmean(top_scores); % TODO: Also try simple sum instead of mean here
 end
     
-% Start with all the first ten models, and try to 'boost'
-chosen_models = 1:N;
-N_max_steps = 1000;
-for step = 1:N_max_steps;
-    fprintf('Step %d of at most %d\n', step, N_max_steps); 
+
+% Try multiple fitting attempts since it's easy to get stuck in local
+% minima with a categorization system like this, where you would need to
+% change TWO models at once to improve.
+
+overall = randsample(length(modelnames), N);
+for iteration = 1:N*length(modelnames)
+    fprintf('\nBeginning fit from random inital condition %d/%d\n', iteration, N*length(modelnames));
     
-    best_score = obj_fn(chosen_models);
-    best_pos = NaN;
-    best_mdl_idx = NaN;
-    for position = 1:N
-        for mdl_idx = 1:length(modelnames)
-            cache = chosen_models;
-            cache(position) = mdl_idx;
-            del = obj_fn(cache);
-            if del > best_score
-                best_score = del;
-                best_pos = position;
-                best_mdl_idx = mdl_idx;
+    % Start with all the first ten models, and try to 'boost'
+    chosen_models = randsample(length(modelnames), N);
+    
+    for step = 1:N^2;
+        fprintf('%d...', step);
+        
+        best_score = obj_fn(chosen_models);
+        best_pos = NaN;
+        best_mdl_idx = NaN;
+        % Take a small step in every direction
+        for position = 1:N
+            for mdl_idx = 1:length(modelnames)
+                cache = chosen_models;
+                cache(position) = mdl_idx;
+                del = obj_fn(cache);
+                if del > best_score
+                    best_score = del;
+                    best_pos = position;
+                    best_mdl_idx = mdl_idx;
+                end
             end
         end
+        
+        % Stop iterating when the score can improve no more
+        if isnan(best_pos)
+            break;
+        else % Otherwise take the best step we found
+            chosen_models(best_pos) = best_mdl_idx;
+        end
     end
-          
-    % Stop iterating when the score can improve no more
-    if isnan(best_pos)
-        break;
-    else % Otherwise take that one best step
-        chosen_models(best_pos) = best_mdl_idx;
+    
+    % If this
+    if obj_fn(overall) < obj_fn(chosen_models),
+        overall = chosen_models;
     end
+    
 end
 
+chosen_models = sort(overall);
 thelabels = modelnames(chosen_models);
 
 % Extract just the count of how many models fall into each
