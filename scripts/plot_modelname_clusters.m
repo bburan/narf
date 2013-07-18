@@ -33,8 +33,10 @@ function relative_scores = scores_for_cellid(bat, cellid, models)
             error('Too many results found!!? WTF!?\n');
         else
             relative_scores(ii) = results.r_test / max_score;
-            if relative_scores(ii) < 0
-                relative_scores(ii) = 0;
+            if relative_scores(ii) < 0 || max_score < 0 
+                relative_scores(ii) = NaN;
+            elseif relative_scores(ii) > 1
+                error('WTF? how did that get large?');
             end
         end       
     end   
@@ -84,19 +86,25 @@ for step = 1:N_max_steps;
     end
 end
 
+thelabels = modelnames(chosen_models);
+
 % Extract just the count of how many models fall into each
 scrap = zeros(length(cellids), N);
-
-thelabels = modelnames(chosen_models);
-for li = 1:N
-   thelabels{li} = thelabels{li};
-end
-
+chosen_scores = nan(size(scores));
 for ci = 1:length(cellids)
     [~, idx] = max(scores(ci, chosen_models), [], 2);
     scrap(ci, idx) = 1;        
-    thelabels{idx} = [thelabels{idx} sprintf('\n%s', cellids{ci})];
+    chosen_scores(ci, idx) = scores(ci, chosen_models(idx));
+    thelabels{idx} = [thelabels{idx} sprintf('\n%s (%5.3f)', cellids{ci}, chosen_scores(ci, idx))];    
 end
+
+
+
+for li = 1:N
+    val = nanmean(chosen_scores(:, li));
+    thelabels{li} = [thelabels{li} sprintf('\nMean Fraction of Maximum: %6.4f', val)];
+end
+
 
 thecount = sum(scrap, 1);
 figure('Name', 'Model Clustering', 'NumberTitle', 'off');
@@ -105,5 +113,6 @@ h = pie(thecount, thelabels);
 for ni = 1:N
     set(h(2*ni), 'Interpreter', 'none');
 end
+
 
 end
