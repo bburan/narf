@@ -1,12 +1,22 @@
 * HIGH LEVEL GOALS:
   - What can we do to produce more interpretable, clean, physically plausible results?
+  - How can we make these inter-model comparisons more straightforward? 
+    1. Update "insert into DB" fn to also compute BIC, AIC, Mutual Info, etc. 
+    3. Better plotting methods: bar/quartile
 
 * Engineering:
-  1. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
+  1. [ ] Bar plots that show median and decatiles
+  2. [ ] Scaling term for compressors
+  3. [ ] Fix selection of the cellids pane! That's a bug!
+  4. [ ] SCAAT boosting variations with large number of iterations, variable step size/scaling, and # of steps/module proportional to parameter count?
+	 Previous step size is remembered
+	 If it CAN take a step, it doubles the step size until it can't, then takes the last previous step.
+	 If it CAN'T take a step, it halves the step size and tries again.
+  5. [ ] DC offset of the RESPAVG helps? 
+  6. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
 	 - [ ] Reduce function that is applied to each META/XXX/STACK and returns something
 	 - [ ] PLOT function that takes the returned something and runs it
-  2. [ ] Scripts
-	 - [ ] Run "Plot_sparsity" scripts at end and remove all but the top N coefficients 
+  7. [ ] Scripts
 	 - [ ] Make a plot of the fitters in the time-to-fit and performance metric
 	 - [ ] Script to parametrize FIR filters 
 	 - [ ] Fix bug: 
@@ -14,7 +24,7 @@
 		Not OK: {'env100', 'log2b', {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {{'inex', 'init10'}}}, 'nonl', 'mse', 'boost'}
 	 - [ ] After saving the model, but before database insertion, compute all the other metrics
 	 - [ ] insert into the DB
-  3. [ ] NARF Architecture Improvements
+  8. [ ] NARF Architecture Improvements
 	 - [ ] Allow queuing of not an entire analysis, but just a subset
 	 - [ ] Problem: Need a way to do one-off plots or analyses of a grouping of files (Adding hooks seems appropriate)
 	 - [ ] Backup database move the old models/images to backup directories which will be scanned
@@ -23,31 +33,31 @@
 	 - [ ] Define a new function to extract/update, from every model, all relevant fields of the database.
 	 - [ ] Import useful models by scanning the directories, copying files and getting relevant metadata
 	 - [ ] Check things loaded well with the narf browser completion tests
-  5. [ ] Boosting Variants
+  9. [ ] Boosting Variants
          - [ ] Boosting Variant: variable step size boosting
          - [ ] Boosting variant: Cheat and stop whenever the validation set error goes up.
          - [ ] Boosting variant: terminate when last N times the 10% held out data error has gone up 
-  6. [-] Default per-paramset, per-channel heatmap graph fns:
-	 - [ ] Loadstimfrompbaphy
-	 - [X] Nonrmalize channels
-	 - [ ] FIR filter
-	 - [ ] Nonlinearity
-  7. [ ] Safety check so that these modules do not allow unifiers/splitters
-         - Correlation, MSE, bayesian, loader, etc
-	 - Split normalization or not?
-  8. [ ] During insert into DB, take a bunch of metrics
-	 - [ ] Sparsity is not going into the DB
-	 - [ ] More metrics should go into the DB
-	 - [ ] Total spike count should go into DB
-	 - [ ] Elitist browsing (Shows ONLY THE HIGHEST MODEL of each cell given current masks)
-  9. [ ] Repair Fitters 
-         - [ ] Remove, then re-add test_set data by default to make fitters faster
-         - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  10. [ ] Profile and look for optimizations:
+  10. [-] Default per-paramset, per-channel heatmap graph fns:
+	  - [ ] Loadstimfrompbaphy
+	  - [X] Nonrmalize channels
+	  - [ ] FIR filter
+	  - [ ] Nonlinearity
+  11. [ ] Safety check so that these modules do not allow unifiers/splitters
+          - Correlation, MSE, bayesian, loader, etc
+	  - Split normalization or not?
+  12. [ ] During insert into DB, take a bunch of metrics
+	  - [ ] Sparsity is not going into the DB
+	  - [ ] More metrics should go into the DB
+	  - [ ] Total spike count should go into DB
+	  - [ ] Elitist browsing (Shows ONLY THE HIGHEST MODEL of each cell given current masks)
+  13. [ ] Repair Fitters 
+          - [ ] Remove, then re-add test_set data by default to make fitters faster
+          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
+  14. [ ] Profile and look for optimizations:
           - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
           - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
           - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
-  11. [ ] Possible features to extract (And what what is needed to detect them)
+  15. [ ] Possible features to extract (And what what is needed to detect them)
           - Spatial location of source (Phase difference or not)
           - Freq (STRF)
           - Freq direction rising/falling (STRF with diagonal band)
@@ -55,12 +65,12 @@
           - Timbre (STRF with harmonics)
           - Vowels, Consonants 
           - Onsets, offturns (STRF)
-  12. [ ] Fix Irregularities
+  16. [ ] Fix Irregularities
           - Not all nonlinearities can accomodate NaNs in their code, especially in stim
           - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
           - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
           - Jackknifing doesn't work with performance metrics besides MSE right now?
-  13. [ ] Write a crash course guide on using NARF 
+  17. [ ] Write a crash course guide on using NARF 
 
 * Experiments:
   1. [ ] Probabilistic FIR filters
@@ -284,3 +294,4 @@ Didn't work well: test/train scatter plot with dot coloring by cellid or model t
   - Provide a "Coefficient mask" that fits only certain params?
   - [ ] What are the error bounds on all of our filters and predictions? Without error bounds, we are not doing science. 
   4. [ ] XXX, META (Modelinfo?), STACK
+	 - [ ] Run "Plot_sparsity" scripts at end and remove all but the top N coefficients 
