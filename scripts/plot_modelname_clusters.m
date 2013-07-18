@@ -10,7 +10,8 @@ if N >= length(modelnames)
     error('There is no point in trying to cluster when comparing less than five modelnames.');
 end
 
-function relative_scores = scores_for_cellid(bat, cellid, models)
+function [relative_scores, absolute_scores] ...
+            = scores_for_cellid(bat, cellid, models)
 
 	sql = ['SELECT * FROM NarfResults WHERE batch=' num2str(bat) ''];
 	sql = [sql ' AND cellid="' cellid '"'];
@@ -19,6 +20,7 @@ function relative_scores = scores_for_cellid(bat, cellid, models)
     max_score = max([results.r_test]);
     
     relative_scores = zeros(1, length(models));
+    absolute_scores = nan(1, length(models));
     
     for ii = 1:length(models)
         m = models{ii};
@@ -32,6 +34,7 @@ function relative_scores = scores_for_cellid(bat, cellid, models)
         elseif length(results) > 1
             error('Too many results found!!? WTF!?\n');
         else
+            absolute_scores(ii) = results.r_test;
             relative_scores(ii) = results.r_test / max_score;
             if relative_scores(ii) < 0 || max_score < 0 
                 relative_scores(ii) = NaN;
@@ -44,10 +47,13 @@ end
 
 % Create a scores cache
 scores = zeros(length(cellids), length(modelnames));
+abs_perf = zeros(length(cellids), length(modelnames));
+
 for ci = 1:length(cellids)
     fprintf('Caching scores for cellid: %s [%d/%d]\n', cellids{ci}, ci, length(cellids)); 
-    ret = scores_for_cellid(batch, cellids{ci}, modelnames);
+    [ret, absret] = scores_for_cellid(batch, cellids{ci}, modelnames);
     scores(ci, :) = ret(:);
+    abs_perf(ci, :) = absret(:);
 end
 
 % Create an objective function for optimizing modelname choices
@@ -109,18 +115,21 @@ thelabels = modelnames(chosen_models);
 % Extract just the count of how many models fall into each
 scrap = zeros(length(cellids), N);
 chosen_scores = nan(size(scores));
+chosen_abs_perf = nan(size(scores));
 for ci = 1:length(cellids)
     [~, idx] = max(scores(ci, chosen_models), [], 2);
     scrap(ci, idx) = 1;        
     chosen_scores(ci, idx) = scores(ci, chosen_models(idx));
-    thelabels{idx} = [thelabels{idx} sprintf('\n%s (%5.3f)', cellids{ci}, chosen_scores(ci, idx))];    
+    chosen_abs_perf(ci, idx) = abs_perf(ci, chosen_models(idx));
+    thelabels{idx} = [thelabels{idx} sprintf('\n%s [%6.4f] (%5.3f)', cellids{ci}, chosen_abs_perf(ci, idx), chosen_scores(ci, idx))];    
 end
 
 
 
 for li = 1:N
-    val = nanmean(chosen_scores(:, li));
-    thelabels{li} = [thelabels{li} sprintf('\nMean Fraction of Maximum: %6.4f', val)];
+    mn = nanmean(chosen_scores(:, li));
+    abs_mn = nanmean(chosen_abs_perf(:, li));
+    thelabels{li} = [thelabels{li} sprintf('\nMeans: [%6.4f] (%6.4f)', abs_mn, mn)];
 end
 
 
