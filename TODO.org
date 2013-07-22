@@ -2,7 +2,7 @@
   1. Somehow, make vocalization data (246) fits take < 1 day for IFN models.
      - Boosting algorithm correction to lessen n^2 performance scaling
        1) Not stepping in every direction each time?
-       2) Nested boosting: CPLD like PLDs
+       2) Nested boosting by groups? Kind of like what we already do. 
   2. What can we do to produce more interpretable, clean, plausible results?
      - Relevancy sparsification?
      - Models with fewer parameters or more general parameterizations? 
@@ -21,9 +21,6 @@
   - Overlap plots of all compressor curves
     
 * Engineering:
-  1. [X] Fix bug when you "cancel" a runscript from the GUI
-  2. [X] Fix selection of the cellids pane! That's a bug!
-  3. [ ] Bar plots that show decatiles
   4. [ ] Scaling term for compressors, or normalization of incoming signal
   5. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
 	 - [ ] Reduce function that is applied to each META/XXX/STACK and returns something
