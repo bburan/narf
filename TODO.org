@@ -1,10 +1,12 @@
 * HIGH LEVEL GOALS:
   1. Somehow, make vocalization data (246) fits take < 1 day for IFN models.
-     - Boosting that doesn't have n^2 penalty
+     - Boosting algorithm correction to lessen n^2 performance scaling
        1) Not stepping in every direction each time?
        2) Nested boosting: CPLD like PLDs
   2. What can we do to produce more interpretable, clean, plausible results?
      - Relevancy sparsification?
+     - Models with fewer parameters or more general parameterizations? 
+     - Perhaps intepretability is irrelevant; relative performance is all that matters for determining model importance?  
   3. How can we make these inter-model comparisons more straightforward? 
      - Update "insert into DB" fn to also compute BIC, AIC, Mutual Info, etc. 
      - Group models by best-fitting stuff?
@@ -14,16 +16,15 @@
 
 * Plots
   - Histogram Plot of depression parameters from depfree from 240
-  - 
-
-  - Histograms of parameters across a population (after sorting by best-fitting model?)
-
-
+  - Histograms of parameters across a population, clustered by best-fitting model?
+  - Histograms of logfree parameters
+  - Overlap plots of all compressor curves
+    
 * Engineering:
-  1. [ ] Fix bug when you "cancel" a runscript from the GUI
-  2. [ ] Fix selection of the cellids pane! That's a bug!
+  1. [X] Fix bug when you "cancel" a runscript from the GUI
+  2. [X] Fix selection of the cellids pane! That's a bug!
   3. [ ] Bar plots that show decatiles
-  4. [ ] Scaling term for compressors
+  4. [ ] Scaling term for compressors, or normalization of incoming signal
   5. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
 	 - [ ] Reduce function that is applied to each META/XXX/STACK and returns something
 	 - [ ] PLOT function that takes the returned something and runs it

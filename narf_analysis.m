@@ -477,6 +477,7 @@ set(batch_JTcb, 'KeyPressedCallback', {@batch_table_row_selected, gcf});
             dat{ii, 3} = remove_crap(char(ret(ii).val_set));
             dat{ii, 4} = remove_crap(char(ret(ii).filecodes));
         end
+        set(handles.batch_table, 'Data', []);
         set(handles.batch_table, 'Data', dat);
         cellids_found = cellstr(char(ret(:).cellid));
         
@@ -818,6 +819,9 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         if isempty(data)
             return;
         end
+        
+        n_pieces = 10;
+        
         % Sort the data
         D = [nanmean(data)' data'];
         [sD, idxs] = sortrows(D, -1);
@@ -826,13 +830,24 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                'Position', [10 10 900 300]);
         hold on;
         len = length(sel_models);
-        bar(1:len, nanmean(data), 'r'); 
-        plot(1:len, data, 'k.');
-        errorbar(1:len, nanmean(data), nanvar(data), max(data) - nanmean(data), 'xk');
+        
+        if (mod(size(data,1), n_pieces) == 0)
+            np = floor(size(data, 1) / n_pieces);        
+        else
+            np = floor(size(data, 1) / (n_pieces-1));
+        end
+        deciles = conv_fn(sort(data, 1, 'descend'), 1, @(x) max(x(:)), np, 0);
+        decadiffs = diff(flipud(deciles));
+        decas = [deciles(end,:); decadiffs];
+        bar(1:len, decas', 'stacked');  
+        bar(1:len, nanmean(data), 0.3, 'r'); 
+        plot(1:len, data, 'k.');        
+        %errorbar(1:len, nanmean(data), nanvar(data), max(data) - nanmean(data), 'xk');
         hold off;
         set(gca,'XTick', 1:len);
         set(gca,'XTickLabel', sel_models(idxs));
         set(gca,'CameraUpVector',[-1,0,0]);
+        title('Model Performance and Deciles');
     end
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
@@ -887,7 +902,9 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         global NARF_SCRIPTS_PATH;
         [filename, pathname] = uigetfile('*.m', ...
                                      'Select Script', NARF_SCRIPTS_PATH);                              
-                                 
+        if filename == 0 
+            return
+        end
         warning off MATLAB:dispatcher:nameConflict;
         addpath(pathname);
         fn = str2func(filename(1:end-2));
@@ -898,7 +915,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
 
     CustomFunctionHandle=uicontrol('Parent', parent_handle, 'Style', 'edit',...
                 'String', 'dummy',...
-                'Units','pixels', 'Position', [300+ButtonWidth*9  bh-ts ButtonWidth*2 ts-pad], ...
+                'Units','pixels', 'Position', [300+ButtonWidth*9  bh-ts ButtonWidth*1.5 ts-pad], ...
                 'Callback', @custom_model_analysis);
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
@@ -915,10 +932,7 @@ function custom_model_analysis(~,~,~)
     load_model(char(sel_results(1).modelpath));
     feval(cust_function_name,STACK,XXX,META,sel_results);
 end
-
-    
-    
-    
+           
 db_results_table = uitable('Parent', bottom_panel, ...
         'Enable', 'on',  'Units', 'pixels', 'RowName', [],...
         'ColumnWidth', {60, 40, 100, 300, ...
