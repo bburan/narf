@@ -15,17 +15,24 @@ min_scoredelta = 10^-5; % Early stopping parameter
 first5_deltas = nan(5,1); % First delta never used, actually
 max_n_steps = 1000000; % (Will be overwritten but must start large)
 steps_taken = 0;
-
+min_stepsize = 10^-9;
 function [termcond, n_iters] = fitter_fn()
     % Yes, this looks goofy, but it has to be here for scope reasons
     % and so that steps_taken is updated properly.
     function stop = term_fn(n,x,s,d)
-        steps_taken = n;
+        steps_taken = n;       
+
         if (n > max_n_steps)
             stop = 1;
             return;
         end
     
+        if (s < min_stepsize)
+            stop = 2;
+            return;
+        end
+
+        
     	idx = find(isnan(first5_deltas), 1);
         if ~isempty(idx)
             first5_deltas(idx) = d;
