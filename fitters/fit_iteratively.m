@@ -41,7 +41,7 @@ for ii = 1:n_outer_loops,
         end
         
         % Run the fitter once
-        fitter();
+        termcond = fitter();
         
         % Restore the fit fields
         for kk = 1:length(STACK)
