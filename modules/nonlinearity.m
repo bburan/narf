@@ -86,7 +86,7 @@ end
 function do_plot_scatter_and_nonlinearity(sel, stack, xxx)
     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
     
-    do_plot_scatter(sel, {xxx}, mdls{1}.input_stim, mdls{1}.input_resp);
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp);
     xlims = xlim();
     xs = linspace(xlims(1), xlims(2), 100);
     hold on;    
@@ -101,7 +101,7 @@ end
 function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)    
     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
     
-    do_plot_scatter(sel, {xxx}, mdls{1}.input_stim, mdls{1}.input_resp, 100);
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100);
     xlims = xlim();
     xs = linspace(xlims(1), xlims(2), 100);
     hold on;
@@ -110,7 +110,6 @@ function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)
 end
 
 function do_plot_channels_as_heatmap(sel, stack, xxx)
-
     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));  
     ii=1;  % assuming just a single data set for now...
     h = imagesc(xouts{ii}.dat.(sel.stimfile).(mdls{1}.time)(:),...
