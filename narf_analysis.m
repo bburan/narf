@@ -507,7 +507,9 @@ handles.select_all_cellids = uicontrol('Parent', right_panel, ...
                 modelname = modelname(1:end-1);
                 models_found{end+1} = modelname;
             end
-            set(handles.modellist, 'String', models_found);
+            set(handles.modellist, 'String', models_found); 
+            sel_models = {};
+            set(handles.modellist, 'Value', []); 
             update_query_results_table();
         catch            
             set(handles.modellist, 'String', {'ERROR IN MODELTREE EXPRESSION'});
