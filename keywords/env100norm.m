@@ -8,6 +8,6 @@ append_module(MODULES.load_stim_resps_from_baphy.mdl(...
                                   'include_prestim', true, ...
                                   'stimulus_format', 'envelope'))); 
 
-append_module(MODULES.normalize_channels);
+append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));
 
                               

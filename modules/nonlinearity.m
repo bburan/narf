@@ -38,6 +38,7 @@ m.nlfn = @polyval;
 m.phi = [1 0];   % Default is to pass the signal through untouched
 
 % Optional fields
+m.auto_plot = @do_plot_smooth_scatter_and_nonlinearity;
 m.plot_fns = {};
 
 m.plot_fns{1}.fn = @do_plot_all_default_outputs;

@@ -1,17 +1,23 @@
 * HIGH LEVEL GOALS:
-  1. Somehow, make vocalization data (246) fits take < 1 day for IFN models.
+  1. Discuss grant writing with Stephen
+  2. Somehow, make vocalization data (246) fits take < 1 day for IFN models.
      - Boosting algorithm correction to lessen n^2 performance scaling problem
        1) Not test-steping along every direction each time:
 	  - Keep a list of the top N coefs. 9 out of 10 times, boost only on those. Rebuild models every 10-15 steps. 
-       2) Boosting on individual models	  
-  2. What can we do to produce more interpretable, clean, plausible results?
-     - Models with fewer parameters or more general parameterizations? 
+       2) Boosting on individual modules	  
+  3. What can we do to produce more interpretable, clean, plausible results?
+     - Models with fewer parameters and more general parameterizations? 
      - Perhaps per-cell intepretability is irrelevant; relative performance is all that matters for determining model importance?  
-  3. How can we make these inter-model comparisons more straightforward? 
+  4. How can we make these inter-model comparisons more straightforward? 
      - Update "insert into DB" fn to also compute BIC, AIC, Mutual Info, etc., and also total spike count, Signal to Noise Ratio. 
-  4. Add more normalization so that fitting with default values becomes easier
+  5. Add more normalization so that fitting with default values becomes easier
+     
 
-* Queueing Plan
+* Friday
+  - [ ] Inspect Rerun normalization with "force positive"
+  - [ ] 
+
+* Next Steps Plan
   - [ ] Repair bugs
 	- Why does "inspect model" fail so often when loading?
 	- Why no nonlinearities being shown in the preview
@@ -33,9 +39,6 @@
        - Histograms comparing coefs of different categories interesting too.
     4. Make a new "Narf Batch Category" containing relevant cells for final analysis so they are more easily grouped
  
-* Discuss with Stephen
-  - Grant writing discussion with Stephen about Sept 3. 
-  - Decile plots and best models
 
 * Plots to Do:
   - Histogram Plot of depression parameters from depfree from 240
