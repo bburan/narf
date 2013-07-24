@@ -1,39 +1,55 @@
 * HIGH LEVEL GOALS:
   1. Somehow, make vocalization data (246) fits take < 1 day for IFN models.
      - Boosting algorithm correction to lessen n^2 performance scaling
-       1) Not stepping in every direction each time?
-       2) Nested boosting by groups? Kind of like what we already do. 
+       1) Not test-steping along every direction each time?
+       2) Nested boosting by 
+       3) Keep a list of the top N coefs. 9 out of 10 times, boost only on those.
+       4) Can I group coefs into small N and boost on them?
+	  - Boosting too long on a subset loses plausibility
+	  - Heirarchical boosting
+	    - Group into sets of size N = sqrt(n). 
+	    - Boost through each set. 
   2. What can we do to produce more interpretable, clean, plausible results?
      - Relevancy sparsification?
      - Models with fewer parameters or more general parameterizations? 
      - Perhaps intepretability is irrelevant; relative performance is all that matters for determining model importance?  
   3. How can we make these inter-model comparisons more straightforward? 
-     - Update "insert into DB" fn to also compute BIC, AIC, Mutual Info, etc. 
+     - Update "insert into DB" fn to also compute BIC, AIC, Mutual Info, etc., and also total spike count, Signal to Noise Ratio,  
      - Group models by best-fitting stuff?
+  4. Add more normalization so that fitting with default values becomes easier
 
-* Grant Stuff
-  Grant writing discussion with Stephen about Sept 3. 
+* Possible experimental workflow in NarfAnalysis
+    1. Spray & pray likely models (already automated)
+    2. Pick 4-5 models as the best categories (already automated)
+    3. For each grouping, scatter/histogram of extracted parameters 
+       - Less variance makes us more certain of cell's categorization
+       - Histograms comparing coefs of different categories interesting too.
+    4. Make a new "Narf Batch Category" containing relevant cells for final analysis so they are more easily grouped
+ 
+* Discuss with Stephen
+  - Grant writing discussion with Stephen about Sept 3. 
+  - Decile plots and best models
 
-* Plots
+* Queued Experiments
+  1. Does boostit work as well as we hope?
+  2. Does normalization after BAPHY help?
+  3. How do the NPNLs fare?
+
+* Plots to Do:
   - Histogram Plot of depression parameters from depfree from 240
   - Histograms of parameters across a population, clustered by best-fitting model?
   - Histograms of logfree parameters
   - Overlap plots of all compressor curves
+  - Time to fit vs performance for fitters
     
 * Engineering:
-  4. [ ] Scaling term for compressors, or normalization of incoming signal
-  5. [ ] 'scripts' directory which can let you apply selected models to a given script for plotting, comparison, or matrix-building
-	 - [ ] Reduce function that is applied to each META/XXX/STACK and returns something
-	 - [ ] PLOT function that takes the returned something and runs it
-  6. [ ] Scripts
-	 - [ ] Make a plot of the fitters in the time-to-fit and performance metric
-	 - [ ] Script to parametrize FIR filters 
-	 - [ ] Fix bug: 
+  1. [ ] Fix bug: 
 		OK: {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {'inex', 'init10'}}, 'nonl', 'mse', 'boost'} 
 		Not OK: {'env100', 'log2b', {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {{'inex', 'init10'}}}, 'nonl', 'mse', 'boost'}
-	 - [ ] After saving the model, but before database insertion, compute all the other metrics
-	 - [ ] insert into the DB
-  7. [ ] NARF Architecture Improvements
+
+  2. [ ] Reduce, Plot function abstractions for working with STACKs of models
+  3. [ ] After saving the model, but before database insertion, do other metrics
+  4. [ ] NARF Architecture Improvements
 	 - [ ] Allow queuing of not an entire analysis, but just a subset
 	 - [ ] Problem: Need a way to do one-off plots or analyses of a grouping of files (Adding hooks seems appropriate)
 	 - [ ] Backup database move the old models/images to backup directories which will be scanned
@@ -42,31 +58,26 @@
 	 - [ ] Define a new function to extract/update, from every model, all relevant fields of the database.
 	 - [ ] Import useful models by scanning the directories, copying files and getting relevant metadata
 	 - [ ] Check things loaded well with the narf browser completion tests
-  8. [ ] Boosting Variants
-         - [ ] Boosting Variant: variable step size boosting
-         - [ ] Boosting variant: Cheat and stop whenever the validation set error goes up.
-         - [ ] Boosting variant: terminate when last N times the 10% held out data error has gone up 
-  9. [-] Default per-paramset, per-channel heatmap graph fns:
+  5. [-] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [X] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  10. [ ] Safety check so that these modules do not allow unifiers/splitters
-          - Correlation, MSE, bayesian, loader, etc
-	  - Split normalization or not?
-  11. [ ] During insert into DB, take a bunch of metrics
-	  - [ ] Sparsity is not going into the DB
-	  - [ ] More metrics should go into the DB
-	  - [ ] Total spike count should go into DB
-	  - [ ] Elitist browsing (Shows ONLY THE HIGHEST MODEL of each cell given current masks)
-  12. [ ] Repair Fitters 
-          - [ ] Remove, then re-add test_set data by default to make fitters faster
-          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  13. [ ] Profile and look for optimizations:
+  6. [ ] Boosting Variants
+         - [ ] Boosting Variant: variable step size boosting
+         - [ ] Boosting variant: Cheat and stop whenever the validation set error goes up.
+         - [ ] Boosting variant: terminate when last N times the 10% held out data error has gone up 
+  7. [ ] Safety check so that these modules do not allow unifiers/splitters
+         - Correlation, MSE, bayesian, loader, etc
+	 - Split normalization or not?
+  9. [ ] Repair Fitters 
+         - [ ] Remove, then re-add test_set data by default to make fitters faster
+         - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
+  10. [ ] Profile and look for optimizations:
           - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
           - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
           - Aha! If I wrote a FASTFILTER closed-over function, and provided it with a way to update its closed-over vector in response to a boost step, I could use the same code for both fast FIR filtering and NPFNL? No, wait, that wouldn't work...the stimulus changes EVERY single time.
-  14. [ ] Possible features to extract (And what what is needed to detect them)
+  11. [ ] Possible features to extract (And what what is needed to detect them)
           - Spatial location of source (Phase difference or not)
           - Freq (STRF)
           - Freq direction rising/falling (STRF with diagonal band)
@@ -74,17 +85,19 @@
           - Timbre (STRF with harmonics)
           - Vowels, Consonants 
           - Onsets, offturns (STRF)
-  15. [ ] Fix Irregularities
+  12. [ ] Fix Irregularities
           - Not all nonlinearities can accomodate NaNs in their code, especially in stim
           - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
           - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
           - Jackknifing doesn't work with performance metrics besides MSE right now?
-  16. [ ] Write a crash course guide on using NARF 
+  13. [ ] Write a crash course guide on using NARF 
 
 * Experiments:
-  1. [ ] Really Simple Model
+  1. [ ] Different parameterization of a sigmoid (corners, etc)
+	 5-parameter sigmoid model	 
+  2. [ ] Really Simple Model
 	 Logfit (1 parm) + scale & delay amount per channel (2*n parms) + respavg-estimated stateful depression amount (2*n parms)
-  2. [ ] Probabilistic FIR filters
+  3. [ ] Probabilistic FIR filters
 	 + Per-coefficient probabilistic distributions to replace FIR filters
 	 + After training, can we get an idea of the STRF variance via reverse correlation?
 	   1) Start from RESPAVG signal at end
@@ -92,30 +105,30 @@
 	   3) For each filter coeff, push in the reverse-correlated distribution (several thousand points)
 	   4) Plot the histograms for each FIR coef as a line plot. 
 	 + Plotting the error bars on the filter would also be REALLY GOOD 
-  3. [ ] Non-Parametric Wavelets for feature extraction
+  4. [ ] Non-Parametric Wavelets for feature extraction
 	 + Make a spike-triggered average filter bank instead of a gammatone
          + Plot STA distributions of sound intensities at each delay (i.e. make a heatmap)
-  4. [ ] Non-Parametric activity-scaled auto-correlation to find time-varying response
+  5. [ ] Non-Parametric activity-scaled auto-correlation to find time-varying response
 	 + Idea: Do NPNL-like transform to autocorrelated ISI data
 	 + Idea: Sort spikes by ISI times
 	    * Take STA/STC of each quartile.
 	    * Are they different? If so, we have proof that model is nonstationary.
-  5. MEGA-META compressor (one channel for every compressor and a weighting!)
-  6. [ ] Estimating Time-Varying State
+  6. MEGA-META compressor (one channel for every compressor and a weighting!)
+  7. [ ] Estimating Time-Varying State
 	 + What if we use RESPAVG to compute the depression state, and fit the depression amounts to that?
-  7. [ ] Can I make a time-compensating autocorrelation NPNL?
-  8. [ ] GMM without slow EM step:
-	 For each point, take K nearest neighbors. 
-	 Compute 2D gaussian for that point. 
-	 Flatten that 2D gaussian and push into SENL's 1D input
-  9. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
-  10. [ ] How well does the MSECHEAT algorithm do?
+  8. [ ] Can I make a time-compensating autocorrelation NPNL?
+  9. [ ] GMM without slow EM step:
+	  For each point, take K nearest neighbors. 
+	  Compute 2D gaussian for that point. 
+	  Flatten that 2D gaussian and push into SENL's 1D input
+  10. [ ] ABCD Control Blocks with arbitrary functions (start with 1st and second degree polynomials)
+  11. [ ] How well does the MSECHEAT algorithm do?
 	  (Tries several different sparsity values in sequence, then picks the best one)
-  11. [ ] Make a gain-changing filter, something like a FIR but with per-pixel gains? After all, by the time the signal reaches cortex, neural responses are likely
-  12. [ ] Do a FIR filter of the output of a FIR filter to get features
-  13. [ ] Test out making layered exponentials (exp of an exp of an exp, etc)
-  14. [ ] Try to remove systemic bias of input by having a positive and a negative input? How did that work in the triggered correlation thing?
-  15. [ ] Is it better to bin, reload from baphy, resample, downsaple, decimate, convolve, smooth, or infer respavg?
+  12. [ ] Make a gain-changing filter, something like a FIR but with per-pixel gains? After all, by the time the signal reaches cortex, neural responses are likely
+  13. [ ] Do a FIR filter of the output of a FIR filter to get features
+  14. [ ] Test out making layered exponentials (exp of an exp of an exp, etc)
+  15. [ ] Try to remove systemic bias of input by having a positive and a negative input? How did that work in the triggered correlation thing?
+  16. [ ] Is it better to bin, reload from baphy, resample, downsaple, decimate, convolve, smooth, or infer respavg?
           Try decimate, or resample (@(x,n) abs(decimate(x,n)),  @(x,n) abs(resample(x,1,n))  
 
 * LOW PRIORITY CLEANUP
@@ -301,3 +314,4 @@ Didn't work well: test/train scatter plot with dot coloring by cellid or model t
   4. [ ] XXX, META (Modelinfo?), STACK
 	 - [ ] Run "Plot_sparsity" scripts at end and remove all but the top N coefficients 
   5. [ ] DC offset of the RESPAVG helps? 
+	 - [ ] Script to parametrize FIR filters 
