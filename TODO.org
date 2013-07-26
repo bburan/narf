@@ -16,13 +16,11 @@
   - Sigumber mostly wrong
      
 * Friday
-  - [X] Inspect parametric compressors (See report)
-  - [X] Inspect Rerun normalization with "force positive" -> (Only helps CP3Free)
-  - [X] Inspect parametric NLs -> winner is SIGLOG 
-  - [X] Inspect Fitters
+  - [ ] Modelstring bug {'env100', 'log2b', {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {{'inex', 'init10'}}}, 'nonl', 'mse', 'boost'}
+  - [ ] Allow queuing of not an entire analysis, but just a subset
   - [ ] Scripty stuff
-    - [ ] Apply a function 
-    - [ ] A script to create a new DB cache with all metrics, fit times
+    - [ ] Apply a function to every model file selected
+    - [ ] Create a new DB cache with all metrics, fit times
     - [ ] Runscript on 240 to create avg fit time plot
   - [ ] Inspect NLxCP variations, and queue depression survey
   - [ ] Inspect depression survey when complete
@@ -31,17 +29,12 @@
   - [ ] Bugfix: when using init0, siglog/nonl doesn't work
 
 * Engineering
-  1. [ ] Bugfix: why does IVAR get called? (traced it to strsep by SVD...I guess it didn't do what I thought it did!)
-  1. [ ] Bugfixes
-	- Modelstring bug
-		OK: {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {'inex', 'init10'}}, 'nonl', 'mse', 'boost'} 
-		Not OK: {'env100', 'log2b', {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {{'inex', 'init10'}}}, 'nonl', 'mse', 'boost'}	 
-  2. [ ] Extract the ending conditions of many fitters and try to improve initial conditions
-  3. [ ] Reduce, Plot function abstractions for working with STACKs of models
-  4. [ ] After saving the model, but before database insertion, do other metrics
-  5. [ ] Optimization: If a keyword string already exists, load that rather than refit. 
+  1. [ ] Extract the ending conditions of many fitters and try to improve initial conditions of the compressors and output nonlinearities
+  2. [ ] Reduce, Plot function abstractions for working with STACKs of models
+  3. [ ] After saving the model, but before database insertion, do other metrics
+  4. [ ] Optimization: If a keyword string already exists, load that rather than refit. 
+  5. [ ] N Scatter plots of two models being compared, where N is the scatter plot for each performance metric.
   6. [ ] NARF Architecture Improvements
-	 - [ ] Allow queuing of not an entire analysis, but just a subset
 	 - [ ] Backup database move the old models/images to backup directories which will be scanned
 	 - [ ] Rename: VALIDATION/TEST  and EST/TRAINING 
 	 - [ ] Start a new NarfModels table
@@ -109,7 +102,6 @@
           - Timbre (STRF with harmonics)
           - Vowels, Consonants 
           - Onsets, offturns (STRF)
-
   10. [ ] GMM without slow EM step:
 	   For each point, take K nearest neighbors. 
 	   Compute 2D gaussian for that point. 

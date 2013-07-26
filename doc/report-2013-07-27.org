@@ -71,9 +71,11 @@
 
 ** Next Analyses
    1. Survey of Interaction.
-      - From different initial conditions (initrc, inita)
+      - From different initial conditions (initrc, inita, initrnd)
       - 
    2. Different compressors for each input channel
-      - 
-   3. Survey of Depression. There are a few depression variations; how many channels are relevant at the minimum?
-   4. Survey of Perf Metric. Is MSE Still the best?
+      - Compress
+   3. Survey of Initial Conditions
+      - Given different initial conditions, which 
+   4. Survey of Depression. There are a few depression variations; how many channels are relevant at the minimum?
+   5. Survey of Perf Metric. Is MSE Still the best?
