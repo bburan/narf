@@ -14,7 +14,7 @@ function y = nl_sig_gumber(phi, z)
     % so shifting is a little more complicated than normal
     z = z - lrshift + (mu-beta*log(log(2)));
    
-    f = @(mu, beta, x) 1 - exp(-exp(-(x-mu)./beta));
+    f = @(mu, beta, x) 1 - exp(-exp((x-mu)./beta));
     
     y = f(mu, beta, z);
    

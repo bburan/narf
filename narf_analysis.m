@@ -907,12 +907,14 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         if filename == 0 
             return
         end
+        enable_or_disable_children(parent_handle, 'off');
         warning off MATLAB:dispatcher:nameConflict;
         addpath(pathname);
         fn = str2func(filename(1:end-2));
         fn(sel_batch, sel_cellids, sel_models);
         rmpath(pathname);
         warning on MATLAB:dispatcher:nameConflict;
+        enable_or_disable_children(parent_handle, 'on');
     end
 
     CustomFunctionHandle=uicontrol('Parent', parent_handle, 'Style', 'edit',...
