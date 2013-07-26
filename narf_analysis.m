@@ -189,7 +189,7 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
          ret = mysql(sql);
          tags = cellstr(char(ret(:).tags));
          % Split the tags by spaces or commas
-         stags = cellfun(@(s) strtrim(strsep(s, ',')), tags, 'UniformOutput', false);        
+         stags = cellfun(@(s) cellfun(@(c) c{1}, regexp(s, '(\w+)\s*\,*', 'tokens'), 'UniformOutput', false), tags, 'UniformOutput', false); 
          stags = cat(2, {'*'}, stags{:});
          stags = unique(stags);
          set(handles.tag_filter, 'String', stags);

@@ -20,16 +20,18 @@
   - [X] Inspect Rerun normalization with "force positive" -> (Only helps CP3Free)
   - [X] Inspect parametric NLs -> winner is SIGLOG 
   - [X] Inspect Fitters
-  - [ ] Inspect NLxCP variations
-  - [ ] Queue the depression survey
-  - [ ] A script to create a new DB cache with all metrics
-  - [ ] Runscript on 240 to create avg fit time cache
-  - [ ] Plot of average fit times for 240 for all the fitters
+  - [ ] Scripty stuff
+    - [ ] Apply a function 
+    - [ ] A script to create a new DB cache with all metrics, fit times
+    - [ ] Runscript on 240 to create avg fit time plot
+  - [ ] Inspect NLxCP variations, and queue depression survey
   - [ ] Inspect depression survey when complete
   - [ ] Write a smarter booster with elitist stepping
-  - [ ]  Figure out why there is no test or train correlation with  fit_single_model(240,'por026c-c1',{'env100','sigumber','firno','initrc','nonl','mse','boost',},{'por026c10_p_SPN',}, {'por026c09_p_SPN',}, {})
+  - [ ] Figure out why there is no test or train correlation with  fit_single_model(240,'por026c-c1',{'env100','sigumber','firno','initrc','nonl','mse','boost',},{'por026c10_p_SPN',}, {'por026c09_p_SPN',}, {})
+  - [ ] Bugfix: when using init0, siglog/nonl doesn't work
 
 * Engineering
+  1. [ ] Bugfix: why does IVAR get called? (traced it to strsep by SVD...I guess it didn't do what I thought it did!)
   1. [ ] Bugfixes
 	- Modelstring bug
 		OK: {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {'inex', 'init10'}}, 'nonl', 'mse', 'boost'} 
@@ -37,7 +39,8 @@
   2. [ ] Extract the ending conditions of many fitters and try to improve initial conditions
   3. [ ] Reduce, Plot function abstractions for working with STACKs of models
   4. [ ] After saving the model, but before database insertion, do other metrics
-  5. [ ] NARF Architecture Improvements
+  5. [ ] Optimization: If a keyword string already exists, load that rather than refit. 
+  6. [ ] NARF Architecture Improvements
 	 - [ ] Allow queuing of not an entire analysis, but just a subset
 	 - [ ] Backup database move the old models/images to backup directories which will be scanned
 	 - [ ] Rename: VALIDATION/TEST  and EST/TRAINING 
@@ -45,35 +48,35 @@
 	 - [ ] Define a new function to extract/update, from every model, all relevant fields of the database.
 	 - [ ] Import useful models by scanning the directories, copying files and getting relevant metadata
 	 - [ ] Check things loaded well with the narf browser completion tests
-  6.  Advanced plots
+  7.  Advanced plots
       - Histograms of parameters across a population, clustered by best-fitting model?
       - Histograms of logfree parameters
       - Overlap plots of all compressor curves
       - Time to fit vs performance for fitters
-  7. [-] Default per-paramset, per-channel heatmap graph fns:
+  8. [-] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [X] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  8. [ ] Boosting Variants
+  9. [ ] Boosting Variants
          - [ ] Boosting Variant: variable step size boosting
          - [ ] Boosting variant: Cheat and stop whenever the validation set error goes up.
          - [ ] Boosting variant: terminate when last N times the 10% held out data error has gone up 
-  9. [ ] Safety check so that these modules do not allow unifiers/splitters
-         - Correlation, MSE, bayesian, loader, etc
-	 - Should normalization module do splitting or not?
-  10. [ ] Repair Fitters 
+  10. [ ] Safety check so that these modules do not allow unifiers/splitters
+          - Correlation, MSE, bayesian, loader, etc
+	  - Should normalization module do splitting or not?
+  11. [ ] Repair Fitters 
           - [ ] Remove, then re-add test_set data by default to make fitters faster
           - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  11. [ ] Fix Irregularities
+  12. [ ] Fix Irregularities
           - Not all nonlinearities can accomodate NaNs in their code, especially in stim
           - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
           - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
           - Jackknifing doesn't work with performance metrics besides MSE right now?
-  12. [ ] Profile and look for optimizations:
+  13. [ ] Profile and look for optimizations:
           - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
           - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
-  13. [ ] Write a crash course guide on using NARF 
+  14. [ ] Write a crash course guide on using NARF 
 
 * Experiments:
   2. [ ] Really Simple Models
