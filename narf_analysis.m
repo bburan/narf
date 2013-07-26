@@ -180,7 +180,7 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
          dbopen;
          ret = mysql(sql);
          statuses = cellstr(char(ret(:).status));
-         set(handles.status_filter, 'String', cat(1, {'*'}, statuses));
+         set(handles.status_filter, 'String', cat(1, {'*'}, unique(statuses)));
      end
 
      function rebuild_tag_filter()

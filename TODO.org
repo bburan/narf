@@ -1,60 +1,43 @@
 * HIGH LEVEL GOALS:
   1. Discuss grant writing with Stephen
-  2. Somehow, make vocalization data (246) fits take < 1 day for IFN models.
-     - Boosting algorithm correction to lessen n^2 performance scaling problem
-       1) Not test-steping along every direction each time:
-	  - Keep a list of the top N coefs. 9 out of 10 times, boost only on those. Rebuild models every 10-15 steps. 
-       2) Boosting on individual modules	  
+  2. Make vocalization data (246) fits take < 1 day for IFN models
   3. What can we do to produce more interpretable, clean, plausible results?
      - Models with fewer parameters and more general parameterizations? 
      - Perhaps per-cell intepretability is irrelevant; relative performance is all that matters for determining model importance?  
   4. How can we make these inter-model comparisons more straightforward? 
      - Update "insert into DB" fn to also compute BIC, AIC, Mutual Info, etc., and also total spike count, Signal to Noise Ratio. 
-  5. Add more normalization so that fitting with default values becomes easier
-     
-
-* Friday
-  - [ ] Inspect Rerun normalization with "force positive"
-  - [ ] 
-
-* Next Steps Plan
-  - [ ] Repair bugs
-	- Why does "inspect model" fail so often when loading?
-	- Why no nonlinearities being shown in the preview
-	- why no correlation updates
-  - [ ] Queue new parametric NL
-  - [ ] Queue new parametric compressors
-  - [ ] Picking depfree, best NL and best compressor, find best fitter
-  - [ ] Extract the ending conditions of many fitters and try to improve initial conditions
-  - [ ] Plot of average fit times for 240 for all the fitters
-  - [ ] With the best fitter, run a 2x2 analysis trying best few NLs and compressors
-  - [ ] Record results for 240
-  - [ ] Study which depression levels work best
-
-* Possible experimental workflow in NarfAnalysis
-    1. Spray & pray likely models (already automated)
-    2. Pick 4-5 models as the best categories (already automated)
-    3. For each grouping, scatter/histogram of extracted parameters 
+     - For each population grouping, scatter/histogram of extracted parameters 
        - Less variance makes us more certain of cell's categorization
-       - Histograms comparing coefs of different categories interesting too.
+       - Compare inter-category variance vs population variance
     4. Make a new "Narf Batch Category" containing relevant cells for final analysis so they are more easily grouped
- 
 
-* Plots to Do:
-  - Histogram Plot of depression parameters from depfree from 240
-  - Histograms of parameters across a population, clustered by best-fitting model?
-  - Histograms of logfree parameters
-  - Overlap plots of all compressor curves
-  - Time to fit vs performance for fitters
-    
-* Engineering:
-  1. [ ] Fix bug: 
+* Corrections discovered
+  - Sigcauchy completely wrong as compressor?
+  - Sigumber mostly wrong
+     
+* Friday
+  - [X] Inspect parametric compressors (See report)
+  - [X] Inspect Rerun normalization with "force positive" -> (Only helps CP3Free)
+  - [X] Inspect parametric NLs -> winner is SIGLOG 
+  - [X] Inspect Fitters
+  - [ ] Inspect NLxCP variations
+  - [ ] Queue the depression survey
+  - [ ] A script to create a new DB cache with all metrics
+  - [ ] Runscript on 240 to create avg fit time cache
+  - [ ] Plot of average fit times for 240 for all the fitters
+  - [ ] Inspect depression survey when complete
+  - [ ] Write a smarter booster with elitist stepping
+  - [ ]  Figure out why there is no test or train correlation with  fit_single_model(240,'por026c-c1',{'env100','sigumber','firno','initrc','nonl','mse','boost',},{'por026c10_p_SPN',}, {'por026c09_p_SPN',}, {})
+
+* Engineering
+  1. [ ] Bugfixes
+	- Modelstring bug
 		OK: {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {'inex', 'init10'}}, 'nonl', 'mse', 'boost'} 
-		Not OK: {'env100', 'log2b', {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {{'inex', 'init10'}}}, 'nonl', 'mse', 'boost'}
-
-  2. [ ] Reduce, Plot function abstractions for working with STACKs of models
-  3. [ ] After saving the model, but before database insertion, do other metrics
-  4. [ ] NARF Architecture Improvements
+		Not OK: {'env100', 'log2b', {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {{'inex', 'init10'}}}, 'nonl', 'mse', 'boost'}	 
+  2. [ ] Extract the ending conditions of many fitters and try to improve initial conditions
+  3. [ ] Reduce, Plot function abstractions for working with STACKs of models
+  4. [ ] After saving the model, but before database insertion, do other metrics
+  5. [ ] NARF Architecture Improvements
 	 - [ ] Allow queuing of not an entire analysis, but just a subset
 	 - [ ] Backup database move the old models/images to backup directories which will be scanned
 	 - [ ] Rename: VALIDATION/TEST  and EST/TRAINING 
@@ -62,35 +45,38 @@
 	 - [ ] Define a new function to extract/update, from every model, all relevant fields of the database.
 	 - [ ] Import useful models by scanning the directories, copying files and getting relevant metadata
 	 - [ ] Check things loaded well with the narf browser completion tests
-  5. [-] Default per-paramset, per-channel heatmap graph fns:
+  6.  Advanced plots
+      - Histograms of parameters across a population, clustered by best-fitting model?
+      - Histograms of logfree parameters
+      - Overlap plots of all compressor curves
+      - Time to fit vs performance for fitters
+  7. [-] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [X] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  6. [ ] Boosting Variants
+  8. [ ] Boosting Variants
          - [ ] Boosting Variant: variable step size boosting
          - [ ] Boosting variant: Cheat and stop whenever the validation set error goes up.
          - [ ] Boosting variant: terminate when last N times the 10% held out data error has gone up 
-  7. [ ] Safety check so that these modules do not allow unifiers/splitters
+  9. [ ] Safety check so that these modules do not allow unifiers/splitters
          - Correlation, MSE, bayesian, loader, etc
-	 - Split normalization or not?
-  8. [ ] Repair Fitters 
-         - [ ] Remove, then re-add test_set data by default to make fitters faster
-         - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  9. [ ] Fix Irregularities
-         - Not all nonlinearities can accomodate NaNs in their code, especially in stim
-         - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
-         - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
-         - Jackknifing doesn't work with performance metrics besides MSE right now?
-  10. [ ] Profile and look for optimizations:
+	 - Should normalization module do splitting or not?
+  10. [ ] Repair Fitters 
+          - [ ] Remove, then re-add test_set data by default to make fitters faster
+          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
+  11. [ ] Fix Irregularities
+          - Not all nonlinearities can accomodate NaNs in their code, especially in stim
+          - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
+          - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
+          - Jackknifing doesn't work with performance metrics besides MSE right now?
+  12. [ ] Profile and look for optimizations:
           - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
           - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
-  12. [ ] Write a crash course guide on using NARF 
+  13. [ ] Write a crash course guide on using NARF 
 
 * Experiments:
-  1. [ ] Different parameterization of a sigmoid (corners, etc)
-	 5-parameter sigmoid model	 
-  2. [ ] Really Simple Model
+  2. [ ] Really Simple Models
 	 Logfit (1 parm) + scale & delay amount per channel (2*n parms) + respavg-estimated stateful depression amount (2*n parms)
   3. [ ] Probabilistic FIR filters
 	 + Per-coefficient probabilistic distributions to replace FIR filters

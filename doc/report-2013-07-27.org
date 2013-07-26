@@ -1,0 +1,56 @@
+* Summary of Model Experiments for July 22-26   
+** Compressor Survey
+   - Batch 240 with modeltype: env100_*_firno_initrc_nonl_mse_boost
+   - Compressors tested: nocp,cp1,cp1free,cp2,cp2free,cp3,cp3free,logfit,logfree,log1b,log2b,log3b,log4b,log5b,log1nb,log2nb,log3nb','log4nb,log5nb,log2c,poly2,poly3,rootfree,root2,root3,root4,root5,rootn2,rootn3,rootn4,rootn5,rootfit,sig,sigcauchy, sigell,siglog,sigumbel,sigumber,zexp,zthresh
+   - Compressors with problems: cp2, logfit, cp3free, sigumber (buggy), sigcauchy(completely broken)
+   - Best 3 by mean correlation: logfree, rootfree, siglog
+   - Best 3 by mean rank: logfree, rootfree, siglog
+   - 1 model that describes population best: Rootfree
+   - 2 models that describe population best: Rootfree (75%), cp1 (25%)
+   - 3 models that describe population best: rootfree (40%), siglog (40%), cp1(20%)
+   - Reasons not to trust these results:
+     1. NONL is not a good output nonlinearity, and compressors and nonlinearities interact. 
+     2. It's possible that boost can fit some compressors better than others. 
+** Do Compressors benefit from normalization with force positive?
+   - Comparison was between env100 and env100norm.
+   - Only cp3free (inverse 2nd-order polynomial) appeared to benefit. Other keywords (rootfree, logfree, cp1free) did not, showing only very slight (negative) differences when normalization was added. 
+** Nonlinearity Survey
+   - Batch 240 with modeltype: env100_log2b_firno_initrc_*_mse_boost
+   - Nonlinearities tested: nonl,npnl,npfnl,npfnl0,exp,poly2,poly3,senl,sig,sigcauchy,sigell,siglog,sigumbel,sigumber,zexp,zthresh
+   - Best 3 by mean correlation: npfnl0, siglog, senl
+   - Best 3 by mean correlation, parametric only: siglog, sigell, sigcauchy
+   - Best 3 by mean rank: npfnl0, npnl, siglog
+   - Best 3 by mean rank, parametric only: sig, siglog, sigumbel   
+   - 1 parametric model that describes population best: siglog
+   - 2 parametric models that describe population best: siglog (70%), poly3(30%)
+   - 3 parametric models that describe population best: siglog (60%), exp(20%), poly3(20%)
+   - Reasons not to trust these results:
+     1. LOG2B is not the best compressor, and compressors and nonlinearities intera
+     2. It's possible that boost can fit some nonlinearities better than others. 
+   - Observations: 
+     1. For about 20% of the neurons, exp fits them really well (avg correlation 0.54). My hypothesis is that these are very linear neurons, and the exponential cancels out the input log2b to some extent. 
+** Fitter Survey 
+   - Batch 240 with modeltype: env100_logfree_depfree_[initrc/init0]_siglog_*
+   - Fitters tested: boost,boosti,boostis,boostit,boostirel,boostrel,boostrel4,boostrel5,boostrel6,anneal,fmin,fminu,genetic,fminlsq,qboost,qfmin,qlsq,qlsqi,qboosti
+   - Fitters with small problems: boosti, anneal, genetic. Very minor: fmin, fminu
+   - Best 3 by mean correlation: init0/boostis, initrc/boost, init0/boost
+   - Best 3 by mean rank: initrc/boost, init0/boostis, init0/boost
+   - 1 model that describes population best: initrc/boost
+   - 2 models that describe population best: initrc/boostit(40%), init0/boost (60%) 
+   - 3 models that describe population best: init0/boostis(55%), initrc/boostit, init0/boostrel5
+   - Observations
+     1. Boosting, in any version, seems to work pretty well. 
+     2. A rough comparison of fit times:
+
+        | boost     | 900 sec  |
+        | boostis   | 2100 sec |
+        | boostit   | 600 sec  |
+        | boostirel | 60 sec   |
+
+	This suggests that init0/boostit is actually a pretty good deal, and init0/boostirel gets us most of the way there at 1/10th the cost.
+     3. After boostis and boost, boostirel and boostit are the next best two. Probably boosting longer would help; we may be stopping too early for these?     
+    
+** Next Analyses
+   1. Survey of Interaction. Because compressors and nonlinearities interact, I think from now on we should consider them together. A brief survey of those combined seems like a good idea. 
+   2. Survey of Depression. There are a few depression variations; how many channels are relevant at the minimum?
+   3. Survey of Perf Metric. Is MSE Still the best?

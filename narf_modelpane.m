@@ -596,7 +596,10 @@ function rebuild_gui_from_stack()
         if length(XXX) <= ii
             calc_xxx(ii, ii+1);
             %was: XXX{ii+1} = m.fn(STACK(1:ii), XXX); 
+        else
+            calc_xxx(ii);
         end
+       
     
         % Delete any existing plot guis 
         if isfield(NARFGUI{ii}, 'plot_gui')
