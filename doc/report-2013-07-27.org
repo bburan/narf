@@ -49,8 +49,31 @@
 
 	This suggests that init0/boostit is actually a pretty good deal, and init0/boostirel gets us most of the way there at 1/10th the cost.
      3. After boostis and boost, boostirel and boostit are the next best two. Probably boosting longer would help; we may be stopping too early for these?     
-    
+
+** Preliminary Interaction Survey
+   - Why: Because compressors and nonlinearities interact, we should consider them together. 
+   - Batch 240 with modeltype env100_*_depfree_init0_*_boostirel
+   - Compressors tested: nocp,logfree,rootfree,cp1,cp1free,siglog
+   - Nonlinearities tested: nonl,sig,sigell,siglog,sigumbel,zexp,zthresh
+   - Best 3 by mean corr: siglog/zthresh, cp1free/zthresh, logfree/zthresh
+   - Best 3 by mean rank: logfree/zthresh, logfree/sig, logfree/nonl
+   - 1 model that describes population best: logfree/nonl
+   - 2 models: logfree/zthresh(66%), nocp/sig(33%)
+   - 3 models: logfree/zthresh(50%), depfree/sig (30%), siglog/zexp (20%)
+   - Reasons not to trust these results
+     1) Rootfree wasn't compared.
+     2) Init0 is a bad place to start, apparently
+     3) 
+   - Observations:
+     1) Rootfree fails as a compressor with init0, in general
+     2) siglog/nonl fails with init0...weird! 
+
+
 ** Next Analyses
-   1. Survey of Interaction. Because compressors and nonlinearities interact, I think from now on we should consider them together. A brief survey of those combined seems like a good idea. 
-   2. Survey of Depression. There are a few depression variations; how many channels are relevant at the minimum?
-   3. Survey of Perf Metric. Is MSE Still the best?
+   1. Survey of Interaction.
+      - From different initial conditions (initrc, inita)
+      - 
+   2. Different compressors for each input channel
+      - 
+   3. Survey of Depression. There are a few depression variations; how many channels are relevant at the minimum?
+   4. Survey of Perf Metric. Is MSE Still the best?
