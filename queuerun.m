@@ -67,10 +67,15 @@ BATQUEUEID=str2num(getenv('QUEUEID'));
 if isempty(findstr(lower(host),'seil.umd.edu')),
     s=get(0,'Children');
     s=s(s<=3);
+    figpath=sprintf('%s/%d',QUEUEOUTPATH,floor(BATQUEUEID/1000)*1000);
+    if ~exist(figpath,'dir'),
+        unix(['mkdir ',figpath]);
+    end
+    
     for ii=s(:)',
         figure(ii);
         fullpage portrait
-        print(['-f' num2str(ii)],'-djpeg','-r75',sprintf('%s/%d.%d.jpg',QUEUEOUTPATH,BATQUEUEID,ii));
+        print(['-f' num2str(ii)],'-djpeg','-r75',sprintf('%s/%d.%d.jpg',figpath,BATQUEUEID,ii));
     end
 end
 
