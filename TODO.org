@@ -1,6 +1,7 @@
 * HIGH LEVEL GOALS:
   1. Discuss grant writing with Stephen
   2. Make vocalization data (246) fits take < 1 day for IFN models
+     - Smarter boosting algorithms (elitist stepping)
   3. What can we do to produce more interpretable, clean, plausible results?
      - Models with fewer parameters and more general parameterizations? 
      - Perhaps per-cell intepretability is irrelevant; relative performance is all that matters for determining model importance?  
@@ -11,65 +12,58 @@
        - Compare inter-category variance vs population variance
     4. Make a new "Narf Batch Category" containing relevant cells for final analysis so they are more easily grouped
 
-* Corrections discovered
-  - Sigcauchy completely wrong as compressor?
-  - Sigumber mostly wrong
-     
-* Friday
+* NEXT
   - [ ] Modelstring bug {'env100', 'log2b', {'firno', 'firn', 'fir2n', 'firn2np', 'irn', 'irnr', 'firnpr', 'firnv2', 'depn', 'depno', 'depped', {{'inex', 'init10'}}}, 'nonl', 'mse', 'boost'}
   - [ ] Allow queuing of not an entire analysis, but just a subset
-  - [ ] Scripty stuff
+  - [ ] Scripts	
     - [ ] Apply a function to every model file selected
     - [ ] Create a new DB cache with all metrics, fit times
     - [ ] Runscript on 240 to create avg fit time plot
-  - [ ] Inspect NLxCP variations, and queue depression survey
-  - [ ] Inspect depression survey when complete
-  - [ ] Write a smarter booster with elitist stepping
-  - [ ] Figure out why there is no test or train correlation with  fit_single_model(240,'por026c-c1',{'env100','sigumber','firno','initrc','nonl','mse','boost',},{'por026c10_p_SPN',}, {'por026c09_p_SPN',}, {})
-  - [ ] Bugfix: when using init0, siglog/nonl doesn't work
 
 * Engineering
   1. [ ] Extract the ending conditions of many fitters and try to improve initial conditions of the compressors and output nonlinearities
   2. [ ] Reduce, Plot function abstractions for working with STACKs of models
   3. [ ] After saving the model, but before database insertion, do other metrics
-  4. [ ] Optimization: If a keyword string already exists, load that rather than refit. 
+  4. [ ] Optimization: If a keyword string already exists, load that rather than refit all the way to that point....
   5. [ ] N Scatter plots of two models being compared, where N is the scatter plot for each performance metric.
-  6. [ ] NARF Architecture Improvements
+  6. [ ] Correlation score that somehow discards outliers? MSE that discards outliers?
+  7. [ ] NARF Architecture Improvements
 	 - [ ] Backup database move the old models/images to backup directories which will be scanned
 	 - [ ] Rename: VALIDATION/TEST  and EST/TRAINING 
 	 - [ ] Start a new NarfModels table
 	 - [ ] Define a new function to extract/update, from every model, all relevant fields of the database.
 	 - [ ] Import useful models by scanning the directories, copying files and getting relevant metadata
 	 - [ ] Check things loaded well with the narf browser completion tests
-  7.  Advanced plots
+  8.  Advanced plots
       - Histograms of parameters across a population, clustered by best-fitting model?
       - Histograms of logfree parameters
       - Overlap plots of all compressor curves
       - Time to fit vs performance for fitters
-  8. [-] Default per-paramset, per-channel heatmap graph fns:
+  9. [-] Default per-paramset, per-channel heatmap graph fns:
 	 - [ ] Loadstimfrompbaphy
 	 - [X] Nonrmalize channels
 	 - [ ] FIR filter
 	 - [ ] Nonlinearity
-  9. [ ] Boosting Variants
-         - [ ] Boosting Variant: variable step size boosting
-         - [ ] Boosting variant: Cheat and stop whenever the validation set error goes up.
-         - [ ] Boosting variant: terminate when last N times the 10% held out data error has gone up 
-  10. [ ] Safety check so that these modules do not allow unifiers/splitters
+  10. [ ] Boosting Variants
+          - [ ] Boosting Variant: variable step size boosting
+          - [ ] Boosting variant: Cheat and stop whenever the validation set error goes up.
+          - [ ] Boosting variant: terminate when last N times the 10% held out data error has gone up 
+  11. [ ] Safety check so that these modules do not allow unifiers/splitters
           - Correlation, MSE, bayesian, loader, etc
 	  - Should normalization module do splitting or not?
-  11. [ ] Repair Fitters 
+  12. [ ] Repair Fitters 
           - [ ] Remove, then re-add test_set data by default to make fitters faster
-          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?
-  12. [ ] Fix Irregularities
+          - [ ] How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?  
+          - [ ] Bugfix: when using init0, siglog/nonl doesn't work
+  13. [ ] Fix Irregularities
           - Not all nonlinearities can accomodate NaNs in their code, especially in stim
           - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
           - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
           - Jackknifing doesn't work with performance metrics besides MSE right now?
-  13. [ ] Profile and look for optimizations:
+  14. [ ] Profile and look for optimizations:
           - Is there a way to speed up NPNL? Unique is DOG SLOW because it sorts.
           - Write a FIR speed booster, which uses N vectors (one per FIR coef, which re a product with the stimulus). Each boost step, only 1 coef need be updated.
-  14. [ ] Write a crash course guide on using NARF 
+  15. [ ] Write a crash course guide on using NARF 
 
 * Experiments:
   2. [ ] Really Simple Models
