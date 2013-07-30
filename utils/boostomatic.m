@@ -122,13 +122,14 @@ while (true)
             n = n + 1;
             
             % Should we quit?
-            if termfn(n, x, stepsize, s_delta)                
-                % Return the best value found so far
-                x_bst = x;
-                s_bst = s;
-                termcond = termfn(n, x, stepsize, s_delta);                
-                return;                
-            end
+        end
+        
+        if termfn(n, x, stepsize, s_delta)
+            % Return the best value found so far
+            x_bst = x;
+            s_bst = s;
+            termcond = termfn(n, x, stepsize, s_delta);
+            return;
         end
             
     end
