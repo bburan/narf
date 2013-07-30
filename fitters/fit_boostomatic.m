@@ -9,7 +9,7 @@ if ~exist('max_n_steps', 'var'),
 end
 
 if ~exist('min_stepsize', 'var'),
-    min_stepsize = 10^-6;
+    min_stepsize = 10^-12;
 end
 
 if ~exist('min_scoredelta', 'var'),
@@ -35,10 +35,10 @@ function stop = term_fn(n,x,s,d)
         stop = 1;
         return
     end
-    %if (s < min_stepsize)
-    %    stop = 2;
-    %    return
-    %end
+    if (s < min_stepsize)
+        stop = 2;
+        return
+    end
     %if (d < min_scoredelta)
     %    stop = 3;
     %    return
