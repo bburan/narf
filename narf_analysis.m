@@ -543,10 +543,10 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         dbopen;
         total = 0;
         complete = 0;
-        for ii = 1:length(cellids_found)
-            fprintf('%-20s|', cellids_found{ii});
-            for jj = 1:length(models_found)       
-                if model_exists_in_db(sel_batch, cellids_found{ii}, models_found{jj})
+        for ii = 1:length(sel_cellids)
+            fprintf('%-20s|', sel_cellids{ii});
+            for jj = 1:length(sel_models)       
+                if model_exists_in_db(sel_batch, sel_cellids{ii}, sel_models{jj})
                     fprintf('X|');
                     complete = complete+1;
                 else
@@ -558,8 +558,8 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         end
         
         fprintf('-------------------------------------------------------------------------------\n');        
-        fprintf('CellIDs: %d\n', length(cellids_found));
-        fprintf('Models: %d\n', length(models_found));
+        fprintf('CellIDs: %d\n', length(sel_cellids));
+        fprintf('Models: %d\n', length(sel_models));
         fprintf('Status: [%d/%d] (complete/total), %d models not yet processed.\n', complete, total, total - complete);       
         fprintf('-------------------------------------------------------------------------------\n');        
 
@@ -627,7 +627,18 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         cells = request_celldb_batch(thebatch);
         
         for ii = 1:length(cells)
-            for jj = 1:length(modulekeys)                     
+            if isempty(find(ismember(sel_cellids, cells{ii}.cellid), 1))
+                continue;
+            end                            
+            for jj = 1:length(modulekeys)     
+                tmp = cellfun(@(n) sprintf('%s_', n), modulekeys{jj}, 'UniformOutput', false);
+                modelname = strcat(tmp{:});
+                modelname = modelname(1:end-1); % Remove trailing underscore
+  
+                if isempty(find(ismember(sel_models, modelname), 1))
+                    continue;
+                end
+                
                 enqueue_single_model(thebatch, cells{ii}.cellid, modulekeys{jj}, ...
                     cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, force);
             end
@@ -791,9 +802,11 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
             return;
         end
         figure('Name', 'Heat Map Comparison', 'NumberTitle', 'off', ...
-               'Position', [10 10 900 900]);        
-        [D, idxs] = sort([nanmean(data)' data']);
-        heatmap(D(idxs, 2:end), sel_cellids(idxs), sel_models(idxs),  '', 'TickAngle', 90, 'ShowAllTicks', true); 
+               'Position', [10 10 900 900]);      
+        ns = 1:size(data,2);
+        D = sortrows([nanmean(data)' ns' data'], [-1]);
+        idxs = D(:,2);
+        heatmap(D(:, 3:end), sel_cellids, sel_models(idxs),  '', 'TickAngle', 90, 'ShowAllTicks', true); 
     end
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
