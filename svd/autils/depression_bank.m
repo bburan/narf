@@ -27,18 +27,18 @@ if ~exist('verbose','var'),
    verbose=0;
 end
 
-dcount=size(u,2);
+dcount=length(u);
 dstim=zeros(dcount*size(stim,1),size(stim,2));
 internalfs=100;
 istimthresh=0;
 
 if verbose,
-   fprintf('applying depression_bank\n');
+   fprintf('Applying depression_bank\n');
 end
 
 % don't update if we KNOW we're in the validation phase of cellxcnodb.m
 if isempty(ESTIMATIONPHASE) || ESTIMATIONPHASE || isempty(DEPSTIMMAX),
-   DEPSTIMMAX=max(stim,[],2);
+   DEPSTIMMAX=max(stim,[],2)
 end
 
 for jj=1:dcount,

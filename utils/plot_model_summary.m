@@ -21,9 +21,9 @@ lb = 50;  % Left border
 rb = 20;  % Right border
 bb = 30;  % Bottom border
 th = 180; % text height
-ph = 200; % Plot height
+ph = 150; % Plot height
 
-w = 800; % Pixels
+w = 600; % Pixels
 
 vspace = 0.2; % Relative sizes
 hspace = 0.05; 
@@ -39,7 +39,7 @@ end
 nplots = length(ap);
 
 % Create a new, invisible figure
-h = (nplots+1)*ph + th;
+h = (nplots)*ph + th;
 fig = figure('Menubar', 'figure', 'Resize','off', 'Visible', 'on', ...
              'Units','pixels', 'Position', [50 50 w+20 h]);
 

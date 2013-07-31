@@ -546,6 +546,7 @@ while 1,
    end
    
    % tell the database dbqueuemaster is still alive
+   [s,dhost]=unix('hostname'); % flush
    [s,dhost]=unix('hostname');
    dhost=dhost(1:(end-1));
    sql=['UPDATE tGlobalData SET ',...
