@@ -863,8 +863,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         %errorbar(1:len, nanmean(data), nanvar(data), max(data) - nanmean(data), 'xk');
         hold off;
         set(gca,'XTick', 1:len);
-        A = axis;
-        axis([A(1) A(2) A(3) A(4)*0.9]);
+        axis([0 len+1 -0.1 max(data(:))*1.1]);
         thelabels = {};
         for ii = 1:len
             thelabels{ii} = [ '(' num2str(Dcount(ii)) ')[' sprintf('%5.3f', Dmeans(ii)) ']' sel_models{ii} ];  
