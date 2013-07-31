@@ -1,9 +1,13 @@
 function ret = nl_root(phi, z)
     exponent = phi(1);
     if length(phi) > 1
-        baseline = phi(2);
+        z0 = phi(2);
     else
-        baseline = 0;
+        z0 = 0;
     end
-    ret = abs(z.^(1/exponent)) + baseline;
+    
+    idxs = (z <= z0);
+    z(idxs) = 0;
+    ret = (z-z0).^(1/exponent);
+    ret(idxs) = 0;
 end

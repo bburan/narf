@@ -791,8 +791,9 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
             return;
         end
         figure('Name', 'Heat Map Comparison', 'NumberTitle', 'off', ...
-               'Position', [10 10 900 900]);
-        heatmap(data', sel_cellids, sel_models,  '', 'TickAngle', 90, 'ShowAllTicks', true); 
+               'Position', [10 10 900 900]);        
+        [D, idxs] = sort([nanmean(data)' data']);
+        heatmap(D(idxs, 2:end), sel_cellids(idxs), sel_models(idxs),  '', 'TickAngle', 90, 'ShowAllTicks', true); 
     end
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
@@ -825,6 +826,8 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         n_pieces = 10;
         
         % Sort the data
+        Dmeans = nanmean(data);
+        Dcount = sum(~isnan(data));
         D = [nanmean(data)' data'];
         [sD, idxs] = sortrows(D, -1);
         data = sD(:, 2:end)';
@@ -841,13 +844,19 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         deciles = conv_fn(sort(data, 1, 'descend'), 1, @(x) max(x(:)), np, 0);
         decadiffs = diff(flipud(deciles));
         decas = [deciles(end,:); decadiffs];
-        bar(1:len, decas', 'stacked');  
+        bar(1:len, decas', 'stacked');          
         bar(1:len, nanmean(data), 0.3, 'r'); 
         plot(1:len, data, 'k.');        
         %errorbar(1:len, nanmean(data), nanvar(data), max(data) - nanmean(data), 'xk');
         hold off;
         set(gca,'XTick', 1:len);
-        set(gca,'XTickLabel', sel_models(idxs));
+        A = axis;
+        axis([A(1) A(2) A(3) A(4)*0.9]);
+        thelabels = {};
+        for ii = 1:len
+            thelabels{ii} = [ '(' num2str(Dcount(ii)) ')[' sprintf('%5.3f', Dmeans(ii)) ']' sel_models{ii} ];  
+        end
+        set(gca,'XTickLabel', thelabels(idxs));
         set(gca,'CameraUpVector',[-1,0,0]);
         title('Model Performance and Deciles');
     end
