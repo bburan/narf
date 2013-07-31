@@ -1,9 +1,13 @@
 * Summary of Model Experiments for July 22-26   
+** Do Compressors benefit from normalization with force positive?
+   - Comparison was between env100 and env100norm.
+   - Only cp3free (inverse 2nd-order polynomial) appeared to benefit. Other keywords (rootfree, logfree, cp1free) did not, showing only very slight (negative) differences when normalization was added. 
 ** Compressor Survey
    - Batch 240 with modeltype: env100_*_firno_initrc_nonl_mse_boost
-   - Compressors tested: nocp,cp1,cp1free,cp2,cp2free,cp3,cp3free,logfit,logfree,log1b,log2b,log3b,log4b,log5b,log1nb,log2nb,log3nb','log4nb,log5nb,log2c,poly2,poly3,rootfree,root2,root3,root4,root5,rootn2,rootn3,rootn4,rootn5,rootfit,sig,sigcauchy, sigell,siglog,sigumbel,sigumber,zexp,zthresh
-   - Compressors with problems: cp2, logfit, cp3free, sigumber (buggy), sigcauchy(completely broken)
-   - Best 3 by mean correlation: logfree, rootfree, siglog
+   - CellIDs: 71, Models: 40, Status: [2823/2840] (complete/total), 17 models not yet processed.
+   - Compressors tested:  nocp,cp1,cp1free,cp2,cp2free,cp3,cp3free,logfit,logfree,log1b,log2b,log3b,log4b,log5b,log1nb,log2nb,log3nb','log4nb,log5nb,log2c,poly2,poly3,rootfree,root2,root3,root4,root5,rootn2,rootn3,rootn4,rootn5,rootfit,sig','sigcauchy',  'sigell,siglog,sigumbel,sigumber,zexp,zthresh
+   - Compressors which failed 100% completeness: cp2, cp3free, logfit, zthresh
+   - Best 3 by mean corr: logfree, rootfree, siglog
    - Best 3 by mean rank: logfree, rootfree, siglog
    - 1 model that describes population best: Rootfree
    - 2 models that describe population best: Rootfree (75%), cp1 (25%)
@@ -11,16 +15,17 @@
    - Reasons not to trust these results:
      1. NONL is not a good output nonlinearity, and compressors and nonlinearities interact. 
      2. It's possible that boost can fit some compressors better than others. 
-** Do Compressors benefit from normalization with force positive?
-   - Comparison was between env100 and env100norm.
-   - Only cp3free (inverse 2nd-order polynomial) appeared to benefit. Other keywords (rootfree, logfree, cp1free) did not, showing only very slight (negative) differences when normalization was added. 
+   - Conclusions it is fair to make:
+     1. For models without an output nonlinearity, ROOTFREE does well. 
 ** Nonlinearity Survey
    - Batch 240 with modeltype: env100_log2b_firno_initrc_*_mse_boost
+   - CellIDs: 71, Models: 16, Status: [1134/1136] (complete/total), 2 models not yet processed.
    - Nonlinearities tested: nonl,npnl,npfnl,npfnl0,exp,poly2,poly3,senl,sig,sigcauchy,sigell,siglog,sigumbel,sigumber,zexp,zthresh
    - Best 3 by mean correlation: npfnl0, siglog, senl
-   - Best 3 by mean correlation, parametric only: siglog, sigell, sigcauchy
-   - Best 3 by mean rank: npfnl0, npnl, siglog
+   - Best 3 by mean correlation, parametric only: siglog, sigumber, sigell
+   - Best 3 by mean rank: npfnl0, sig, npnl
    - Best 3 by mean rank, parametric only: sig, siglog, sigumbel   
+   - 1 model that describes entire population best: senl
    - 1 parametric model that describes population best: siglog
    - 2 parametric models that describe population best: siglog (70%), poly3(30%)
    - 3 parametric models that describe population best: siglog (60%), exp(20%), poly3(20%)
@@ -29,29 +34,50 @@
      2. It's possible that boost can fit some nonlinearities better than others. 
    - Observations: 
      1. For about 20% of the neurons, exp fits them really well (avg correlation 0.54). My hypothesis is that these are very linear neurons, and the exponential cancels out the input log2b to some extent. 
+   - Conclusions it is fair to make: 
+     1. SIGLOG is a great nonlinearity when paired with log2b. 
+
 ** Fitter Survey 
    - Batch 240 with modeltype: env100_logfree_depfree_[initrc/init0]_siglog_*
-   - Fitters tested: boost,boosti,boostis,boostit,boostirel,boostrel,boostrel4,boostrel5,boostrel6,anneal,fmin,fminu,genetic,fminlsq,qboost,qfmin,qlsq,qlsqi,qboosti
-   - Fitters with small problems: boosti, anneal, genetic. Very minor: fmin, fminu
-   - Best 3 by mean correlation: init0/boostis, initrc/boost, init0/boost
-   - Best 3 by mean rank: initrc/boost, init0/boostis, init0/boost
-   - 1 model that describes population best: initrc/boost
-   - 2 models that describe population best: initrc/boostit(40%), init0/boost (60%) 
-   - 3 models that describe population best: init0/boostis(55%), initrc/boostit, init0/boostrel5
+   - CellIDs: 71, Models: 46, Status: [3171/3266] (complete/total), 95 models not yet processed.
+   - Fitters tested:  boost,boosti,boostis,boostit,boostit2,boosto,boosto2,boosto3,boosto4,boostrel,boostrel4,boostrel5,boostrel6,anneal,fmin,fminu,genetic,fminlsq,qboost,qfmin,qlsq,qlsqi,qboosti
+   - Fitters which failed occasionally from init0: boosti, boosto3, anneal, fminlsq, qboosti
+   - Fitters which failed occasionally from initrc: boosti, boosto2, boosto3, anneal, qlsqi, qboosti
+*** Only fitters without failures
+   - Best 3 by mean corr: init0/boosto4, init0/boostit2, initrc/boosto4, 
+   - Best 4 by mean rank: initrc/boost, init0/boostis, init0/boosto4, init0/boostit2
+   - 1 model for pop: init0/boosto4, 
+   - 2 models for pop: init0/boosto4 (60%), initrc/boostit (40%)
+   - 3 models for pop: init0/boostit2 (40%), initrc/boostit2(30), init0/boosto2 (30%)
+*** Entire Fitter group
+   - Note: Because some fitters never converged, I had to select only the complete subset of 240 for a fair comparison. 
+   - Best 3 by mean corr: init0/boosto4, initrc/boostis, init0/boostit2
+   - Best 3 by mean rank: init0/boosto4, init0/boostis, init0/boost
+   - 1 model for pop: initrc/boosto4
+   - 2 models for pop: initrc/boostis(60%), init0/boostrel6(40%) 
+   - 3 models for pop: init0/boostis(45%), init0/boost(30%), init0/boostrel(25%)
    - Observations
-     1. Boosting, in any version, seems to work pretty well. 
-     2. A rough comparison of fit times:
+     1. Boosting, in any version, seems to work pretty well. New boost algorithms boostit, boostit2, and boosto4 work very well. 
+     2. Boosto4 is a hybrid fitter, which uses TWO fitters: a quick boost (qboost) followed by a boosto. That it performs so well is interesting. 
+     2. A rough comparison of fit times, in seconds
+        | CELLID    | por023a-a1 | por023a-b1 |
+        |-----------+------------+------------|
+        | boost     |        852 |        894 |
+        | boostis   |       2232 |       2130 |
+        | boostit   |        554 |        771 |
+        | boostit2  |        735 |        902 |
+        | boostirel |         49 |         31 |
+        | boosto    |        542 |        788 |
+        | boosto2   |        347 |        303 |
+        | boosto4   |        807 |        675 |
+	My interpretation is that we can safely switch to boosto4 instead of boost. 
+	This suggests that init0/boostirel is a wonderful bargain, getting us most of the way there at a tiny fraction of the fitting time. Perhaps stopping boosto4 earlier would also yield nice benefits?	
+     3. Boostis doing so well suggests that early stopping is less of a problem (on average) than not boosting long enough. 
+	However, a scatter plot of boosto4 vs boostis clearly shows that boostis is overfitting consistently for low correlation values, but winning consistently for higher correlation values. 
+	After boostis and boost, boostirel and boostit are the next best two. Probably boosting longer would help; we may be stopping too early for these?     
 
-        | boost     | 900 sec  |
-        | boostis   | 2100 sec |
-        | boostit   | 600 sec  |
-        | boostirel | 60 sec   |
-
-	This suggests that init0/boostit is actually a pretty good deal, and init0/boostirel is a wonderful bargain, getting us most of the way there at 1/10th the cost.
-     3. After boostis and boost, boostirel and boostit are the next best two. Probably boosting longer would help; we may be stopping too early for these?     
-
-** Preliminary Interaction Survey Results
-   - Why: Because compressors and nonlinearities interact, we should consider them together. 
+** CP/NL Interaction Survey
+   - Why: Because compressors and nonlinearities clearly interact, we should consider them together. 
    - Batch 240 with modeltype env100_*_depfree_init0_*_boostirel
    - Compressors tested: nocp,logfree,rootfree,cp1,cp1free,siglog
    - Nonlinearities tested: nonl,sig,sigell,siglog,sigumbel,zexp,zthresh
@@ -61,25 +87,50 @@
    - 2 models: logfree/zthresh(66%), nocp/sig(33%)
    - 3 models: logfree/zthresh(50%), depfree/sig (30%), siglog/zexp (20%)
    - Reasons not to trust these results
-     1) Rootfree wasn't compared
-     2) Init0 is a bad place to start
+     1) Rootfree wasn't compared because it did so poorly when combined with output nonlinearities
+     2) Boostirel is probably not safe to base our conclusions upon in this case. 
+     3) Init0 may be a bad place to start; it is probably already a local minimum that is hard to escape.
    - Observations:
      1) Rootfree fails as a compressor with init0, in general
-     2) siglog/nonl fails with init0...weird! 
+     2) siglog/nonl completely fails with init0
 
-** Next Analyses
-   1. Survey of Interaction
-      - 
-   2. Survey of Initial Conditions
-      - From different initial conditions (initrc, inita, initrnd)
-   3. Survey of Depression. 
-      - How many channels are relevant? 
-      - Which initial conditions help?
+** Initial Conditions Survey
+   - Batch 240
+   - env100_logfree_depfree_*_zthresh_mse_boostirel
+   - Initial Conditions Tested: init0, initrc, inita, initrnd
+   - CellIDs: 71, Models: 4, Status: [284/284] (complete/total), 0 models not yet processed.     
+   - Best 3 by mean corr: init0, inita, initrc
+   - Best 3 by mean rank: initrc, initrnd, init0
+   - 1 model for pop: init0
+   - 2 models for pop: initrnd(55%), init0(45%)
+   - 3 models for pop: initrnd(40%), init0(35%), inita(25%)
+   - Reasons not to trust these results:
+     1) Differences are fairly minor on average and may just be noise.
+   - Observations
+     1) There are surprisingly large variations in FIR filter coefficients appearance, although not in performance, when starting from different initial conditions. 
 
-** Next Week's Analyses
-   1. Different compressors for each input channel
-      - Should I split? Or what?
-   2. Survey of Perf Metrics
-      - Is MSE Still the best?
-   
-    
+** Depression Survey
+   - Batch 240. 
+   - CellIDs: 71, Models: 4, Status: [284/284] (complete/total), 0 models not yet processed.
+   - Model: env100_logfree_*_initrc_zthresh_mse_boostirel
+   - Depression variants tried: depfree,depno,depped,depn
+   - Clear winners: depno, followed by depfree. 
+   - Depfree runtime: 76.3883 (10 channel FIR)
+   - Depno runtime:  230. (2 channel fir)
+   - Observations:
+     1) For 3x the fit time and 5x the coefficients, depno does _slightly_ better.
+     2) A scatter plot comparing depno vs depfree suggests that there is little performance  variance between the two answers for high-correlation neurons, and a lot of variance for low correlation neurons. If we are only studying the 'best' cells, depfree is a better decision because it has fewer parameters.
+
+** Future Analyses
+   1. CP/NL interaction has been queued up again with boosto4, since that was our best fitter. 
+   2. IRNR queued up (Rectified inputs)      
+   3. Minimum fittable compressor channels
+      - Depno does better, but takes 3x the fit time of depfree and has many more coefficients. Perhaps a two-channel depfree2 is a good compromise?
+   4. Further improvements to boosting:
+      - Perhaps early stopping should occur earlier when the overall correlation sucks, and you should not occur when the correlation is "high enough". 
+      - Boosto5: qboost, boosto, and finally lsq?
+   5. Different fittable compressor nonlinearities for each input channel
+
+
+
+
