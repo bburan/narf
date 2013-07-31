@@ -1,11 +1,19 @@
-* Post-SVD Discussion
-  - Run FIRNO and not depfree for CP/NL interaction survey
-  - Boost0 keyword is our new default. 
-  - Rootfreeb is rootfree with a baseline, same for logfreeb
-  - Status report for the selected models only
-  - Add # of neurons to the barplot. Add also the mean.
-  - Rerun all surveys with boosto0
-
+* TODO:
+  - SURVEYS CHECKLIST:
+     - [X] Is batch 240 refreshed?
+     - [X] Has all code been pushed?
+     - [ ] Fitters: Add mixfit0 to the mix?
+     - [ ] Compressors: Remove initrc and run with boost0
+     - [ ] Depression: Rerun with boost0. 
+     - [ ] Filters: Consolidate IFN crap, do with boost0
+     - [ ] Interaction: Try best compressors, nonlinearities, boost0
+  - [ ] When the results of the fitters come back, possibly alter the interaction survey
+  - Plots next time
+    - Scatter plots of fitters
+    - Scatter plots of best compressors
+    - Scatter plots of best filters (depfree vs firno)
+    - Scatter plots of other crap. 
+  - 
 * Avenues of Research
   1. Grant: a way to pay for myself and get a grant to my name, but stay in this lab?
      ( Look at NRSA grant from NIH, due in December, called the Kirchstein award, F-32. I would be a good applicant, and could probably modify SVD's grant and list my own publication.  Also, a hearing health foundation grant might also help. )
@@ -22,11 +30,9 @@
   6. Outlier rejection:
      1) Exclude worst 1% in MSE calculations?
      2) Start at L2, gradually switch to L1 as time goes on?
-     3) 
   7. Improved initial conditions:
      1) Depression
      2) FIR filters
-     3) 
   8. By-Hand Observations
   9. Additional keywords
      1) Simple-Delay FIR
@@ -36,7 +42,6 @@
   10. Additional modules
       1) Gain changing module
   11. Engineering fixes
-      1) Allow queueing of just a subset of analysis
       2) Modelstring bug
   12. Filter properties as they change over time
       1) Split according to time in file

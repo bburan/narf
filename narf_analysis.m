@@ -850,9 +850,9 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         len = length(sel_models);
         
         if (mod(size(data,1), n_pieces) == 0)
-            np = floor(size(data, 1) / n_pieces);        
+            np = max(1, floor(size(data, 1) / n_pieces));        
         else
-            np = floor(size(data, 1) / (n_pieces-1));
+            np = max(1, floor(size(data, 1) / (n_pieces-1)));
         end
         deciles = conv_fn(sort(data, 1, 'descend'), 1, @(x) max(x(:)), np, 0);
         decadiffs = diff(flipud(deciles));
