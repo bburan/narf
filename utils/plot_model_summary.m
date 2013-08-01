@@ -39,7 +39,7 @@ end
 nplots = length(ap);
 
 % Create a new, invisible figure
-h = (nplots)*ph + th;
+h = (nplots+1)*ph + th;
 fig = figure('Menubar', 'figure', 'Resize','off', 'Visible', 'on', ...
              'Units','pixels', 'Position', [50 50 w+20 h]);
 
