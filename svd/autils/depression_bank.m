@@ -38,7 +38,7 @@ end
 
 % don't update if we KNOW we're in the validation phase of cellxcnodb.m
 if isempty(ESTIMATIONPHASE) || ESTIMATIONPHASE || isempty(DEPSTIMMAX),
-   DEPSTIMMAX=max(stim,[],2)
+   DEPSTIMMAX=max(stim,[],2);
 end
 
 for jj=1:dcount,
