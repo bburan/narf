@@ -932,7 +932,14 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         warning off MATLAB:dispatcher:nameConflict;
         addpath(pathname);
         fn = str2func(filename(1:end-2));
-        fn(sel_batch, sel_cellids, sel_models);
+        try
+            fn(sel_batch, sel_cellids, sel_models);
+        catch err
+            rmpath(pathname);
+            warning on MATLAB:dispatcher:nameConflict;
+            enable_or_disable_children(parent_handle, 'on');
+            rethrow(err);
+        end
         rmpath(pathname);
         warning on MATLAB:dispatcher:nameConflict;
         enable_or_disable_children(parent_handle, 'on');

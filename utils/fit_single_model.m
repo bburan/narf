@@ -69,8 +69,6 @@ cmd = [git 'rev-parse HEAD'];
 [~, unix_string] = unix(cmd);
 META.git_commit  = regexprep(unix_string, '\n', '');
 
-tic;
-
 % Build the modelname
 tmp = cellfun(@(n) sprintf('%s_', n), modulekeys, 'UniformOutput', false);
 modelname = strcat(tmp{:});

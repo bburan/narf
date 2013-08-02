@@ -9,6 +9,6 @@ linestyle = {'.', 'o', 'x', '+', '*', 's', 'd', 'v', '^', '<', '>', 'p', 'h'};
 
 n_linestyles = length(linestyle);
 
-l = linestyle{mod(n-1, n_linestyles) + 1};
+p = linestyle{mod(n-1, n_linestyles) + 1};
 
 end
