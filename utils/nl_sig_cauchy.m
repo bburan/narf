@@ -20,12 +20,7 @@ function y = nl_sig_cauchy(phi, z)
     else
         inflection = (2/pi) * -sqrt(1/(lo*hi));    
     end
-%     if hi > lo
-%         inflection = fzero(@(x) df(hi,x) - df(lo,x), 0.1);
-%     else
-%         inflection = fzero(@(x) df(hi,x) - df(lo,x), -0.1);
-%     end
-     
+
     offset = f(lo, inflection) - f(hi, inflection) ;
 
     y = z;

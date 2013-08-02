@@ -13,14 +13,25 @@ function y = nl_sig_logistic(phi, z)
 
     f = @(A, x) 1 ./ ( 1 + exp(-x*A));
     
-    df = @(A, x) A*exp(-x*A) / (exp(-x*A)+1).^2;       
+    df = @(A, x) A*exp(-x*A) / (exp(-x*A)+1).^2;           
+
+    opts = optimset('Display', 'off');
     
     if hi > lo
-        inflection = fzero(@(x) df(hi,x) - df(lo,x), 0.1);
+        [inflection, ~, ef, ~] = fzero(@(x) df(hi,x) - df(lo,x), 0.1, opts);
     else
-        inflection = fzero(@(x) df(hi,x) - df(lo,x), -0.1);
+        [inflection, ~, ef, ~] = fzero(@(x) df(hi,x) - df(lo,x), -0.1, opts);
     end
      
+    if ef < 0
+        % We reach this point typically when Phi is such that the sigmoid
+        % has invalid parameters (such as when baserate=peakrate) and the
+        % resulting sigmoid zeros everything to the same level. We can
+        % safely ignore this event, since the fitters will realize that it
+        % is a stupid step. 
+        % keyboard;
+    end
+    
     offset = f(lo, inflection) - f(hi, inflection) ;
 
     y = z;
