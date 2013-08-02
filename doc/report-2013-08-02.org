@@ -1,0 +1,20 @@
+* Discoveries of the Week:
+  - Our best few guesses for each function are now:
+     1. compressors: logfree, rootfree, siglog, cp2free
+     2. Nonlinearities: siglog, sigumber, poly2
+     3. nteraction: logfree/siglog, logfree/zthresh, siglog/zthresh, rootfree/siglog
+  - Fitting with mixfit0 is uniformly faster and better than boost0 or boosto0. 
+  - Horrible discovery and Caveat:
+    - Horror: logfree_firno_siglog_boost0  is beating logfree_depfree_siglog_boost0 pretty consistently in a scatter plot.
+    - Caveat: DEPFREE's filters look generally cleaner across the population. 
+
+* Questions for next week:
+  - Interaction: cp2free, sigumber and poly2, were added and queued up with mixfit0.  Do they change anything in the analysis?
+  - Which core filters do better? depno, depfree, firno, etc?
+  - Is there a variation of mixfit0 that will give even better performance?
+  - There seems to be a really clear relationship between the number of FIR coefficients and the ability to fit data.
+    Looking at the core filter survey, models with more parameters always do better, and integrate/fire or depression seem to have little to do with actual performance
+    This suggests that the main reason the depression models win is because they have more parameters...which sucks for SVD's old paper. 
+    However, I've also noticed that DEPFREE models have significantly sparser filters than FIRNO models. 
+    This suggests to me that reduced complexity models will give us a better indication of the kind of compressor nonlinearity we actually need, because to some extent a complex FIR can compensate for a poor nonlinearity. 
+    What would clarify this dilemma? (Write a script that plots sparsity (summed overall) vs performance for a few model groups. Or, come up with better metrics.)

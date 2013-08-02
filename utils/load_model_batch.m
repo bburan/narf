@@ -44,7 +44,7 @@ x0s = cell(n_models, n_cellids);
 dbopen;
 for mi = 1:n_models
     model = modelnames{mi};
-    fprintf('Loading %d modelfiles matching: %s\n', n_cellids, model);
+    fprintf('Loading modelfiles matching: %s\n', model);
     for ci = 1:n_cellids
         cellid = cellids{ci};
         
