@@ -27,7 +27,7 @@ if ~exist('verbose','var'),
    verbose=0;
 end
 
-dcount=length(u);
+dcount=length(tau);
 dstim=zeros(dcount*size(stim,1),size(stim,2));
 internalfs=100;
 istimthresh=0;
