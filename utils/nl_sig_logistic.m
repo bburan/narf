@@ -3,7 +3,7 @@ function y = nl_sig_logistic(phi, z)
 
     % Generic 5 parameter sigmoid parameters
     baserate = min([phi(1), phi(2)]);
-    peakrate = max([phi(1), phi(2)]);   
+    peakrate = max([phi(1), phi(2)]);
     lrshift = phi(3); % Where the centerpoint of the sigmoid is
     lo = phi(4);   % low side curvature
     hi = phi(5);   % high side curvature
