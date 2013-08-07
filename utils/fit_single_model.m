@@ -43,7 +43,7 @@ STACK = {};
 XXX = {};
 XXX{1}.cellid = cellid;
 XXX{1}.training_set = training_set;
-XXX{1}.test_set = test_set;
+XXX{1}.test_set = {};
 XXX{1}.filecodes = filecodes;
 
 git = ['git --git-dir=' NARF_PATH '/.git --work-tree=' NARF_PATH ' '];
@@ -99,6 +99,9 @@ else
     end
     META.fit_time = toc;    
 
+    XXX{1}.test_set = test_set;
+    calc_xxx(1);
+    
     verify_model_polarity(); % invert the model    
     save_model(META.modelpath, STACK, XXX, META);
     db_insert_model();
