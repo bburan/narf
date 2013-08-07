@@ -1,5 +1,5 @@
 function [termcond, n_iters] = fit_boost(max_n_steps, min_stepsize, min_scoredelta, relative_delta)
-% [termcond, n_iters] = fit_boost(n_steps, minstepsize, min_scoredelta)
+% [termcond, n_iters] = fit_boost(n_steps, minstepsize, min_scoredelta, relative_delta)
 %
 % A generic NARF Fitting Routine which uses a boosting algorithm. Works
 % well for sparse linear spaces initialized with magnitudes between

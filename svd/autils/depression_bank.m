@@ -43,12 +43,21 @@ end
 
 for jj=1:dcount,
    
-   taui=tau(jj);
    if ~fixu,
        ui=u(jj)./DEPSTIMMAX(:);
    else
        ui=u(:,jj);
    end
+   
+   taui=tau(jj);
+   taui=floor(taui);
+   if taui==0,
+       ui=0;
+   end
+   
+   taui=abs(taui);
+   ui=abs(ui);
+   
    if verbose,
       fprintf(' efficacy = %.3f (max(stim)=%.3f)\n',ui,DEPSTIMMAX);
       fprintf(' time constant = %.1f bins (%.3f sec?)\n',...
@@ -68,7 +77,7 @@ for jj=1:dcount,
          delta=(1-di(:,ii-1))./taui - ui.*di(:,ii-1).*tstim(:,ii-1);
          di(:,ii)=di(:,ii-1)+delta;
          di(di(:,ii)<0,ii)=0;
-         di(di(:,ii)>1,ii)=1;
+         %di(di(:,ii)>1,ii)=1;
       end
       
       dstim((1:size(stim,1))+(jj-1)*size(stim,1),:)=di.*stim;
