@@ -1,5 +1,5 @@
-function [x_bst, s_bst, termcond] = boosting(objfn, x_0, termfn, stepsize, stepscale)
-% [x_bst, s_bst, termcond] = boosting(objfn, x_0, termfn, stepsize=1, stepscale=10)
+function [x_bst, s_bst, termcond] = boosting(objfn, x_0, termfn, stepsize, stepscale, vary_stepsize)
+% [x_bst, s_bst, termcond] = boosting(objfn, x_0, termfn, stepsize=1, stepscale=10, vary_stepsize=false)
 %
 % A naive 'boosting' search method in which stepsize can only decrease from
 % its initial value. Good for linear searches of FIR coefficient space, but
@@ -65,6 +65,12 @@ if (stepscale <= 1)
     error('stepscalemust be > 1');
 end
 
+if ~exist('vary_stepsize','var')
+    vary_stepsize = false;   
+end
+
+global XXX;
+
 % Starting search point
 x = x_0(:);
 s = objfn(x);
@@ -82,23 +88,41 @@ while ~termfn(n, x, stepsize, s_delta)
     global META;
     [~,~,val_s] = META.perf_metric();
     fprintf('pm_est:  %12.8f  pm_val:  %12.8f\n', s, val_s);
-   
+       
+    deltas = ones(l, 1);
+    stim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');
     
-%     if strcmp(XXX{1}.cellid,'oni009b-a1'),
-%         sfigure(1);clf;
-%         subplot(2,1,1);plot(mse1);legend('fit','test');
-%         title('normalized mse');
-%         subplot(2,1,2);plot(corr1);drawnow;
-%        title('corr coef');
-%     end
+    if (vary_stepsize)
+        fprintf('Calculating Deltas');
+        for d = 1:l
+            stepdir = zeros(l, 1);
+            stepdir(d) = x(d) * stepsize;             
+            deltas(d) = abs(s - objfn(x + stepdir)); % To ensure evaluation
+            newstim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');
+            deltas(d) = sum((stim - newstim).^2);
+    
+            % Print a 20 dot progress bar
+            if mod(d, ceil(l/20)) == 1
+                fprintf('.');
+            end
+        end
+        
+        % If there was a very minor change in the output, set it to 1 so
+        % you don't see a huge explosion later.
+        deltas(deltas <= 10^-6) = 1;
+        fprintf('\n');
+    end
     
     % Try to take a step along every dimension
     fprintf('Boosting');
     
     for d = 1:l
         stepdir = zeros(l, 1);
-        stepdir(d) = stepsize;
-                
+        stepdir(d) = stepsize + (stepsize/deltas(d));
+        if stepdir(d) == 0
+            stepdir(d) = stepsize;
+        end
+
         % Step in the direction
         x_fwd = x + stepdir;
         x_bck = x - stepdir;
@@ -106,13 +130,13 @@ while ~termfn(n, x, stepsize, s_delta)
         s_fwd = objfn(x_fwd);
         s_bck = objfn(x_bck);
         
-        % Take a step forward if that is better
+        % Possibly record a step forward as being better
         if s_fwd < s_next
             s_next = s_fwd;
             x_next = x_fwd;
         end
 
-        % Take a step backward if that is better
+        % Possibly record a backward step as being better
         if s_bck < s_next
             s_next = s_bck;
             x_next = x_bck;
@@ -138,7 +162,6 @@ while ~termfn(n, x, stepsize, s_delta)
         
         % Take a step in the best direction
         x = x_next; 
-        % svd -- recalc error to reflect x_next in XXX
         s = objfn(x);
         
         % Print the improvement after stepping

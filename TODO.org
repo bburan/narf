@@ -1,7 +1,7 @@
 * HIGH LEVEL OBJECTIVES:
   1. Variable step size boosting (All steps taken are for OUTPUT size, not INPUT)
   2. Enhanced calc_xxx() speedup
-     Vary "pack fits" to cache also a list of where to start for each param     
+     Vary "pack fits" to cache also a list of where to start for each param
   3. A hacked implementation for per-file fits with boosting
      Split the modules "all the way down" with independent fit sets
      Look at extending the functionality of pack_fittables() to support multiple groups
@@ -31,19 +31,29 @@
   17. [ ] metric_mutual_info.m: Assume a gaussian noise model or something?
   18. [ ] metric_SNR.m: Somehow compute the SNR?
 
+* Notes on Variable step size boosting
+  - The objective function given to boosting() doesn't provide the STACK or XXX.
+    - Instead of using the power, I am normalizing by the 
+  - When doing "variable step size" boosting, you may not want to use step size as a termination condition.
+
+
 * COMPARE TWO MODELS FUNCTION:
   Plots of all of the above metrics in scatter plot form
   Collapse a scatter plot along the diagonal, create a histogram, and do a randomized pair T-test to estimate distribution
   Determine statistical significance of the difference between the two datasets. If applicable, do a likelihood ratio test.
 
-* TODAY
-  1. [X] Remove Training set during fitting, then re-add it (fit single model)
-  2. [X] Computer Access Administration
-  3. [ ] Queue up mixfit3 (which is like mixfit1, but modified to be closer to qboosto0?)
-  4. [ ] Test fitters for gt12ch_logfree_firno_initrc_siglogIC
-  5. [ ] Queue up a few different smooth_respavg kernels?
+
+* Outlier removal
+  Remove each data point and use fitdist() to estimate it's effect on the noise model probability
+  Sort these effects
+  Mark the n% worst data points for plotting as "outliers" and also for removal during MSE or CORR calculations
 
 * IDEAS
+  - Merge boostomatic and boost together and standardize an interface for fitting. This time, use a STRUCT to pass keywords instead of a big mess.
+  - 
+  - [ ] Queue up mixfit3 (which is like mixfit1, but modified to be closer to qboosto0?)
+  - [ ] Test fitters for gt12ch_logfree_firno_initrc_siglogIC
+  - [ ] Queue up a few different smooth_respavg kernels?
   - Won't the trial-to-trial correlation become EXTREMELY low with small bin sizes?
   - Zeroing or Naning out values to express a contsraint
   - Keeping parameterizations near -5 to +5ish
