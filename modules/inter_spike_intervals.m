@@ -21,12 +21,12 @@ m.output_time = 'resp_spiketimes';
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_raw_spikes;
-m.plot_fns{1}.pretty_name = 'Spikes vs. Time';
-m.plot_fns{2}.fn = @do_plot_isis;
-m.plot_fns{2}.pretty_name = 'Inter-spike Intervals';
-m.plot_fns{3}.fn = @do_plot_autocorrelation;
-m.plot_fns{3}.pretty_name = 'Auto-Correlation';
+m.plot_fns{1}.fn = @do_plot_isis;
+m.plot_fns{1}.pretty_name = 'Inter-spike Intervals';
+m.plot_fns{2}.fn = @do_plot_autocorrelation;
+m.plot_fns{2}.pretty_name = 'Auto-Correlation';
+m.plot_fns{3}.fn = @do_plot_raw_spikes;
+m.plot_fns{3}.pretty_name = 'Spikes vs. Time';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0

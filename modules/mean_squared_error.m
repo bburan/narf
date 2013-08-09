@@ -37,6 +37,8 @@ end
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_inputs_and_mse;
 m.plot_fns{1}.pretty_name = 'Inputs, Error vs Time';
+m.plot_fns{2}.fn = @do_plot_error_histogram;
+m.plot_fns{2}.pretty_name = 'Error Histogram';
 
 function x = do_mean_squared_error(mdl, x, stack, xxx)
     % Compute the mean squared error of the training set
@@ -60,6 +62,18 @@ function do_plot_inputs_and_mse(sel, stack, xxx)
     do_plot(xouts, mdls{1}.time, {mdls{1}.input1, mdls{1}.input2}, ...
             sel, 'Time [s]', 'Prediction & RespAvg [-]');
     hold off;
+end
+
+function do_plot_error_histogram(sel, stack, xxx)    
+    x = xxx{end};
+    mdl = stack{end}{1};
+    n_bins = 100;
+    
+    hist(x.dat.(sel.stimfile).(mdl.input1)(:) - x.dat.(sel.stimfile).(mdl.input2)(:), n_bins);
+    
+    do_xlabel('STIM Minus RESPAVG [-]');
+    do_ylabel('Frequency of Error[-]');
+    
 end
 
 end
