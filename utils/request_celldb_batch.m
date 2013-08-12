@@ -71,7 +71,13 @@ for nn = 1:length(rundata)
     file_code={};
     rawid=[];
     
-    if ismember(rundata(nn).batch,[241,244])
+    if ismember(rundata(nn).batch,[241,244,251])
+        
+        % find a file that matches specific behavioral selection
+        % criteria for this batch
+        batchactivefiles=dbbatchcells(rundata(nn).batch,cellid);
+        firstactiveidx=[];
+        
         cellfiledata=dbgetscellfile('cellid',cellid,'runclassid',[42 8 103]);
         filecount=length(cellfiledata);
         
@@ -87,6 +93,10 @@ for nn = 1:length(rundata)
         ForcePreStimSilence=0.25;
         for ii=1:length(cellfiledata),
             [parms, ~]=dbReadData(cellfiledata(ii).rawid);
+            if cellfiledata(ii).rawid==batchactivefiles(1).rawid,
+                % first active that matches criteria for this batch
+                firstactiveidx=ii;
+            end
             
             if strcmpi(cellfiledata(ii).behavior,'active'),
                 activefile(ii)=1;
@@ -108,13 +118,11 @@ for nn = 1:length(rundata)
             poststimsilence(ii)=0; % force to zero below
         end
         
-        
-        
-        firstactiveidx=find(activefile, 1);  % use last activefile!
         if isempty(firstactiveidx),
             error('no active TSP data for this cell');
         end
-        printmatch=double(sum(abs(stimprint-repmat(stimprint(firstactiveidx,:),filecount,1)),2)==0);
+        printmatch=double(sum(abs(...
+            stimprint-repmat(stimprint(firstactiveidx,:),filecount,1)),2)==0);
         useidx=find(printmatch);
         acounter=1;
         pcounter=0;
@@ -135,7 +143,6 @@ for nn = 1:length(rundata)
                 pcounter=pcounter+1;
             end                                             
         end
-        
     else
         % figure out what files to use for what stage of the analysis
         %[cellfiledata, times, params] = cellfiletimes(cellid, rundata(nn).batch);

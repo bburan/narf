@@ -164,6 +164,9 @@ end
 
 lasterror=repmat(nanstd(abs(tresp(:))).^2,[params.resampcount,1]).*100;
 for sfsidx=1:params.sfscount,
+
+    %keyboard
+    
     % in order to get denser sampling without wasting a lot of time,
     % do multiple iterations per strf that will actually be tested
     % at the next stage
