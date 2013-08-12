@@ -1,5 +1,5 @@
-function [termcond, n_iters] = fit_boost(max_n_steps, min_stepsize, min_scoredelta, relative_delta)
-% [termcond, n_iters] = fit_boost(n_steps, minstepsize, min_scoredelta, relative_delta)
+function [termcond, n_iters] = fit_boost(max_n_steps, min_stepsize, min_scoredelta, relative_delta, vary_stepsize, starting_stepsize)
+% [termcond, n_iters] = fit_boost(n_steps, minstepsize, min_scoredelta, relative_delta, vary_stepsize, starting_stepsize)
 %
 % A generic NARF Fitting Routine which uses a boosting algorithm. Works
 % well for sparse linear spaces initialized with magnitudes between
@@ -21,6 +21,9 @@ function [termcond, n_iters] = fit_boost(max_n_steps, min_stepsize, min_scoredel
 %
 %    relative_delta     When true, the min_scoredelta will act relative to
 %                       the average of the first five delta steps. 
+%
+%    vary_stepsize      When true, stepsizes will vary to make them all
+%                       have roughly the same effect on the score
 %
 % RETURNS:
 %    n_steps            The number of boosting steps taken.
@@ -44,6 +47,15 @@ end
 if ~exist('relative_delta', 'var'),
     relative_delta = false;
 end
+
+if ~exist('vary_stepsize', 'var'),
+    vary_stepsize = false;
+end
+if ~exist('starting_stepsize', 'var'),
+    starting_stepsize = 1;
+end
+
+
 
 first5_deltas = nan(5,1); % First delta never used
 
@@ -75,6 +87,6 @@ function stop = term_fn(n,x,s,d)
 end
 
 [termcond, n_iters] = default_fitter_loop('fit_boost()', ...
-    @(obj_fn, phi_init) boosting(obj_fn, phi_init, @term_fn, 1), true);    
+    @(obj_fn, phi_init) boosting(obj_fn, phi_init, @term_fn, starting_stepsize, 2, vary_stepsize), true);    
 
 end

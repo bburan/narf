@@ -1,0 +1,26 @@
+* Discoveries of the Week:
+  1) Mixfit methods are confirmed to be the best fitters in general
+     - Mixfit1 and mixfit2 do not beat it for logfree_depfree_siglog
+     - Mixfit1 beats it for logfree_dep2ifn_zthresh (may be due to IFN, see next point)
+  2) Core filter ranking nearly exactly follows the number of filter coefficients: 
+     depno (x5) > ifn (x) (x2) > firnov2 (x1.5) > depfree2 (x2) > firno(x1) > depfree (x1), where values in parenthesis indicate relative channel count multiplier
+  3) Models were run at 200Hz to start studying finer dynamics (Analysis 18)
+     - A tiny gaussian kernel smoothing of the estimation set RESPAVG improves unfiltered validation set performance.
+     - This was previously not true at 100Hz. Smoothing may be important at higher sample rates.
+     - Inferring the average rate of fire using a dumb poisson spiking model did not help.
+  4) Best Compressor/Nonlinearity pairings with mixfit0 vary in different batches:
+      1. By mean corr
+	 Batch 240: logfree/siglog, cp1free/poly2, rootfree/siglog, cp2free/siglog
+	 Batch 242: cp1free/siglog, siglog/siglog, nocp/siglog
+      2. By mean rank
+	 Batch 240: logfree/siglog, rootfree/siglog, cp2free/siglog
+	 Batch 242: cp1free/siglog, siglog/siglog, nocp/siglog
+      4. By top 3 describing pop:
+	 Batch 240: cp2free/poly2, rootfree/siglog, siglog/zthresh
+	 Batch 242: cp1free/siglog, cp2free/sigumber, cp2free/zthresh, 
+  5) New Metric Added: "Self Distance" of a cellid's responses (Inspired by Tuesday's journal club)
+     When we have a poorly performing model, is that because our model is bad, or because the data itself is bad? 
+     Wednesday I tried using the spike distance metric to measure mean distance between any two RESP trials, as a way of measuring the quality of the data in some sense.
+     It is essentially the VR metric from this week's journal club, normalized by the number of spikes and the kernel area. 
+     It works (large "distances" between trials had poorer correlations), but doesn't normalize by # of trials, and so more trials typically results in a larger average distance.
+     Perhaps there is a better metric you can recommend for estimating the "quality" of the cell's responses?

@@ -21,10 +21,14 @@ m.raw_ISIs = 'resp_ISIs';
 m.raw_spiketimes = 'resp_spiketimes';
 m.scaled_ISIs = 'scaled_resp_ISIs';
 m.time = 'stim_time';
+m.train_aic = 'score_train_aic';
+m.test_aic = 'score_test_aic';
 m.train_bic  = 'score_train_bic';
 m.test_bic  = 'score_test_bic';
 m.train_nlogl = 'score_train_nlogl';
 m.test_nlogl = 'score_test_nlogl';
+m.train_autocorr = 'score_train_autocorr';
+m.test_autocorr = 'score_test_autocorr';
 m.probdist = 'exponential'; % Also try 'inversegaussian', 'gamma'
 m.probcutoff = 0.001; % Cutoff in seconds
 m.cstim = 'cstim'; % Cumulative stimulus
@@ -41,17 +45,14 @@ m.plot_fns{1}.fn = @do_plot_scaled_isis;
 m.plot_fns{1}.pretty_name = 'Scaled ISI Distribution';
 m.plot_fns{2}.fn = @do_plot_scaled_autocorr;
 m.plot_fns{2}.pretty_name = 'Scaled ISI AutoCorrelation';
-
 % m.plot_fns{5}.fn = @do_plot_kolmorgorov;
 % m.plot_fns{5}.pretty_name = 'Kolmogorov-Smirnov Plot';
 
-function x = do_bayesian_likelihood(mdl, x, stack, xxx)
-    
+function [x, nlogl, bic, aic, autocorr] = helper_fn(mdl, x, stimfiles)       
+    global STACK;
     scaled_ISIs = [];
-    
-    fns = x.training_set;
-    for ii = 1:length(fns)
-        sf = x.training_set{ii};
+    for ii = 1:length(stimfiles)
+        sf = stimfiles{ii};
         stim = x.dat.(sf).(mdl.stim);
         time = x.dat.(sf).(mdl.time);
         
@@ -71,11 +72,9 @@ function x = do_bayesian_likelihood(mdl, x, stack, xxx)
         
         if all(stim(:) == 0)
             fprintf('WARNING: Skipping BIC/NLOGL calculation because stim is all zero...\n');  
-            x.(mdl.scaled_ISIs) = [];
-            x.(mdl.train_bic) = 0;
-            x.(mdl.test_bic) = 0;
-            x.(mdl.train_nlogl) = inf;
-            x.(mdl.test_nlogl) = inf;
+            x.dat.(sf).(mdl.scaled_ISIs) = [];
+            nlogl = inf;
+            bic = 0; 
             return
         end
         
@@ -88,22 +87,23 @@ function x = do_bayesian_likelihood(mdl, x, stack, xxx)
             x.dat.(sf).(mdl.cstim)(:,s) = CDF;
            
             % Build up the scaled inter-spike intervals distribution
-            v = x.dat.(sf).(mdl.raw_ISIs)(:,s);
-            idxs = v > 0;
-            spiketimes = x.dat.(sf).(mdl.raw_spiketimes)(idxs,s);
-            sISIs = diff(interp1([0; time], [0; CDF], spiketimes));
-            
-            % FIXME: Sometimes scaled ISIs of 0 occur
-            % I'm not sure what to do about this.
-            % Right now I'll just 'modify' them to be slightly nonzero
-            sISIs(sISIs < 0) = 10^-9; % FIXME
-            
-            if any(isnan(sISIs))
-                error('How did a scaled ISI become NaN?!');
-            end
-            
-            scaled_ISIs = cat(1, scaled_ISIs, sISIs);
-            
+           for r = 1:ri
+                v = x.dat.(sf).(mdl.raw_ISIs)(:,s,r);
+                idxs = v > 0;
+                spiketimes = x.dat.(sf).(mdl.raw_spiketimes)(idxs,s,r);
+                sISIs = diff(interp1([0; time], [0; CDF], [0;spiketimes]));
+
+                % FIXME: Sometimes scaled ISIs of 0 occur
+                % I'm not sure what to do about this.
+                % Right now I'll just 'modify' them to be slightly nonzero
+                sISIs(sISIs < 0) = 10^-9; % FIXME
+    
+                if any(isnan(sISIs))
+                    error('How did a scaled ISI become NaN?!');
+                end
+                
+                scaled_ISIs = cat(1, scaled_ISIs, sISIs);
+           end
         end
     end
     
@@ -120,19 +120,40 @@ function x = do_bayesian_likelihood(mdl, x, stack, xxx)
     z = 1 - exp(- l_avg * scaled_ISIs);      
     
     % Mathematically it's impossible to have z become less than zero, but
-    % occasionally numerical noise is bringing us there. I think.     
-    z(z < 0) = 10^-9;   
+    % occasionally numerical noise is bringing us there... I think.     
+    z(z < 0) = 10^-9; 
     
-    PD = fitdist(z, mdl.probdist);  % TODO: Also try gamma, inverse gaussian
-    k = 1;
+    PD = fitdist(z, mdl.probdist);    
+    k = length(pack_fittables(STACK));
     n = numel(scaled_ISIs);
     
-    x.(mdl.scaled_ISIs) = scaled_ISIs;
-    x.(mdl.train_bic) = -2*(-PD.NLogL) + 2*k*log(n);
-    x.(mdl.test_bic) = 0;
-    x.(mdl.train_nlogl) = - PD.NLogL;
-    x.(mdl.test_nlogl) = 0;
+    x.dat.(sf).(mdl.scaled_ISIs) = scaled_ISIs;        
+    nlogl = PD.NLogL;    
+    bic = -2*(-PD.NLogL) + k*log(n);
+    aic = -2*(-PD.NLogL) + 2*k;
     
+    tmp = excise(scaled_ISIs);
+    R = corrcoef(tmp(2:end), tmp(1:end-1));
+    autocorr = R(2,1);    
+    
+end
+
+
+function x = do_bayesian_likelihood(mdl, x, stack, xxx)
+    
+    [x, train_nlogl, train_bic, train_aic, train_autocorr] = helper_fn(mdl, x, x.training_set);
+    [x, test_nlogl, test_bic, test_aic, test_autocorr] = helper_fn(mdl, x, x.test_set);    
+    
+    x.(mdl.train_nlogl) = train_nlogl;
+    x.(mdl.train_bic) = train_bic;       
+    x.(mdl.train_aic) = train_aic;
+    x.(mdl.train_autocorr) = train_autocorr;
+    
+    x.(mdl.test_nlogl) = test_nlogl;
+    x.(mdl.test_bic) = test_bic;   
+    x.(mdl.test_aic) = test_aic;
+    x.(mdl.test_autocorr) = test_autocorr;
+       
 end
 
 function do_plot_scaled_isis(sel, stack, xxx)
@@ -141,7 +162,7 @@ function do_plot_scaled_isis(sel, stack, xxx)
     mdl = stack{end}{1};
      
     %sidxs = (xout.dat.(sel.stimfile).(mdl.scaled_ISIs) > 0);
-    tmp = xout.(mdl.scaled_ISIs);
+    tmp = xout.dat.(sel.stimfile).(mdl.scaled_ISIs);
     tmp(tmp < mdl.probcutoff) = NaN;
     tmp(:) = tmp(:) - mdl.probcutoff;
     %hold on;
@@ -153,7 +174,7 @@ function do_plot_scaled_isis(sel, stack, xxx)
     %plot(ts, length(tmp)/mdl.n_bins * lam * exp(-lam*ts), 'r-');
     %hold off;
 
-    do_xlabel('Raw Inter-Spike Intervals [s]');
+    do_xlabel('Scaled Inter-Spike Intervals [s]');
     do_ylabel('# of neurons');
     
     textLoc(sprintf('train nlogl:%f\ntest nlogl:%f', ...
@@ -166,15 +187,13 @@ function do_plot_scaled_autocorr(sel, stack, xxx)
     xout = xxx{end};
     mdl = stack{end}{1};
     
-    isis = xout.(mdl.scaled_ISIs);   
-    isis(isis < mdl.probcutoff) = NaN;
-
+    isis = xout.dat.(sel.stimfile).(mdl.scaled_ISIs);
+    train_autocorr = xout.(mdl.train_autocorr);
+    test_autocorr = xout.(mdl.test_autocorr);
     plot(isis(2:end), isis(1:end-1), 'k.');
- 
-    R = corrcoef(isis(2:end), isis(1:end-1));
-    
-    textLoc(sprintf('Spike Count:%d\nCorr=%f', ...
-                    length(isis), R(2,1)), 'NorthEast');
+     
+    textLoc(sprintf('Spike Count:%d\nTrainAutoCorr=%f\nTestAutoCorr=%f,', ...
+                    length(isis), train_autocorr, test_autocorr), 'NorthEast');
     
     do_xlabel('ISI at t(n) [s]');
     do_ylabel('ISI at t(n-1) [s]');
