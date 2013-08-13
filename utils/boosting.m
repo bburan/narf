@@ -92,11 +92,13 @@ while ~termfn(n, x, stepsize, s_delta)
     deltas = ones(l, 1);
     stim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');
     
-    if (vary_stepsize)
-        fprintf('Calculating Deltas');
+    if (vary_stepsize && ~mod(n,5))  % update delta every 5 steps
+        fprintf('Calculating Deltas for small Epsilon (stepsize/1000)');
         for d = 1:l
             stepdir = zeros(l, 1);
-            stepdir(d) = x(d) * stepsize;             
+            % SVD alternative. epsilon=stepsize./1000;
+            stepdir(d) = stepsize./1000;
+            %stepdir(d) = x(d) * stepsize;             
             deltas(d) = abs(s - objfn(x + stepdir)); % To ensure evaluation
             newstim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');
             deltas(d) = sum((stim - newstim).^2);
@@ -107,9 +109,17 @@ while ~termfn(n, x, stepsize, s_delta)
             end
         end
         
+        % SVD alternative, scale max delta to 1000 and truncate min
+        % to 1.
+        deltas=deltas./max(deltas).*10^3;
+        deltas(deltas <= 1) = 1;
+        
+        % renormalize just in case spread of effects does not span 10^3
+        deltas=deltas./min(deltas); 
+        
         % If there was a very minor change in the output, set it to 1 so
         % you don't see a huge explosion later.
-        deltas(deltas <= 10^-6) = 1;
+        %deltas(deltas <= 10^-6) = 1;
         fprintf('\n');
     end
     
@@ -118,7 +128,8 @@ while ~termfn(n, x, stepsize, s_delta)
     
     for d = 1:l
         stepdir = zeros(l, 1);
-        stepdir(d) = stepsize + (stepsize/deltas(d));
+        %stepdir(d) = stepsize + (stepsize/deltas(d));
+        stepdir(d) = stepsize/deltas(d);
         if stepdir(d) == 0
             stepdir(d) = stepsize;
         end
