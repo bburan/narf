@@ -25,6 +25,7 @@ m.output = 'stim';
 % work pretty well, but its' really ad-hoc!
     
 % Optional fields
+m.is_splittable = true;
 m.auto_plot = @do_plot_smooth_scatter_npfnl;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_smooth_scatter_npfnl; 
@@ -153,11 +154,11 @@ function help_plot_npfnl(sel, mdls, xins, xouts)
         aa = linspace(xmin, xmax, 100);        
         z = npfnl(aa);
         
-        xouts{ii}.dat.(sel.stimfile).npfnlstim = aa';
-        xouts{ii}.dat.(sel.stimfile).npfnlpred = z';
+        xouts{ii}.dat.(sel.stimfile).forprinting_in = v';
+        xouts{ii}.dat.(sel.stimfile).forprinting_out = z';
     end
     
-    hold on;    
+    hold on;
     do_plot(xouts, 'npfnlstim', 'npfnlpred', ...
             sel, 'NPFNL Input [-]', 'RespAvg Prediction [Hz]');   
 	hold off;

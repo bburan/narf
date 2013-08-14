@@ -25,6 +25,7 @@ m.rectify_inputs=0;
 m.subsample=10;
 
 % Optional fields
+m.is_splittable = true;
 m.plot_fns = {};
 m.auto_plot = @do_plot_irn_output;
 m.plot_fns{1}.fn = @do_plot_irn_output; 

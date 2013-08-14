@@ -23,7 +23,8 @@ m.numpts = 100; % Doubling number of points takes 4x the calc time
 m.relvar = 0.2;  % Magnitude of the gaussian variance, relative to the 
                  % total range (max - min) of the input space.
 
-% Optional fields
+% Optional fields 
+m.is_splittable = true;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_smooth_scatter_and_nonlinearity; 
 m.plot_fns{1}.pretty_name = 'Stim/Resp Smooth Scatter';

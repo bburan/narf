@@ -18,6 +18,8 @@ m.output = 'stim';
 m.force_positive = false;
 
 % Optional fields
+%m.is_splittable = true;  % Has different effects depending on whether you 
+%                           use fit_split_simply or fit_split_generally
 %m.plot_gui_create_fn = @create_chan_selector_gui;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_all_normalized_channels;

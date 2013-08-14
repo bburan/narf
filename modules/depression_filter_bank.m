@@ -22,12 +22,8 @@ m.input = 'stim';
 m.time = 'stim_time';
 m.output = 'stim';
 
-% Overwrite the default module fields with arguments 
-if nargin > 0
-    m = merge_structs(m, args);
-end
-
 % Optional fields
+m.is_splittable = true;
 m.plot_gui_create_fn = @create_chan_selector_gui;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_all_default_outputs;
@@ -36,6 +32,11 @@ m.plot_fns{2}.fn = @do_plot_single_default_output;
 m.plot_fns{2}.pretty_name = 'Filtered Stimuli (Single)';
 m.plot_fns{3}.fn = @do_plot_channels_as_heatmap;
 m.plot_fns{3}.pretty_name = 'Filtered Stimuli (Heatmap)';
+
+% Overwrite the default module fields with arguments 
+if nargin > 0
+    m = merge_structs(m, args);
+end
 
 % Finally, define the 'methods' of this module, as if it were a class
 function x = do_depression_filter(mdl, x, stack, xxx)

@@ -58,9 +58,11 @@ for ii = 1:length(xxs)
             if (1 == length(sel.chan_idx)) && (n_yfields == 1)
                 c = [0, 0, 0];
             end
+            hold on;
             h = plot(xxs{ii}.dat.(sel.stimfile).(xfield)(:), ...
                 squeeze(xxs{ii}.dat.(sel.stimfile).(yfield)(:, sel.stim_idx, jj)), ...
                 'Color', c, 'LineStyle', ls, 'LineWidth', lw);
+            hold off;
             handles(end+1) = h;
             leg{end+1} = [yfield '/PS' num2str(ii) '/CH' num2str(jj)];
         end

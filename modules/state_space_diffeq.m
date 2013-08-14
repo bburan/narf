@@ -31,6 +31,7 @@ m.output = 'stim';
 m.init_fit_sig = 'respavg'; % For initializing coefficients only
 
 % Optional fields
+m.is_splittable = true;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @(stack, xxx) do_plot_signal(stack, xxx, m.time, m.output);
 m.plot_fns{1}.pretty_name = 'Response vs Time';

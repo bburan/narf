@@ -38,6 +38,7 @@ m.nlfn = @polyval;
 m.phi = [1 0];   % Default is to pass the signal through untouched
 
 % Optional fields
+m.is_splittable = true;
 m.auto_plot = @do_plot_smooth_scatter_and_nonlinearity;
 m.plot_fns = {};
 
@@ -84,30 +85,35 @@ function x = do_nonlinearity(mdl, x, stack, xxx)
     end
 end
 
-function do_plot_scatter_and_nonlinearity(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+
+
+function help_plot_nonlinearity(sel, mdls, xins, xouts)     
+    xlims = xlim();  
+    xs = linspace(xlims(1), xlims(2), 100);   
+       
+    for ii = 1:length(mdls)    
+        ys = mdls{ii}.nlfn(mdls{ii}.phi, xs);         
+        xouts{ii}.dat.(sel.stimfile).printable_nonlinearity_input = xs';
+        xouts{ii}.dat.(sel.stimfile).printable_nonlinearity_output = ys';
+    end
     
-    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp);
-    xlims = xlim();
-    xs = linspace(xlims(1), xlims(2), 100);
-    hold on;    
-    plot(xs, mdls{1}.nlfn(mdls{1}.phi, xs));
-    hold off;
-  
-    do_xlabel('Input');
-    do_ylabel('Output');
+    hold on;
+    do_plot(xouts, 'printable_nonlinearity_input', 'printable_nonlinearity_output', ...
+            sel, 'Nonlinearity Input [-]', 'Prediction [Hz]');   
+	hold off;
     
 end
 
-function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)    
+function do_plot_scatter_and_nonlinearity(sel, stack, xxx)
     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
-    
-    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100);
-    xlims = xlim();
-    xs = linspace(xlims(1), xlims(2), 100);
-    hold on;
-    plot(xs, mdls{1}.nlfn(mdls{1}.phi, xs));
-    hold off;   
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100);  
+    help_plot_nonlinearity(sel, mdls, xins, xouts);     
+end
+
+function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)            
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100);  
+    help_plot_nonlinearity(sel, mdls, xins, xouts); 
 end
 
 function do_plot_channels_as_heatmap(sel, stack, xxx)
@@ -123,15 +129,5 @@ function do_plot_channels_as_heatmap(sel, stack, xxx)
     axis xy tight;
     
 end
-
-
-
-
-
-
-
-
-
-
 
 end
