@@ -50,7 +50,7 @@ for jj=1:dcount,
    end
    
    taui=tau(jj);
-   taui=floor(taui);
+   %taui=floor(taui);
    if taui==0,
        ui=0;
    end

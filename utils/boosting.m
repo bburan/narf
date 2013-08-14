@@ -70,6 +70,7 @@ if ~exist('vary_stepsize','var')
 end
 
 global XXX;
+global META;
 
 % Starting search point
 x = x_0(:);
@@ -77,22 +78,16 @@ s = objfn(x);
 l = length(x_0);
 n = 0;  % Step number
 s_delta = s;
+lastdeltastep=-1;
 while ~termfn(n, x, stepsize, s_delta)    
     x_next = x;  % x_next holds best stepping direction so far
     s_next = s;
     
-    % We cannot assume that the performance metric will be MSE in every
-    % case; therefore you should query META.perf_metric() directly or pass
-    % it from some function that is already calling perf_metric(). We'll
-    % take the former case to avoid complicating the interface.    
-    global META;
-    [~,~,val_s] = META.perf_metric();
-    fprintf('pm_est:  %12.8f  pm_val:  %12.8f\n', s, val_s);
-       
     deltas = ones(l, 1);
     stim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');
     
-    if (vary_stepsize && ~mod(n,5))  % update delta every 5 steps
+    % if vary_stepsize, update delta every 5 steps
+    if (vary_stepsize && ~mod(n,5) && n>lastdeltastep)  
         fprintf('Calculating Deltas for small Epsilon (stepsize/1000)');
         for d = 1:l
             stepdir = zeros(l, 1);
@@ -100,7 +95,7 @@ while ~termfn(n, x, stepsize, s_delta)
             stepdir(d) = stepsize./1000;
             %stepdir(d) = x(d) * stepsize;             
             deltas(d) = abs(s - objfn(x + stepdir)); % To ensure evaluation
-            newstim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');
+            newstim = flatten_field(XXX{end}.dat, XXX{end}.training_set,'stim');
             deltas(d) = sum((stim - newstim).^2);
     
             % Print a 20 dot progress bar
@@ -115,12 +110,18 @@ while ~termfn(n, x, stepsize, s_delta)
         deltas(deltas <= 1) = 1;
         
         % renormalize just in case spread of effects does not span 10^3
-        deltas=deltas./min(deltas); 
+        deltas=deltas./min(deltas).*10; 
         
         % If there was a very minor change in the output, set it to 1 so
         % you don't see a huge explosion later.
         %deltas(deltas <= 10^-6) = 1;
         fprintf('\n');
+        
+        % record so we don't recalc deltas over and over for
+        % stepsize reductions
+        lastdeltastep=n;
+        
+        dbtickqueue(s);
     end
     
     % Try to take a step along every dimension
@@ -180,7 +181,17 @@ while ~termfn(n, x, stepsize, s_delta)
         n = n + 1;
         
      end
-    
+     
+     % We cannot assume that the performance metric will be MSE in every
+     % case; therefore you should query META.perf_metric() directly or pass
+     % it from some function that is already calling perf_metric(). We'll
+     % take the former case to avoid complicating the interface.    
+     if ~isempty(XXX{end}.test_set),
+         [~,~,val_s] = META.perf_metric();
+         fprintf('pm_est:  %12.8f  pm_val:  %12.8f\n', s, val_s);
+     else
+         fprintf('pm_est:  %12.8f\n', s);
+     end
 end
 
 % Return the best value found so far
