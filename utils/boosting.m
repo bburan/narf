@@ -110,7 +110,7 @@ while ~termfn(n, x, stepsize, s_delta)
         deltas(deltas <= 1) = 1;
         
         % renormalize just in case spread of effects does not span 10^3
-        deltas=deltas./min(deltas).*10; 
+        deltas=deltas./min(deltas)./10; 
         
         % If there was a very minor change in the output, set it to 1 so
         % you don't see a huge explosion later.
