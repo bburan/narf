@@ -38,7 +38,12 @@ for kk = 1:length(firmod_idxs)
     D = [V1(idxs) V2(idxs)]; 
     D = excise(D);
     D = sortrows(D);
-    D = conv_fn(D, 1, @nanmean, ceil(size(D, 1)/100), 0);
+    winsize = ceil(size(D, 1)/100);
+    if winsize < 1
+        fprintf('RESPAVG and fir filter outputs are all NaN, skipping\n');
+        return;
+    end
+    D = conv_fn(D, 1, @nanmean, winsize, 0);
     xs = D(:,1);
     ys = D(:,2);
     

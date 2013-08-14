@@ -64,7 +64,7 @@ function x = do_depression_filter(mdl, x, stack, xxx)
     end
     stimmax=stimmax./T;
     [T, S, N] = size(x.dat.(sf).(mdl.input));
-    if mdl.per_channel,
+    if isfield(mdl,'per_channel') && mdl.per_channel,
         num_channels=length(mdl.tau)./N;
     else
         num_channels=length(mdl.tau);
