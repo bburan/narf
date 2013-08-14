@@ -101,7 +101,12 @@ function npfnl = calc_npfnl(mdl, x)
     function z = hacky_interpolator(xs)        
         
         if lengthsok
-            z = interp1(S, R, xs, 'linear');
+            % Quick fix is just to catch the error
+            try
+                z = interp1(S, R, xs, 'linear');
+            catch err
+                z = xs;
+            end            
         else
             z = xs;
         end

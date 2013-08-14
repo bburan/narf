@@ -63,9 +63,13 @@ function x = do_normalize_channels(mdl, x, stack, xxx)
             end
         end
         if any(isnan(rms))
-            error('divide by zero errors in normalize_channels');
+            % error('divide by zero errors in normalize_channels');
+            % We'll just zero everything out so it keeps running and the
+            % fitters hopefully realize this is stupid
+            x.dat.(sf).(mdl.output) = zeros(size(out));
+        else
+            x.dat.(sf).(mdl.output) = out;
         end
-        x.dat.(sf).(mdl.output) = out;
     end
 end
 

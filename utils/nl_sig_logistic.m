@@ -15,12 +15,24 @@ function y = nl_sig_logistic(phi, z)
     
     df = @(A, x) A*exp(-x*A) / (exp(-x*A)+1).^2;           
 
-    opts = optimset('Display', 'off');
+    opts = optimset('Display', 'off');       
     
     if hi > lo
-        [inflection, ~, ef, ~] = fzero(@(x) df(hi,x) - df(lo,x), 0.1, opts);
+        q = (df(hi, 0.1) - df(lo, 0.1));
+        if ~isfinite(q)
+            inflection = Inf;
+            ef = 0;
+        else
+            [inflection, ~, ef, ~] = fzero(@(x) df(hi,x) - df(lo,x), 0.1, opts);
+        end
     else
-        [inflection, ~, ef, ~] = fzero(@(x) df(hi,x) - df(lo,x), -0.1, opts);
+        q = (df(hi, -0.1) - df(lo, -0.1));
+        if ~isfinite(q)
+            inflection = Inf;
+            ef = 0;
+        else
+            [inflection, ~, ef, ~] = fzero(@(x) df(hi,x) - df(lo,x), -0.1, opts);
+        end
     end
      
     if ef < 0
