@@ -88,7 +88,7 @@ function stopcode = termfn(n,x,s,d)
         end
     end
        
-    if (etime(t_start, clock) > opts.StopAtSeconds)
+    if (etime(clock, t_start) > opts.StopAtSeconds)
         stopcode = 5;
         return
     end
