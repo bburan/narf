@@ -73,10 +73,10 @@ for ii = 1:n_splits
     % Reset the STACK and XXX
     XXX = split_XXXs{ii};
     STACK = split_STACKs{ii}; 
-        
+    
     calc_xxx(fit_start_depth);     
     fitter();
-
+    
     split_XXXs{ii} = XXX;
     split_STACKs{ii} = STACK;
 end
