@@ -1,15 +1,8 @@
 * HIGH LEVEL OBJECTIVES:
-  1. Variable step size boosting (All steps taken are for OUTPUT size, not INPUT)
-  2. Enhanced calc_xxx() speedup
-     Vary "pack fits" to cache also a list of where to start for each param
-  3. A hacked implementation for per-file fits with boosting
-     Split the modules "all the way down" with independent fit sets
-     Look at extending the functionality of pack_fittables() to support multiple groups
-     Or try a higher level function that does the crap manually.
-  4. Add more metrics so we can answer subtle questions better
-     
-  5. Grant: (Look at NRSA grant from NIH, due in December, called the Kirchstein award, F-32. I would be a good applicant, and could probably modify SVD's grant and list my own publication.  Also, a hearing health foundation grant might also help. )
-     Work through the grant example stephen sent me
+  1. [ ] Find a fitter such that DEPFREE always matches or exceeds FIRNO's performance
+  2. [ ] Add more metrics so we can answer subtle questions better
+  3. [ ] Add a two-model comparison function which scatter-plots many matrices, does a histogram of collapsed scatter plot along diagonal, and does randomized paired T-test. Maybe log-likelihood ratio too. 
+  4. [ ] Grant: (Look at NRSA grant from NIH, due in December, called the Kirchstein award, F-32. I would be a good applicant, and could probably modify SVD's grant and list my own publication.  Also, a hearing health foundation grant might also help. ).  Work through the grant example stephen sent me
 
 * Metric-taking Ideas being developed in update_metrics();
   1. [X] metric_lnorm.m: Takes an L norm metric (MSE, L1, Linfty, etc)
@@ -21,89 +14,46 @@
   7. [X] metric_BIC: Bayes information criteria
   8. [X] metric_sparsity: The sum of all the FIR filter sparsity values
   9. [X] metric_smoothness: The summed smoothness of all the FIR filter smoothness values.
-  10. [ ] metric_binned_resp_corr: RESP's variance with itself at this bin size
-  11. [ ] metric that assumes a gaussian noise interfering with prediction and RESPAVG, and gives back an "improbability" score that is to be minimized
-  12. [ ] metric_corr_homoskedastic: Ensure homodskedasticity before taking correlation by reweighting
-  13. [ ] metric_corr_trim_outliers: Remove outliers from the correlation
-  14. [ ] metric_mse_trim_outliers.m: Takes the MSE without outliers
+  10. [ ] metric_nmse: "Normalized mean squared error" (R_pred - R)^2 / (R^2)
+  11. [ ] metric_binned_resp_corr: RESP's variance with itself at this bin size.
+  12. [ ] metric that assumes a gaussian noise interfering with prediction and RESPAVG, and gives back an "improbability" score that is to be minimized
+  13. [ ] metric_corr_homoskedastic: Ensure homodskedasticity before taking correlation by reweighting
+  14. [ ] metric_corr_trim_outliers: Remove outliers from the correlation
+  15. [ ] metric_mse_trim_outliers.m: Takes the MSE without outliers
   16. [ ] metric_vr.m: Distance metric between predicted and actual spike trains
-  15. [ ] metric_rectified: Rectified correlation approximation
-  17. [ ] metric_mutual_info.m: Assume a gaussian noise model or something?
-  18. [ ] metric_SNR.m: Somehow compute the SNR?
+  17. [ ] metric_rectified: Rectified correlation approximation
+  18. [ ] metric_mutual_info.m: Assume a gaussian noise model or something?
+  19. [ ] metric_SNR.m: Somehow compute the SNR?
 
-* Notes on Variable step size boosting
-  - The objective function given to boosting() doesn't provide the STACK or XXX.
-    - Instead of using the power, I am normalizing by the 
-  - When doing "variable step size" boosting, you may not want to use step size as a termination condition.
-
-
-* COMPARE TWO MODELS FUNCTION:
-  Plots of all of the above metrics in scatter plot form
-  Collapse a scatter plot along the diagonal, create a histogram, and do a randomized pair T-test to estimate distribution
-  Determine statistical significance of the difference between the two datasets. If applicable, do a likelihood ratio test.
-
-
-* Outlier removal
-  Remove each data point and use fitdist() to estimate it's effect on the noise model probability
-  Sort these effects
-  Mark the n% worst data points for plotting as "outliers" and also for removal during MSE or CORR calculations
-
-* IDEAS
-  - Merge boostomatic and boost together and standardize an interface for fitting. This time, use a STRUCT to pass keywords instead of a big mess.
-  - 
-  - [ ] Queue up mixfit3 (which is like mixfit1, but modified to be closer to qboosto0?)
-  - [ ] Test fitters for gt12ch_logfree_firno_initrc_siglogIC
-  - [ ] Queue up a few different smooth_respavg kernels?
-  - Won't the trial-to-trial correlation become EXTREMELY low with small bin sizes?
-  - Zeroing or Naning out values to express a contsraint
-  - Keeping parameterizations near -5 to +5ish
-  - Resolving the depfree/firno debacle with a better fitter?
-  - Problem with Poisson spiking models: Neurons are leaky, imperfect integrators. 
-    We should accomodate this by having a certain amount of 'spiking leak'
-    We should also have a 'baseline' rate of fire 
-  - N Scatter plots of two models being compared, where N is the scatter plot for each performance metric.
-  - Fix the "dead jobs" occurring in the queue
-  - Function: est_set_as_vector(), est_set_as_matrix()
-  - New Metric #1: MSE scaled for homoskedasticity (Inspired by noise distributions)
-  - Sparse FIR filter with just a few per-element compressors, representing each synapse more explicitly.
-    - How about an "additive" fitter/model, which adds per-element compressor, latency, depression state, and spiking nonlinearity 
-    - The best way to go in that direction is to slowly build up my minimal-model ABCD idea
-      - x_dot = A(x) + B(u)    A:self-resetting spiking and integrated state   B:compressor
-      - y = C(x)               C:spiking      
-      - Params per "synapse", whose inputs are all the channels
-	A: gain max, gain state recovery rate (States: gain state). Can model inhib or excit synapse.
-        B: Latency, logfree exponent and weights for each input channels
-        C: (optional nonlinearity at some point?)
-      - Params per whole cell
-	A: parameters for a membrane leakage rate fn (State: membrane voltage)
-	B: spike threshold level (perhaps a CDF so stochasticity can exist)
-	C: N/A
-      - Training should occur with the spike-distance metric, not with MSE. 
-      - Ideally, projecting responses backward to find the filter nonlinearity in a NPNL style would be sweet
+* Quickies
+  - Improve siglog curvature initial further by setting it to 1/variance?
+  - Keep "dead jobs" thing near zero
+  - Grep around for {1} bugs
+  - Narf analysis bugs out when you click delete and nothing is selected, because underneath something may still be selected.
 
 * Next Steps:
-  1. Read about the Grant and write a proposal. Stephen suggests I write about:
+  1. Presentation of Maximially Informative Dimensions
+  2. Make split modules visible/editable from the GUI
+  3. Read about the Grant and write a proposal. Stephen suggests I write about:
      - Models which use wavelets to approximate cortex input features
      - Apply some sort of nonlinear transform to those wavelets?
      - Either using explicit center/surround stimuli, or extracting center/surround channels from a full spectrally rich stimulus (hopefully capturing essentials in just 2 channels)
-  2. Presentation of Maximially Informative Dimensions
-  3. Optimization
-     - More intelligent fitters which understand which module a fittable parameter sits in, and don't recompute from the earliest fittable of the stack.
-     - If a keyword string already exists, load that rather than refit all the way to that point
-     - Profile to see what else is slow
   4. General purpose scatter + marginals plot (Reuse scatter comparison?)
   5. Simple-Delay FIR keyword.
   6. Write a script that plots sparsity (summed overall) vs performance for a few model groups
   7. Modelstring bug.
-  8. A plot of # of free parameters (put in database)
-  9. Why does SENL drop to keyboard?
-  10. Heatmaps: loadstimfrombaphy, FIR, nonlinearity
-  11. Metrics:
+  8. Mixfit variations explored more.
+  9. Queue up a few different smooth_respavg kernels at 200Hz  
+  10. A plot of # of free parameters (put in database)
+  11. Profile code and look for optimizations that would speed up each iteration
+  12. Why does SENL drop to keyboard?
+  13. Heatmaps: loadstimfrombaphy, FIR, nonlinearity
+  14. Metrics:
           - Instead of taking the MSE, we scale the higher values MSE so that the effective variance is homoskedastic
           - Mutual info or Rectified correlation approximation?
           - Function to calculate BIC, AIC, mutual information, total spike count, SNR. N Scatter plots of two models being compared, where N is the scatter plot for each performance metric.
 	  - How about I do simulations which don't use a PSTH, but instead use ISIs, and then at the end, I convert them back to PSTHs for comparison?
-  12. Updated DB Insertion and Great Name Replacing proposal
+  15. Updated DB Insertion and Great Name Replacing proposal
 	  + [ ] calc_all_metrics()  function
           + [ ] Make est/val standard across everything, and move perf metric stuff from XXX{end} to META
 	  + [ ] Rename: VALIDATION/TEST and EST/TRAINING 
@@ -115,27 +65,39 @@
           + [ ] WHATEVER IS GOING INTO XXX{1} should be given to fit_single_model as well! When I'm not using BAPHY it should still be able to work.
 	  + [ ] Name convention of STACK vs stack, XXX vs xxx and the difficulty in understanding which one we are looking at! 
 		Lots of hidden assumptions here which are a problem. Plot modules have access to AFTER data, too.
-  13. Boost algorithmic improvements. Comparison of Boost algorithms efficiency Per step, over time. 
-  14. Better initial conditions.
-  15. Outlier rejection. Exclude worst 1% in MSE calculations? Start at L2, gradually switch to L1 as time goes on?
-  16. Narf Batch categories. 
+  16. Boost algorithmic improvements. Comparison of Boost algorithms efficiency Per step, over time. 
+  17. Better initial conditions.
+  18. Outlier rejection. Exclude worst 1% in MSE calculations? Start at L2, gradually switch to L1 as time goes on? Remove each data point and use fitdist() to estimate it's effect on the noise model probability. Sort these effects. Mark the n% worst data points for plotting as "outliers" and also for removal during MSE or CORR calculations.
+  19. Write a generalized hook-in for constraints (  - Zeroing or Naning out values to express a constraint)
+  20. Narf Batch categories. 
          - Easier creation of sub-populations through the GUI I prototyped
          - Plots of params for each sub-population. 
-  17. Fix Irregularities
-          - Safety check so that these modules do not allow unifiers/splitters: Correlation, MSE, bayesian, loader, and perhaps normalization?
+  21. Fix Irregularities
+          - Many functions still use STACK{N}{1} to compute things, which is probably wrong now.   
           - How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?  
           - Not all nonlinearities can accomodate NaNs in their code, especially in stim
           - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
           - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
-          - Jackknifing doesn't work with performance metrics besides MSE right now
-  18. Write a crash course guide on using NARF
+  22. Write a crash course guide on using NARF
 
 * New Experiments:
   1. Gain-changing module (per pixel gain/state?)
-  2. ABCD model:
+  2. ABCD model:  
+     - Per-element compresors
      - Nonlinear functions relating dual variables
-     - Thresholded state reset
-  9. Advanced FIR Filters
+     - Thresholded state reset (depression effects)
+     - Spiking nonlinearity is shared
+     - x_dot = A(x) + B(u)    A:self-resetting spiking and integrated state   B:compressor
+     - y = C(x)               C:spiking      
+     - Params per "synapse", whose inputs are all the channels
+       A: gain max, gain state recovery rate (States: gain state). Can model inhib or excit synapse.
+       B: Latency, logfree exponent and weights for each input channels
+       C: (optional nonlinearity at some point?)
+     - Params per whole cell
+       A: parameters for a membrane leakage rate fn (State: membrane voltage)
+       B: spike threshold level (perhaps a CDF so stochasticity can exist)
+       C: N/A
+  4. Advanced FIR Filters
      + Do a FIR filter of the output of a FIR filter to get narrowband AM features
      + Probabilistic FIR filters
 	- Per-coefficient probabilistic distributions to replace FIR filters
@@ -145,18 +107,18 @@
 	   3) For each filter coeff, push in the reverse-correlated distribution (several thousand points)
 	   4) Plot the histograms for each FIR coef as a line plot. 
 	- Plotting the error bars on the filter would also be REALLY GOOD 
-  4. Non-Parametric Wavelets for feature extraction
+  5. Non-Parametric Wavelets for feature extraction
 	 + Make a spike-triggered average filter bank instead of a gammatone
          + Plot STA distributions of sound intensities at each delay (i.e. make a heatmap)
-  5. Non-Parametric activity-scaled auto-correlation to find time-varying response
+  6. Non-Parametric activity-scaled auto-correlation to find time-varying response
 	 + Idea: Do NPNL-like transform to autocorrelated ISI data (Leaky integrator?)
 	 + Idea: Use splitter which works according to time, and sort spikes by ISI times
 	    * Take STA/STC of each quartile.
 	    * Are they different? If so, we have proof that model is nonstationary.
-  6. Meta-Model tricks
+  7. Meta-Model tricks
      - Define a module which is a weighted combination of other modules
      - Try a meta-compressor, which combines logfree, depfree, etc
-  7. Better feature extraction:     
+  8. Better feature extraction:     
      - Resample/downsample/decimate/convolve/smooth/infer respavg
      - Try more advanced features
          - Spatial location of source (Phase difference or not)
@@ -365,3 +327,7 @@ do?
   - Try qboost->boostirel->qfmin->qlsq->qboost->qlsq->qboost->qlsq->qboost (on the theory that that last qboost helps avoid local minima)
   6. Could we get a data set with a very high number of reps?
   7. SSH tunnel, neuropredict, inferring I from V or vice versa
+    1) Function: est_set_as_vector(), est_set_as_matrix()
+  - Keeping parameterizations near -5 to +5ish
+  - Ask stephen for a better metric than the trial-to-trial correlation become EXTREMELY low with small bin sizes?
+     - Ideally, projecting responses backward to find the filter nonlinearity in a NPNL style would be sweet

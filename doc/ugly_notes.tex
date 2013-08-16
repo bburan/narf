@@ -1,3 +1,10 @@
+** Considerations when fitting per file:
+   1. Normalization should NEVER be split, which means we can't just do naive "outer loop" methods that train on each file independently. 
+   2. The strategy instead is to use "splitters" and add intelligence to the fitters so that it iterates 
+   3. Must work for several performance metrics
+   4. Safety check so that these modules do not allow unifiers/splitters: Correlation, MSE, bayesian, loader, and perhaps normalization?
+
+
 * Notes on Variable step size boosting
   - The objective function given to boosting() doesn't provide the STACK or XXX.
     - I can hack around it and normalize by power of the difference, which is what stephen suggested

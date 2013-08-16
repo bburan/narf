@@ -1,0 +1,9 @@
+* Discoveries of the Week:
+  1) Boosting with a step size proportional to 1/variance now works.
+  2) Boosting methods that use "default_fitter_loop.m" will now only calculate the minimum part of the stack needed to update it
+  3) Simple per-file fitter rewritten as "boostperfile"
+  4) Generalized per-file fitter which allows "across file" modules was halfway implemented but not checked in, and necessary hooks in pack/unpack_fittables were checked in. 
+  5) Added a standardized the interface to boosting methods: "fit_boo.m" which may let us remove some code later.
+  6) Queued up some tests trying to see what can be done to improve the performance of boosting during the first 2 minutes that it is running.
+  7) How models with nonlinear parameters will be interpreted is beyond me; "distance" between different fits is not euclidean at all. 
+  
