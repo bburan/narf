@@ -16,12 +16,22 @@ end
 
 n_iters = 1;
 start_depth = find_fit_start_depth(STACK);
+depths = find_fit_param_depths(STACK);
 [mse, pen] = META.perf_metric();
 score_prev = mse + pen;
+prev_phi = [];
 
 function score = my_obj_fn(phi)
-    unpack_fittables(phi);
-    calc_xxx(start_depth);
+    % Find the point at which the stack needs to be recalculated.
+    if isempty(prev_phi)
+        prev_phi = phi;
+        unpack_fittables(phi);        
+        calc_xxx(start_depth);         
+    else
+        idx_of_first_different_param = find(phi ~= prev_phi, 1);
+        unpack_fittables(phi);     
+        calc_xxx(depths(idx_of_first_different_param));
+    end
     [m, p] = META.perf_metric();
     score = m + p;
     score_delta = score_prev - score;
@@ -30,10 +40,11 @@ function score = my_obj_fn(phi)
     % Print a newline and important info every 100 iterations
     if isequal(mod(n_iters, 100), 1) && ~bequiet
         fprintf('\n[Iter: %5d, score:%f delta:%6f]', n_iters, score, score_delta);
+        % dbtickqueue(n_iters);
     end
     
     % Print 1 progress dot for every 5 iterations
-    if isequal(mod(n_iters, 5), 0) && ~bequiet
+    if isequal(mod(n_iters, 5), 0) %% && ~bequiet
         fprintf('.');
     end
     
@@ -47,6 +58,6 @@ fprintf('Fitting %d variables with %s\n', length(phi_init), fittername);
                                 
 unpack_fittables(phi_best);
 
-fprintf('Complete fit in %d iterations.\n', n_iters);
+fprintf('Complete fit with %d objective function evaluations.\n', n_iters);
 fprintf('----------------------------------------------------------------------\n');
 end
