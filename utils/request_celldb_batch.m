@@ -71,7 +71,7 @@ for nn = 1:length(rundata)
     file_code={};
     rawid=[];
     
-    if ismember(rundata(nn).batch,[241,244,251])
+    if ismember(rundata(nn).batch,[241 244 251 252])
         
         % find a file that matches specific behavioral selection
         % criteria for this batch

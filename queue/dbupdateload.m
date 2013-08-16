@@ -12,7 +12,7 @@
 %
 function [l1,computerid]=dbupdateload(hostname,user,updateloadbg);
 
-SSHCMD=['ssh -q -x -o StrictHostKeyChecking=no',...
+SSHCMD=['ssh -q -x -o ConnectTimeout=3 -o StrictHostKeyChecking=no',...
         ' -o PasswordAuthentication=no '];
 
 dbopen;

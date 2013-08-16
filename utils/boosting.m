@@ -115,7 +115,11 @@ while ~termfn(n, x, stepsize, s_delta)
         % If there was a very minor change in the output, set it to 1 so
         % you don't see a huge explosion later.
         %deltas(deltas <= 10^-6) = 1;
-        fprintf('\n');
+        minidx=find(deltas==min(deltas),1);
+        maxidx=find(deltas==max(deltas),1);
+        
+        fprintf('delta min %.3f (%d) max %.3f (%d)\n',...
+                deltas(minidx),minidx,deltas(maxidx),maxidx);
         
         % record so we don't recalc deltas over and over for
         % stepsize reductions

@@ -4,11 +4,6 @@ function xxxs = split_by_filecode(xxx)
 % Returns a cell array of XXX structs with only one respfile per final
 % cell.
 
-estfiles = xxx{end}.training_set;
-valfiles = xxx{end}.test_set;
-
-xxxs = cell(1, length(estfiles));
-
 % If there are no filecodes, put everything together
 if isfield(xxx{1}, 'filecodes')
     filecodes = xxx{1}.filecodes;
@@ -24,28 +19,37 @@ for ii = 1:length(filecodes)
     filecodes{ii} = tmp;
 end
 
-% Otherwise, group by filecode
 unique_codes = unique(filecodes);
+xxxs = cell(1, length(unique_codes));
+estfiles = xxx{end}.training_set;
+valfiles = xxx{end}.test_set;
+
+% Otherwise, group by filecode
 for ii = 1:length(unique_codes);
     fc = unique_codes{ii};
     
     matches = strcmp(fc, filecodes);   
     
     efs = estfiles(matches);
-    vfs = valfiles(matches); 
+    vfs = valfiles(matches(matches<=length(valfiles))); 
     
-    tmp = xxx;
-    tmp.dat = [];
-    tmp.training_set = {};
-    tmp.test_set = {};
+    xxxs{ii} = xxx;
+    xxxs{ii}{end}.dat = [];   
+    xxxs{ii}{end}.training_set={};
+    xxxs{ii}{end}.test_set={};
+    xxxs{ii}{end}.filecodes={};
     
-    for jj = 1:length(fs)
-        f = fs{jj};
-        tmp.dat.(esf) = xxx{end}.dat.(esf);
-        tmp.dat.(vsf) = xxx{end}.dat.(vsf);
-        tmp.training_set{end+1} = esf;
-        tmp.test_set{end+1}     = vsf;
+    for jj = 1:length(efs)
+        f = efs{jj};
+        xxxs{ii}{end}.dat.(f) = xxx{end}.dat.(f);
+        xxxs{ii}{end}.training_set{jj} = f;
+        xxxs{ii}{end}.filecodes{jj} = fc;
+    end
+    for jj = 1:length(vfs)
+        f = vfs{jj};
+        xxxs{ii}{end}.dat.(f) = xxx{end}.dat.(f);
+        xxxs{ii}{end}.test_set{jj} = f;
     end
     
-    xxxs{ii}{end+1} = tmp;
 end
+
