@@ -522,12 +522,30 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'Callback', @status_report_callback);
     
     function yn = model_exists_in_db(bat, cellid, modelname, est_set, val_set, fcs) 
+        queuenote=sprintf('%s/%d/%s',cellid,bat,modelname);
+        sql = ['SELECT * FROM tQueue WHERE note="' queuenote '"'];
+        queuedata=mysql(sql);
+        if ~isempty(queuedata),
+            if queuedata(1).complete==-1,
+                yn='!'; return
+            elseif queuedata(1).complete==0,
+                yn='_'; return
+            elseif queuedata(1).complete==2,
+                yn='D'; return
+            end
+        end
+        
         sql = ['SELECT * FROM NarfResults WHERE batch=' num2str(bat) ...
                ' AND cellid="' cellid '" AND modelname="' modelname '"'];
-           
+        
         % TODO: Eventually this query should also test est, val, and fcs!
         ret = mysql(sql);
-        yn = (1 == length(ret));
+        if ~isempty(ret),
+            yn='X';
+        else
+            yn=' ';
+        end
+        
     end
 
     function status_report_callback(~,~,~)
@@ -545,12 +563,12 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         complete = 0;
         for ii = 1:length(sel_cellids)
             fprintf('%-20s|', sel_cellids{ii});
-            for jj = 1:length(sel_models)       
-                if model_exists_in_db(sel_batch, sel_cellids{ii}, sel_models{jj})
-                    fprintf('X|');
+            for jj = 1:length(sel_models)
+                yn=model_exists_in_db(sel_batch, sel_cellids{ii},sel_models{jj});
+                fprintf([yn '|']);
+                
+                if ~(yn==' '),
                     complete = complete+1;
-                else
-                    fprintf(' |');
                 end
                 total = total+1;
             end
