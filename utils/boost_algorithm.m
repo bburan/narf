@@ -34,7 +34,7 @@ while (true)
             
             % this next line actually does the work, since it causes a
             % calc_xxx to occur 
-            eliteness(d) = abs(s - objfn(x + stepdir));
+            eliteness(d) = objfn(x + stepdir) - s;
             
             if options.StepRel
                 newstim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');
@@ -54,8 +54,8 @@ while (true)
         end
 
         if options.Elitism
-            idxs = 1:length(n_params);
-            D = [eliteness(:), idxs'];
+            idxs = 1:n_params;
+            D = [eliteness, idxs'];
             D = sortrows(D);
             elites = D(1:options.EliteParams, 2);
             %fprintf('\nElite indexes: ');
@@ -105,7 +105,11 @@ while (true)
         if all(x == x_next)
             % Stepsize was too big so no step was taken
             stepsize = stepsize * options.StepShrink;
-            fprintf('Stepsize shrunk to %d\n', stepsize);
+            fprintf('Stepsize shrunk to %d\n', stepsize);            
+            if (options.Elitism)
+                last_elite_recalc = n-100;  % Force another recalc
+                break;
+            end
         else
             % Step was taken successful
             s_delta = s - s_next;   % Improvement in score            
