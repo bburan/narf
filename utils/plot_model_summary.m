@@ -20,10 +20,10 @@ global META XXX STACK NARF_SAVED_IMAGES_PATH;
 lb = 50;  % Left border
 rb = 20;  % Right border
 bb = 30;  % Bottom border
-th = 180; % text height
-ph = 150; % Plot height
+th = 130; % text height
+ph = 130; % Plot height
 
-w = 600; % Pixels
+w = 500;  % Pixels
 
 vspace = 0.2; % Relative sizes
 hspace = 0.05; 
@@ -35,17 +35,17 @@ for ii = 1:length(STACK)
     if isfield(m, 'auto_plot')
         ap(end+1) = ii;
     end
-end       
+end
 nplots = length(ap);
 
 % Create a new, invisible figure
-h = (nplots+1)*ph + th;
+h = nplots*ph + th;
 fig = figure('Menubar', 'figure', 'Resize','off', 'Visible', 'on', ...
              'Units','pixels', 'Position', [50 50 w+20 h]);
 
 % Call the auto-plot functions
 for ii = 1:nplots
-    idx = ap(ii);  
+    idx = ap(ii);
     m = STACK{idx}{1};
     
     plotfn = m.auto_plot;
@@ -67,16 +67,17 @@ end
 
 % Print the text at the top
 axtt = axes('Parent', fig , 'Units','pixels', ...
-    'Position', [lb nplots*ph+bb w-lb-rb ph-bb]);
+    'Position', [lb nplots*ph+bb w-lb-rb th-bb]);
 set(gca,'xtick',[]); set(gca,'xticklabel',[]);
 set(gca,'ytick',[]); set(gca,'yticklabel',[]);
-ax_text  = text('Interpreter', 'none', 'Position', [0.05, 0.45], ...
+ax_text  = text('Interpreter', 'none', 'Position', [0.0, 0.45], ...
    'String', sprintf('Batch:     %d\nCellid:    %s\nModel:     %s\nTrain Set: %s\nTest Set:  %s\nTrain r:   %.5f\nTest r:    %.5f', ...
                        META.batch, XXX{1}.cellid, META.modelname, ...
                        [XXX{1}.training_set{:}], [XXX{1}.test_set{:}], ...
                        XXX{end}.score_train_corr, ...
                        XXX{end}.score_test_corr));
-                   
+axis off
+
 % Save the file
 celldir = [NARF_SAVED_IMAGES_PATH filesep num2str(META.batch) filesep XXX{1}.cellid];
 if ~exist(celldir)
