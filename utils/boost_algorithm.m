@@ -106,10 +106,6 @@ while (true)
             % Stepsize was too big so no step was taken
             stepsize = stepsize * options.StepShrink;
             fprintf('Stepsize shrunk to %d\n', stepsize);            
-            if (options.Elitism)
-                last_elite_recalc = n-100;  % Force another recalc
-                break;
-            end
         else
             % Step was taken successful
             s_delta = s - s_next;   % Improvement in score            
@@ -134,6 +130,12 @@ while (true)
             s_bst = s;
             termcond = options.TermFn(n, x, stepsize, s_delta);
             return;
+        end
+        
+        % Force a recalc because we didn't take a step and are elite
+        if all(x == x_next) && (options.Elitism)
+           last_elite_recalc = n-100;  % Force another recalc
+           break;
         end
     end        
 end
