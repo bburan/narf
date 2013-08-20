@@ -71,6 +71,7 @@ end
 
 global XXX;
 global META;
+global NARF_DEBUG NARF_DEBUG_FIGURE
 
 % Starting search point
 x = x_0(:);
@@ -79,25 +80,21 @@ l = length(x_0);
 n = 0;  % Step number
 s_delta = s;
 lastdeltastep=-1;
+deltas = ones(l, 1);
 while ~termfn(n, x, stepsize, s_delta)    
-    x_next = x;  % x_next holds best stepping direction so far
-    s_next = s;
-    
-    deltas = ones(l, 1);
-    stim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');
     
     % if vary_stepsize, update delta every 5 steps
     if (vary_stepsize && ~mod(n,5) && n>lastdeltastep)  
-        fprintf('Calculating Deltas for small Epsilon (stepsize/1000)');
+        stim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');
+        fprintf('Calculating deltas for small epsilon: ');
         for d = 1:l
             stepdir = zeros(l, 1);
             % SVD alternative. epsilon=stepsize./1000;
             stepdir(d) = stepsize./1000;
-            %stepdir(d) = x(d) * stepsize;             
             deltas(d) = abs(s - objfn(x + stepdir)); % To ensure evaluation
             newstim = flatten_field(XXX{end}.dat, XXX{end}.training_set,'stim');
             deltas(d) = sum((stim - newstim).^2);
-    
+            
             % Print a 20 dot progress bar
             if mod(d, ceil(l/20)) == 1
                 fprintf('.');
@@ -110,7 +107,7 @@ while ~termfn(n, x, stepsize, s_delta)
         deltas(deltas <= 1) = 1;
         
         % renormalize just in case spread of effects does not span 10^3
-        deltas=deltas./min(deltas)./10; 
+        deltas=deltas./min(deltas)./10;
         
         % If there was a very minor change in the output, set it to 1 so
         % you don't see a huge explosion later.
@@ -118,7 +115,7 @@ while ~termfn(n, x, stepsize, s_delta)
         minidx=find(deltas==min(deltas),1);
         maxidx=find(deltas==max(deltas),1);
         
-        fprintf('delta min %.3f (%d) max %.3f (%d)\n',...
+        fprintf(' min %.3f (%d) max %.3f (%d)\n',...
                 deltas(minidx),minidx,deltas(maxidx),maxidx);
         
         % record so we don't recalc deltas over and over for
@@ -131,6 +128,9 @@ while ~termfn(n, x, stepsize, s_delta)
     % Try to take a step along every dimension
     fprintf('Boosting');
     
+    x_next = x;  % x_next holds best stepping direction so far
+    s_next = s;
+    
     for d = 1:l
         stepdir = zeros(l, 1);
         %stepdir(d) = stepsize + (stepsize/deltas(d));
@@ -138,7 +138,7 @@ while ~termfn(n, x, stepsize, s_delta)
         if stepdir(d) == 0
             stepdir(d) = stepsize;
         end
-
+        
         % Step in the direction
         x_fwd = x + stepdir;
         x_bck = x - stepdir;
@@ -176,6 +176,21 @@ while ~termfn(n, x, stepsize, s_delta)
         dirs = 1:l;
         dir = dirs(x ~= x_next);
         
+        if NARF_DEBUG
+            if isempty(NARF_DEBUG_FIGURE),
+                NARF_DEBUG_FIGURE=figure;
+            else
+                sfigure(NARF_DEBUG_FIGURE);
+            end
+            clf;
+            errorbar(1:length(x),x,stepsize./deltas);
+            hold on
+            plot(dir,x_next(dir),'ro');
+            hold off
+            xlabel('parameter');
+            drawnow
+        end
+     
         % Take a step in the best direction
         x = x_next; 
         s = objfn(x);
@@ -196,6 +211,7 @@ while ~termfn(n, x, stepsize, s_delta)
      else
          fprintf('pm_est:  %12.8f\n', s);
      end
+     
 end
 
 % Return the best value found so far

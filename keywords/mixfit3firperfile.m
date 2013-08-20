@@ -1,9 +1,8 @@
 function mixfit3firperfile()
 
 global STACK
-    
-mse(); %% We need a performance metric, so add one
-mixfit3nomse(); %% Relative boost algorithm across all files to initialize
+
+mixfit3(); %% Relative boost algorithm across all files to initialize
 
 [~, mod_idxs] = find_modules(STACK, 'fir_filter', false);
 for ii=1:(mod_idxs{1}(1)-1),

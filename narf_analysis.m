@@ -695,16 +695,22 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'Callback', @preview_model_callback);
     function clear_preview_fig_handle(f,~)
         preview_fig = [];
-        close(f);
+        delete(f);
     end
-      
+    
     function preview_model_callback(~,~,~)
         if ~isempty(sel_results)
             for ii = 1:length(sel_results)
                 preview_fig = figure('Menubar', 'none', ...
                                      'CloseRequestFcn', @clear_preview_fig_handle);
-                [I,map] = imread(char(sel_results(ii).figurefile),'png');  
+                [I,map] = imread(char(sel_results(ii).figurefile),'png');
+                subplot('position',[0 0 1 1]);
                 imshow(I, map);
+                g=get(preview_fig,'Position');
+                g(2)=g(2)+g(4)-size(I,1);
+                g(3)=size(I,2);
+                g(4)=size(I,1);
+                set(preview_fig,'Position',g);
             end
         end
     end
@@ -1014,7 +1020,12 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
             sfigure(preview_fig);
             [I,map] = imread(char(sel_results(1).figurefile),'png');  
             imshow(I, map);
-        end
+            g=get(preview_fig,'Position');
+            g(2)=g(2)+g(4)-size(I,1);
+            g(3)=size(I,2);
+            g(4)=size(I,1);
+            set(preview_fig,'Position',g);
+         end
     end
 
 
