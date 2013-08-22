@@ -18,18 +18,18 @@ n_iters = 1;
 start_depth = find_fit_start_depth(STACK);
 depths = find_fit_param_depths(STACK);
 [mse, pen] = META.perf_metric();
-score_prev = mse + pen;
+score_prev = mse + pen
 prev_phi = [];
 
 function score = my_obj_fn(phi)
     % Find the point at which the stack needs to be recalculated.
     if isempty(prev_phi)
         prev_phi = phi;
-        unpack_fittables(phi);        
-        calc_xxx(start_depth);         
+        unpack_fittables(phi);
+        calc_xxx(start_depth);
     else
         idx_of_first_different_param = find(phi ~= prev_phi, 1);
-        unpack_fittables(phi);     
+        unpack_fittables(phi);
         calc_xxx(depths(idx_of_first_different_param));
     end
     [m, p] = META.perf_metric();

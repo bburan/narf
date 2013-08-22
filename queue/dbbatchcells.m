@@ -1,4 +1,4 @@
-function [cellfiledata,cellids]=dbbatchcells(batchid,cellid);
+function [cellfiledata,cellids,params]=dbbatchcells(batchid,cellid);
 
 dbopen;
 
@@ -17,6 +17,7 @@ cellargs={};
 if exist('cellid','var'),
    cellargs=cat(2,cellargs,{'cellid'},{cellid});
 end
+params.miniso=getparm(params,'miniso',0);
 
 if 1 || params.stimspeedid==0,
    % disp('disabling speed test');
@@ -183,7 +184,7 @@ if isfield(params,'specialbatch'),
                     diff(parms.Ref_LowFreq)==0 &&...
                     diff(parms.Ref_HighFreq)==0 && ...
                     strcmpi(cellfiledata(ii).behavior,'active') &&...
-                    cellfiledata(ii).isolation>90,
+                    cellfiledata(ii).isolation>params.miniso,
                 keepfiles(ii)=1;
                 keepcellids=union(keepcellids,cellfiledata(ii).cellid);
             end
@@ -205,7 +206,7 @@ if isfield(params,'specialbatch'),
                     (diff(parms.Ref_LowFreq)~=0 ||...
                      diff(parms.Ref_HighFreq)~=0) && ...
                     strcmpi(cellfiledata(ii).behavior,'active') &&...
-                    cellfiledata(ii).isolation>85,
+                    cellfiledata(ii).isolation>params.miniso,
                 keepfiles(ii)=1;
                 keepcellids=union(keepcellids,cellfiledata(ii).cellid);
             end
@@ -226,7 +227,7 @@ if isfield(params,'specialbatch'),
                     length(parms.Ref_LowFreq)==1 &&...
                     length(parms.Trial_RelativeTarRefdB)>1 &&...
                     strcmpi(cellfiledata(ii).behavior,'active') &&...
-                    cellfiledata(ii).isolation>90,
+                    cellfiledata(ii).isolation>params.miniso,
                 keepfiles(ii)=1;
                 keepcellids=union(keepcellids,cellfiledata(ii).cellid);
             end

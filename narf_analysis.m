@@ -172,6 +172,10 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
             rebuild_modeltree();
         end
         update_query_results_table();
+        
+        % after switching to new analysis, select all models and cells
+        batch_callback();
+        sel_all_models_callback();
     end
 
 
@@ -408,6 +412,9 @@ handles.batch = uicontrol('Parent', right_panel, 'Style', 'popupmenu', 'Units', 
         sel_batch = str2num(bat);
         analysis_changed_callback();
         rebuild_batch_table();
+        
+        % by default, select all cells
+        select_all_cellids_callback();
     end
     
 handles.refresh_batches = uicontrol('Parent', right_panel, ...
@@ -810,6 +817,9 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
             return;
         end
         % Query the DB and record a single data point
+        fig_title=sprintf('Validation Set Comparison (batch %d, %s)',...
+                          sel_batch,datestr(now));
+
         figure('Name', 'Validation Set Comparison', 'NumberTitle', 'off', ...
                'Position', [10 10 900 900]);
         plot_scatter(data, sel_models); 
@@ -894,7 +904,8 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         end
         set(gca,'XTickLabel', thelabels(idxs));
         set(gca,'CameraUpVector',[-1,0,0]);
-        title('Model Performance and Deciles');
+        title(sprintf('Model Performance and Deciles (batch %d, %s)',...
+                      sel_batch,datestr(now)));
     end
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...

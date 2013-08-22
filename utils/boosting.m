@@ -101,22 +101,23 @@ while ~termfn(n, x, stepsize, s_delta)
             end
         end
         
-        % SVD alternative, scale max delta to 1000 and truncate min
-        % to 1.
-        deltas=deltas./max(deltas).*10^3;
+        % SVD alternative, scale max delta to 10 and truncate min to 1
+        deltas=deltas./max(deltas).*10;
         deltas(deltas <= 1) = 1;
-        
-        % renormalize just in case spread of effects does not span 10^3
-        deltas=deltas./min(deltas)./10;
-        
+        % renormalize 1-max spread of effects spans less than 10^2
+        deltas=deltas./min(deltas);
+       
         % If there was a very minor change in the output, set it to 1 so
         % you don't see a huge explosion later.
         %deltas(deltas <= 10^-6) = 1;
-        minidx=find(deltas==min(deltas),1);
-        maxidx=find(deltas==max(deltas),1);
         
-        fprintf(' min %.3f (%d) max %.3f (%d)\n',...
-                deltas(minidx),minidx,deltas(maxidx),maxidx);
+        minidx=find(deltas==min(deltas));
+        maxidx=find(deltas==max(deltas));
+        if ~isempty(minidx) && ~isempty(maxidx),
+            fprintf(' min %.3f (%d, n=%d) max %.3f (%d, n=%d)\n',...
+                    deltas(minidx(1)),minidx(1),length(minidx),...
+                    deltas(maxidx(1)),maxidx(1),length(maxidx));
+        end
         
         % record so we don't recalc deltas over and over for
         % stepsize reductions
@@ -167,7 +168,7 @@ while ~termfn(n, x, stepsize, s_delta)
     % If the search point has not changed, step size is too big.
     if all(x == x_next)
         stepsize = stepsize / stepscale;
-        fprintf('Decreased stepsize to %d\n', stepsize);
+        fprintf('Decreased stepsize to %d (s=%d)\n', stepsize,s_next);
     else        
         % Compute the improvement in score
         s_delta = s - s_next;
@@ -182,23 +183,26 @@ while ~termfn(n, x, stepsize, s_delta)
             else
                 sfigure(NARF_DEBUG_FIGURE);
             end
+            if n==0,
+                x0=x;
+            end
             clf;
-            errorbar(1:length(x),x,stepsize./deltas);
+            plot(1:length(x),x0,'k+--');
             hold on
+            errorbar(1:length(x),x,stepsize./deltas);
             plot(dir,x_next(dir),'ro');
             hold off
             xlabel('parameter');
             drawnow
         end
-     
+        
         % Take a step in the best direction
-        x = x_next; 
+        x = x_next;
         s = objfn(x);
         
         % Print the improvement after stepping
-        fprintf('coef# %3d, delta: %d, score:%d\n', dir, s_delta, s);
+        fprintf('coef# %3d, delta: %d, score: %12.8f\n', dir, s_delta, s);
         n = n + 1;
-        
      end
      
      % We cannot assume that the performance metric will be MSE in every
@@ -208,10 +212,7 @@ while ~termfn(n, x, stepsize, s_delta)
      if ~isempty(XXX{end}.test_set),
          [~,~,val_s] = META.perf_metric();
          fprintf('pm_est:  %12.8f  pm_val:  %12.8f\n', s, val_s);
-     else
-         fprintf('pm_est:  %12.8f\n', s);
      end
-     
 end
 
 % Return the best value found so far

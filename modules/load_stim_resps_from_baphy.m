@@ -252,6 +252,11 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             resp=resp(:,:,keepidx);
         end
         
+        nanstim=find(isnan(stim(:)));
+        if ~isempty(nanstim),
+            disp('WARNING: nan-valued stims are being set to zero');
+            stim(nanstim)=0;
+        end
         x.dat.(f).(mdl.output_stim) = stim;
         x.dat.(f).(mdl.output_resp) = permute(resp, [1, 3, 2]);
         x.dat.(f).(mdl.output_respavg) = squeeze(nanmean(x.dat.(f).(mdl.output_resp), ...

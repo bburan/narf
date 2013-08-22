@@ -61,15 +61,15 @@ first5_deltas = nan(5,1); % First delta never used
 
 function stop = term_fn(n,x,s,d)    
     if (n > max_n_steps)
-        stop = 1;
+        stop = 1
         return
     end
     if (s < min_stepsize)
-        stop = 2;
+        stop = 2
         return
     end
     if (d < min_scoredelta) && ~relative_delta
-        stop = 3;
+        stop = 3
         return
     end
     if relative_delta        
@@ -78,11 +78,11 @@ function stop = term_fn(n,x,s,d)
             first5_deltas(idx) = d;
         else
            if (d / mean(first5_deltas(2:end))) < min_scoredelta
-                stop = 4;
+                stop = 4
                 return
            end
         end
-    end     
+    end
     stop = false;   
 end
 
