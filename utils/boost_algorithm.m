@@ -27,14 +27,14 @@ while (true)
     if (options.Elitism && last_elite_recalc ~= n) || ...
        (options.StepRel && last_effect_recalc <= n - options.StepRelRecalcEvery),
    
-        fprintf('Calculating parameter importance');        
+        fprintf('Calculating effect deltas for small epsilon');        
         for d = 1:n_params
             stepdir = zeros(n_params, 1);
-            stepdir(d) = stepsize;            
+            stepdir(d) = stepsize ./ 1000;            
             
             % this next line actually does the work, since it causes a
             % calc_xxx to occur 
-            eliteness(d) = objfn(x + stepdir) - s;
+            eliteness(d) = abs(s - objfn(x + stepdir));
             
             if options.StepRel
                 newstim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');
@@ -112,13 +112,35 @@ while (true)
             dirs = 1:n_params;      % Direction of the step;
             dir = dirs(x ~= x_next);
             
+            actual_stepsize = sum(x_next-x);
             x = x_next;   % Take a step in the best direction
             s = objfn(x); % Recalculate the score
             stim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');       
     
             % Print the improvement after stepping
-            fprintf('step: %d, coef# %3d, delta: %d, score:%d\n', stepsize, dir, s_delta, s);
+            fprintf('stepsize: %d, actual: %d, coef# %3d, delta: %d, score:%d\n', ...
+                     stepsize, actual_stepsize, dir, s_delta, s);
 
+            % Possibly display debug info as well
+            if exist('NARF_DEBUG', 'var') && NARF_DEBUG
+                if isempty(NARF_DEBUG_FIGURE),
+                    NARF_DEBUG_FIGURE=figure;
+                else
+                    sfigure(NARF_DEBUG_FIGURE);
+                end
+                if n==0,
+                    x0=x;
+                end
+                clf;
+                plot(1:length(x), x0, 'k+--');
+                hold on
+                errorbar(1:length(x), x, stepsize./effect);
+                plot(dir, x_next(dir), 'ro');
+                hold off
+                xlabel('parameter');
+                drawnow
+            end
+            
             % Prepare for next loop
             stepsize = stepsize * options.StepGrowth;
             n = n + 1;
