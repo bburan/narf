@@ -3,7 +3,7 @@ function [x_bst, s_bst, termcond] = boost_algorithm(objfn, x_0, options)
 %
 % See documentation of fit_boo.m for more information.
 %
-global XXX;
+global XXX NARF_DEBUG;
 
 n_params = length(x_0);
 
