@@ -80,7 +80,7 @@ while (true)
                 stepdir(idx) = stepsize / effect(idx);
             else
                 stepdir(idx) = stepsize;
-            end           
+            end 
 
             x_fwd = x + stepdir;
             x_bck = x - stepdir;            

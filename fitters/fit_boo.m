@@ -50,8 +50,8 @@ default_options = struct('StopAtSeconds', 60*60*24, ...
                          'StopAtRelScoreDelta', 10^-5, ...
                          'StopAtAbsScoreDelta', 10^-12, ...
                          'StepSize', 1.0, ...
-                         'StepRel', true, ...
-                         'StepRelRecalcEvery', 5, ...
+                         'StepRel', false, ...
+                         'StepRelRecalcEvery', 1, ...
                          'StepRelMin', 10^-3, ...
                          'StepRelMax', 10^3, ...
                          'StepGrowth', 1.0, ...
@@ -75,21 +75,40 @@ t_start = clock(); %
 first_5_deltas = [];       % Used for relative stopping
 
 function stopcode = termfn(n,x,s,d)
-    if (n > opts.StopAtStepNumber),    stopcode = 1; return; end
-    if (s < opts.StopAtStepSize),      stopcode = 2; return; end
-    if (d < opts.StopAtAbsScoreDelta), stopcode = 3; return; end
+    if (n > opts.StopAtStepNumber),   
+        stopcode = 1; 
+        fprintf('Took more than %d steps in total, stopping.\n', ...
+            opts.StopAtStepNumber);
+        return;
+    end
+    if (s < opts.StopAtStepSize),      
+        stopcode = 2;  
+        fprintf('Stepsize less than absolute limit %f, stopping.\n', ...
+            opts.StopAtStepSize);
+        return; 
+    end
+    if (d < opts.StopAtAbsScoreDelta), 
+        stopcode = 3;
+        fprintf('Absolute score improvement less %f, stopping.\n', ...
+            opts.StopAtAbsScoreDelta);
+        return; 
+    end
     
     if length(first_5_deltas) < 5
         first_5_deltas(end+1) = d;
     else
         if (d / mean(first_5_deltas(2:end))) < opts.StopAtRelScoreDelta
             stopcode = 4;
+            fprintf('Relative score improvement less %f, stopping.\n', ...
+                opts.StopAtRelScoreDelta);
             return
         end
     end
        
     if (etime(clock, t_start) > opts.StopAtSeconds)
-        stopcode = 5;
+        stopcode = 5; 
+        fprintf('Fit time exceeded %f, stopping.\n', ...
+                opts.StopAtSeconds);
         return
     end
 

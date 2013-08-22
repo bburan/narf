@@ -127,7 +127,6 @@ function do_plot_channels_as_heatmap(sel, stack, xxx)
     
     set(gca,'YDir','normal');
     axis xy tight;
-    
 end
 
 end
