@@ -19,11 +19,13 @@ if ~exist('n_outer_loops', 'var')
 end
 
 cached_stack = STACK;
+prev_stepsize = []; 
 
 for ii = 1:n_outer_loops,
     fprintf('Outer Loop Iteration %d/%d\n', ii, n_outer_loops);
     for jj = 1:length(STACK),
         if ~isfield(cached_stack{jj}{1}, 'fit_fields')
+            prev_stepsize(jj) = 0; %% Just a stupid placeholder
             continue;
         end
         
@@ -40,8 +42,15 @@ for ii = 1:n_outer_loops,
             end
         end
         
-        % Run the fitter once
-        fitter();
+        % Run the fitter once. If it supports arguments, also pass it 
+        % stepsize that the fitter ended on during the previous iteration
+        if nargin(fitter) == 0
+            fitter();
+        elseif length(prev_stepsize) < jj
+            prev_stepsize(jj) = fitter();
+        else
+            prev_stepsize(jj) = fitter(prev_stepsize(jj));
+        end
         
         % Restore the fit fields
         for kk = 1:length(STACK)

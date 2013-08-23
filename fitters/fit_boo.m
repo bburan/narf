@@ -1,5 +1,5 @@
-function [termcond, n_iters] = fit_boo(options)
-%  [termcond,n_iters] = fit_boo(options)
+function [termcond, n_iters, term_stepsize] = fit_boo(options)
+%  [termcond,n_iters, term_stepsize] = fit_boo(options)
 %
 % A consolidation of various boost algorithms that have been tried.
 % 
@@ -119,7 +119,7 @@ if ~isfield(opts, 'TermFn')
     opts.TermFn = @termfn;
 end
 
-[termcond, n_iters] = default_fitter_loop('fit_boo()', ...
+[termcond, n_iters, term_stepsize] = default_fitter_loop('fit_boo()', ...
     @(obj_fn, phi_init) boost_algorithm(obj_fn, phi_init, opts), true);
 
 end

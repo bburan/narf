@@ -1,5 +1,5 @@
-function [x_bst, s_bst, termcond] = boost_algorithm(objfn, x_0, options)
-%  [x_bst, s_bst, termcond] = boost_algorithm(objfn, x_0, options)
+function [x_bst, s_bst, termcond, term_stepsize] = boost_algorithm(objfn, x_0, options)
+%  [x_bst, s_bst, termcond, term_stepsize] = boost_algorithm(objfn, x_0, options)
 %
 % See documentation of fit_boo.m for more information.
 %
@@ -105,7 +105,7 @@ while (true)
         if all(x == x_next)
             % Stepsize was too big so no step was taken
             stepsize = stepsize * options.StepShrink;
-            fprintf('Stepsize shrunk to %d\n', stepsize);            
+            fprintf('stepsize shrunk to %d\n', stepsize);            
         else
             % Step was taken successful
             s_delta = s - s_next;   % Improvement in score            
@@ -147,10 +147,11 @@ while (true)
         end
 
         % Should we stop searching?
-        if options.TermFn(n, x, stepsize, s_delta)
+        termcond = options.TermFn(n, x, stepsize, s_delta);
+        if termcond
             x_bst = x;
             s_bst = s;
-            termcond = options.TermFn(n, x, stepsize, s_delta);
+            term_stepsize = stepsize;
             return;
         end
         

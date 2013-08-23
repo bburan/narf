@@ -1,4 +1,4 @@
-function [termcond, n_iters] = default_fitter_loop(fittername, highlevel_fn, bequiet)
+function [termcond, n_iters, term_stepsize] = default_fitter_loop(fittername, highlevel_fn, bequiet)
 
 global STACK META;
 
@@ -18,7 +18,7 @@ n_iters = 1;
 start_depth = find_fit_start_depth(STACK);
 depths = find_fit_param_depths(STACK);
 [mse, pen] = META.perf_metric();
-score_prev = mse + pen
+score_prev = mse + pen;
 prev_phi = [];
 
 function score = my_obj_fn(phi)
@@ -54,8 +54,8 @@ end
 fprintf('----------------------------------------------------------------------\n');
 fprintf('Fitting %d variables with %s\n', length(phi_init), fittername);
 
-[phi_best, ~, termcond] = highlevel_fn(@my_obj_fn, phi_init);
-                                
+[phi_best, ~, termcond, term_stepsize] = highlevel_fn(@my_obj_fn, phi_init);
+
 unpack_fittables(phi_best);
 
 fprintf('Complete fit with %d objective function evaluations.\n', n_iters);
