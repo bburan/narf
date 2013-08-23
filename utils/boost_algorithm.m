@@ -121,25 +121,25 @@ while (true)
             fprintf('stepsize: %d, actual: %d, coef# %3d, delta: %d, score:%d\n', ...
                      stepsize, actual_stepsize, dir, s_delta, s);
 
-            % Possibly display debug info as well
-            if exist('NARF_DEBUG', 'var') && NARF_DEBUG
-                if isempty(NARF_DEBUG_FIGURE),
-                    NARF_DEBUG_FIGURE=figure;
-                else
-                    sfigure(NARF_DEBUG_FIGURE);
-                end
-                if n==0,
-                    x0=x;
-                end
-                clf;
-                plot(1:length(x), x0, 'k+--');
-                hold on
-                errorbar(1:length(x), x, stepsize./effect);
-                plot(dir, x_next(dir), 'ro');
-                hold off
-                xlabel('parameter');
-                drawnow
-            end
+%             % Possibly display debug info as well
+%             if exist('NARF_DEBUG', 'var') && NARF_DEBUG
+%                 if isempty(NARF_DEBUG_FIGURE),
+%                     NARF_DEBUG_FIGURE=figure;
+%                 else
+%                     sfigure(NARF_DEBUG_FIGURE);
+%                 end
+%                 if n==0,
+%                     x0=x;
+%                 end
+%                 clf;
+%                 plot(1:length(x), x0, 'k+--');
+%                 hold on
+%                 errorbar(1:length(x), x, stepsize./effect);
+%                 plot(dir, x_next(dir), 'ro');
+%                 hold off
+%                 xlabel('parameter');
+%                 drawnow
+%             end
             
             % Prepare for next loop
             stepsize = stepsize * options.StepGrowth;
