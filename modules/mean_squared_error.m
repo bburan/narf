@@ -15,7 +15,8 @@ m.name = 'mean_squared_error';
 m.fn = @do_mean_squared_error;
 m.pretty_name = 'Mean Squared Error';
 m.editable_fields = {'input1', 'input2', 'time', 'error', 'output', ...
-                     'train_score', 'test_score'};
+                     'train_score', 'test_score', ...
+                     'train_score_norm', 'test_score_norm'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
@@ -25,6 +26,8 @@ m.time   = 'stim_time';
 m.error  = 'error';
 m.train_score  = 'score_train_mse';
 m.test_score  = 'score_test_mse';
+m.train_score_norm  = 'score_train_nmse';
+m.test_score_norm  = 'score_test_nmse';
 m.output = 'score_train_mse';
 m.is_perf_metric = true;
 
@@ -45,14 +48,21 @@ function x = do_mean_squared_error(mdl, x, stack, xxx)
     p = flatten_field(x.dat, x.training_set, mdl.input1);
     q = flatten_field(x.dat, x.training_set, mdl.input2); 
     train_score = nanmean((p - q).^2);
+    train_nmse = train_score / (nanmean(p)*nanmean(q));
     
     % Compute the mean squared error of the test set
     ptest = flatten_field(x.dat, x.test_set, mdl.input1);
     qtest = flatten_field(x.dat, x.test_set, mdl.input2); 
     test_score = nanmean((ptest - qtest).^2);
+    test_nmse = train_score / (nanmean(ptest)*nanmean(qtest));
     
     x.(mdl.train_score) = train_score;
     x.(mdl.test_score) = test_score;   
+    
+    if isfield(mdl, 'train_score_norm')
+        x.(mdl.train_score_norm) = train_nmse;
+        x.(mdl.test_score_norm) = test_nmse;
+    end
     x.(mdl.output) = train_score;
 end
 
