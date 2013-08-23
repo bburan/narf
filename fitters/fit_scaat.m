@@ -30,14 +30,14 @@ function [x, s, termcond] = one_at_a_time(objfn, x_0, opts)
     fprintf('\n');
     
     for ii = 1:opts.OuterLoops
-        fprintf('Outer loop %d/%d\n', ii, opts.OuterLoops);
+        fprintf('Outer loop %d/%d', ii, opts.OuterLoops);
         for jj = 1:n_params
             stepsize = stepsizes(jj);
             
-            fprintf('Param# %03d/%03d, Score: %d, Stepsize: %d', jj, n_params, s, stepsize);
+            fprintf('\nParam# %02d/%02d, Score: %d, Stepsize: %.2d, Phi: [', jj, n_params, s, stepsize);
             p = pack_fittables(STACK);
             fprintf(' %.3f', p);
-            fprintf(']\n');
+            fprintf(']');
             
             n = 1;
             while n <= opts.StepsPerParam && stepsize > opts.StopStepsize 
