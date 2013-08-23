@@ -27,7 +27,23 @@ fit_boo(struct('StopAtSeconds', 300, ...
                'EliteParams', 5, ...
                'EliteSteps', 5));
 
-% PASS 2: Use the mighty SCAAT fitter now that initial conditions are good
+% PASS 2: Warm up to the idea of SCAAT by doing some iterative fitting           
+function stepsize = boosting_as_many_steps_as_there_are_parameters(init_stepsize)    
+    if ~exist('init_stepsize', 'var')
+        init_stepsize = 1;
+    end        
+    phi = pack_fittables(STACK);
+    [~,~,stepsize] = fit_boo(struct('StopAtStepSize', 10^-7, ...
+                                    'StepSize', init_stepsize, ...
+                                    'StopAtStepNumber', length(phi), ...
+                                    'StepRel', false, ...
+                                    'Elitism', false, ...
+                                    'StepGrowth', 1.3)); 
+end
+max_loops = 10;
+fit_iteratively(@boosting_as_many_steps_as_there_are_parameters, max_loops);
+    
+% PASS 3: Use the mighty SCAAT fitter now that initial conditions are good
 fit_scaat();
 
 end
