@@ -28,7 +28,8 @@ function score = my_obj_fn(phi)
         unpack_fittables(phi);
         calc_xxx(start_depth);
     else
-        idx_of_first_different_param = find(phi ~= prev_phi, 1);
+        idx_of_first_different_param = find(phi ~= prev_phi, 1)
+        prev_phi = phi;
         unpack_fittables(phi);
         calc_xxx(depths(idx_of_first_different_param));
     end
@@ -54,7 +55,12 @@ end
 fprintf('----------------------------------------------------------------------\n');
 fprintf('Fitting %d variables with %s\n', length(phi_init), fittername);
 
-[phi_best, ~, termcond, term_stepsize] = highlevel_fn(@my_obj_fn, phi_init);
+if nargout(highlevel_fn) ==4 
+    [phi_best, ~, termcond, term_stepsize] = highlevel_fn(@my_obj_fn, phi_init);
+else    
+    [phi_best, ~, termcond] = highlevel_fn(@my_obj_fn, phi_init);
+    term_stepsize = 1;
+end
 
 unpack_fittables(phi_best);
 

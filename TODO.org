@@ -18,16 +18,18 @@
   1. For the first two minutes, boo04 wins, followed by boo09 and boo03.
 ** For Batch 251 (Behavior data, logfree_firnoi/depfreew_siglogIC)
   1. For the first four minutes, boo06 wins, followed by boo00 and boo04.
-
-** Growing at 1.5 is clearly too mmuch
+** Growing at 1.5 is clearly too much
    Growing at 1.3 is pretty good
 
 * What problems do I face?
-  Getting stuck on a particular parameter and stepping many times on it beacuse its the best in the weird place you are stuck in
-  Taking a gigantic step on a single parameter too early
-** Hypothetical Solution: Force fitter to take a single, small absolute step iteratively on each module (SCAAT style), and grow each stepsize each time
+** Step sizes
+   Getting stuck on a particular parameter and stepping many times on it beacuse its the best in the weird place you are stuck in
+   Taking a gigantic step on a single parameter too early
+*** Hypothetical Solution: Force fitter to take a single, small absolute step iteratively on each module (SCAAT style), and grow each stepsize each time
+** Two dependent parameters
+   Imagine one parameters that affect each other, one with a large magnitude and the other with a small magnitude
+   The stepsize will have to be VERY small before the smaller one will be modified. 
 
-  
 * HIGH LEVEL OBJECTIVES:
   1. [ ] Find a fitter such that DEPFREEW always matches or exceeds FIRNOI's performance for BATCH 251!
   2. [ ] Add a two-model comparison function which scatter-plots many matrices, does a histogram of collapsed scatter plot along diagonal, and does randomized paired T-test. Maybe log-likelihood ratio too. 
@@ -38,11 +40,13 @@
   - [X] Iterative fits with stepsize that starts at same as previous iteration
   - [X] Edit MixFit4, queue it up, and hope it beats MixFit3
   - [X] Score is not updating properly during iterative fits (Fixed in boost_algorithm, but not in others)
+  - [ ] Add a fit_scaat algorithm which should be good for 'cleanup'?
   - [ ] MSE NORMALIZATION
   - [ ] Study por032a-07-1 with logfree_depfreew_siglogIC_mixfit3 and wonder why it chokes at the beginning
   - [ ] Make fitboo use varargin instead of a struct 
   - [ ] Add a hook to display fitting info as it goes. (OR FIGURE OUT WHY DEBUG DOESN"T WORK)
   - [ ] Mutual Information fits queued up
+  - [ ] Read Dan Butz paper.
 
 * Next Steps:
   1. Add Debug mode flag in META, plot function hooks, so I can watch fits go. Test on my best results for today. 
