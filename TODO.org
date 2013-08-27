@@ -1,78 +1,49 @@
-* Discoveries of the week. 
-** Normalization
-  - Normalization-wise, normalizing after compressor is most important. Would a compressor gain term (or per-channel FIR gain term) remove the necessity of this normalization? 
-** Initial Conditions
-  - It's hard for the boosting fitters to alter the siglog parameters because it requires two coefficients to change together. 
-  - Would simultaneous stepping in TWO directions help? 
-    The wrong but fast way to do this is just to take two steps at the same time. 
-    The right way to do this is to try every PAIRING, since otherwise a single step direction will never look attractive. 
-    A compromise way to do this might be to only look at pairings of /elite/ values.
-** Fitting Problems
-   - Might want to have the ability to start stepsize to 2x the last iteration
-   - Score is not updating properly 
-   - Need a flag in the MSE module 
-** For Batch 240 (logfree_depfreewnn/depfreewnn2_siglogIC)
-  1. For the first two minutes, boosting with a non-scaled stepsize is the best choice. Elitism is the next best thing for both relative and absolute step-sizes.
-  2. For the next two minutes, all the boosting variations seem to about the same, and boo04 wins again (non scaled step size)
-** For Batch 251 (Behavior data, logfree_firnoi/depfreewnn_siglogIC)
-  1. For the first two minutes, boo04 wins, followed by boo09 and boo03.
-** For Batch 251 (Behavior data, logfree_firnoi/depfreew_siglogIC)
-  1. For the first four minutes, boo06 wins, followed by boo00 and boo04.
-** Growing at 1.5 is clearly too much
-   Growing at 1.3 is pretty good
-
-* What problems do I face?
-** Step sizes
-   Getting stuck on a particular parameter and stepping many times on it beacuse its the best in the weird place you are stuck in
-   Taking a gigantic step on a single parameter too early
-*** Hypothetical Solution: Force fitter to take a single, small absolute step iteratively on each module (SCAAT style), and grow each stepsize each time
-** Two dependent parameters
-   Imagine one parameters that affect each other, one with a large magnitude and the other with a small magnitude
-   The stepsize will have to be VERY small before the smaller one will be modified. 
-
-* HIGH LEVEL OBJECTIVES:
-  1. [ ] Find a fitter such that DEPFREEW always matches or exceeds FIRNOI's performance for BATCH 251!
+* HIGH-LEVEL OBJECTIVES:
+  1. [ ] Find a fitter such that DEPFREEW always matches or exceeds FIRNOI's performance for BATCH 251!	
   2. [ ] Add a two-model comparison function which scatter-plots many matrices, does a histogram of collapsed scatter plot along diagonal, and does randomized paired T-test. Maybe log-likelihood ratio too. 
-  3. [ ] Grant: (Look at NRSA grant from NIH, due in December, called the Kirchstein award, F-32. I would be a good applicant, and could probably modify SVD's grant and list my own publication.  Also, a hearing health foundation grant might also help. ).  Work through the grant example stephen sent me. Copy the style of the Neuron MID paper.
+  3. [ ] Grant: (Look at NRSA grant from NIH, due in December, called the Kirchstein award, F-32. I would be a good applicant, and could probably modify SVD's grant and list my own publication.  Also, a hearing health foundation grant might also help. ).  Work through the grant example stephen sent me. Copy the style of the Neuron MID paper. Stephen suggests I write about: Models which use wavelets to approximate cortex input features, applying some sort of nonlinear transform to those wavelets, or Either using explicit center/surround stimuli, or extracting center/surround channels from a full spectrally rich stimulus (hopefully capturing essentials in just 2 channels)
 
+* Things to try after last discussion with Stephen
+  1) Experiment: Does NMSE work as a performance metric?
+     Yes. Results for 4 minute fits with boo12 (MSE) vs boo14(NMSE) are different. 
+
+  2) Experiment: Do scatter plots show depfree always beats firno with mixfit3, mixfit4, or mixfit5
+     
+  3) Experiment: Which is a good 4 minute initial condition boost routine?
+     
+  4) Experiment: What are the optimal number of boost steps and iterations during iterative fitting?
+
+  5) Experiment: What level of relative stepsize helps?
+     Answer: I don't know? For batch 251, I was able to get relative stepsizes to work better (although not in the first 2 minutes), but not for 240. 
+
+  7) Experiment: Is there a way to use correlation as a stop criterion? 
+     If in the last 100 steps, we have not improved the minimum correlation more than 0.001, stop. 
+     
 * TODAYS WORK
-  - [X] Keep queueing and boosting the boost_algorithm hyperparameters
-  - [X] Iterative fits with stepsize that starts at same as previous iteration
-  - [X] Edit MixFit4, queue it up, and hope it beats MixFit3
-  - [X] Score is not updating properly during iterative fits (Fixed in boost_algorithm, but not in others)
-  - [ ] Add a fit_scaat algorithm which should be good for 'cleanup'?
-  - [ ] MSE NORMALIZATION
-  - [ ] Study por032a-07-1 with logfree_depfreew_siglogIC_mixfit3 and wonder why it chokes at the beginning
-  - [ ] Make fitboo use varargin instead of a struct 
-  - [ ] Add a hook to display fitting info as it goes. (OR FIGURE OUT WHY DEBUG DOESN"T WORK)
+  - [ ] Normalized mean squared error
+  - [ ] Termination condition that 
+  - [ ] Add a button to LOADSTIMFROMBAPHY that plays the sound or stimulus selected
+  - [ ] Add a hook to display fitting info as it goes. (OR FIGURE OUT WHY DEBUG DOESN'T WORK)
   - [ ] Mutual Information fits queued up
-  - [ ] Read Dan Butz paper.
+  - [ ] Read Dan Butz paper
+  - [ ] Make fitboo use varargin instead of a struct 
 
 * Next Steps:
-  1. Add Debug mode flag in META, plot function hooks, so I can watch fits go. Test on my best results for today. 
-  2. Read Hsu, Theunisson and try to understand how much information is in the response data. 
-  3. narf_modelpane chokes if interrupted during fit. Fix this.
-  4. Relative stopping criteria are possibly not being properly re-initialized during iterative fits.
-  5. Narf analysis bugs out when you click delete and nothing is selected, because underneath something may still be selected.
-  6. Grep around for {1} bugs
-  7. Write a generalized hook-in for constraints that pack_fittables calls and resets values as they are re-inserted
-  8. Read about the Grant and write a proposal. Stephen suggests I write about:
-     - Models which use wavelets to approximate cortex input features
-     - Apply some sort of nonlinear transform to those wavelets?
-     - Either using explicit center/surround stimuli, or extracting center/surround channels from a full spectrally rich stimulus (hopefully capturing essentials in just 2 channels)
-  9. General purpose scatter + marginals plot (Reuse scatter comparison?)
-  10. Simple-Delay FIR keyword.
-  11. Write a script that plots sparsity (summed overall) vs performance for a few model groups.
-  12. Modelstring bug.
-  13. Make split modules visible/editable from the GUI
-  14. Mixfit variations explored more.
-  15. Queue up a few different smooth_respavg kernels at 200Hz  
-  16. A plot of # of free parameters (put in database)
-  17. Profile code and look for optimizations that would speed up each iteration
-  18. Why does SENL drop to keyboard?
-  19. Heatmaps: loadstimfrombaphy, FIR, nonlinearity
-  20. Scatter plots of two models being compared. One plot for each performance metric.
-  21. Updated DB Insertion and Great Name Replacing proposal
+  1. Read Hsu, Theunisson and try to understand how much information is in the response data. 
+  2. Write a generalized hook-in for constraints that pack_fittables calls and resets values as they are re-inserted
+  4. General purpose scatter + marginals plot (Reuse scatter comparison?)
+  5. Simple-Delay FIR keyword.
+  6. Write a script that plots sparsity (summed overall) vs performance for a few model groups.
+  7. Modelstring bug.
+  8. Make split modules visible/editable from the GUI
+  9. Mixfit variations explored more.
+  10. Queue up a few different smooth_respavg kernels at 200Hz  
+  11. A plot of # of free parameters (put in database)
+  12. Profile code and look for optimizations that would speed up each iteration
+  13. Why does SENL drop to keyboard?
+  14. Heatmaps: loadstimfrombaphy, FIR, nonlinearity
+  15. Scatter plots of two models being compared. One plot for each performance metric.
+  16. Updated DB Insertion and Great Name Replacing proposal
 	  + [ ] calc_all_metrics()  function
           + [ ] Make est/val standard across everything, and move perf metric stuff from XXX{end} to META
 	  + [ ] Rename: VALIDATION/TEST and EST/TRAINING 
@@ -84,20 +55,22 @@
           + [ ] WHATEVER IS GOING INTO XXX{1} should be given to fit_single_model as well! When I'm not using BAPHY it should still be able to work.
 	  + [ ] Name convention of STACK vs stack, XXX vs xxx and the difficulty in understanding which one we are looking at! 
 		Lots of hidden assumptions here which are a problem. Plot modules have access to AFTER data, too.
-  22. Better initial conditions.
-  23. Outlier rejection. Exclude worst 1% in MSE calculations? Start at L2, gradually switch to L1 as time goes on? Remove each data point and use fitdist() to estimate it's effect on the noise model probability. Sort these effects. Mark the n% worst data points for plotting as "outliers" and also for removal during MSE or CORR calculations.
-  24. Narf Batch categories. 
+  17. Better initial conditions.
+  18. Outlier rejection. Exclude worst 1% in MSE calculations? Start at L2, gradually switch to L1 as time goes on? Remove each data point and use fitdist() to estimate it's effect on the noise model probability. Sort these effects. Mark the n% worst data points for plotting as "outliers" and also for removal during MSE or CORR calculations.
+  19. Narf Batch categories. 
          - Easier creation of sub-populations through the GUI I prototyped
          - Plots of params for each sub-population. 
          - Exclude crappy data (eliminate crappy behavior performance, then crappy isolation)
-  25. Fix Irregularities
+  20. Fix Irregularities
+	  - Grep around for {1} bugs
+	  - Narf analysis bugs out when you click delete and nothing is selected, because underneath something may still be selected.
           - Many functions still use STACK{N}{1} to compute things, which is probably wrong now.   
           - How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?  
           - Not all nonlinearities can accomodate NaNs in their code, especially in stim
           - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
           - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
           - Use keywords and VARARGIN instead of structs or long lists of many arguments
-  26. Write a crash course guide on using NARF
+  22. Write a crash course guide on using NARF
 
 * Metric-taking Ideas being developed in update_metrics();
   1. [X] metric_lnorm.m: Takes an L norm metric (MSE, L1, Linfty, etc)
@@ -109,7 +82,7 @@
   7. [X] metric_BIC: Bayes information criteria
   8. [X] metric_sparsity: The sum of all the FIR filter sparsity values
   9. [X] metric_smoothness: The summed smoothness of all the FIR filter smoothness values.
-  10. [ ] metric_mutual_info.m: Empirically derive P(X,R)
+  10. [X] metric_mutual_info.m: Empirically derive P(X,R)
   11. [ ] metric_nmse: "Normalized mean squared error" (R_pred - R)^2 / (R^2)
   12. [ ] metric_binned_resp_corr: RESP's variance with itself at this bin size
   13. [ ] metric that assumes a gaussian noise interfering with prediction and RESPAVG, and gives back an "improbability" score that is to be minimized
@@ -119,6 +92,10 @@
   17. [ ] metric_vr.m: Distance metric between predicted and actual spike trains
   18. [ ] metric_rectified: Rectified correlation approximation
   19. [ ] metric_SNR.m: Somehow compute the SNR?
+  20. [ ] Fractional bias
+  21. [ ] Geometric mean bias
+  22. [ ] Geometric variance
+  23. [ ] Fraction with a factor of 2 (FAC2)
 
 * New Experiments:
   1. Gain-changing module (per pixel gain/state?)
@@ -374,3 +351,5 @@ do?
   16. Boost algorithmic improvements. Comparison of Boost algorithms efficiency Per step, over time. 
   - Keep "dead jobs" thing near zero  
 - Improve siglog curvature initial further by setting it to 1/variance?
+  1. Add Debug mode flag in META, plot function hooks, so I can watch fits go. Test on my best results for today. 
+  3. Relative stopping criteria are possibly not being properly re-initialized during iterative fits.

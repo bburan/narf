@@ -1,0 +1,19 @@
+* Discoveries of the Week (2013-08-23) 
+** Mixfit 4: Maybe not better, but at least a more efficient boost algorithm
+   I tried, I tried, and I cried, but I couldn't get relative boosting to consisently and reliably work better than absolute stepsize boosting for batch 240 or 251. That is probably a result of the way I was scaling the parameters in boost_algorithm.m, since it was slightly different than what was used in "boosting.m". It may be something about nonlinearities in our data and model resulting in too-large stepsizes unless heavily constrained. Either way, finding decent hyperparameters for the general case was too hard for me.
+
+   Elitism (stepping only on the best dimensions) and step growth after a successful actually do help efficiency a few percent, and so mixfit4 uses those to a slight advantage over Mixfit 3. Note that Mixfit 4 has basically just been optimized to work better for 240 and 251 datasets.
+
+** Mixfit 5: SCAAT works pretty well for 251
+   I noticed several failure modes for boosting fitters:
+      1) Taking too large a step at the beginning puts the model in a state from which it never recovers.
+      2) Taking too many steps on a single parameter puts the model in a state from which it never recovers. 
+      3) Never even trying to take step on a small parameter because it seems to have a minimal impact on performance or output variance. 
+
+   Although it would be tempting to write a boosting algorithm that picks out pairings and steps along two dimension at the same time, but this seems computationally very wasteful since there are a nearly n^2 possible pairings for n parameters. 
+
+   The solution that seems to be working for the moment is to consider every single parameter independently, to keep a log of the stepsizes for every parameter, and to take one small step on each constraint (parameter), growing or shrinking as appropriate. This is the Single Constraint At A Time (SCAAT) technique that is used in sensor fusion and robotics. Although I haven't optimized it much yet, it is beating mixfit3 and mixfit4 most of the time, except when it completely fails and gets a big fat 0 for some reason. Probably this is an initial conditions problem. 
+
+** Other Notes
+   1. I added a binned mutual information module but didn't have time to actually use it as a performance metric. Haven't tried it yet. 
+   2. I also added Normalized mean squared error (NMSE keyword, untested). Normalizing by signal mean as seems more common http://rem.jrc.ec.europa.eu/RemWeb/atmes2/20b.htm. Is it also common to normalize by the variance as you suggested?

@@ -599,6 +599,7 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
     function fit_selected_now(~,~,~)        
         if length(sel_models) ~= 1 || length(sel_cellids) ~= 1               
             warndlg('Only a single model and cellid must be selected.');
+            return;
         end
         
         reply = questdlg('Are you sure you want to fit the selected model to the selected cellid, on this machine only, immediately? While it is running, please do not click on any of the GUI buttons.', ...
