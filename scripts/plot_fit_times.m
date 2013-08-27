@@ -37,7 +37,7 @@ figure;
 for ii = 1:size(times, 1)
     subplot(n,n,ii);
 	hist(times(ii,:), ceil(size(times,2)/5));
-    title(modelnames{ii}, 'Interpreter', 'none');
+    title([modelnames{ii} '(' num2str(nanmean(times(ii))) ')'], 'Interpreter', 'none');
 end
 
 end
