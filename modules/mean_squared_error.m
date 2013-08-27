@@ -50,7 +50,7 @@ function x = do_mean_squared_error(mdl, x, stack, xxx)
     train_score = nanmean((p - q).^2);
     %train_nmse = train_score / (nanmean(q)^2);            % Boo14
     %train_nmse = train_score / (nanmean(p)*nanmean(q));  % Boo15   
-    train_nmse = train_score / (nanvar(q)^2);            % Boo16
+    train_nmse = train_score / (nanvar(q));            % Boo16
     
     
     % Compute the mean squared error of the test set
@@ -59,7 +59,7 @@ function x = do_mean_squared_error(mdl, x, stack, xxx)
     test_score = nanmean((ptest - qtest).^2);
     %test_nmse = train_score / (nanmean(qtest)^2);               % boo14
     %test_nmse = train_score / (nanmean(ptest)*nanmean(qtest)); % boo15
-    test_nmse = train_score / (nanvar(qtest)^2);               % boo16
+    test_nmse = train_score / (nanvar(qtest));               % boo16
     
     x.(mdl.train_score) = train_score;
     x.(mdl.test_score) = test_score;   
