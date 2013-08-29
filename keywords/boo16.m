@@ -1,10 +1,6 @@
 function boo16()
-global STACK;
-% Only append MSE module if needed
-mods = find_modules(STACK, 'mean_squared_error', true);
-if isempty(mods)
-    nmse();    
-end
+
+nmse;
 
 % Very rapid step growth, but absolute
 fit_boo(struct('StopAtSeconds', 240, ...

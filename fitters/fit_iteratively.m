@@ -1,4 +1,4 @@
-function [termcond, n_iters] = fit_iteratively(fitter, n_outer_loops)
+function [termcond, s, n_iters] = fit_iteratively(fitter, outer_loop_term_fn)
 
 global STACK;
 
@@ -11,25 +11,32 @@ if isempty(phi_init)
 end
 
 if ~exist('fitter', 'var')
-    fitter = @(~) fit_boost(length(phi_init));
+    error('You should provide a fitter to fit_iteratively();'); 
 end
 
-if ~exist('n_outer_loops', 'var')
-    n_outer_loops = 10;
+if ~exist('outer_loop_term_fn', 'var')
+    outer_loop_term_fn = create_term_fn('StopAtStepNumber', 10);
 end
 
 cached_stack = STACK;
-prev_stepsize = []; 
+prev_opts = {}; 
 
-for ii = 1:n_outer_loops,
-    fprintf('Outer Loop Iteration %d/%d\n', ii, n_outer_loops);
+n = 1;
+s = nan;
+d = nan;
+n_iters = 0;
+
+% Terminate if the previous position is exactly the same as this one
+termcond = outer_loop_term_fn(n, s, d, n_iters);
+while ~termcond
+    fprintf('Outer Loop Iteration #%d. Score: %e\n', n, s);
     for jj = 1:length(STACK),
         if ~isfield(cached_stack{jj}{1}, 'fit_fields')
-            prev_stepsize(jj) = 0; %% Just a stupid placeholder
+            prev_opts{jj} = nan; % Just a stupid placeholder
             continue;
         end
         
-        fprintf('Running fitter on only module %d\n', jj);
+        fprintf('Running fitter on only module %d (%s)\n', jj, STACK{jj}{1}.name);
         
         % Erase all fit fields except the normal one
         for kk = 1:length(STACK)
@@ -42,15 +49,20 @@ for ii = 1:n_outer_loops,
             end
         end
         
-        % Run the fitter once. If it supports arguments, also pass it 
-        % stepsize that the fitter ended on during the previous iteration
-        if nargin(fitter) == 0
-            fitter();
-        elseif length(prev_stepsize) < jj
-            prev_stepsize(jj) = fitter();
+        % Run the fitter once, passing it the previous opts if they exist.       
+        if length(prev_opts) < jj
+            [~, s_new, iters, prev_opts{jj}] = fitter();
         else
-            prev_stepsize(jj) = fitter(prev_stepsize(jj));
+            [~, s_new, iters, prev_opts{jj}] = fitter(prev_opts{jj});
         end
+        
+        n_iters = n_iters + iters; 
+        if isnan(s)
+            d = s_new;
+        else
+            d = s - s_new;
+        end
+        s = s_new;
         
         % Restore the fit fields
         for kk = 1:length(STACK)
@@ -61,9 +73,9 @@ for ii = 1:n_outer_loops,
                     STACK{kk}{ll}.fit_fields = cached_stack{kk}{ll}.fit_fields;
                 end
             end
-        end    
-    end
+        end
+    end    
+    fprintf('Iterative loop %d ended. Score: %e, S_delta: %e\n', n, s, d);
+    n = n + 1;
+    termcond = outer_loop_term_fn(n, s, d, n_iters);
 end
-
-termcond = NaN;
-n_iters = NaN;

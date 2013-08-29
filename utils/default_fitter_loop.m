@@ -1,4 +1,4 @@
-function [termcond, n_iters, term_stepsize] = default_fitter_loop(fittername, highlevel_fn, bequiet)
+function [term_cond, term_score, n_iters, term_step] = default_fitter_loop(fittername, highlevel_fn, bequiet)
 
 global STACK META;
 
@@ -10,7 +10,7 @@ phi_init = pack_fittables(STACK);
 
 if isempty(phi_init)
     fprintf('Skipping because there are no parameters to fit.\n');
-    termcond = NaN;
+    term_cond = NaN;
     return 
 end
 
@@ -21,7 +21,9 @@ depths = find_fit_param_depths(STACK);
 score_prev = mse + pen;
 prev_phi = [];
 
-function score = my_obj_fn(phi)
+function [score, iters] = my_obj_fn(phi)
+    iters = n_iters;
+    
     % Find the point at which the stack needs to be recalculated.
     if isempty(prev_phi)
         prev_phi = phi;
@@ -44,7 +46,7 @@ function score = my_obj_fn(phi)
         % dbtickqueue(n_iters);
     end
     
-    % Print 1 progress dot for every 5 iterations
+    % Print 1 progress dot for every 5 iterations no matter what
     if isequal(mod(n_iters, 5), 0) %% && ~bequiet
         fprintf('.');
     end
@@ -55,14 +57,10 @@ end
 fprintf('----------------------------------------------------------------------\n');
 fprintf('Fitting %d variables with %s\n', length(phi_init), fittername);
 
-if nargout(highlevel_fn) ==4 
-    [phi_best, ~, termcond, term_stepsize] = highlevel_fn(@my_obj_fn, phi_init);
-else    
-    [phi_best, ~, termcond] = highlevel_fn(@my_obj_fn, phi_init);
-    term_stepsize = 1;
-end
+[term_phi, term_score, term_cond, term_step] = highlevel_fn(@my_obj_fn, phi_init);
 
-unpack_fittables(phi_best);
+unpack_fittables(term_phi);
+%% TODO: Even though I'm pretty sure we don't need to calc_XXX here, it would be good to verify this is true!
 
 fprintf('Complete fit with %d objective function evaluations.\n', n_iters);
 fprintf('----------------------------------------------------------------------\n');

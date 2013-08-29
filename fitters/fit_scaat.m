@@ -1,46 +1,58 @@
-function [termcond, n_iters] = fit_scaat(options)
+function [term_cond, best_score, n_iters, options] = fit_scaat(varargin)
 
 global STACK;
 phi = pack_fittables(STACK);
 n_params = length(phi);
 
-default_options = struct('InitStepsize', 1.0, ...
-                         'StepsPerParam', 1, ...
-                         'OuterLoops', 100, ...
+default_options = struct('StepsPerParam', 1, ...
+                         'InitStepSize', 1.0, ...
+                         'StopAtStepsize', 10^-6, ...
                          'StepGrowth', 2.0, ...
-                         'StepShrink', 0.5, ...
-                         'StopStepsize', 10^-7);
+                         'StepShrink', 0.5);
 
-if ~exist('options', 'var')
-    optz = default_options;
+if (length(varargin) == 1)
+    options = merge_structs(default_options, varargin{1});
 else
-    optz = merge_structs(default_options,options);
+    options = merge_structs(default_options, struct(varargin{:}));
 end
 
-function [x, s, termcond] = one_at_a_time(objfn, x_0, opts)        
+if ~isfield(options, 'TermFn') 
+    options.TermFn = create_term_fn(options);
+end
+
+[term_cond, best_score, n_iters, term_stepsizes] = ...
+    default_fitter_loop('fit_scaat()', ...
+        @(obj_fn, phi_init) one_at_a_time(obj_fn, phi_init, options), true);
+
+% If we are running this in an iterative fitter, next time start from here
+options.InitStepSizeVector = term_stepsizes;
+
+% ---------------
+
+function [x, s, term_cond, stepsizes] = one_at_a_time(objfn, x_0, opts)        
     
-    stepsizes = opts.InitStepsize * ones(size(x_0));
+    if ~isfield(opts, 'InitStepSizeVector') 
+        stepsizes = opts.InitStepSize * ones(size(x_0));
+    else
+        stepsizes = opts.InitStepSizeVector;
+    end
     x = x_0; 
-    s = objfn(x); 
-    n_params = length(x_0);
+    [s, o] = objfn(x); 
+    n_params = length(x_0);        
+    n = 1;
+    d = s;    
+    s_outer = s;
     
-	fprintf('Initial score: %d \tphi:', s);
-    p = pack_fittables(STACK);
-    fprintf(' %.3f', p);
-    fprintf('\n');
-    
-    for ii = 1:opts.OuterLoops
-        fprintf('Outer loop %d/%d', ii, opts.OuterLoops);
+    while ~(opts.TermFn(n, s_outer, d, o))
+        fprintf('\nSCAAT Step #%d (Score: %e)', n, s_outer);
         for jj = 1:n_params
             stepsize = stepsizes(jj);
             
-            fprintf('\nParam# %02d/%02d, Score: %d, Stepsize: %.2d, Phi: [', jj, n_params, s, stepsize);
-            p = pack_fittables(STACK);
-            fprintf(' %.3f', p);
-            fprintf(']');
+            % Comment out if desired
+            fprintf('\neval: %d, size: %.3e, coef#%3d, s_delta: %.3e, score:%e', o, stepsize, jj, d, s);
             
-            n = 1;
-            while n <= opts.StepsPerParam && stepsize > opts.StopStepsize 
+            ii = 1;
+            while ii <= opts.StepsPerParam && stepsize > opts.StopAtStepsize 
                 
                 stepdir = zeros(n_params, 1);
                 stepdir(jj) = stepsize;
@@ -51,8 +63,8 @@ function [x, s, termcond] = one_at_a_time(objfn, x_0, opts)
                 x_fwd = x + stepdir;
                 x_bck = x - stepdir;            
             
-                s_fwd = objfn(x_fwd);
-                s_bck = objfn(x_bck);         
+                [s_fwd, o] = objfn(x_fwd);
+                [s_bck, o] = objfn(x_bck);         
                 
                 if s_fwd < s
                     s_next = s_fwd;
@@ -69,22 +81,19 @@ function [x, s, termcond] = one_at_a_time(objfn, x_0, opts)
                     continue;
                 else
                     stepsize = stepsize * opts.StepGrowth;
+                    
                     x = x_next;
-                    s = s_next;       
-                    n = n+1;
+                    s = s_next;
+                    ii = ii + 1;
                 end
-            end            
+            end
             stepsizes(jj) = stepsize;
         end 
-        fprintf('Score: %d \tphi:', s);
-        p = pack_fittables(STACK);
-        fprintf(' %.3f', p);
-        fprintf('\n');
-    end        
-    termcond = 0;
+        n = n+1;
+        d = s_outer - s;
+        s_outer = s;
+    end 
+    term_cond = 0;
 end
-
-[termcond, n_iters] = default_fitter_loop('fit_scaat()', ...
-    @(obj_fn, phi_init) one_at_a_time(obj_fn, phi_init, optz), true);
 
 end
