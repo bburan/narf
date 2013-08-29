@@ -7,8 +7,8 @@ m.mdl = @depression_filter_bank;
 m.name = 'depression_filter_bank';
 m.fn = @do_depression_filter;
 m.pretty_name = 'Depression Filter Bank';
-m.editable_fields = {'num_channels', 'strength', 'tau', ...
-                     'pedestal', 'per_channel', 'input', 'time', 'output' };
+m.editable_fields = {'num_channels', 'strength', 'tau',...
+                    'per_channel', 'input', 'time', 'output' };
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
@@ -16,6 +16,7 @@ m.num_channels = 2;
 m.per_channel = 0;
 m.strength = [0 0.2];  % as fraction of stimulus max magnitude
 m.tau = [0 100];  % in ms
+m.tau_norm = 1000;  % 1000 means ms, 10 means 10ths of sec, 1 means sec
 m.pedestal = 0;  % as fraction of stimulus max magnitude
 m.raw_stim_freq = 100000;
 m.input = 'stim';
@@ -44,7 +45,9 @@ function x = do_depression_filter(mdl, x, stack, xxx)
     if ~isfield(mdl,'pedestal'),
         mdl.pedestal=0;
     end
-    
+    if ~isfield(mdl,'tau_norm'),
+        mdl.tau_norm=1000;
+    end
     [load_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy',true);
     if isempty(load_mod),
         [load_mod, ~] = find_modules(stack, 'load_stim_resps_wehr',true);
@@ -52,16 +55,16 @@ function x = do_depression_filter(mdl, x, stack, xxx)
     load_mod = load_mod{1}; % We assume only 1 paramset
     
     % calculate global mean level of each channel for scaling dep
-    stimmax=[];
     T=0;
     for sf = fieldnames(x.dat)', sf = sf{1};
+        ts=x.dat.(sf).(mdl.input);
+        ts=ts.*(ts>0);
         if T==0,
-            stimmax=nansum(nansum(x.dat.(sf).(mdl.input),1),2);
+            stimmax=nansum(nansum(ts,1),2);
         else
-            stimmax=stimmax+nansum(nansum(x.dat.(sf).(mdl.input),1),2);
+            stimmax=stimmax+nansum(nansum(ts,1),2);
         end
-        
-        T=T+sum(sum(~isnan(x.dat.(sf).(mdl.input)(:,:,1)),1),2);
+        T=T+sum(sum(~isnan(ts(:,:,1)),1),2);
     end
     stimmax=stimmax./T;
     [T, S, N] = size(x.dat.(sf).(mdl.input));
@@ -70,6 +73,7 @@ function x = do_depression_filter(mdl, x, stack, xxx)
     else
         num_channels=length(mdl.tau);
     end
+    
     % Now actually compute depression
     for sf = fieldnames(x.dat)', sf = sf{1};
         [T, S, N] = size(x.dat.(sf).(mdl.input));
@@ -79,7 +83,7 @@ function x = do_depression_filter(mdl, x, stack, xxx)
         ret = zeros(T, S, N*num_channels);
         for s = 1:S
             stim_in=squeeze(x.dat.(sf).(mdl.input)(:,s,:))';
-            
+            stim_in=stim_in.*(stim_in>0);
             if mdl.pedestal>0,
                 thresh = mdl.pedestal./stimmax(:);
                 for n=1:N,
@@ -93,7 +97,7 @@ function x = do_depression_filter(mdl, x, stack, xxx)
                 for jj=1:N,
                     tresp=depression_bank(...
                         stim_in(jj,:), (1./stimmax(jj))*mdl.strength,...
-                        mdl.tau(jj) .* load_mod.raw_stim_fs/1000, 1);
+                        mdl.tau(jj) .* load_mod.raw_stim_fs/mdl.tau_norm, 1);
                     depresp=cat(1,depresp,tresp);
                 end
            else

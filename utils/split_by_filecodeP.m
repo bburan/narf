@@ -1,4 +1,4 @@
-function xxxs = split_by_filecodeP(xxx)
+function [xxxs,unique_codes] = split_by_filecodeP(xxx)
 % {xxx1, xxx2, etc} = splitter(XXX)
 %
 % Returns a cell array of XXX structs with only one respfile per final
@@ -30,12 +30,12 @@ valfiles = xxx{end}.test_set;
 for ii = 1:length(unique_codes);
     fc = unique_codes{ii};
     
-    matches = strcmp(fc, filecodes);   
+    matches = strcmp(fc, filecodes) ;
     
     efs = estfiles(matches);
     vfs = valfiles(matches(matches<=length(valfiles))); 
     
-    xxxs{ii} = xxx;
+    xxxs{ii} = xxx(1);
     xxxs{ii}{end}.dat = [];   
     xxxs{ii}{end}.training_set={};
     xxxs{ii}{end}.test_set={};

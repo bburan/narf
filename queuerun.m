@@ -26,9 +26,9 @@ dbopen;
 
 global BATQUEUEID
 if exist('queueid','var'),
-   BATQUEUEID=queueid;
+    BATQUEUEID=queueid;
 else
-   BATQUEUEID=str2num(getenv('QUEUEID'));
+    BATQUEUEID=str2num(getenv('QUEUEID'));
 end
 QUEUEOUTPATH=getenv('QUEUEOUTPATH');
 if isempty(QUEUEOUTPATH),
