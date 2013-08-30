@@ -1,6 +1,6 @@
 function mixfit3nlpercode()
 
-global STACK
+global STACK XXX
 
 % We need a performance metric, so add one
 mse();

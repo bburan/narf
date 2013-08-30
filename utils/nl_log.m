@@ -5,5 +5,15 @@ function ret = nl_log(phi, z)
     else
         zeroer = 0;
     end
+    
+    % soften effects of more extreme offsets
+    if offset>4,
+        adjoffset=4+(offset-4)./10;
+    elseif offset<-4
+        adjoffset=-4+(offset+4)./10;
+    else
+        adjoffset=offset;
+    end
+    
     ret = log(z + 10^offset) + zeroer;
 end

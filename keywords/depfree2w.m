@@ -1,6 +1,6 @@
 function depfree2w()
 
-global MODULES;
+global MODULES XXX STACK;
 
 append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));
 
@@ -12,7 +12,11 @@ append_module(MODULES.depression_filter_bank.mdl(...
 
 append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));
 
+meanresp = nanmean(flatten_field(XXX{end}.dat,XXX{end}.training_set,'respavg'));
 append_module(MODULES.fir_filter.mdl(struct('num_coefs', 12, ...
-                           'fit_fields',{{'coefs','baseline'}})));
+                            'baseline',meanresp,...
+                            'fit_fields', {{'coefs','baseline'}})));
 
-init10();
+%init10();
+fitSubstack(size(STACK,1),10^-1);
+fitSubstack(size(STACK,1)-2,10^-2);

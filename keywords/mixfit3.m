@@ -6,7 +6,7 @@ if ~exist('SKIP_MSE','var'),
     SKIP_MSE=0;
 end
 if ~SKIP_MSE,
-    mse();
+    nmse();
 end
 
 min_stepsize = 10^-7; % stop boosting if abs step size smaller than this
@@ -15,7 +15,7 @@ min_scoredelta = 10^-5; % stop boosting if mse improvement smaller than this
 %% initially run with qboost with large stop limit
 phi_init = pack_fittables(STACK);
 %fit_boost(n_steps, minstepsize, min_scoredelta, relative_delta, vary_stepsize, starting_stepsize)
-fit_boost(length(phi_init),min_stepsize,10^-2,true,true);
+fit_boost(length(phi_init),min_stepsize,10^-3,false,true);
 
 
 %% iterative part
@@ -44,7 +44,7 @@ first5_deltas = nan(5,1); % First delta never used
 function stop = term_fn(n,x,s,d)
     
     % iterations per loop depends on the number of parameters to fit
-    max_n_steps=min(10,length(x));
+    max_n_steps=min(10,length(x).*2);
     
     if (n >= max_n_steps)
         fprintf('%d steps completed, stopping\n',max_n_steps);

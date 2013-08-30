@@ -1,8 +1,22 @@
 function mixfit3firperfile()
 
-global STACK
+global STACK XXX
 
-mixfit3(); %% Relative boost algorithm across all files to initialize
+% Relative boost algorithm across all Passive files to initialize
+XXX_save=XXX;
+[xxxs,unique_codes]=split_by_filecodeP(XXX);
+pidx=find(strcmp(unique_codes,'P'));
+XXX=xxxs{pidx};
+calc_xxx(1);
+
+fitSubstack([],10^-2);
+
+nmse(); % We need a performance metric, so add one 
+mixfit3nomse();
+
+% now restore XXX to include active and passive data
+XXX=XXX_save;
+calc_xxx(2);
 
 [~, mod_idxs] = find_modules(STACK, 'fir_filter', false);
 for ii=1:(mod_idxs{1}(1)-1),
