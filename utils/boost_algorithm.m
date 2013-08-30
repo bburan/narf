@@ -1,19 +1,23 @@
-function [x_bst, s_bst, termcond, term_stepsize] = boost_algorithm(objfn, x_0, options)
-%  [x_bst, s_bst, termcond, term_stepsize] = boost_algorithm(objfn, x_0, options)
+function [term_phi, term_score, term_cond, term_step] = boost_algorithm(objfn, x_0, options)
+%  [term_phi, term_score, term_cond, term_step] = boost_algorithm(objfn, x_0, options)
 %
 % See documentation of fit_boo.m for more information.
 %
-global XXX NARF_DEBUG;
+global XXX ; % NARF_DEBUG NARF_DEBUG_FIGURE;
 
 n_params = length(x_0);
 
-n = 0;             % Step number
+if ~options.Elitism
+    options.EliteParams = n_params;
+    options.EliteSteps = 1;
+end
+
+n = 1;             % Step number
 x = x_0(:);        % Current search location
 s = objfn(x);      % Current score
 s_delta = s;       % Improvement of score over the previous step
-stepsize = options.StepSize;  % Starting step size.
-stim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');       
-    
+stepsize = options.InitStepSize;  % Starting step size.
+
 effect    = zeros(n_params, 1);  % The variance it creates on the STIM 
 eliteness = zeros(n_params, 1);  % The effect on the score of each parameter
 
@@ -26,15 +30,17 @@ while (true)
         
     if (options.Elitism && last_elite_recalc ~= n) || ...
        (options.StepRel && last_effect_recalc <= n - options.StepRelRecalcEvery),
-   
-        fprintf('Calculating effect deltas for small epsilon');        
+           
+        [~, o] = objfn(x); % Calculate base stim rate
+        stim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');       
+    
+        fprintf('Calculating effect deltas for small epsilon step');        
         for d = 1:n_params
             stepdir = zeros(n_params, 1);
             stepdir(d) = stepsize ./ 1000;            
             
-            % this next line actually does the work, since it causes a
-            % calc_xxx to occur 
-            eliteness(d) = abs(s - objfn(x + stepdir));
+            [s_del, o] = objfn(x);
+            eliteness(d) = abs(s - s_del);
             
             if options.StepRel
                 newstim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');
@@ -85,8 +91,8 @@ while (true)
             x_fwd = x + stepdir;
             x_bck = x - stepdir;            
             
-            s_fwd = objfn(x_fwd);
-            s_bck = objfn(x_bck);           
+            [s_fwd, o] = objfn(x_fwd);
+            [s_bck, o] = objfn(x_bck);           
             
             % Prepare to step forward if that is better
             if s_fwd < s_next
@@ -101,11 +107,21 @@ while (true)
             end
             
         end    
-                        
+                                       
         if all(x == x_next)
             % Stepsize was too big so no step was taken
             stepsize = stepsize * options.StepShrink;
-            fprintf('stepsize shrunk to %d\n', stepsize);            
+            fprintf('stepsize shrunk to %d\n', stepsize);      
+ 
+            % Should we stop searching? (perhaps stepsize is too small)
+            term_cond = options.TermFn(n, stepsize, s_delta, o);
+            if term_cond
+                [s, o] = objfn(x);  % don't leave us in wrong state from last step
+                term_phi = x;
+                term_score = s;
+                term_step = stepsize;
+                return;
+            end     
         else
             % Step was taken successful
             s_delta = s - s_next;   % Improvement in score            
@@ -113,13 +129,23 @@ while (true)
             dir = dirs(x ~= x_next);
             
             actual_stepsize = sum(x_next-x);
-            x = x_next;   % Take a step in the best direction
-            s = objfn(x); % Recalculate the score
-            stim = flatten_field(XXX{end}.dat, XXX{end}.training_set, 'stim');       
-    
+            
+            % Should we stop searching? (perhaps s_delta is too small)
+            term_cond = options.TermFn(n, stepsize, s_delta, o);
+            if term_cond
+                [s, o] = objfn(x); 
+                term_phi = x;
+                term_score = s;
+                term_step = stepsize;
+                return;
+            end
+                       
+            x = x_next; % Take a step in the best direction
+            s = s_next; 
+            
             % Print the improvement after stepping
-            fprintf('stepsize: %d, actual: %d, coef# %3d, delta: %d, score:%d\n', ...
-                     stepsize, actual_stepsize, dir, s_delta, s);
+            fprintf('eval: %d, size: %.3e, act: %.3e, coef#%3d, s_delta: %.3e, score:%e\n', ...
+                     o, stepsize, actual_stepsize, dir, s_delta, s);
 
 %             % Possibly display debug info as well
 %             if exist('NARF_DEBUG', 'var') && NARF_DEBUG
@@ -145,15 +171,6 @@ while (true)
             stepsize = stepsize * options.StepGrowth;
             n = n + 1;
         end
-
-        % Should we stop searching?
-        termcond = options.TermFn(n, x, stepsize, s_delta);
-        if termcond
-            x_bst = x;
-            s_bst = s;
-            term_stepsize = stepsize;
-            return;
-        end
         
         % Force a recalc because we didn't take a step and are elite
         if all(x == x_next) && (options.Elitism)
@@ -162,6 +179,7 @@ while (true)
         end
     end        
 end
+
 
 end %% end function
 

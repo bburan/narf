@@ -48,18 +48,13 @@ function x = do_mean_squared_error(mdl, x, stack, xxx)
     p = flatten_field(x.dat, x.training_set, mdl.input1);
     q = flatten_field(x.dat, x.training_set, mdl.input2); 
     train_score = nanmean((p - q).^2);
-    %train_nmse = train_score / (nanmean(q)^2);            % Boo14
-    %train_nmse = train_score / (nanmean(p)*nanmean(q));  % Boo15   
-    train_nmse = train_score / (nanvar(q));            % Boo16
-    
-    
+    train_nmse = train_score / (nanvar(q)); 
+        
     % Compute the mean squared error of the test set
     ptest = flatten_field(x.dat, x.test_set, mdl.input1);
     qtest = flatten_field(x.dat, x.test_set, mdl.input2); 
     test_score = nanmean((ptest - qtest).^2);
-    %test_nmse = train_score / (nanmean(qtest)^2);               % boo14
-    %test_nmse = train_score / (nanmean(ptest)*nanmean(qtest)); % boo15
-    test_nmse = train_score / (nanvar(qtest));               % boo16
+    test_nmse = train_score / (nanvar(qtest)); 
     
     x.(mdl.train_score) = train_score;
     x.(mdl.test_score) = test_score;   
@@ -87,8 +82,7 @@ function do_plot_error_histogram(sel, stack, xxx)
     hist(x.dat.(sel.stimfile).(mdl.input1)(:) - x.dat.(sel.stimfile).(mdl.input2)(:), n_bins);
     
     do_xlabel('STIM Minus RESPAVG [-]');
-    do_ylabel('Frequency of Error[-]');
-    
+    do_ylabel('Frequency of Error[-]');    
 end
 
 end

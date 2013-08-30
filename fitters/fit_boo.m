@@ -1,7 +1,7 @@
-function [termcond, n_iters, term_stepsize] = fit_boo(options)
-%  [termcond,n_iters, term_stepsize] = fit_boo(options)
+function [term_cond, term_score,  n_iters, options] = fit_boo(varargin)
+%  [termcond,n_iters, term_stepsize] = fit_boo(varargin)
 %
-% A consolidation of various boost algorithms that have been tried.
+% A clean interface to the boost algorithms. 
 % 
 %   'StopAtSeconds'        Stop after this many seconds.
 %   'StopAtStepNumber'     Stop when the stepnumber is this small.
@@ -31,96 +31,49 @@ function [termcond, n_iters, term_stepsize] = fit_boo(options)
 %    'TermFn'              When defined, this is used instead of the above
 %                          termination conditions to allow for truly
 %                          arbitrary stopping conditions.
-% The termination function which accepts 4 arguments:
+%
+% The termination function should accept 3 arguments:
 %                     n    Step number of this iteration.
-%                     x    The present x being considered.
 %                     s    Stepsize taken in this past step
 %                     d    Score improvement (delta) vs previous point
 %
-% Boosting will terminate when TermFn returns a true.
+% Boosting will terminate when TermFn returns a non-zero value.
 
 global STACK;
 phi = pack_fittables(STACK);
-
 n_params = length(phi);
 
 default_options = struct('StopAtSeconds', 60*60*24, ...
                          'StopAtStepNumber', max(50, n_params*5), ...
                          'StopAtStepSize', 10^-9, ...
-                         'StopAtRelScoreDelta', 10^-5, ...
+                         'StopAtRelScoreDelta', 10^-12, ...
                          'StopAtAbsScoreDelta', 10^-12, ...
-                         'StepSize', 1.0, ...
+                         'InitStepSize', 1.0, ...
                          'StepRel', false, ...
                          'StepRelRecalcEvery', 1, ...
-                         'StepRelMin', 10^-3, ...
-                         'StepRelMax', 10^3, ...
+                         'StepRelMin', 10^-1, ...
+                         'StepRelMax', 10^1, ...
                          'StepGrowth', 1.0, ...
                          'StepShrink', 0.5, ...
                          'Elitism', false, ...
                          'EliteParams', 10, ...
                          'EliteSteps', 1);
 
-if ~exist('options', 'var')
-    opts = default_options;
+if (length(varargin) == 1)
+    options = merge_structs(default_options, varargin{1});
 else
-    opts = merge_structs(default_options,options);
+    options = merge_structs(default_options, struct(varargin{:}));
 end
 
-if ~opts.Elitism
-    opts.EliteParams = n_params;
-    opts.EliteSteps = 1;
+if ~isfield(options, 'TermFn') 
+    options.TermFn = create_term_fn(options);
 end
 
-t_start = clock(); %
-first_5_deltas = [];       % Used for relative stopping
+[term_cond, term_score, n_iters, term_step] = ...
+    default_fitter_loop('fit_boo()', ...
+        @(obj_fn, phi_init) boost_algorithm(obj_fn, phi_init, options), true);
 
-function stopcode = termfn(n,x,s,d)
-    if (n > opts.StopAtStepNumber),   
-        stopcode = 1; 
-        fprintf('Took more than %d steps in total, stopping.\n', ...
-            opts.StopAtStepNumber);
-        return;
-    end
-    if (s < opts.StopAtStepSize),      
-        stopcode = 2;  
-        fprintf('Stepsize less than absolute limit %f, stopping.\n', ...
-            opts.StopAtStepSize);
-        return; 
-    end
-    if (d < opts.StopAtAbsScoreDelta), 
-        stopcode = 3;
-        fprintf('Absolute score improvement less %f, stopping.\n', ...
-            opts.StopAtAbsScoreDelta);
-        return; 
-    end
-    
-    if length(first_5_deltas) < 5
-        first_5_deltas(end+1) = d;
-    else
-        if (d / mean(first_5_deltas(2:end))) < opts.StopAtRelScoreDelta
-            stopcode = 4;
-            fprintf('Relative score improvement less %f, stopping.\n', ...
-                opts.StopAtRelScoreDelta);
-            return
-        end
-    end
-       
-    if (etime(clock, t_start) > opts.StopAtSeconds)
-        stopcode = 5; 
-        fprintf('Fit time exceeded %f, stopping.\n', ...
-                opts.StopAtSeconds);
-        return
-    end
-
-    stopcode = false;   
-end
-
-if ~isfield(opts, 'TermFn')
-    opts.TermFn = @termfn;
-end
-
-[termcond, n_iters, term_stepsize] = default_fitter_loop('fit_boo()', ...
-    @(obj_fn, phi_init) boost_algorithm(obj_fn, phi_init, opts), true);
-
+% If we are running this in an iterative fitter, next time start from here
+options.InitStepSize = term_step;
 end
 
