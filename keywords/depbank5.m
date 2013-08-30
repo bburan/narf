@@ -1,4 +1,4 @@
-function depno()
+function dep5()
 
 global MODULES XXX;
 
@@ -16,5 +16,4 @@ append_module(MODULES.fir_filter.mdl(struct('num_coefs', 12, ...
                             'baseline',meanresp,...
                             'fit_fields', {{'coefs','baseline'}})));
 
-%init10();
 fitSubstack([],10^-2);

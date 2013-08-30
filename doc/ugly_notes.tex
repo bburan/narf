@@ -1,3 +1,13 @@
+ 1) Does NMSE work as a performance metric?
+     Yes. Normalizing by the response mean or variance works fine and has little effect on the actual fit. 
+     Results for 4 minute fits with boo12 (MSE) vs boo14(NMSE)/boo15/boo16 were quickly tested for batches 240 and 251. 
+     boo12: MSE  = nanmean((p-r).^2)
+     boo14: NMSE = nanmean((p-r).^2) / (nanmean(r)^2);
+     boo15a: NMSE = nanmean((p-r).^2) / (nanmean(p)*nanmean(r));  (FAILS HARD)
+     boo15b: NMSE = nanmean((p-r).^2) / (nanmean(p.*r));  (Didn't try it)
+     boo16: NMSE = nanmean((p-r).^2) / (nanvar(r));
+     TODO: Queue up some results
+
 ** Considerations when fitting per file:
    1. Normalization should NEVER be split, which means we can't just do naive "outer loop" methods that train on each file independently. 
    2. The strategy instead is to use "splitters" and add intelligence to the fitters so that it iterates 

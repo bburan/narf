@@ -24,12 +24,15 @@ function fitSubstack(startidx,stopdelta,output)
     nmse();
     STACK{end}{1}.input1=output;
     
-    min_stepsize = 10^-7; % stop boosting if abs step size smaller than this
-    min_scoredelta = stopdelta; % stop boosting if mse improvement smaller than this
-    
     phi_init = pack_fittables(STACK);
-    fit_boost(length(phi_init)*5,min_stepsize,min_scoredelta,false,true);
-    
+    %fit_boost(length(phi_init)*5,min_stepsize,min_scoredelta,false,true);
+    fit_boo('StopAtAbsScoreDelta', stopdelta, ...
+            'StopAtStepNumber', length(phi_init)*5, ...
+            'StopAtStepSize', 10^-7, ...
+            'StepGrowth', 1.3, ...
+            'RelStep', true, ...
+            'Elitism', false);
+        
     for ii=1:(startidx-1),
         if isfield(STACK{ii}{1},'fit_fields'),
             STACK{ii}{1}.fit_fields=savefitparms{ii};

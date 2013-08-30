@@ -1,4 +1,4 @@
-function cp3free()
+function invpoly3()
 
 global MODULES;
 

@@ -1,6 +1,10 @@
-function firnoi()
+function volterra()
 
-global MODULES XXX;
+global MODULES;
+
+append_module(MODULES.normalize_channels);
+
+append_module(MODULES.add_nth_order_terms);
 
 append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));
 
@@ -9,5 +13,4 @@ append_module(MODULES.fir_filter.mdl(struct('num_coefs', 12, ...
                                 'baseline',meanresp,...
                                 'fit_fields', {{'coefs','baseline'}})));
 
-%init10();
 fitSubstack();

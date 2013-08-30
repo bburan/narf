@@ -1,0 +1,34 @@
+* The Great Keyword Purge of Agust 30, 2013
+
+  A lot of cruft has been building up in the keywords directory, so today the following decisions were made to clean up our thoughtspace a bit:
+  1) All fitters will now be named "fit" plus a two-digit number, plus any other descriptor you want to add. Fitters have been a huge area of exploration and it's hard to keep track of what is current or not. Same thing for initial conditions. Set them yourself.
+  2) Instead of using "nocp", "nonl", we'll just use the "null" keyword as a placeholder from now on.
+  3) Most keywords not proven to be useful were thrown into the graveyard. Resurrect as needed. 
+
+* Archives of Analyses that will be renamed
+** Nonlinearities
+   For parametric nonlinearities on 240 with boost0, sigumber, siglog, and poly2 are doing very well. For batch 241, it appears that NPNL works best on average. For batch 240, NPFNL0 is the best. Previously, when this was done on batch 242, it was found that NPFNL was best, although this may not be current anymore.
+  {'env100', 'log2b', 'firno', {'nonl', 'npnl', 'npfnl', 'npfnl0', 'exp', 'poly2', 'poly3', 'sig', 'sigcauchy', 'sigell', 'siglog', 'sigumbel', 'sigumber', 'zexp', 'zthresh'}, 'boost0'}
+
+** Compressors
+   This experiment tries a wide variety of polynomial, sigmoidal, log, root, inverse linear compressors(cp3), sigmoidal compressors (cp2), clipped exponential compressors (cp1), and fits them before (fit) or during(free) the normal fitting process. At present, the best three are : logfree, rootfree, siglog.
+   {'env100', {'nocp', 'cp1', 'cp1free', 'cp2', 'cp2free', 'cp3', 'cp3free', 'logfit', 'logfree', 'logfreeb', 'log1b', 'log2b', 'log3b', 'log4b', 'log5b', 'log1nb', 'log2nb', 'log3nb','log4nb', 'log5nb', 'log2c', 'poly2', 'poly3', 'rootfree', 'rootfreeb', 'root2', 'root3', 'root4', 'root5', 'rootn2', 'rootn3', 'rootn4', 'rootn5', 'rootfit', 'sig','sigcauchy',  'sigell', 'siglog', 'sigumbel', 'sigumber', 'zexp', 'zthresh'}, 'firno', 'nonl', 'boost0'}
+
+  This experiment tries a wide variety of polynomial, sigmoidal, log, root, inverse linear compressors(cp3), sigmoidal compressors (cp2), clipped exponential compressors (cp1), and fits them before (fit) or during(free) the normal fitting process. At present, the best three are : logfree, rootfree, siglog.
+
+** Fitters
+   Q: Is boosting the best fitter for the types of models we are studying now?
+   A: WARNING: DEPFREE HAS CHANGED SINCE THESE WERE RUN LAST!!!!! I would say boosto4 is the best. If you have the time, then the real winner is BOOSTIS. boostit does very well, but it looks like we should start from init0 rather than initrc. This survey is now treating free parameters in a more realistic way, since future NARF models will have parametric compressors, parametric depression, and parametric nonlinearities, so we should start finding out ways to efficiently fit all of these. Observations: 1. Boostis takes 3x as long as boost and consistently does better for high-correlation signals, and consistenly worse for low-correlation neurons. This is probably due to boost stopping earlier, which helps low-correlation neurons more. Also, Boostirel is FAST, taking 1/10th the time of boost.
+   {'env100', 'logfree', 'depfree', {'init0', 'initrc'}, 'siglog', 'mse', {'boost', 'boosti', 'boostis', 'boostit', 'boostit2', 'boosto', 'boosto2', 'boosto3', 'boosto4', 'boostrel', 'boostrel4', 'boostrel5', 'boostrel6', 'boostirel', 'anneal', 'fmin', 'fminu', 'genetic', 'fminlsq', 'qboost', 'qfmin', 'qlsq', 'qlsqi', 'qboosti' }}
+
+** Perf Metrics
+   Are there metrics besides MSE and correlation which tell a different story about the performance of various models?
+   Probably this will need some eyeball-work to figure out if different metrics produce qualitatively different fits. For 241, the best on average is mse, with the variations: mse, mses7, and err15.
+   {'env100', 'log2b', 'firno', 'initrc', 'nonl', {'err10', 'err15', 'mse', 'mses4', 'mses5', 'mses6', 'mses7', 'mses8', 'mses9', 'mses10', 'mses11', 'mses12'}, 'boost'}
+
+** Core Filters
+   The ranking is this: depno (x5) > ifn (x) (x2) > firnov2 (x1.5) > depfree2 (x2) > firno(x1) > depfree (x1)...Values in parenthesis indicate the channel count multiplier, so depno has 5x the number of FIR coefs of firno. WARNING: DEPFREE HAS CHANGED SINCE THIS WAS LAST RUN
+   {'env100', 'logfree', {'ifn', 'depfree2', 'depfree', 'depfreew', 'depno', 'firnov2', 'firno'}, 'siglog', 'boost0'}
+
+** Inter Spike Intervals
+  If we start with a well-fitting MSE-trained estimator, how well do different noise distributions fit the prediction-scaled inter-spike-intervals (ISIs)? {'env100', 'log4b', 'firno', 'npfnl', 'mse', 'boost', {'llinv', 'lllogn', 'llgam', 'llexp', 'llweib'}}

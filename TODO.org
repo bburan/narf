@@ -3,30 +3,69 @@
   2. [ ] Add a two-model comparison function which scatter-plots many matrices, does a histogram of collapsed scatter plot along diagonal, and does randomized paired T-test. Maybe log-likelihood ratio too. 
   3. [ ] Grant: (Look at NRSA grant from NIH, due in December, called the Kirchstein award, F-32. I would be a good applicant, and could probably modify SVD's grant and list my own publication.  Also, a hearing health foundation grant might also help. ).  Work through the grant example stephen sent me. Copy the style of the Neuron MID paper. Stephen suggests I write about: Models which use wavelets to approximate cortex input features, applying some sort of nonlinear transform to those wavelets, or Either using explicit center/surround stimuli, or extracting center/surround channels from a full spectrally rich stimulus (hopefully capturing essentials in just 2 channels)
 
-* Things to try after last discussion with Stephen
-  1) Experiment: Does NMSE work as a performance metric?
-     Yes. Results for 4 minute fits with boo12 (MSE) vs boo14(NMSE) are different. 
+* TODO: 
+  Check that all the fitters still work,
+  Roll fit_splits together
 
-  2) Experiment: Do scatter plots show depfree always beats firno with mixfit3, mixfit4, or mixfit5
+* Using Residuals to Estimate Noise Floor
+  1. Make a prediction p(t).
+  2. Subtract neural response r(t) from p(t) to get residual s(t). 
+  3. Shuffle s(t) in time, so that the same marginal is kept but all time correlation is lost. Call this w.
+  4. Add w to p(t) and check to see if your response improves it as well.
+  5. Repeat steps 2 and 3 as many times as is needed to estimate that it improves the 95% of the time. 
+** Expected Problem
+   There are MANY more samples at the 0 (prestim silence) input level...and residual is often a function of input amplitude.
      
-  3) Experiment: Which is a good 4 minute initial condition boost routine?
+* The New Basic Fitter Interface Rules
+  - All Fitters are varargin. If there is just one argument, it is assumed to be an options struct. If there are more, they are assumed to be field-value pairs. Arguments are converted into structs and used to update defaults. 
+  - All fitters return: [termcond, score_best, n_iters, ending_options]. If desired, ending_options can be used to re-initialize the fitter next time. 
+  - Iterative fitting, outer loops, etc can use [termcond, score_best, n_iters, ] of each inner fitter to decide when to quit. 
+
+* Fitting Use Cases
+  1. Quick fits (for initial conditions, testing, or iterative fits)
+     - Take N steps
+     - Take steps for 1-5 minutes
+     - Take steps until efficiency drops to 1% of first five improvements.
+  2. Efficiency tests (for comparing fitters)
+     - Take steps for 30 minutes and see overall performance (all machines being equal)
+     - Take steps until objfn() has been evaluated 10000 times.
+  3. Relative stepsize case (for when your metric has no special meaning or when its scale varies from cell to cell)
+     - Avoid whenever possible, since it makes termination conditions much more sensitive to initial conditions. 
+     - Take steps until efficiency drops to 0.1% or 0.01% of first five improvements.
+  4. Absolute stepsize case (for when your metric has a meaning, such as fraction of variance explained)
+     - Take steps until your fraction of variance is increasing by less than 10^-6 each step.
+  5. Iterative or SCAAT fits (for harder fits)
+     - Inner loops are as above (Usually N steps or absolute improvement small, not relative)
+     - Outer loop continues until:
+       1) No steps were taken in any module
+       2) When the total improvement over all modules is less than some absolute amount (relative?) 
+
+* Stephen's Discussion Points
+  1) Does NMSE work as a performance metric?
+     Yes. Just use the nmse() keyword and things should work fine. 
+
+  2) Do scatter plots show depfree always beats firno with mixfit3, mixfit4, or mixfit5 for batches 240 and 251?
+     Nope. 
      
-  4) Experiment: What are the optimal number of boost steps and iterations during iterative fitting?
+  3) Which is a good 4 minute initial condition boost routine?
+     Redo this.
+     
+  4) What are the optimal number of boost steps and iterations during iterative fitting?
+     I'm not sure how to answer this in general, since it probably depends upon model structure. 
 
-  5) Experiment: What level of relative stepsize helps?
-     Answer: I don't know? For batch 251, I was able to get relative stepsizes to work better (although not in the first 2 minutes), but not for 240. 
+  5) What level of relative stepsize helps?
+     I don't know. For batch 251, I was able to get relative stepsizes to work a little better (although not in the first 2 minutes of initialization), but not at all for 240. 
 
-  7) Experiment: Is there a way to use correlation as a stop criterion? 
-     If in the last 100 steps, we have not improved the minimum correlation more than 0.001, stop. 
+  6) Is there a way to use correlation as a stop criterion? 
+     If in the last 100 steps, we have not improved the minimum correlation seen so far by more than 0.001, stop. 
      
 * TODAYS WORK
-  - [ ] Normalized mean squared error
-  - [ ] Termination condition that 
+  - [X] Normalized mean squared error
+  - [ ] Termination condition for the outer loop
   - [ ] Add a button to LOADSTIMFROMBAPHY that plays the sound or stimulus selected
   - [ ] Add a hook to display fitting info as it goes. (OR FIGURE OUT WHY DEBUG DOESN'T WORK)
   - [ ] Mutual Information fits queued up
   - [ ] Read Dan Butz paper
-  - [ ] Make fitboo use varargin instead of a struct 
 
 * Next Steps:
   1. Read Hsu, Theunisson and try to understand how much information is in the response data. 
@@ -83,7 +122,7 @@
   8. [X] metric_sparsity: The sum of all the FIR filter sparsity values
   9. [X] metric_smoothness: The summed smoothness of all the FIR filter smoothness values.
   10. [X] metric_mutual_info.m: Empirically derive P(X,R)
-  11. [ ] metric_nmse: "Normalized mean squared error" (R_pred - R)^2 / (R^2)
+  11. [X] metric_nmse: "Normalized mean squared error" (R_pred - R)^2 / var(R)
   12. [ ] metric_binned_resp_corr: RESP's variance with itself at this bin size
   13. [ ] metric that assumes a gaussian noise interfering with prediction and RESPAVG, and gives back an "improbability" score that is to be minimized
   14. [ ] metric_corr_homoskedastic: Ensure homodskedasticity before taking correlation by reweighting
