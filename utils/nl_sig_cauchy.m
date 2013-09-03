@@ -5,8 +5,8 @@ function y = nl_sig_cauchy(phi, z)
     baserate = min([phi(1), phi(2)]);
     peakrate = max([phi(1), phi(2)]);   
     lrshift = phi(3); % Where the centerpoint of the sigmoid is
-    lo = phi(4);   % low side curvature
-    hi = phi(5);   % high side curvature term   
+    lo = abs(phi(4));   % low side curvature
+    hi = abs(phi(5));   % high side curvature term   
     
     % Shift z left to right immediately
     z = z - lrshift;    

@@ -1,6 +1,6 @@
 function volterra()
 
-global MODULES;
+global MODULES XXX;
 
 append_module(MODULES.normalize_channels);
 
