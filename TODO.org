@@ -1,88 +1,33 @@
+* Queue Status
+  - All surveys requeued using fit00, fit01, fit02, fit03, fit04. 
+
 * HIGH-LEVEL OBJECTIVES:
   1. [ ] Find a fitter such that DEPFREEW always matches or exceeds FIRNOI's performance for BATCH 251!	
   2. [ ] Add a two-model comparison function which scatter-plots many matrices, does a histogram of collapsed scatter plot along diagonal, and does randomized paired T-test. Maybe log-likelihood ratio too. 
   3. [ ] Grant: (Look at NRSA grant from NIH, due in December, called the Kirchstein award, F-32. I would be a good applicant, and could probably modify SVD's grant and list my own publication.  Also, a hearing health foundation grant might also help. ).  Work through the grant example stephen sent me. Copy the style of the Neuron MID paper. Stephen suggests I write about: Models which use wavelets to approximate cortex input features, applying some sort of nonlinear transform to those wavelets, or Either using explicit center/surround stimuli, or extracting center/surround channels from a full spectrally rich stimulus (hopefully capturing essentials in just 2 channels)
-
-* TODO: 
-  Check that all the fitters still work,
-  Roll fit_splits together
-
-* Using Residuals to Estimate Noise Floor
-  1. Make a prediction p(t).
-  2. Subtract neural response r(t) from p(t) to get residual s(t). 
-  3. Shuffle s(t) in time, so that the same marginal is kept but all time correlation is lost. Call this w.
-  4. Add w to p(t) and check to see if your response improves it as well.
-  5. Repeat steps 2 and 3 as many times as is needed to estimate that it improves the 95% of the time. 
-** Expected Problem
-   There are MANY more samples at the 0 (prestim silence) input level...and residual is often a function of input amplitude.
-     
-* The New Basic Fitter Interface Rules
-  - All Fitters are varargin. If there is just one argument, it is assumed to be an options struct. If there are more, they are assumed to be field-value pairs. Arguments are converted into structs and used to update defaults. 
-  - All fitters return: [termcond, score_best, n_iters, ending_options]. If desired, ending_options can be used to re-initialize the fitter next time. 
-  - Iterative fitting, outer loops, etc can use [termcond, score_best, n_iters, ] of each inner fitter to decide when to quit. 
-
-* Fitting Use Cases
-  1. Quick fits (for initial conditions, testing, or iterative fits)
-     - Take N steps
-     - Take steps for 1-5 minutes
-     - Take steps until efficiency drops to 1% of first five improvements.
-  2. Efficiency tests (for comparing fitters)
-     - Take steps for 30 minutes and see overall performance (all machines being equal)
-     - Take steps until objfn() has been evaluated 10000 times.
-  3. Relative stepsize case (for when your metric has no special meaning or when its scale varies from cell to cell)
-     - Avoid whenever possible, since it makes termination conditions much more sensitive to initial conditions. 
-     - Take steps until efficiency drops to 0.1% or 0.01% of first five improvements.
-  4. Absolute stepsize case (for when your metric has a meaning, such as fraction of variance explained)
-     - Take steps until your fraction of variance is increasing by less than 10^-6 each step.
-  5. Iterative or SCAAT fits (for harder fits)
-     - Inner loops are as above (Usually N steps or absolute improvement small, not relative)
-     - Outer loop continues until:
-       1) No steps were taken in any module
-       2) When the total improvement over all modules is less than some absolute amount (relative?) 
-
-* Stephen's Discussion Points
-  1) Does NMSE work as a performance metric?
-     Yes. Just use the nmse() keyword and things should work fine. 
-
-  2) Do scatter plots show depfree always beats firno with mixfit3, mixfit4, or mixfit5 for batches 240 and 251?
-     Nope. 
-     
-  3) Which is a good 4 minute initial condition boost routine?
-     Redo this.
-     
-  4) What are the optimal number of boost steps and iterations during iterative fitting?
-     I'm not sure how to answer this in general, since it probably depends upon model structure. 
-
-  5) What level of relative stepsize helps?
-     I don't know. For batch 251, I was able to get relative stepsizes to work a little better (although not in the first 2 minutes of initialization), but not at all for 240. 
-
-  6) Is there a way to use correlation as a stop criterion? 
-     If in the last 100 steps, we have not improved the minimum correlation seen so far by more than 0.001, stop. 
-     
-* TODAYS WORK
-  - [X] Normalized mean squared error
-  - [ ] Termination condition for the outer loop
-  - [ ] Add a button to LOADSTIMFROMBAPHY that plays the sound or stimulus selected
-  - [ ] Add a hook to display fitting info as it goes. (OR FIGURE OUT WHY DEBUG DOESN'T WORK)
-  - [ ] Mutual Information fits queued up
-  - [ ] Read Dan Butz paper
-
+    
 * Next Steps:
-  1. Read Hsu, Theunisson and try to understand how much information is in the response data. 
-  2. Write a generalized hook-in for constraints that pack_fittables calls and resets values as they are re-inserted
-  4. General purpose scatter + marginals plot (Reuse scatter comparison?)
-  5. Simple-Delay FIR keyword.
-  6. Write a script that plots sparsity (summed overall) vs performance for a few model groups.
-  7. Modelstring bug.
-  8. Make split modules visible/editable from the GUI
-  9. Mixfit variations explored more.
-  10. Queue up a few different smooth_respavg kernels at 200Hz  
-  11. A plot of # of free parameters (put in database)
-  12. Profile code and look for optimizations that would speed up each iteration
-  13. Why does SENL drop to keyboard?
-  14. Heatmaps: loadstimfrombaphy, FIR, nonlinearity
-  15. Scatter plots of two models being compared. One plot for each performance metric.
-  16. Updated DB Insertion and Great Name Replacing proposal
+  1. Discover why fit02 has subtly different results than the other fits for the FIR only model.   
+  2. Read Hsu, Theunisson and try to understand how much information is in the response data. 
+  3. Mutual Information fits queued up
+  4. Read Dan Butz paper
+  5. Add a button to LOADSTIMFROMBAPHY that plays the sound or stimulus selected
+  6. Write a generalized hook-in for constraints that pack_fittables calls and resets values as they are re-inserted
+  7. General purpose scatter + marginals plot (Reuse scatter comparison?)
+  8. Check that all the fit_* stuff still works,
+  9. Roll fit_splits together
+  10. Simple-Delay FIR keyword.
+  11. Write a script that plots sparsity (summed overall) vs performance for a few model groups.
+  12. Modelstring bug.
+  13. Make split modules visible/editable from the GUI
+  14. Mixfit variations explored more.
+  15. Queue up a few different smooth_respavg kernels at 200Hz  
+  16. A plot of # of free parameters (put in database)
+  17. Profile code and look for optimizations that would speed up each iteration
+  18. Why does SENL drop to keyboard?
+  19. Heatmaps: loadstimfrombaphy, FIR, nonlinearity
+  20. Scatter plots of two models being compared. One plot for each performance metric.
+  21. Updated DB Insertion and Great Name Replacing proposal
 	  + [ ] calc_all_metrics()  function
           + [ ] Make est/val standard across everything, and move perf metric stuff from XXX{end} to META
 	  + [ ] Rename: VALIDATION/TEST and EST/TRAINING 
@@ -94,13 +39,13 @@
           + [ ] WHATEVER IS GOING INTO XXX{1} should be given to fit_single_model as well! When I'm not using BAPHY it should still be able to work.
 	  + [ ] Name convention of STACK vs stack, XXX vs xxx and the difficulty in understanding which one we are looking at! 
 		Lots of hidden assumptions here which are a problem. Plot modules have access to AFTER data, too.
-  17. Better initial conditions.
-  18. Outlier rejection. Exclude worst 1% in MSE calculations? Start at L2, gradually switch to L1 as time goes on? Remove each data point and use fitdist() to estimate it's effect on the noise model probability. Sort these effects. Mark the n% worst data points for plotting as "outliers" and also for removal during MSE or CORR calculations.
-  19. Narf Batch categories. 
+  22. Better initial conditions.
+  23. Outlier rejection. Exclude worst 1% in MSE calculations? Start at L2, gradually switch to L1 as time goes on? Remove each data point and use fitdist() to estimate it's effect on the noise model probability. Sort these effects. Mark the n% worst data points for plotting as "outliers" and also for removal during MSE or CORR calculations.
+  24. Narf Batch categories. 
          - Easier creation of sub-populations through the GUI I prototyped
          - Plots of params for each sub-population. 
          - Exclude crappy data (eliminate crappy behavior performance, then crappy isolation)
-  20. Fix Irregularities
+  25. Fix Irregularities
 	  - Grep around for {1} bugs
 	  - Narf analysis bugs out when you click delete and nothing is selected, because underneath something may still be selected.
           - Many functions still use STACK{N}{1} to compute things, which is probably wrong now.   
@@ -109,7 +54,7 @@
           - I think NPNL (or Normalize channels) is having a freak out when the FIR coefs are zero. 
           - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
           - Use keywords and VARARGIN instead of structs or long lists of many arguments
-  22. Write a crash course guide on using NARF
+  26. Write a crash course guide on using NARF
 
 * Metric-taking Ideas being developed in update_metrics();
   1. [X] metric_lnorm.m: Takes an L norm metric (MSE, L1, Linfty, etc)
@@ -135,6 +80,15 @@
   21. [ ] Geometric mean bias
   22. [ ] Geometric variance
   23. [ ] Fraction with a factor of 2 (FAC2)
+
+* Using Residuals to Estimate Noise Floor
+  1. Make a prediction p(t).
+  2. Subtract neural response r(t) from p(t) to get residual s(t). 
+  3. Shuffle s(t) in time, so that the same marginal is kept but all time correlation is lost. Call this w.
+  4. Add w to p(t) and check to see if your response improves it as well.
+  5. Repeat steps 2 and 3 as many times as is needed to estimate that it improves the 95% of the time. 
+** Expected Problem
+   There are MANY more samples at the 0 (prestim silence) input level...and residual is often a function of input amplitude, so this biases answer?
 
 * New Experiments:
   1. Gain-changing module (per pixel gain/state?)
