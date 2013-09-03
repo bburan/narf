@@ -1,6 +1,6 @@
 function fitSubstack(startidx,stopdelta,output)
     
-    global STACK
+    global STACK META MODULES;
     
     if ~exist('startidx','var') || isempty(startidx),
         startidx=length(STACK); % default, only fit last module
@@ -20,8 +20,10 @@ function fitSubstack(startidx,stopdelta,output)
         end
     end
     
-    % temporarily add mse module
-    nmse();
+    % We must add the MSE module temporarily in a very specific way       
+    append_module(MODULES.mean_squared_error.mdl(struct('input1', output)));   
+    append_module(MODULES.correlation.mdl(struct('input1', output)));    
+    META.perf_metric = @pm_nmse;
     STACK{end}{1}.input1=output;
     
     phi_init = pack_fittables(STACK);
