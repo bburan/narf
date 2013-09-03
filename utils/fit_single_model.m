@@ -101,8 +101,10 @@ else
 
     XXX{1}.test_set = test_set;
     calc_xxx(1);
-    
-    verify_model_polarity(); % invert the model    
+        
+    % invert the polarity of the model, possibly screwing it completely up,
+    % because there is probably some sort of nonlinearity after the filter
+    verify_model_polarity();
     save_model(META.modelpath, STACK, XXX, META);
     db_insert_model();
 end

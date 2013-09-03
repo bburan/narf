@@ -57,6 +57,7 @@ for kk = 1:length(firmod_idxs)
     y2 = mean(ys(end-idx10:end));
     if (y1 > y2)
         fprintf('verify_model_polarity.m: Detected negative slope. Flipping.\n');
+        error('Flipping the polarity will probably break the model, so I am refusing!'); 
         for aa = 1:length(STACK{idx})
             STACK{idx}{aa}.coefs = - STACK{idx}{aa}.coefs;
         end

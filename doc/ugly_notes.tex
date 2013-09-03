@@ -1,3 +1,9 @@
+* The New Basic Fitter Interface Rules
+  - All Fitters are varargin. If there is just one argument, it is assumed to be an options struct. If there are more, they are assumed to be field-value pairs. Arguments are converted into structs and used to update defaults. 
+  - All fitters return: [termcond, score_best, n_iters, ending_options]. If desired, ending_options can be used to re-initialize the fitter next time. 
+  - Iterative fitting, outer loops, etc can use [termcond, score_best, n_iters, ] of each inner fitter to decide when to quit. 
+
+
  1) Does NMSE work as a performance metric?
      Yes. Normalizing by the response mean or variance works fine and has little effect on the actual fit. 
      Results for 4 minute fits with boo12 (MSE) vs boo14(NMSE)/boo15/boo16 were quickly tested for batches 240 and 251. 

@@ -1,4 +1,4 @@
-function siglog2()
+function siglog()
 
 global MODULES XXX;
 
