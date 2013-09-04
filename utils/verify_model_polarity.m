@@ -19,6 +19,17 @@ if length(firmod_idxs)>1,
     return
 end
 
+% If there are any free parameters after the FIR filter, we should NOT
+% try to flip anything, because it would mess up the model. 
+for kk = firmod_idxs{1}:length(STACK)
+	for ii = 1:length(STACK{kk})
+        if isfield(STACK{kk}{ii}, 'fit_fields') && ~isempty(STACK{kk}{ii}.fit_fields)
+            fprintf('Free parameters found after the FIR filter. Flipping the polarity will probably break the model, so I am refusing!'); 
+            return;
+        end
+    end
+end
+
 for kk = 1:length(firmod_idxs)
     idx = firmod_idxs{kk};
     
@@ -57,7 +68,8 @@ for kk = 1:length(firmod_idxs)
     y2 = mean(ys(end-idx10:end));
     if (y1 > y2)
         fprintf('verify_model_polarity.m: Detected negative slope. Flipping.\n');
-        error('Flipping the polarity will probably break the model, so I am refusing!'); 
+  
+        % There are no later fittable params, we can flip safely
         for aa = 1:length(STACK{idx})
             STACK{idx}{aa}.coefs = - STACK{idx}{aa}.coefs;
         end
