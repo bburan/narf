@@ -24,7 +24,7 @@ end
 for kk = firmod_idxs{1}:length(STACK)
 	for ii = 1:length(STACK{kk})
         if isfield(STACK{kk}{ii}, 'fit_fields') && ~isempty(STACK{kk}{ii}.fit_fields)
-            fprintf('Free parameters found after the FIR filter. Flipping the polarity will probably break the model, so I am refusing!'); 
+            fprintf('Free parameters found after the FIR filter. Flipping the polarity will probably break the model, so I am refusing!\n'); 
             return;
         end
     end
