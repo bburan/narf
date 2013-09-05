@@ -24,6 +24,8 @@ eliteness = zeros(n_params, 1);  % The effect on the score of each parameter
 last_elite_recalc = -100;
 last_effect_recalc = -2*options.StepRelRecalcEvery;
 
+fprintf('\n');
+
 while (true) 
     x_next = x;
     s_next = s;  

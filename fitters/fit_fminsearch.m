@@ -1,4 +1,4 @@
-function [termcond, n_iters] = fit_fminsearch(options)
+function [term_cond, term_score, n_iters, term_step] = fit_fminsearch(options)
 
 if nargin < 1
     options = optimset('MaxIter', 9000, ...
@@ -7,5 +7,6 @@ if nargin < 1
                        'TolX', 1e-9);  
 end
 
-[termcond, n_iters] = default_fitter_loop('fminsearch()', ...
-    @(obj_fn, phi_init) fminsearch(obj_fn, phi_init, options));    
+[term_cond, term_score, n_iters, term_step] = ...
+    default_fitter_loop('fminsearch()', ...
+         @(obj_fn, phi_init) fminsearch(obj_fn, phi_init, options));    

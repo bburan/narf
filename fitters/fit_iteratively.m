@@ -26,10 +26,12 @@ s = nan;
 d = nan;
 n_iters = 0;
 
+fprintf('*********************BEGINNING ITERATIVE FIT**************************\n');
+
 % Terminate if the previous position is exactly the same as this one
 termcond = outer_loop_term_fn(n, s, d, n_iters);
-while ~termcond
-    fprintf('Outer Loop Iteration #%d. Score: %e\n', n, s);
+while ~termcond                 
+    fprintf('Beginning Iterative Loop Iteration #%d\n', n);
     for jj = 1:length(STACK),
         if ~isfield(cached_stack{jj}{1}, 'fit_fields')
             prev_opts{jj} = nan; % Just a stupid placeholder
@@ -75,7 +77,8 @@ while ~termcond
             end
         end
     end    
-    fprintf('Iterative loop %d ended. Score: %e, S_delta: %e\n', n, s, d);
+    fprintf('Ending Iterative loop %d. Score: %e, S_delta: %e\n', n, s, d);
+    fprintf('======================================================================\n', n);  
     n = n + 1;
     termcond = outer_loop_term_fn(n, s, d, n_iters);
 end

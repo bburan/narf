@@ -42,14 +42,14 @@ function [x, s, term_cond, stepsizes] = one_at_a_time(objfn, x_0, opts)
     n = 1;
     d = s;    
     s_outer = s;
-    
+    fprintf('\n');
     while ~(opts.TermFn(n, s_outer, d, o))
-        fprintf('\nSCAAT Step #%d (Score: %e)', n, s_outer);
+        fprintf('SCAAT Step #%d (Score: %e)', n, s_outer);
         for jj = 1:n_params
             stepsize = stepsizes(jj);
             
             % Comment out if desired
-            fprintf('\neval: %d, size: %.3e, coef#%3d, s_delta: %.3e, score:%e', o, stepsize, jj, d, s);
+            fprintf('eval: %d, size: %.3e, coef#%3d, s_delta: %.3e, score:%e', o, stepsize, jj, d, s);
             
             ii = 1;
             while ii <= opts.StepsPerParam && stepsize > opts.StopAtStepsize 
@@ -87,6 +87,8 @@ function [x, s, term_cond, stepsizes] = one_at_a_time(objfn, x_0, opts)
                     ii = ii + 1;
                 end
             end
+            
+            fprintf('\n');
             stepsizes(jj) = stepsize;
         end 
         n = n+1;
