@@ -44,7 +44,7 @@ function [x, s, term_cond, stepsizes] = one_at_a_time(objfn, x_0, opts)
     s_outer = s;
     fprintf('\n');
     while ~(opts.TermFn(n, s_outer, d, o))
-        fprintf('SCAAT Step #%d (Score: %e)', n, s_outer);
+        fprintf('SCAAT Step #%d (Score: %e)\n', n, s_outer);
         for jj = 1:n_params
             stepsize = stepsizes(jj);
             

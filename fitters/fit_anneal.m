@@ -1,4 +1,4 @@
-function [termcond, n_iters] = fit_anneal(options)
+function [term_cond, term_score, n_iters, term_step] = fit_anneal(options)
 
 if nargin < 1
     options = saoptimset('MaxIter', 9000, ...
@@ -6,5 +6,5 @@ if nargin < 1
                          'TolFun', 1e-12);  
 end
 
-[termcond, n_iters] = default_fitter_loop('simulannealbnd()', ...
+[term_cond, term_score, n_iters, term_step] = default_fitter_loop('simulannealbnd()', ...
     @(obj_fn, phi_init) simulannealbnd(obj_fn, phi_init, [], [], options));
