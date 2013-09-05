@@ -27,7 +27,12 @@ function fitSubstack(startidx,stopdelta,output)
     STACK{end}{1}.input1=output;
     
     phi_init = pack_fittables(STACK);
-    %fit_boost(length(phi_init)*5,min_stepsize,min_scoredelta,false,true);
+    %fit_boost(length(phi_init)*5,min_stepsize,min_scoredelta,false,true);  
+    
+    % Force one step to occur no matter what
+    fit_boo('StopAtStepNumber', 1, ...
+            'StopAtStepSize', 10^-12);
+        
     fit_boo('StopAtAbsScoreDelta', stopdelta, ...
             'StopAtStepNumber', length(phi_init)*5, ...
             'StopAtStepSize', 10^-7, ...
