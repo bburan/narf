@@ -54,13 +54,14 @@ function [score, iters] = my_obj_fn(phi)
     n_iters = n_iters + 1;
 end
 
-fprintf('----------------------------------------------------------------------\n');
 fprintf('Fitting %d variables with %s', length(phi_init), fittername);
 
 [term_phi, term_score, term_cond, term_step] = highlevel_fn(@my_obj_fn, phi_init);
 
 unpack_fittables(term_phi);
-%% TODO: Even though I'm pretty sure we don't need to calc_XXX here, it would be good to verify this is true!
+idx_of_first_different_param = find(term_phi ~= prev_phi, 1);
+calc_xxx(depths(idx_of_first_different_param));
 
 fprintf('Complete fit with %d objective function evaluations.\n', n_iters);
+fprintf('----------------------------------------------------------------------\n');
 end

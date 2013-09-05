@@ -46,6 +46,11 @@ t_start = clock();
 first_deltas = [];
 
 function stopcode = default_termfn(n,s,d,o)
+    
+    if (d < 0)
+        error('Somebody calculated the delta wrong.\n');
+    end
+    
     if (n > opts.StopAtStepNumber),   
         stopcode = 1; 
         fprintf('Took %d steps in total, stopping.\n', ...

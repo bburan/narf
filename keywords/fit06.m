@@ -41,6 +41,7 @@ function fn = make_subfitter(del)
     
 end
 
+fit_boo('StopAtAbsScoreDelta', 10^-2, 'StepGrowth', 1.3);
 fit_iteratively(make_subfitter(10^1), create_term_fn('StopAtAbsScoreDelta', 10^1));
 fit_iteratively(make_subfitter(10^0), create_term_fn('StopAtAbsScoreDelta', 10^0));
 fit_iteratively(make_subfitter(10^-1), create_term_fn('StopAtAbsScoreDelta', 10^-1));

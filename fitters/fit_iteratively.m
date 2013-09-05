@@ -56,15 +56,11 @@ while ~termcond
             [~, s_new, iters, prev_opts{jj}] = fitter();
         else
             [~, s_new, iters, prev_opts{jj}] = fitter(prev_opts{jj});
-        end
+        end        
         
-        n_iters = n_iters + iters; 
         if isnan(s)
-            d = s_new;
-        else
-            d = s - s_new;
+            s = s_new;   % Just the first time, initialize it
         end
-        s = s_new;
         
         % Restore the fit fields
         for kk = 1:length(STACK)
@@ -77,8 +73,17 @@ while ~termcond
             end
         end
     end    
+    
+    n_iters = n_iters + iters;
+    if isnan(s)
+        d = s_new;
+    else
+        d = s - s_new;
+    end
+    s = s_new;
+    
     fprintf('Ending Iterative loop %d. Score: %e, S_delta: %e\n', n, s, d);
-    fprintf('======================================================================\n', n);  
+    fprintf('======================================================================\n');  
     n = n + 1;
     termcond = outer_loop_term_fn(n, s, d, n_iters);
 end
