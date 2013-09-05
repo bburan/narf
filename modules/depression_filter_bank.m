@@ -1,3 +1,4 @@
+
 function m = depression_filter_bank(args)
 % apply bank of synaptic depression filters to each input channel
 
@@ -103,7 +104,7 @@ function x = do_depression_filter(mdl, x, stack, xxx)
            else
                 depresp=depression_bank(...
                     stim_in, (1./stimmax(:))*mdl.strength,...
-                    mdl.tau .* load_mod.raw_stim_fs/1000, 1);
+                    mdl.tau .* load_mod.raw_stim_fs/mdl.tau_norm, 1);
             end
             depresp=permute(depresp',[1 3 2]);
             
