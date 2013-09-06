@@ -11,6 +11,9 @@ phi_init = pack_fittables(STACK);
 if isempty(phi_init)
     fprintf('Skipping because there are no parameters to fit.\n');
     term_cond = NaN;
+    term_score = NaN;
+    n_iters = 0;
+    term_step = NaN;
     return 
 end
 

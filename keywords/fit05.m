@@ -1,4 +1,4 @@
-function [a,b,c,d] = fit05()
+function fit05()
 
 nmse();
 
@@ -81,11 +81,6 @@ fit_iteratively(@step_until_10neg45, ...
 
 fit_iteratively(@step_until_10neg5, ...
                 create_term_fn());
-
-a=nan;
-b=nan;
-c=nan;
-d=nan;
 
 %fit_iteratively(@step_until_10neg6, ...
 %                create_term_fn());
