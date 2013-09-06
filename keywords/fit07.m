@@ -1,4 +1,4 @@
-function fit06()
+function fit07()
 
 global STACK;
 
@@ -8,6 +8,7 @@ function fn = make_subfitter(del)
     function [a,b,c,d] = subfitter(prev_opts)    
     
         % Detect whether the fittables are in a FIR block or not    
+        module_being_fit = '';
         for kk = 1:length(STACK)
             if isfield(STACK{kk}{1}, 'fit_fields') && ~isempty(STACK{kk}{1}.fit_fields)
                 module_being_fit = STACK{kk}{1}.name;
@@ -25,15 +26,10 @@ function fn = make_subfitter(del)
             end
         else
             if exist('prev_opts', 'var')
-                aphi = abs(pack_fittables(STACK));
-                theopts = optimset('TolFun', del*10, 'TolX', max(1,min(aphi)));
-                [a,b,c,d] = fit_fminsearch(theopts);
-                % [a,b,c,d] = fit_scaat(prev_opts);
+                [a,b,c,d] = fit_scaat(prev_opts);
             else
-                aphi = abs(pack_fittables(STACK));
-                theopts = optimset('TolFun', del*10, 'TolX', max(1,min(aphi)));
-                [a,b,c,d] = fit_fminsearch(theopts);
-                %[a,b,c,d] = fit_scaat('StopAtAbsScoreDelta', del);
+                [a,b,c,d] = fit_scaat('StopAtAbsScoreDelta', del, ...
+                                      'StopAtStepNumber', 1);
             end
         end
     end
