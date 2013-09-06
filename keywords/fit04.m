@@ -8,6 +8,7 @@ function fn = make_subfitter(del)
     function [a,b,c,d] = subfitter(prev_opts)    
     
         % Detect whether the fittables are in a FIR block or not    
+        module_being_fit = '';
         for kk = 1:length(STACK)
             if isfield(STACK{kk}{1}, 'fit_fields') && ~isempty(STACK{kk}{1}.fit_fields)
                 module_being_fit = STACK{kk}{1}.name;
