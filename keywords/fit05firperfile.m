@@ -1,4 +1,4 @@
-function fit05nlperfile()
+function fit05firperfile()
 
 global STACK XXX
 
@@ -19,7 +19,7 @@ fit05();
 
 disp('NOW FITTING POST-FIR STAGES PER FILE');
 [~, mod_idxs] = find_modules(STACK, 'fir_filter', false);
-for ii=1:(mod_idxs{end}(1)), % 1:mod_idxs{end}(end),
+for ii=1:(mod_idxs{1}(1)-1), % 1:mod_idxs{end}(end),
     if isfield(STACK{ii}{1},'fit_fields'),
         STACK{ii}{1}.fit_fields={};
     end
