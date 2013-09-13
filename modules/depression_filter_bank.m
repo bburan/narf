@@ -26,6 +26,8 @@ m.output = 'stim';
 
 % Optional fields
 m.is_splittable = true;
+m.auto_plot = @do_depression_cartoon;
+
 m.plot_gui_create_fn = @create_chan_selector_gui;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_all_default_outputs;
@@ -34,6 +36,8 @@ m.plot_fns{2}.fn = @do_plot_single_default_output;
 m.plot_fns{2}.pretty_name = 'Filtered Stimuli (Single)';
 m.plot_fns{3}.fn = @do_plot_channels_as_heatmap;
 m.plot_fns{3}.pretty_name = 'Filtered Stimuli (Heatmap)';
+m.plot_fns{4}.fn = @do_depression_cartoon;
+m.plot_fns{4}.pretty_name = 'Depression cartoon';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -120,6 +124,32 @@ function x = do_depression_filter(mdl, x, stack, xxx)
 end
 
 % % Plot the filter responses
+function do_depression_cartoon(sel, stack, xxx)
+    
+    mdl = stack{end}{1};
+    fs=stack{1}{1}.raw_stim_fs;
+    
+    x = struct();
+    x.dat.demo.stim=[zeros(fs./2,1);ones(fs,1);zeros(fs,1);ones(fs./5,1);
+                 zeros(fs./5,1);ones(fs./5,1);zeros(fs.*1.5,1)];
+    xfiltered=do_depression_filter(mdl, x, stack, xxx);
+    
+    data=[x.dat.demo.stim+1 squeeze(xfiltered.dat.demo.stim)];
+    timeaxis=(1:size(data,1))'./fs;
+    plot(timeaxis,data);
+    
+    axis([timeaxis([1 end])' -0.1 2.1]);
+    
+    legstr=cell(length(mdl.tau)+1,1);
+    legstr{1}='Stim';
+    for ii=1:length(mdl.tau);
+        legstr{ii+1}=sprintf('(u=%.1f,tau=%.3f)',mdl.strength(ii),...
+                             mdl.tau(ii)./mdl.tau_norm);
+    end
+    legend(legstr);
+   
+end
+ 
 % function do_plot_filtered_stim(stack, xxx)
 %     mdl = stack{end};
 %     x = xxx{end};

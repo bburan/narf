@@ -613,7 +613,6 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         
         cells = request_celldb_batch(sel_batch, sel_cellids{1});       
         ii=1;
-        
         indexes = get(handles.modellist, 'Value');        
         jj=indexes(1);
         

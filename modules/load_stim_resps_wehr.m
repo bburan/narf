@@ -4,6 +4,8 @@ function m = load_stim_resps_wehr(args)
 % files. Returns a function module which implements the MODULE interface.
 % Hacked from load_stim_resps_from_baphy
 %
+global ANESTHETIZED_MOUSE
+ANESTHETIZED_MOUSE=1;
 
 % Module fields that must ALWAYS be defined
 m = [];
@@ -57,44 +59,124 @@ m.plot_fns{4}.pretty_name = 'Response Raster';
 
 m.plot_gui_create_fn = @create_gui;
 
-m.file_lookup=struct();
+envpath='/auto/data/daq/wehr/soundfiles/sourcefiles/';
 basepath='/auto/users/svd/data/wehr/SpNoise_Data/';
-m.file_lookup.out121012_002_002.file=[basepath 'out121012-002-002.mat'];
+basepathcc='/auto/data/daq/wehr/data/Current Clamp Files (SPNoise)/';
+basepathvc='/auto/data/daq/wehr/data/Voltage Clamp Files (SPNoise)/';
+
+m.file_lookup=struct();
+m.file_lookup.out121012_002_002.file=[basepathcc 'out121012-002-002.mat'];
 m.file_lookup.out121012_002_002.respfmt=0;
-m.file_lookup.out121112_004_003_E.file=[basepath 'out121112-004-003.mat'];;
-m.file_lookup.out121112_004_003_E.respfmt=1;
-m.file_lookup.out121112_004_003_I.file=[basepath 'out121112-004-003.mat'];;
-m.file_lookup.out121112_004_003_I.respfmt=2;
-m.file_lookup.out121112_004_005_E.file=[basepath 'out121112-004-005.mat'];
-m.file_lookup.out121112_004_005_E.respfmt=1;
-m.file_lookup.out121112_004_005_I.file=[basepath 'out121112-004-005.mat'];
-m.file_lookup.out121112_004_005_I.respfmt=2;
-m.file_lookup.out121412_007_002.file=[basepath 'out121412-007-002.mat'];
+m.file_lookup.out121412_007_002.file=[basepathcc 'out121412-007-002.mat'];
 m.file_lookup.out121412_007_002.respfmt=0;
-m.file_lookup.out121812_002_003.file=[basepath 'out121812-002-003.mat'];
+m.file_lookup.out121812_002_003.file=[basepathcc 'out121812-002-003.mat'];
 m.file_lookup.out121812_002_003.respfmt=0;
-m.file_lookup.out121812_002_005.file=[basepath 'out121812-002-005.mat'];
+m.file_lookup.out121812_002_005.file=[basepathcc 'out121812-002-005.mat'];
 m.file_lookup.out121812_002_005.respfmt=0;
-m.file_lookup.out121812_004_003.file=[basepath 'out121812-004-003.mat'];
+m.file_lookup.out121812_004_003.file=[basepathcc 'out121812-004-003.mat'];
 m.file_lookup.out121812_004_003.respfmt=0;
-m.file_lookup.out121812_004_005.file=[basepath 'out121812-004-005.mat'];
+m.file_lookup.out121812_004_005.file=[basepathcc 'out121812-004-005.mat'];
 m.file_lookup.out121812_004_005.respfmt=0;
-m.file_lookup.out122012_002_001_E.file=[basepath 'out122012-002-001.mat'];
-m.file_lookup.out122012_002_001_E.respfmt=1;
-m.file_lookup.out122012_002_001_I.file=[basepath 'out122012-002-001.mat'];
-m.file_lookup.out122012_002_001_I.respfmt=2;
-m.file_lookup.out122012_003_001.file=[basepath 'out122012-003-001.mat'];
+m.file_lookup.out122012_003_001.file=[basepathcc 'out122012-003-001.mat'];
 m.file_lookup.out122012_003_001.respfmt=0;
-m.file_lookup.out122012_007_001_E.file=[basepath 'out122012-007-001.mat'];
+m.file_lookup.out012213_007_002.file=[basepathcc 'out012213-007-002.mat'];
+m.file_lookup.out012213_007_002.respfmt=0;
+m.file_lookup.out031113_002_002.file=[basepathcc 'out031113-002-002.mat'];
+m.file_lookup.out031113_002_002.respfmt=0;
+m.file_lookup.out040213_003_002.file=[basepathcc 'out040213-003-002.mat'];
+m.file_lookup.out040213_003_002.respfmt=0;
+m.file_lookup.out040213_004_001.file=[basepathcc 'out040213-004-001.mat'];
+m.file_lookup.out040213_004_001.respfmt=0;
+m.file_lookup.out051113_003_004.file=[basepathcc 'out051113-003-004.mat'];
+m.file_lookup.out051113_003_004.respfmt=0;
+m.file_lookup.out051113_003_009.file=[basepathcc 'out051113-003-009.mat'];
+m.file_lookup.out051113_003_009.respfmt=0;
+m.file_lookup.out051113_004_003.file=[basepathcc 'out051113-004-003.mat'];
+m.file_lookup.out051113_004_003.respfmt=0;
+m.file_lookup.out061913_002_002.file=[basepathcc 'out061913-002-002.mat'];
+m.file_lookup.out061913_002_002.respfmt=0;
+m.file_lookup.out062113_005_001.file=[basepathcc 'out062113-005-001.mat'];
+m.file_lookup.out062113_005_001.respfmt=0;
+
+m.file_lookup.out121112_004_003_E.file=[basepathvc 'out121112-004-003.mat'];
+m.file_lookup.out121112_004_003_E.respfmt=1;
+m.file_lookup.out121112_004_003_I.file=[basepathvc 'out121112-004-003.mat'];
+m.file_lookup.out121112_004_003_I.respfmt=2;
+m.file_lookup.out121112_004_005_E.file=[basepathvc 'out121112-004-005.mat'];
+m.file_lookup.out121112_004_005_E.respfmt=1;
+m.file_lookup.out121112_004_005_I.file=[basepathvc 'out121112-004-005.mat'];
+m.file_lookup.out121112_004_005_I.respfmt=2;
+m.file_lookup.out122012_002_001_E.file=[basepathvc 'out122012-002-001.mat'];
+m.file_lookup.out122012_002_001_E.respfmt=1;
+m.file_lookup.out122012_002_001_I.file=[basepathvc 'out122012-002-001.mat'];
+m.file_lookup.out122012_002_001_I.respfmt=2;
+m.file_lookup.out122012_007_001_E.file=[basepathvc 'out122012-007-001.mat'];
 m.file_lookup.out122012_007_001_E.respfmt=1;
-m.file_lookup.out122012_007_001_I.file=[basepath 'out122012-007-001.mat'];
+m.file_lookup.out122012_007_001_I.file=[basepathvc 'out122012-007-001.mat'];
 m.file_lookup.out122012_007_001_I.respfmt=2;
+
+m.file_lookup.out022313_005_002_E.file=[basepathvc 'out022313-005-002.mat'];
+m.file_lookup.out022313_005_002_E.respfmt=1;
+m.file_lookup.out022313_005_002_I.file=[basepathvc 'out022313-005-002.mat'];
+m.file_lookup.out022313_005_002_I.respfmt=2;
+
+m.file_lookup.out022313_008_001_E.file=[basepathvc 'out022313-008-001.mat'];
+m.file_lookup.out022313_008_001_E.respfmt=1;
+m.file_lookup.out022313_008_001_I.file=[basepathvc 'out022313-008-001.mat'];
+m.file_lookup.out022313_008_001_I.respfmt=2;
+
+m.file_lookup.out052213_003_001_E.file=[basepathvc 'out052213-003-001.mat'];
+m.file_lookup.out052213_003_001_E.respfmt=1;
+m.file_lookup.out052213_003_001_I.file=[basepathvc 'out052213-003-001.mat'];
+m.file_lookup.out052213_003_001_I.respfmt=2;
+
+m.file_lookup.out052213_004_001_E.file=[basepathvc 'out052213-004-001.mat'];
+m.file_lookup.out052213_004_001_E.respfmt=1;
+m.file_lookup.out052213_004_001_I.file=[basepathvc 'out052213-004-001.mat'];
+m.file_lookup.out052213_004_001_I.respfmt=2;
+
+m.file_lookup.out071113_003_002_E.file=[basepathvc 'out071113-003-002.mat'];
+m.file_lookup.out071113_003_002_E.respfmt=1;
+m.file_lookup.out071113_003_002_I.file=[basepathvc 'out071113-003-002.mat'];
+m.file_lookup.out071113_003_002_I.respfmt=2;
+
+m.file_lookup.out071113_004_001_E.file=[basepathvc 'out071113-004-001.mat'];
+m.file_lookup.out071113_004_001_E.respfmt=1;
+m.file_lookup.out071113_004_001_I.file=[basepathvc 'out071113-004-001.mat'];
+m.file_lookup.out071113_004_001_I.respfmt=2;
+
+m.file_lookup.out082613_002_002_E.file=[basepathvc 'out082613-002-002.mat'];
+m.file_lookup.out082613_002_002_E.respfmt=1;
+m.file_lookup.out082613_002_002_I.file=[basepathvc 'out082613-002-002.mat'];
+m.file_lookup.out082613_002_002_I.respfmt=2;
+
+m.file_lookup.out082613_003_001_E.file=[basepathvc 'out082613-003-001.mat'];
+m.file_lookup.out082613_003_001_E.respfmt=1;
+m.file_lookup.out082613_003_001_I.file=[basepathvc 'out082613-003-001.mat'];
+m.file_lookup.out082613_003_001_I.respfmt=2;
+
+m.file_lookup.out082713_005_002_E.file=[basepathvc 'out082713-005-002.mat'];
+m.file_lookup.out082713_005_002_E.respfmt=1;
+m.file_lookup.out082713_005_002_I.file=[basepathvc 'out082713-005-002.mat'];
+m.file_lookup.out082713_005_002_I.respfmt=2;
+
+m.file_lookup.out082813_002_003_E.file=[basepathvc 'out082813-002-003.mat'];
+m.file_lookup.out082813_002_003_E.respfmt=1;
+m.file_lookup.out082813_002_003_I.file=[basepathvc 'out082813-002-003.mat'];
+m.file_lookup.out082813_002_003_I.respfmt=2;
+
+m.file_lookup.out121812_003_002_E.file=[basepathvc 'out121812-003-002.mat'];
+m.file_lookup.out121812_003_002_E.respfmt=1;
+m.file_lookup.out121812_003_002_I.file=[basepathvc 'out121812-003-002.mat'];
+m.file_lookup.out121812_003_002_I.respfmt=2;
 
 
 % ------------------------------------------------------------------------
 % Define the 'methods' of this module, as if it were a class
 
 function x = do_load_wehr(mdl, x, stack, xxx)
+    
+    global NARF_DEBUG NARF_DEBUG_FIGURE
     
     % Merge the training and test set names, which may overlap
     files_to_load = unique({x.training_set{:}, x.test_set{:}});
@@ -134,9 +216,10 @@ function x = do_load_wehr(mdl, x, stack, xxx)
         pp=fileparts(f);
         envfile=strrep(out.epochfilenames{1},'\',filesep);
         envfile=strrep(basename(envfile),'sourcefile','envfile');
-        e=load([pp filesep envfile]);
+        e=load([envpath envfile]);
         
         SRint=e.EnvSamplingRate;
+        secPerSegment=size(e.EnvSet,1)./length(e.sequence)./SRint;
         
         s0=zeros(SRint,size(e.EnvSet,2));
 
@@ -150,30 +233,35 @@ function x = do_load_wehr(mdl, x, stack, xxx)
             if size(out.M1,4)>1,
                 % v-clamp data
                 % dim 2 index specifies which v-vclamp mode
-                ri=squeeze(mean(out.M1(ii,vdim,1:out.nreps(ii),:),3));
-                %ri=squeeze(out.mM1(ii,vdim,:));
-                
+                %ri=squeeze(mean(out.M1(ii,vdim,1:out.nreps(ii,vdim),:),3));
+                ri=squeeze(out.mM1(ii,vdim,:));
+                if vdim==1,
+                    % flip sign for E current so that up="more"
+                    ri=-ri;
+                end
                 % load low-res stimulus just to make sure it's aligned with
                 % the envelope
                 dsi=squeeze(mean(out.M1stim(ii,1,1:out.nreps(ii),:),3));
+                sentencesperoffset=size(out.sequences,4);
             else
                 % i-clamp data
-                %ri=squeeze(mean(out.M1(ii,:,:),2));
-                ri=squeeze(out.mM1(ii,:))';
+                ri=squeeze(mean(out.M1(ii,:,:),2));
+                %ri=squeeze(out.mM1(ii,:))';
                 dsi=squeeze(mean(out.M1stim(ii,1:out.nreps(ii),:),2));
+                sentencesperoffset=size(out.sequences,3);
             end
             ri=resample(ri,SRint,out.samprate);
             dsi=resample(dsi,SRint,out.samprate);
             
-            offset=(3.2*SRint)*9; % number of SRint hz samples per segment 
-            
-            if ii<size(out.M1,1),
+            % number of SRint hz samples per segment (segment==sentence?)
+            offset=(secPerSegment*SRint)*sentencesperoffset;
+            %ii
+            %keyboard
+            if ii<size(out.M1,1) || offset.*ii<size(e.EnvSet,1),
                 si=[s0;e.EnvSet(offset.*(ii-1)+(1:offset),:);s0];
             else
-                si=[s0;e.EnvSet((offset*(ii-1)):end,:)];
+                si=[s0;e.EnvSet((offset*(ii-1)):end,:);s0];
             end
-            %si=log2(si+2);
-            
             
             if SR<SRint,
                 ri=resample(ri,SR,SRint);
@@ -203,16 +291,64 @@ function x = do_load_wehr(mdl, x, stack, xxx)
             si=si(round(0.1*SR)+1:end,:);
             dsi=dsi(round(0.1*SR)+1:end);
             
-            % remove linear trend
-            %ri=detrend(ri);
-            % remove trend by substracting 4th order polynomial fit
-            order = 4;
-            p = polyfit((1:numel(ri))', ri(:), order);
-            %keyboard
-            ri = ri(:) - polyval(p, (1:numel(ri))');
+            if 0,
+                % remove linear trend
+                ri=detrend(ri);
+            elseif 1,
+                % remove trend by subtracting min-filtered version
+                % of signal
+                N=round(SR./2);
+                sy=gsmooth(ri(:),N./4);
+                y=zeros(size(sy(:)));
+                for ii=1:length(ri(:));
+                    xx=max(1,ii-N);
+                    yy=min(length(sy(:)),ii+N);
+                    y(ii)=min(sy(xx:yy));
+                end
+                y=gsmooth(y,N./4);
+                
+                if NARF_DEBUG,
+                    if isempty(NARF_DEBUG_FIGURE),
+                        NARF_DEBUG_FIGURE=figure;
+                    end
+                    sfigure(NARF_DEBUG_FIGURE);
+                    clf
+                    subplot(2,1,1);
+                    plot([ri(:) sy ri(:)-y y]);
+                    axis tight
+                    subplot(2,1,2);
+                    ty=ri(:)-y;
+                    ts=nanmean(si,2);
+                    plot([ts./max(ts) ty./max(ty)]);
+                    axis tight
+                    pause(0.1);
+                    %keyboard
+                end
+                ri=ri(:)-y;
+                ri=sqrt(abs(ri)).*sign(ri);
+            else
+                % remove trend by substracting 5th order polynomial fit
+                order = 5;
+                %p = polyfit((1:numel(ri))', ri(:), order);
+                p = polyfit((1:numel(ri))', gsmooth(ri(:),50), order);
+                %plot([ri(:)  gsmooth(ri(:),100) polyval(p, (1:numel(ri))')]);
+                
+                if NARF_DEBUG,
+                    if isempty(NARF_DEBUG_FIGURE),
+                        NARF_DEBUG_FIGURE=figure;
+                    end
+                    sfigure(NARF_DEBUG_FIGURE);
+                    clf
+                    plot([ri(:) polyval(p, (1:numel(ri))') ...
+                          ri(:) - polyval(p, (1:numel(ri))')]);
+                    keyboard;
+                end
+                
+                ri = ri(:) - polyval(p, (1:numel(ri))');
+            end
             
-            onsettimesi=(0:floor(length(si)./(3.2*SR)-1))*(3.2.*SR)+...
-                1+round(length(s0)./SRint*SR)-10;
+            onsettimesi=(0:floor(length(si)./(secPerSegment*SR)-1))*...
+                (secPerSegment.*SR)+1+round(length(s0)./SRint*SR)-10;
             onsettimes=[onsettimes onsettimesi+length(r(:))];
             
             if length(si)<size(s,1),
@@ -246,13 +382,15 @@ function x = do_load_wehr(mdl, x, stack, xxx)
                           nanmax(x.stimminmax(2,:),stimminmax(2,:))];
         end
         
-       % SVD 2013-03-08 - if specified, pull out either estimation (fit) or
+        % SVD 2013-03-08 - if specified, pull out either estimation (fit) or
         % validation (test) subset of the data
         if datasubset,
             % break out estimation and validation sets
-            slen=3.2*SR;  % HACK!
-            ffval=find(e.sequence==1);
-            ffest=find(e.sequence~=1);
+            % maybe not a hack?
+            slen=secPerSegment*SR;  
+            
+            ffval=find(e.sequence(1:length(onsettimes))==1);
+            ffest=find(e.sequence(1:length(onsettimes))~=1);
             
             FitRange=[];
             for ffe=ffest,
@@ -271,7 +409,6 @@ function x = do_load_wehr(mdl, x, stack, xxx)
             
             % nan out the pre stim silence:
             resp(1:(onsettimes(1)-1),:)=nan;
-            %keyboard
         end
         
         x.dat.(fbase).(mdl.output_stim) = stim;
