@@ -743,6 +743,20 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                         cfd(jj).channum, cfd(jj).unit);
                 end
             end
+            [cfd, ~, ~] = dbgetscellfile('cellid', sel_results(ii).cellid, 'runclass','BNB');
+            for jj = 1:length(cfd);
+                figure;
+                hs=subplot(1,2,1);
+                options=[];
+                options.usesorted=1;
+                options.datause='Reference Only';
+                chord_strf_online([cfd(jj).stimpath cfd(jj).stimfile], ...
+                    cfd(jj).channum, cfd(jj).unit,hs,options);
+                hs=subplot(1,2,2);
+                raster_online([cfd(jj).stimpath cfd(jj).stimfile], ...
+                    cfd(jj).channum, cfd(jj).unit,hs,options);
+
+            end
         end
     end
 
