@@ -3,7 +3,7 @@ function ret = nl_log(phi, z)
     if length(phi) > 1
         zeroer = phi(2);
     else
-        zeroer = 0;
+        zeroer = -log(10^offset);
     end
     
     % soften effects of more extreme offsets
