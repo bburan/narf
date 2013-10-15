@@ -50,7 +50,7 @@ if ~all(areperfmetrics > fit_end_depth) || isempty(areperfmetrics)
     error('Model structure not splittable: performance metric must come after all modules with fittable fields.');
 end
 if ~isempty(has_splitters)
-    error('fit_split_spmily() relies on all modules NOT being fittable.');
+    error('fit_split_simply() relies on all modules NOT being splittable.');
 end
 
 cached_STACK = STACK;

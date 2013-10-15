@@ -18,6 +18,7 @@ if exist('cellid','var'),
    cellargs=cat(2,cellargs,{'cellid'},{cellid});
 end
 params.miniso=getparm(params,'miniso',0);
+params.activeonly=getparm(params,'activeonly',0);
 
 if 1 || params.stimspeedid==0,
    % disp('disabling speed test');
@@ -250,9 +251,26 @@ if isfield(params,'specialbatch'),
         cellfileids=cellfileids(keepidx);
         cellfiledata=cellfiledata(keepidx);
         cellids=keepcellids;
-        
     end
     
+    if params.activeonly,
+        % require at least two active files if activeonly==1
+        uniquecellids=cellids;
+        allcellids={cellfiledata.cellid};
+        
+        keepcells=zeros(size(uniquecellids));
+        keepfiles=zeros(size(cellfiledata));
+        for ii=1:length(uniquecellids),
+            ff=find(strcmp(uniquecellids{ii},allcellids));
+            if length(ff)>1,
+                keepfiles(ff)=1;
+                keepcells(ii)=1;
+            end
+        end
+        cellids=cellids(find(keepcells));
+        cellfiledata=cellfiledata(find(keepfiles));
+        cellfileids=cellfileids(find(keepfiles));
+    end
 end
 
 

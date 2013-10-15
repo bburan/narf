@@ -177,7 +177,7 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
         batch_callback();
         sel_all_models_callback();
     end
-
+    
 
      function rebuild_status_filter()
          sql = ['SELECT DISTINCT status FROM NarfAnalysis AS sq'];
@@ -613,7 +613,6 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         
         cells = request_celldb_batch(sel_batch, sel_cellids{1});       
         ii=1;
-        
         indexes = get(handles.modellist, 'Value');        
         jj=indexes(1);
         
@@ -742,6 +741,20 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                         [cfd(jj).path cfd(jj).respfile], ...
                         cfd(jj).channum, cfd(jj).unit);
                 end
+            end
+            [cfd, ~, ~] = dbgetscellfile('cellid', sel_results(ii).cellid, 'runclass','BNB');
+            for jj = 1:length(cfd);
+                figure;
+                hs=subplot(1,2,1);
+                options=[];
+                options.usesorted=1;
+                options.datause='Reference Only';
+                chord_strf_online([cfd(jj).stimpath cfd(jj).stimfile], ...
+                    cfd(jj).channum, cfd(jj).unit,hs,options);
+                hs=subplot(1,2,2);
+                raster_online([cfd(jj).stimpath cfd(jj).stimfile], ...
+                    cfd(jj).channum, cfd(jj).unit,hs,options);
+
             end
         end
     end
@@ -994,14 +1007,24 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
 
 function custom_model_analysis(~,~,~)
     global STACK XXX META;
-    if isempty(sel_results) || length(sel_results) > 1
+    if isempty(sel_results),
         return
     end
+    
     cust_function_name=get(CustomFunctionHandle,'String');
     load_model(char(sel_results(1).modelpath));
+    
+    mvec=zeros(size(sel_results));
+    for ii=1:length(sel_results),
+        mvec(ii)=find(strcmp(char(sel_results(ii).modelname), ...
+                         sel_models));
+    end
+    [~,ii]=sort(mvec);
+    sel_results=sel_results(ii);
+    
     feval(cust_function_name,STACK,XXX,META,sel_results);
 end
-           
+
 db_results_table = uitable('Parent', bottom_panel, ...
         'Enable', 'on',  'Units', 'pixels', 'RowName', [],...
         'ColumnWidth', {60, 40, 100, 300, ...

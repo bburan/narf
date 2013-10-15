@@ -32,7 +32,7 @@ hspace = 0.05;
 ap = [];
 for ii = 1:length(STACK)
     m = STACK{ii}{1};
-    if isfield(m, 'auto_plot')
+    if isfield(m, 'auto_plot') && ~isempty(m.auto_plot),
         ap(end+1) = ii;
     end
 end
