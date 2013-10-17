@@ -1,6 +1,7 @@
 function [stacks, metas, x0s, preds] = load_model_batch(batch, cellids, modelnames, ...
                                 stack_extract_fn, meta_extract_fn, x0_extract_fn)
-% [stacks, metas, x0s, preds] = load_model_batch(batch, cellids, modelnames)
+% [stacks, metas, x0s, preds] = load_model_batch(batch, cellids, modelnames, ...
+%                        stack_extract_fn, meta_extract_fn, x0_extract_fn)
 %
 % Loads every NARF model in BATCH with a matching cellid and modelanme 
 % found in CELLIDS and MODELNAMES. This function is intended to be used

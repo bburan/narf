@@ -892,6 +892,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         D = [nanmean(data)' data'];
         [sD, idxs] = sortrows(D, -1);
         data = sD(:, 2:end)';
+        data = abs(data); % Neg correlations are still FINE, I say!
         figure('Name', 'Bar Plot', 'NumberTitle', 'off', ...
                'Position', [10 10 900 300]);
         hold on;

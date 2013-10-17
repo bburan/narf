@@ -1,0 +1,111 @@
+* Questions and Answers of the Week
+  1) Q: Do scatter plots show dep1 always beats fir?
+     A: Given model env100_logfree_{fir/dep1}_siglog_*, fit04 htrough fit08 all show a strong tendancy for dep1 to beat fir.
+  
+  2) Q: Which is the best fitter in general?
+     A: Not clear yet.
+        fit04 wins for: FIR, DEP1, DEP2, DEPBANK, IFN, DEP1IFN, DEP1PERCHAN
+	fit05 wins for: DEP2IFN, DEP1PIFN, or VOLTERRA
+	fit06 and fit07 were requeued.
+     
+  3) Q: What makes a winning fitter? How many boost steps per iteration and what final stopping point is best?
+     A: A few things could be making fit04 do well:
+        1) A 10^-6 stopping criterion
+	2) The fact that it only takes one step on the boost per iteration 
+	3) The way it takes steps on the nonlinear modules
+	Therefore, I propose that we test each of these and make these changes:
+	fit06: Redefine and re-run with 10^-6 stopping criterion
+	fit07: The same as fit04, but with just one step
+        fit08: The same as fit05, but with 10^-6 step criterion.
+
+  4) Q: By fitting to some small improvement of variance per step, are we biasing ourselves towards easy-to-fit models?
+     A: Maybe? But how could we ever know a truly absolute termination condition unless we really keep trying forever to find the asymptote, then back off?
+
+* Survey Results
+** Fitter Similarlity
+   - model: env100_null_firno_null_fit{00,01,02,03,04}
+   - Winner: Nobody! Stopping at fraction of variance seems to work great. There is a slight difference between fit02/04 and the others, but on inspection, that is a normal consequence of the way stepsizes are carried over (or not) from iteration to iteration. 
+
+** Core Filters
+   - model: env100_logfree_*_siglog_fit
+   - Best fitter: Probably fit06, fit07 or fit08?
+   - Best Fitters by filter using fit(04,05,06,07,08)
+     | Fitter      | 1st   | 2nd   | Notes            |
+     |-------------+-------+-------+------------------|
+     | fir         | fit07 | fit04 |                  |
+     | dep1        | fit04 | fit07 |                  |
+     | dep2        | fit07 | fit04 |                  |
+     | depbank5    | fit07 | fit08 |                  |
+     | ifn         | fit08 | fit06 |                  |
+     | dep1ifn     | fit04 | fit08 | fit07 wins rank. |
+     | dep2ifn     | fit08 | fit06 |                  |
+     | dep1pifn    | fit06 | fit08 | fit08 wins rank. |
+     | dep1perchan | fit07 | fit06 |                  |
+     | volterra    | fit08 | fit06 |                  |
+
+     Where not marked, 1st place by mean fitters were also first place by rank. Scatter plots were also checked, so these results aren't biased by outliers.
+
+   - Fit Times for the logfree_dep2ifn_siglog
+     | Fitter |  Avg |  Max |
+     |--------+------+------|
+     | fit00  |  189 |  255 |
+     | fit01  | 1645 | 2600 |
+     | fit02  | 1560 | 2600 |
+     | fit03  | 2151 | 9000 |
+     | fit04  |      |      |
+     | fit05  |      |      |
+     | fit06  |      |      |
+     | fit07  |      |      |
+     | fit08  |      |      |
+
+** Compressors
+   - model: env100_{*}_firno_null_fit{00,01,02,03,04}
+   - Early in the week, fit02 was found to be pretty good. Now
+   - Best Compressor is still LOGFREE (Using fit06):
+
+
+     | Fitter | 1st     | 2nd      | 3rd       | Notes  |
+     |--------+---------+----------+-----------+--------|
+     | fit*   | sigell  | sigumber | sigcauchy | fit03. |
+     | fit00  | logfree | rootfree | root2     |        |
+     | fit01  | zexp    | siglog   | rootfree  |        |
+     | fit02  | siglog  | zexp     | sig       |        |
+     | fit03  | poly3   | sigumber | zexp      |        |
+     
+   - Eyeball quality for the fitters:
+     + Fit00 are too sparse
+     + Fit01 is ok
+     + Fit02 is probably the best
+     + Fit03 has noisier FIR filters but better-fit nonlinearities
+
+   - Fit times for logfree_fir_null_*
+     | Fitter | Avg     | Max |
+     |--------+---------+-----|
+     | fit00  | 7.1 sec |  70 |
+     | fit01  | 29 sec  |  85 |
+     | fit02  | 8 sec   |  75 |
+     | fit03  | 22 sec  |  75 |
+
+   - Other notes:
+     - The best 25% of the population is being very well described by sigumbel/fit03 or sigumber (mean of 0.6025 for 25% of population)
+
+** Nonlinearities
+   - model: log2_fir_*_fit{00,01,02,03}
+   - Best nonlinearities for each fitter:
+     | Fitter | 1st     | 2nd     | 3rd   | Notes                                      |
+     |--------+---------+---------+-------+--------------------------------------------|
+     | fit*   | poly3   | npfnl   | npnl  | poly3/fit03 wins!?                         |
+     | fit00  | zthresh | null    | poly2 | Perhaps zthresh easy to fit with boosting? |
+     | fit01  | poly3   | zthresh | null  |                                            |
+     | fit02  | zthresh | exp     | poly2 |                                            |
+     | fit03  | poly3   | zthresh | null  |                                            |
+   - Fit Times for the log2_fir_poly3
+     | Fitter | Avg |   Max |
+     |--------+-----+-------|
+     | fit00  |  24 |    55 |
+     | fit01  | 105 |   120 |
+     | fit02  |  33 |   140 |
+     | fit03  | 713 | 18000 |
+   - Why zthresh and poly3 are doing so well now, I do not know. 
+
+* Conclusions/Next Steps
