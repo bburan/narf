@@ -24,7 +24,8 @@ function narf_set_path()
 
     addpath(NARF_PATH);    % Do I need really need this? Is it searching the keywords/ dir?    
     
-    if ~exist('dbgetscellfile','file'),
+    global BAPHYHOME
+    if isempty(BAPHYHOME),
         baphy_set_path
     end
     warning on MATLAB:dispatcher:nameConflict;

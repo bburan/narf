@@ -1,4 +1,4 @@
-% function dstim=depression_bank(stim,u,tau,fixu)
+% function dstim=depression_bank(stim,u,tau,fixu,crosstalk)
 %
 % on each time step,
 %  dstim(t) = stim(t) * d(t)
@@ -15,13 +15,16 @@
 % 
 % created svd 2010-07-08
 %
-function dstim=depression_bank(stim,u,tau,fixu)
+function dstim=depression_bank(stim,u,tau,fixu,crosstalk)
 
 global ESTIMATIONPHASE
 global DEPSTIMMAX
 
 if ~exist('fixu','var'),
    fixu=0;
+end
+if ~exist('crosstalk','var'),
+   crosstalk=0;
 end
 if ~exist('verbose','var'),
    verbose=0;
@@ -72,12 +75,57 @@ for jj=1:dcount,
       if size(tstim,2)<10,
          keyboard
       end
+      if length(crosstalk)>1,
+          tstim=crosstalk;
+      elseif crosstalk>0,
+          % 1 channel do nothing
+          if size(stim,1)==2,
+              sfilt=[1-crosstalk./100 crosstalk./100;
+                     crosstalk./100 1-crosstalk./100];
+              tstim=sfilt*tstim;
+          elseif size(stim,1)>2,
+              sfilt=[crosstalk./100; 1-crosstalk.*2./100; crosstalk./100];
+              tstim=rconv2(tstim,sfilt);
+          end
+          %keyboard
+      end
       tstim(:,1:10)=min(tstim(:));
+      
+      if taui(1)./ui(1)./10>1,
+          subsample=1;
+      elseif taui(1)./ui(1)./10>.1,
+          subsample=10;
+      elseif taui(1)./ui(1)./10>.01,
+          subsample=100;
+      elseif ui(1)>10,
+          % tau too small, effectively no depression.
+          % otherwise this will create unstable oscillations
+          ui(:)=taui(:)./10*1000
+          subsample=100;
+      else
+          % tau too small, effectively no depression.
+          % otherwise this will create unstable oscillations
+          subsample=1;
+          ui(:)=0;taui(:)=10;
+      end
+      
       for ii=2:size(stim,2),
-         delta=(1-di(:,ii-1))./taui - ui.*di(:,ii-1).*tstim(:,ii-1);
-         di(:,ii)=di(:,ii-1)+delta;
-         di(di(:,ii)<0,ii)=0;
-         %di(di(:,ii)>1,ii)=1;
+          if 1 % subsample as much as is necessary to avoid oscillations
+              td=di(:,ii-1);
+              for dd=1:subsample,
+                  delta=(1-td)./(taui.*subsample) - ...
+                        (ui./subsample).*td.*tstim(:,ii-1);
+                  td=td+delta;
+              end
+              di(:,ii)=td;
+              di(di(:,ii)<0,ii)=0;
+          else
+              delta=(1-di(:,ii-1))./taui - ui.*di(:,ii-1).*tstim(:,ii-1);
+              di(:,ii)=di(:,ii-1)+delta;
+              di(di(:,ii)<0,ii)=0;
+              %di(di(:,ii)>1,ii)=1;
+          end
+          
       end
       
       dstim((1:size(stim,1))+(jj-1)*size(stim,1),:)=di.*stim;

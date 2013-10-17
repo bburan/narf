@@ -1,23 +1,26 @@
-function m = depression_filter_bank(args)
+function m = depression_filter_bank_nonorm(args)
 % apply bank of synaptic depression filters to each input channel
 
+    global NARF_DEBUG
+    
 % Module fields that must ALWAYS be defined
 m = [];
-m.mdl = @depression_filter_bank;
-m.name = 'depression_filter_bank';
+m.mdl = @depression_filter_bank_nonorm;
+m.name = 'depression_filter_bank_nonorm';
 m.fn = @do_depression_filter;
-m.pretty_name = 'Depression Filter Bank';
-m.editable_fields = {'num_channels', 'strength', 'tau',...
-                    'per_channel', 'crosstalk', 'input', 'time', 'output' };
+m.pretty_name = 'Depression Filter Bank No Norm';
+m.editable_fields = {'num_channels', 'strength', 'tau', 'gain',...
+                    'per_channel', 'input', 'time', 'output' };
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.num_channels = 2;
+m.num_channels = 2;     % is this a useful parameter?
 m.per_channel = 0;
-m.strength = [0 0.2];  % as fraction of stimulus max magnitude
-m.crosstalk = 0;
-m.tau = [0 100];  % in ms
-m.tau_norm = 1000;  % 1000 means ms, 10 means 10ths of sec, 1 means sec
+m.strength = [0 0.2];   % as fraction of stimulus max magnitude
+m.tau = [0 100];        % in ms
+m.gain = [1 1];        % in ms
+m.strength_norm = 100;  % should be approximately stimmax
+m.tau_norm = 1000;      % 1000 means ms, 10 means 10ths of sec, 1 means sec
 m.raw_stim_freq = 100000;
 m.input = 'stim';
 m.time = 'stim_time';
@@ -26,6 +29,7 @@ m.output = 'stim';
 % Optional fields
 m.is_splittable = true;
 m.auto_plot = @do_depression_cartoon;
+m.auto_init = @auto_init_depression_filter_bank;
 
 m.plot_gui_create_fn = @create_chan_selector_gui;
 m.plot_fns = {};
@@ -43,40 +47,51 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% ------------------------------------------------------------------------
+% INSTANCE METHODS
+
+function mdl = auto_init_depression_filter_bank(stack, xxx)
+    % NOTE: Unlike most plot functions, auto_init functions get a 
+    % STACK and XXX which do not yet have this module or module's data
+    % added to them. 
+        disp('depression_filter_bank init');
+        mdl=m;
+        
+        sf=fieldnames(xxx{end}.dat);
+        sf=sf{1};
+        [T, S, N] = size(xxx{end}.dat.(sf).(mdl.input));
+        if mdl.per_channel,
+            mdl.num_channels=length(mdl.tau)./N;
+        else
+            mdl.num_channels=length(mdl.tau);
+        end
+    end
+
 % Finally, define the 'methods' of this module, as if it were a class
 function x = do_depression_filter(mdl, x, stack, xxx)
     
     if ~isfield(mdl,'tau_norm'),
         mdl.tau_norm=1000;
     end
-    if ~isfield(mdl,'crosstalk'),
-        mdl.crosstalk=0;
+    if ~isfield(mdl,'strength_norm'),
+        mdl.strength_norm=100;
     end
-    [load_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy',true);
-    if isempty(load_mod),
-        [load_mod, ~] = find_modules(stack, 'load_stim_resps_wehr',true);
-    end
-    load_mod = load_mod{1}; % We assume only 1 paramset
     
-    % calculate global mean level of each channel for scaling dep
-    T=0;
-    for sf = fieldnames(x.dat)', sf = sf{1};
-        ts=x.dat.(sf).(mdl.input);
-        ts=ts.*(ts>0);
-        if T==0,
-            stimmax=nansum(nansum(ts,1),2);
-        else
-            stimmax=stimmax+nansum(nansum(ts,1),2);
-        end
-        T=T+sum(sum(~isnan(ts(:,:,1)),1),2);
-    end
-    stimmax=stimmax./T;
+    rawfs=stack{1}{1}.raw_stim_fs;
+    
+    % bookkeeping for per-channel depression
+    sf=fieldnames(x.dat);
+    sf=sf{1};
     [T, S, N] = size(x.dat.(sf).(mdl.input));
     if isfield(mdl,'per_channel') && mdl.per_channel,
         num_channels=length(mdl.tau)./N;
     else
         num_channels=length(mdl.tau);
     end
+    gainvector=abs(repmat(mdl.gain(1:num_channels),[N 1]));
+    gainvector(gainvector<1)=exp(gainvector(gainvector<1)-1);
+    gainvector(gainvector>1)=sqrt(gainvector(gainvector>1));
+    gainvector=gainvector(:);
     
     % Now actually compute depression
     for sf = fieldnames(x.dat)', sf = sf{1};
@@ -87,48 +102,27 @@ function x = do_depression_filter(mdl, x, stack, xxx)
         ret = zeros(T, S, N*num_channels);
         for s = 1:S
             stim_in=squeeze(x.dat.(sf).(mdl.input)(:,s,:))';
+            % require positive threshold
             stim_in=stim_in.*(stim_in>0);
             
             if isfield(mdl,'per_channel') && mdl.per_channel
                 depresp=[];
-                if mdl.crosstalk
-                    % calc a smoothed "tstim" reflecting crosstalk
-                    % that feeds the depression calculator
-                    if size(stim_in,1)==2,
-                        sfilt=[1-mdl.crosstalk./100 mdl.crosstalk./100;
-                               mdl.crosstalk./100 1-mdl.crosstalk./100];
-                        ctstim=sfilt*stim_in;
-                    elseif size(stim_in,1)>2,
-                        sfilt=[mdl.crosstalk./100; ...
-                               1-mdl.crosstalk.*2./100; ...
-                               mdl.crosstalk./100];
-                        ctstim=rconv2(stim_in,sfilt);
-                    end
-                    for jj=1:N,
-                        tresp=depression_bank(...
-                            stim_in(jj,:),...
-                            (1./stimmax(jj))*mdl.strength(jj)./100,...
-                            mdl.tau(jj) .* load_mod.raw_stim_fs/mdl.tau_norm, ...
-                            1, ctstim(jj,:));
-                        depresp=cat(1,depresp,tresp);
-                    end
-                else
-                    for jj=1:N,
-                        tresp=depression_bank(...
-                            stim_in(jj,:),...
-                            (1./stimmax(jj))*mdl.strength(jj)./100,...
-                            mdl.tau(jj).*load_mod.raw_stim_fs/mdl.tau_norm,1);
-                        depresp=cat(1,depresp,tresp);
-                    end
+                for jj=1:N,
+                    tresp=depression_bank(...
+                        stim_in(jj,:), mdl.strength(jj)./mdl.strength_norm,...
+                        mdl.tau(jj) .* rawfs / mdl.tau_norm, 1);
+                    depresp=cat(1,depresp,tresp);
                 end
             else
                depresp=depression_bank(...
-                   stim_in, (1./stimmax(:))*mdl.strength./100,...
-                   mdl.tau .* load_mod.raw_stim_fs/mdl.tau_norm, 1, ...
-                   mdl.crosstalk);
+                   stim_in, mdl.strength ./ mdl.strength_norm,...
+                   mdl.tau .* rawfs ./ mdl.tau_norm, 1);
+            end
+            if any(gainvector~=1),
+                depresp=depresp .* ...
+                    repmat(gainvector,[1 size(depresp,2) size(depresp,3)]);
             end
             depresp=permute(depresp',[1 3 2]);
-            
             ret(:,s,:) = depresp;
         end
         
@@ -144,7 +138,7 @@ function do_depression_cartoon(sel, stack, xxx)
     fs=stack{1}{1}.raw_stim_fs;
     tau=[];
     strength=[];
-        
+    
     x = struct();
     x.dat.demo.stim=[zeros(fs./2,1);ones(fs,1)./2;zeros(fs,1);
                      ones(round(fs./10),1);zeros(round(fs./10),1);

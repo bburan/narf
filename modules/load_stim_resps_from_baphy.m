@@ -231,6 +231,14 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             end
         end
         
+        % SVD 2013-10-14 for special case of vocalizations (subset 2) the
+        % number of stimuli changed for quirky reasons. if stim has
+        % more stimidx values than resp, truncate stim
+        if size(resp,3)<size(stim,2),
+            disp('special case:  truncating stim to match resp stimcount');
+            stim=stim(:,1:size(resp,3),:);
+        end
+        
         % SVD 2013-03-08 - if specified, pull out either estimation (fit) or
         % validation (test) subset of the data
         if datasubset,
@@ -248,6 +256,7 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             else
                 keepidx=setdiff(find(repcount>0),validx);
             end
+            %keyboard
             stim=stim(:,keepidx,:);
             resp=resp(:,:,keepidx);
         end
