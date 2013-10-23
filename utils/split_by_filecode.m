@@ -13,11 +13,12 @@ else
 end
 
 % Cut off everything after the first character of the filecode
-for ii = 1:length(filecodes)
-    tmp = filecodes{ii};
-    tmp = tmp(1); % Just the first character
-    filecodes{ii} = tmp;
-end
+% disabled, svd
+% $$$ for ii = 1:length(filecodes)
+% $$$     tmp = filecodes{ii};
+% $$$     tmp = tmp(1); % Just the first character
+% $$$     filecodes{ii} = tmp;
+% $$$ end
 
 unique_codes = unique(filecodes);
 xxxs = cell(1, length(unique_codes));

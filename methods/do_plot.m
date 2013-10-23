@@ -64,7 +64,12 @@ for ii = 1:length(xxs)
                 'Color', c, 'LineStyle', ls, 'LineWidth', lw);
             hold off;
             handles(end+1) = h;
-            leg{end+1} = [yfield '/PS' num2str(ii) '/CH' num2str(jj)];
+            
+            if length(xxs)>1,
+                leg{end+1}=[yfield '/' xxs{ii}.filecodes{1} '/CH' num2str(jj)];
+            else
+                leg{end+1} = [yfield '/PS' num2str(ii) '/CH' num2str(jj)];
+            end
         end
     end
 end

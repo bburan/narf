@@ -120,7 +120,8 @@ if exist('cellid','var'),
     sql = ['SELECT * from sRunData WHERE batch=', num2str(batch),...
           ' AND cellid="',cellid,'"'];
 else
-    sql = ['SELECT * from sRunData WHERE batch=', num2str(batch)];
+    sql = ['SELECT * from sRunData WHERE batch=', num2str(batch),...
+           ' ORDER BY cellid'];
 end
 rundata = mysql(sql);
 
@@ -140,7 +141,7 @@ for nn = 1:length(rundata)
     file_code={};
     rawid=[];
     
-    if ismember(rundata(nn).batch,[241 244 251 252 253 254 255])
+    if ismember(rundata(nn).batch,[241 244 251 252 253 254 255 258])
         
         % find a file that matches specific behavioral selection
         % criteria for this batch
@@ -154,15 +155,76 @@ for nn = 1:length(rundata)
             test_set{ii}=[cellfiledata(ii).stimfile,'_val'];
             rawid(ii)=cellfiledata(ii).rawid;
             
+            
             if activefile(ii),
-                file_code{ii}=['A',num2str(acounter)];
+                res=spn_tuning_match(cellid,batch,0);
+                baphyparms=dbReadData(rawid(ii));
+                if isfield(baphyparms,'Tar_Frequencies'),
+                    maxtar=length(baphyparms.Tar_Frequencies);
+                else
+                    maxtar=length(baphyparms.Trial_TargetIdxFreq);
+                end
+                snr=baphyparms.Trial_RelativeTarRefdB;
+                targetfreq=baphyparms.Trial_TargetIdxFreq(1:maxtar);
+                commontargetid=min(find(targetfreq==max(targetfreq)));
+                if ismember(rundata(nn).batch,[251 253 254])
+                    % batch 251, 253, 254:  A1 hard, A2 easy 
+                    % for in/out data, A1: attend in
+                    % for high/low data. A1: attemd low
+                    commonHz=baphyparms.Tar_Frequencies(commontargetid);
+                    uncommontarid=min(find(targetfreq==min(targetfreq)));
+                    uncommonHz=baphyparms.Tar_Frequencies(uncommontarid);
+                    commontarinref=length(baphyparms.Ref_LowFreq)==1 && ...
+                        commonHz>=baphyparms.Ref_LowFreq &&....
+                        commonHz<=baphyparms.Ref_HighFreq;
+                    uncommontarinref=length(baphyparms.Ref_LowFreq)==1 && ...
+                        uncommonHz>=baphyparms.Ref_LowFreq &&....
+                        uncommonHz<=baphyparms.Ref_HighFreq;
+                    if commontarinref && ~uncommontarinref,
+                        Aidx=1;
+                    elseif uncommontarinref && ~commontarinref,
+                        Aidx=2;
+                    elseif snr(commontargetid)==max(snr),
+                        Aidx=2;
+                    else
+                        Aidx=1;
+                    end
+                    
+                elseif ismember(rundata(nn).batch,[ 244  255])
+                    % lr  batches
+                    % A1: attend contra; A2: attend ipsi
+                    if isfield(baphyparms,'Trial_TargetChannel'),
+                        Aidx=baphyparms.Trial_TargetChannel(commontargetid);
+                    elseif isfield(baphyparms,'Tar_SplitChannels') &&...
+                                strcmpi(baphyparms.Tar_SplitChannels,'Yes')
+                        Aidx=commontargetid
+                    else
+                        disp('unknown lr condition');
+                        keyboard
+                    end
+                    
+                elseif ismember(rundata(nn).batch,[241 252 255 258])
+                    % lr/hl batches
+                    % A1: attend band near BF, A2: attend away
+                    
+                    if max(res)>0 && res(commontargetid)==max(res),
+                        Aidx=1;
+                    else
+                        Aidx=2;
+                    end
+                end
+                
+                file_code{ii}=['A',num2str(Aidx)];
                 acounter=acounter+1;
                 pcounter=0;
             elseif ~pcounter,
                 file_code{ii}=['P',num2str(acounter)];
                 pcounter=1;
             else
-                file_code{ii}=['P',num2str(acounter),char('a'-1+pcounter)];
+                % disabled lettering for multiple passives.  now
+                % just collapse into a single set
+                %file_code{ii}=['P',num2str(acounter),char('a'-1+pcounter)];
+                file_code{ii}=['P',num2str(acounter)];
                 pcounter=pcounter+1;
             end                                             
         end

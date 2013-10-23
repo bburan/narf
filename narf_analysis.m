@@ -143,6 +143,7 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
         set(handles.long_desc, 'String', char(sel_analysis.answer));
         
         available_batches = get(handles.batch, 'String');
+        batch_numbers = get(handles.batch, 'UserData');
         if isempty(sel_analysis.batch) || isempty(strcmp(available_batches, sel_analysis.batch))
             set(handles.batch, 'Value', 1);
         else
@@ -156,7 +157,7 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
             if strcmp(sel_analysis.batch, 'SELECT A BATCH')
                 sel_batch = [];
             else
-                sel_batch = str2num(sel_analysis.batch);
+                sel_batch = batch_numbers(idx);
             end
             rebuild_batch_table();
         end
@@ -238,12 +239,23 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
      end 
 
     function rebuild_batches_popup()
-        sql = ['SELECT DISTINCT batch FROM NarfBatches AS sq ORDER BY batch'];
+        sql = ['SELECT DISTINCT NarfBatches.batch,sBatch.name',...
+               ' FROM NarfBatches LEFT JOIN sBatch',...
+               ' ON NarfBatches.batch=sBatch.id',...
+               ' ORDER BY NarfBatches.batch'];
         dbopen;
-        ret = mysql(sql);       
-        batches = cellstr(char(ret(:).batch));
+        ret = mysql(sql);
+        batches=cell(length(ret),1);
+        userdata=zeros(length(ret),1);
+        for ii=1:length(ret),
+            batches{ii}=sprintf('%s: %s',ret(ii).batch,ret(ii).name);
+            userdata(ii)=str2num(ret(ii).batch);
+            
+        end
+        %batches = cellstr(char(ret(:).batch));
         set(handles.batch, 'String', cat(1, {'SELECT A BATCH'}, batches));
-    end
+        set(handles.batch, 'UserData', userdata);
+   end
 
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -408,8 +420,8 @@ handles.batch = uicontrol('Parent', right_panel, 'Style', 'popupmenu', 'Units', 
           'Callback', @batch_callback);
       
     function batch_callback(~,~,~)
-        bat = popup2str(handles.batch);        
-        sel_batch = str2num(bat);
+        bat = popup2str(handles.batch);
+        sel_batch = str2num(bat(1:findstr(bat,':')-1));
         analysis_changed_callback();
         rebuild_batch_table();
         

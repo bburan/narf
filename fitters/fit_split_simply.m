@@ -86,7 +86,7 @@ XXX = cached_XXX;
 
 % Merge all the splits together
 for ii = fit_start_depth:length(STACK)
-    if isfield(STACK{ii}{1}, 'fit_fields')
+    %if isfield(STACK{ii}{1}, 'fit_fields')
         mm = STACK{ii}{1};
         if isfield(mm, 'is_splittable') && mm.is_splittable
             for jj = 1:n_splits
@@ -95,7 +95,7 @@ for ii = fit_start_depth:length(STACK)
                 STACK{ii}{jj}.unifier = unifier;
             end
         end
-    end
+        %end
 end
 
 % Recalc once to create the updated performance metric

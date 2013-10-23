@@ -60,7 +60,8 @@ function x = do_depression_filter(mdl, x, stack, xxx)
     
     % calculate global mean level of each channel for scaling dep
     T=0;
-    for sf = fieldnames(x.dat)', sf = sf{1};
+    for sf = fieldnames(x.dat)', 
+        sf = sf{1};
         ts=x.dat.(sf).(mdl.input);
         ts=ts.*(ts>0);
         if T==0,
@@ -71,6 +72,7 @@ function x = do_depression_filter(mdl, x, stack, xxx)
         T=T+sum(sum(~isnan(ts(:,:,1)),1),2);
     end
     stimmax=stimmax./T;
+    
     [T, S, N] = size(x.dat.(sf).(mdl.input));
     if isfield(mdl,'per_channel') && mdl.per_channel,
         num_channels=length(mdl.tau)./N;

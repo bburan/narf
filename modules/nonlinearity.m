@@ -93,12 +93,12 @@ function help_plot_nonlinearity(sel, mdls, xins, xouts)
        
     for ii = 1:length(mdls)    
         ys = mdls{ii}.nlfn(mdls{ii}.phi, xs);         
-        xouts{ii}.dat.(sel.stimfile).printable_nonlinearity_input = xs';
-        xouts{ii}.dat.(sel.stimfile).printable_nonlinearity_output = ys';
+        xouts{ii}.dat.(sel.stimfile).input = xs';
+        xouts{ii}.dat.(sel.stimfile).output = ys';
     end
     
     hold on;
-    do_plot(xouts, 'printable_nonlinearity_input', 'printable_nonlinearity_output', ...
+    do_plot(xouts, 'input', 'output', ...
             sel, 'Nonlinearity Input [-]', 'Prediction [Hz]');   
 	hold off;
     

@@ -3,9 +3,11 @@ function string = sql_sanitize(string)
 % Escapes the characters \x00, \n, \r, \, ', " and \x1a. 
 
 if ismatrix(string)
-    s = '';
-    for ii = 1:size(string, 1)
-        s = cat(2, s, strtrim(string(ii,:))); %% FIXME: Right now this removes newlines
+    s = strtrim(string(1,:));
+    for ii = 2:size(string, 1)
+        s = cat(2, s, sprintf('\n'), strtrim(string(ii,:))); 
+        %s = cat(2, s, strtrim(string(ii,:))); 
+        % FIXME: Right now this removes newlines. Fixed? SVD
     end
     string = s;
 end
