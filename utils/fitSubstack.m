@@ -21,8 +21,11 @@ function fitSubstack(startidx,stopdelta,output)
     end
     
     % We must add the MSE module temporarily in a very specific way       
+    mods = find_modules(STACK, 'mean_squared_error', true);
     append_module(MODULES.mean_squared_error.mdl(struct('input1', output)));   
-    append_module(MODULES.correlation.mdl(struct('input1', output)));    
+    % don't append correlation.  we don't need it, and it just
+    % takes cycles.
+    
     META.perf_metric = @pm_nmse;
     STACK{end}{1}.input1=output;
     
@@ -45,6 +48,6 @@ function fitSubstack(startidx,stopdelta,output)
             STACK{ii}{1}.fit_fields=savefitparms{ii};
         end
     end
-    pop_module();
-    pop_module();
+    
+    pop_module();  % trim the mean_squared_error module from the stack
     

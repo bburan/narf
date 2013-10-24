@@ -121,9 +121,18 @@ function do_plot_correlation_inputs(sel, stack, xxx)
     mdl = mdls{1};
     
     do_plot_scatter(sel, {xxx}, mdls{1}.input1, mdls{1}.input2, 500);
-    textLoc(sprintf(' Train r: %f\n Test r : %f', ...
-        xout.(mdls{1}.train_score), xout.(mdl.test_score)), 'NorthWest');
-
+    
+    if ~isfield(mdl, 'test_r_ceiling')
+        mdl.test_r_ceiling = 'score_test_ceilingcorr';
+    end
+    if ~isfield(mdl, 'test_r_floor')
+        mdl.test_r_floor = 'score_test_floorcorr';
+    end    
+    textLoc(sprintf(' Train r: %f\n Test r : %f ({\\pm}%f)\n Ceiling r: %f', ...
+                    xout.(mdl.train_score), xout.(mdl.test_score),...
+                    xout.(mdl.test_r_floor), xout.(mdl.test_r_ceiling)),...
+            'NorthWest');
+    
     % If 
     
     

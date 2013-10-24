@@ -19,6 +19,10 @@
 function rnorm=rceiling(pred,resp);
 
 repcount=size(resp,2);
+if repcount<=1,
+    rnorm=0;
+    return
+end
 
 paircount=nchoosek(repcount,2);
 pairs=zeros(paircount,2);
@@ -49,7 +53,7 @@ end
 rac=mean(rac);
 rsingle=mean(rsingle);
 
-rnorm=rsingle./sqrt(rac);
+rnorm=rsingle./sqrt(abs(rac));
 
 return
 

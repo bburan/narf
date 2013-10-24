@@ -97,6 +97,13 @@ else
     for ii = 1:length(modulekeys)
         run_keyword(modulekeys{ii});
     end
+    
+    % SVD hacked in from nmse
+    mods = find_modules(STACK, 'correlation', true);
+    if isempty(mods)
+        append_module(MODULES.correlation);    
+    end
+    
     META.fit_time = toc;    
 
     XXX{1}.test_set = test_set;
