@@ -20,9 +20,12 @@ m.isready_pred = @isready_always;
 % Module fields that are specific to THIS MODULE
 m.input1 = 'stim';
 m.input2 = 'respavg';
+m.input_resp = 'resp';
 m.time   = 'stim_time';
 m.train_score = 'score_train_corr';
 m.test_score = 'score_test_corr';
+m.test_r_ceiling = 'score_test_ceilingcorr';
+m.test_r_floor = 'score_test_floorcorr';
 m.output = 'corr_score';  
 
 % Overwrite the default module fields with arguments 
@@ -59,7 +62,57 @@ function x = do_correlation(mdl, x, stack, xxx)
     else
         x.(mdl.test_score) = R(2,1);
     end
+            
+    if ~isfield(mdl, 'test_r_ceiling')
+        mdl.test_r_ceiling = 'score_test_ceilingcorr';
+    end
+    if ~isfield(mdl, 'test_r_floor')
+        mdl.test_r_floor = 'score_test_floorcorr';
+    end    
     
+    % TODO: 
+    %  Come back and make this more general so that we compute respavg from
+    %  resp and this module goes back to having just two inputs. (a vector
+    %  and a scalar)
+    
+    % Extract resps as a matrix, not a vector    
+    %if isfield(x.dat., 'resp')
+        
+        respmat = [];
+        for ii = 1:length(x.test_set),
+            [A, B, C] = size(x.dat.(x.test_set{ii}).resp);
+            M = reshape(x.dat.(x.test_set{ii}).resp, A*B, C);
+            if ~isempty(respmat) && C > size(respmat, 2)
+                respmat = cat(1, [respmat nan(size(respmat,1), M-size(respmat,2))] , M);
+            elseif C < size(respmat, 2)
+                respmat = cat(1, respmat, [M nan(size(M,1), size(respmat,2) - M)]);
+            else
+                respmat = cat(1, respmat, M);
+            end
+        end
+        
+        % Remove rows with all NaNs
+        idxs = find(~isnan(qtest) & ~isnan(ptest));                
+        tmp = [ptest qtest respmat];
+        tmp = tmp(idxs, :);
+        tmp = excise(tmp')';
+        
+        pe = tmp(:,1);
+        qe = tmp(:,2);
+        re = tmp(:,3:end);
+        
+        x.(mdl.test_r_ceiling) = rceiling(pe, re);
+        [~, x.(mdl.test_r_floor)] = rfloor(pe, qe);
+        
+%     else
+%         tmp = excise([ptest qtest]);
+%         pe = tmp(:,1);
+%         qe = tmp(:,2);        
+%         
+%         x.(mdl.test_r_ceiling) = NaN;
+%         [~, x.(mdl.test_r_floor)] = rfloor(pe, qe);
+%     end
+%     
 end
 
 function do_plot_correlation_inputs(sel, stack, xxx)
@@ -71,6 +124,9 @@ function do_plot_correlation_inputs(sel, stack, xxx)
     textLoc(sprintf(' Train r: %f\n Test r : %f', ...
         xout.(mdls{1}.train_score), xout.(mdl.test_score)), 'NorthWest');
 
+    % If 
+    
+    
     do_xlabel('Prediction [Hz]');
     do_ylabel('Actual Response [Hz]');
     

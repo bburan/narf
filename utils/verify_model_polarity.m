@@ -13,9 +13,9 @@ global STACK XXX;
 
 [~, firmod_idxs] = find_modules(STACK, 'fir_filter');
 
-% if there are mulitple filters, this is a more complex-form model
+% if there are zero or mulitple filters, this is a more complex-form model
 % and not to be messed with here.
-if length(firmod_idxs)>1,
+if length(firmod_idxs)>1 || isempty(firmod_idxs)
     return
 end
 

@@ -43,8 +43,8 @@ for nn=1:repcount,
     rsingle(nn)=xcov(pred,resp(:,nn),0,'coeff');
 end
 
-figure;subplot(2,1,1);hist(rac);
-subplot(2,1,2);hist(rsingle);
+%figure;subplot(2,1,1);hist(rac);
+%subplot(2,1,2);hist(rsingle);
 
 rac=mean(rac);
 rsingle=mean(rsingle);

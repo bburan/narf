@@ -53,7 +53,7 @@ for ii=1:length(cxy),
     p(ii)=sum(cxy(ii)<=bexy(ii,:))./(N+1);
 end
 
-keyboard
+%keyboard
 return
 
 [cxy,exy,tt]=randxcov(rectpred(trespvalididx),trespvalid,100);
