@@ -11,7 +11,6 @@ function [a,b,c,d] = step_until_10neg5(prev_opts)
     end
 end
 
-fit_iteratively(@step_until_10neg5, ...
-                create_term_fn());
+fit_iteratively(@step_until_10neg5, create_term_fn());
 
 end

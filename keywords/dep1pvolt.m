@@ -1,9 +1,13 @@
-function dep1()
+function dep1pvolt()
 
 global MODULES XXX STACK;
 global ANESTHETIZED_MOUSE
 
-append_module(MODULES.normalize_channels.mdl(struct('force_positive',true)));
+append_module(MODULES.normalize_channels);
+
+append_module(MODULES.add_nth_order_terms);
+
+append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));
 
 if ANESTHETIZED_MOUSE==1,
     disp('dep1: Using longer depression time constant IC for mouse data.');
@@ -16,12 +20,17 @@ else
     stop_exp=2.0;
 end
 
+sf=XXX{end}.training_set{1};
+chan_count=size(XXX{end}.dat.(sf).stim,3);
+init_str=repmat(5,[1 chan_count]);
+init_tau=repmat(20,[1 chan_count]);
+
 append_module(MODULES.depression_filter_bank.mdl(...
-    struct('strength', [5], ...
-           'tau',      [20], ...
-           'tau_norm',dep_tau_norm,...
-           'num_channels', 1, ...
-           'fit_fields', {{'strength', 'tau'}})));
+                    struct('strength', init_str, ...
+                           'tau',      init_tau, ...
+                           'tau_norm',  100,...
+                           'per_channel', 1, ...
+                           'fit_fields', {{'strength', 'tau'}})));
 
 append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));
 

@@ -3,13 +3,15 @@ function fir()
 global MODULES XXX;
 global ANESTHETIZED_MOUSE
 
-if ANESTHETIZED_MOUSE,
+if ANESTHETIZED_MOUSE==1,
     disp('fir: Using longer num_coefs for mouse data.');
-    dep_tau_norm=50;
+    dep_tau_norm=100;
     fir_num_coefs=20;
+    stop_exp=3.0;
 else
     dep_tau_norm=100;
     fir_num_coefs=12;
+    stop_exp=2.0;
 end
 
 append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));
@@ -19,4 +21,4 @@ append_module(MODULES.fir_filter.mdl(struct('num_coefs', fir_num_coefs, ...
                                 'baseline',meanresp,...
                                 'fit_fields', {{'coefs','baseline'}})));
 
-fitSubstack();
+fitSubstack([],10^-(stop_exp));

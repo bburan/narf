@@ -134,7 +134,7 @@ end
 for nn = 1:length(rundata)
     cellid = rundata(nn).cellid;
     
-    fprintf('CELLID=%s BATCH=%d\n', cellid, batch);
+    fprintf('request_celldb_batch.m: CELLID=%s BATCH=%d\n', cellid, batch);
 
     train_set={};
     test_set={};

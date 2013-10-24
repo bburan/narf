@@ -168,6 +168,28 @@ if isfield(params,'specialbatch'),
                 keepcellids=union(keepcellids,cellfiledata(ii).cellid);
             end
         end
+        
+        keepidx=find(keepfiles);
+        cellfileids=cellfileids(keepidx);
+        cellfiledata=cellfiledata(keepidx);
+        cellids=keepcellids;
+       case 'hl',
+        
+         % spn / high-low, non-overlapping bands in single speaker
+         keepfiles=zeros(size(cellfiledata));
+         keepcellids={};
+         for ii=1:length(cellfiledata),
+            parms=dbReadData(cellfiledata(ii).rawid);
+            if (~isfield(parms,'Ref_SplitChannels') ||...
+                    strcmpi(strtrim(parms.Ref_SplitChannels),'No')) &&...
+                    length(parms.Ref_LowFreq)>1 &&...
+                    (parms.Ref_HighFreq(1)<=parms.Ref_LowFreq(2) || ...
+                     parms.Ref_HighFreq(2)<=parms.Ref_LowFreq(1)),
+                keepfiles(ii)=1;
+                keepcellids=union(keepcellids,cellfiledata(ii).cellid);
+            end
+        end
+        
         keepidx=find(keepfiles);
         cellfileids=cellfileids(keepidx);
         cellfiledata=cellfiledata(keepidx);
