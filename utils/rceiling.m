@@ -18,10 +18,15 @@
 %
 function rnorm=rceiling(pred,resp);
 
+global NARF_DEBUG
+
 repcount=size(resp,2);
 if repcount<=1,
     rnorm=0;
     return
+end
+if NARF_DEBUG
+    keyboard
 end
 
 paircount=nchoosek(repcount,2);
@@ -33,27 +38,34 @@ for p1=1:repcount,
         pairs(pp,:)=[p1 p2];
     end
 end
-N=min(100,size(pairs,1));
-[~,sidx]=sort(rand(N,1));
-pairs=pairs(sidx,:);
+N=min(500,size(pairs,1));
+[~,sidx]=sort(rand(size(pairs,1),1));
+pairs=pairs(sidx(1:N),:);
 
 rac=zeros(N,1);
 for nn=1:N,
-    rac(nn)=xcov(resp(:,pairs(nn,1)),resp(:,pairs(nn,2)),0,'coeff');
+    if std(resp(:,pairs(nn,1)))>0 && std(resp(:,pairs(nn,2)))>0,
+        rac(nn)=xcov(resp(:,pairs(nn,1)),resp(:,pairs(nn,2)),0,'coeff');
+    end
 end
 
 rsingle=zeros(repcount,1);
 for nn=1:repcount,
-    rsingle(nn)=xcov(pred,resp(:,nn),0,'coeff');
+    if std(resp(:,nn))>0
+        rsingle(nn)=xcov(pred,resp(:,nn),0,'coeff');
+    end
 end
 
 %figure;subplot(2,1,1);hist(rac);
 %subplot(2,1,2);hist(rsingle);
 
-rac=mean(rac);
+rac=mean(abs(rac));
+if rac<0.01,
+    rac=0.01;
+end
 rsingle=mean(rsingle);
 
-rnorm=rsingle./sqrt(abs(rac));
+rnorm=rsingle./sqrt(rac);
 
 return
 

@@ -166,20 +166,35 @@ function do_depression_cartoon(sel, stack, xxx)
         data((end-9):end,:,:)=nan;
     end
     timeaxis=(1:size(data,1))'./fs;
-    plot(timeaxis,data);
-    
-    axis([timeaxis([1 end])' -0.1 2.1]);
-    for jj=1:length(mdls),
-        text(1.5+(jj-1)*3.5,2,'stim','VerticalAlign','top');
-        legstr={};
-        for ii=1:length(mdls{jj}.tau);
-            legstr{ii}=sprintf('%d:u=%.1f,tau=%.3f',...
-                               ii,mdls{jj}.strength(ii),...
-                               mdls{jj}.tau(ii)./mdls{jj}.tau_norm);
+    if size(data,2)>3,
+        data=data(:,2:end);
+        imagesc(timeaxis,1:size(data,2),data');
+        axis xy
+        for jj=1:length(mdls),
+            %text(1.5+(jj-1)*3.5,2,'stim','VerticalAlign','middle');
+            legstr={};
+            for ii=1:length(mdls{jj}.tau);
+                text(1.55+(jj-1)*3.5,ii,...
+                     sprintf('%2d:u=%.1f,{\\tau}=%.0f',...
+                             ii,abs(mdls{jj}.strength(ii)),...
+                             abs(mdls{jj}.tau(ii)./mdls{jj}.tau_norm.*1000)),...
+                     'Color',[1 1 1]);
+            end
         end
-        text(1.5+(jj-1)*3.5,1,legstr,'VerticalAlign','top');
+    else
+        plot(timeaxis,data);
+        axis([timeaxis([1 end])' -0.1 2.1]);
+        for jj=1:length(mdls),
+            text(1.5+(jj-1)*3.5,2,'stim','VerticalAlign','top');
+            legstr={};
+            for ii=1:length(mdls{jj}.tau);
+                legstr{ii}=sprintf('%2d:u=%.1f,{\\tau}=%.0f',...
+                        ii,abs(mdls{jj}.strength(ii)),...
+                        abs(mdls{jj}.tau(ii)./mdls{jj}.tau_norm.*1000));
+            end
+            text(1.5+(jj-1)*3.5,1,legstr,'VerticalAlign','top');
+        end
     end
-    
 end
  
 % function do_plot_filtered_stim(stack, xxx)

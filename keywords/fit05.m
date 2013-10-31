@@ -2,15 +2,17 @@ function fit05()
 
 nmse();
 
-MaxStepsPerIteration=100;
+MaxStepsPerIteration=10;
+StepGrowth=1.1;
 
 function [a,b,c,d] = step_until_10neg3(prev_opts)              
     if exist('prev_opts', 'var')
         [a,b,c,d] = fit_boo(prev_opts);
     else
         [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-3, ...
+                            'StopAtStepSize', 10^-6,...
                             'StopAtStepNumber', MaxStepsPerIteration, ...
-                            'StepGrowth', 1.3);
+                            'StepGrowth', StepGrowth);
     end
 end
 
@@ -19,8 +21,9 @@ function [a,b,c,d] = step_until_10neg35(prev_opts)
         [a,b,c,d] = fit_boo(prev_opts);
     else
         [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-3.5, ...
+                            'StopAtStepSize', 10^-6,...
                             'StopAtStepNumber', MaxStepsPerIteration, ...
-                            'StepGrowth', 1.3);
+                            'StepGrowth', StepGrowth);
     end
 end
 
@@ -29,8 +32,9 @@ function [a,b,c,d] = step_until_10neg4(prev_opts)
         [a,b,c,d] = fit_boo(prev_opts);
     else
         [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-4, ...
+                            'StopAtStepSize', 10^-7,...
                             'StopAtStepNumber', MaxStepsPerIteration, ...
-                            'StepGrowth', 1.3);
+                            'StepGrowth', StepGrowth);
     end
 end
 
@@ -39,8 +43,9 @@ function [a,b,c,d] = step_until_10neg45(prev_opts)
         [a,b,c,d] = fit_boo(prev_opts);
     else
         [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-4.5, ...
+                            'StopAtStepSize', 10^-7,...
                             'StopAtStepNumber', MaxStepsPerIteration, ...
-                            'StepGrowth', 1.3);
+                            'StepGrowth', StepGrowth);
     end
 end
 
@@ -50,7 +55,7 @@ function [a,b,c,d] = step_until_10neg5(prev_opts)
     else
         [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-5, ...
                             'StopAtStepNumber', MaxStepsPerIteration, ...
-                            'StepGrowth', 1.3);
+                            'StepGrowth', StepGrowth);
     end
 end
 
@@ -60,12 +65,12 @@ function [a,b,c,d] = step_until_10neg6(prev_opts)
     else
         [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-6, ...
                             'StopAtStepNumber', MaxStepsPerIteration, ...
-                            'StepGrowth', 1.3);
+                            'StepGrowth', StepGrowth);
     end
 end
 
-fit_boo('StopAtAbsScoreDelta', 10^-2, ...
-        'StepGrowth', 1.3);
+fit_boo('StopAtAbsScoreDelta', 10^-2.0, ...
+        'StepGrowth', StepGrowth);
 
 fit_iteratively(@step_until_10neg3, ...
                 create_term_fn());

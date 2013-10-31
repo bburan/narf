@@ -92,7 +92,7 @@ function x = do_correlation(mdl, x, stack, xxx)
         end
         
         % Remove rows with all NaNs
-        idxs = find(~isnan(qtest) & ~isnan(ptest));                
+        idxs = find(~isnan(qtest) & ~isnan(ptest) & sum(~isnan(respmat),2)>=size(respmat,2)./2);                
         tmp = [ptest qtest respmat];
         tmp = tmp(idxs, :);
         tmp = excise(tmp')';

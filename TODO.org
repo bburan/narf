@@ -1,21 +1,35 @@
-* TODAY
-  1. [ ] NSF proposal tweaks.
-  2. [ ] Talk with Henry about setting up the cluster. 
-  3. [ ] Sparse NMSE penalty 
-  4. [ ] Noise Ceiling (Theunisson and Hsu paper, cross correlation)
-  5. [ ] Allow Per file normalization (add fitter and splitter)
-  6. [ ] Try time-varying stimulus idea. 
+* UPCOMING
+  - Expanded figure for poster
+  - Employee Health
+  - Venn Diagram? 
+  - SVD: Overfitting (analysis 19, batch 246). 
+         depwct1perchan and depct1perchan are identical except for init conds. 
+         These should both subsume dep1, which should in turn subsumes fir. 
 
-* Eternal Problems with fitters
-  - If the FIR filter doesn't get initialized, it outputs all zeros, which messes up many fitting algorithms. 
-  - Sparsity applied too early locks in the user into a particular subdomain of solutions (It should be applied towards end?) 
-  - Nonlinear parameters require TWO things to change simulatanously, which boosting can't do. 
-  - Scaling of parameters means some are much larger than others, which boosting can't do (and effect-normalization had flaws for some reason, such as certain small parameters having ZERO effect on output due to binning problems)
+* Engineering Mini Projects
+** Additional Metrics
+   Problem to be solved: Need a reliable way to add metrics, save to DB, and refresh when applicable. 
+   Method: Apply a "Metric meta package keyword". It uses as many other as it can and adds appropriate columns to the DB. 
+   
+** 2-Model Comparison HUD
+   Problem to be solved: 
+  
+** Sub-Batch Categorization
+   Problem to be solved: Currently there is no way storing a categorization of neurons into groups, saving those groups as sub-batches, and then making a multi-scatterplot metric dashboard to compare them. 
+   Goals:
+
+** Function Memoization
+   Problem to be solved: We are recomputing things too much. Also, we have no way of caching expensive things like gammatone filters short of using BAPHY. 
+   Goals: 
+   1. Cache things computed from the original signal without using MYSQL. 
+   2. 
+
+** Fitter Scaling:
+   Problem: (See Eternal Problems with Fitters, below)
 
 * Ideas:
   - Try to understand the information content in correlated noise
-  - FIR filter with a gain term, so that all FIR coefficients are relative to that.
-    Or even, for ALL of the terms, having a scaling term like that. 
+  - FIR filter with a gain term, so that all FIR coefficients are relative to that. Or even, for ALL of the modules, having a scaling and shifting term like that. 
   - What about NONLINEAR FIR filters? Replace each simple convolution coefficient with a NL function, like quadratic?
   - Go through modules and REMOVE any absolute scaling term, since it can be accomodated by the filter. 
   - Paper on Streaming as actually being a result of time varying dynamics
@@ -38,38 +52,20 @@
   - Quadratics: x_dot = Ax + x^T D x 
     Parameterizations: x_dot = Ax + P_1(x)x + P_2(x)x + ...
 
-* Queue Questions
-  - Sparsity penalty trials queued 
-
-  - How will we decide which fit algorithm is the best?
-    1) A comparison between dep1 and fir will show dep1 always winning
-    2) It will have a higher EST score than others
-    3) It will (after early-stop adjustments) have a higher VAL score than others
-
-  - How does "tuning" vs "delay" vs "fir" affect performance?
-    1) find the tuning and delay
-    2) Second polyfit the compressor
-    3) Scaling
-
-* Larger Objectives
-  1. Fancy early stop criterion or Sparseness Penalty 
-  2. STOP BINNING RESPONSEAVG and instead come up with a correlation that uses individual spike times to record instantaneous 
-  3. Code up the Hsu & Theunissen noise-ceiling corrected prediction score
-
 * Next Steps:
-  1. Read Hsu, Theunisson and try to understand how much information is in the response data. 
-  2. Still need to fix problems with parameter scaling (0.1 vs 1000) and normalizing by effect variance
-  3. Is there a way to weight data points by NOVELTY? We want to discard outliers, but also don't want to weight repetitive signals so strongly that we overfit to the repetitive signals and not the new data.
-  4. Mutual Information fits queued up
-  5. Add a two-model comparison function which scatter-plots many matrices, does a histogram of collapsed scatter plot along diagonal, and does randomized paired T-test. Maybe log-likelihood ratio too. 
-  6. Read Dan Butz NIM paper and package
-  7. Add a button to LOADSTIMFROMBAPHY that plays the sound or stimulus selected
-  8. Write a generalized hook-in for constraints that pack_fittables calls and resets values as they are re-inserted
-  9. General purpose scatter + marginals plot (Reuse scatter comparison?)
-  10. Check that all the fit_* stuff still works,
-  11. Roll fit_splits together
-  12. Simple-Delay FIR keyword.
-  13. Modelstring bug.
+  1. Still need to fix problems with parameter scaling (0.1 vs 1000) and normalizing by effect variance
+  2. Is there a way to weight data points by NOVELTY? We want to discard outliers, but also don't want to weight repetitive signals so strongly that we overfit to the repetitive signals and not the new data.
+  3. Mutual Information fits queued up
+  4. Add a two-model comparison function which scatter-plots many matrices, does a histogram of collapsed scatter plot along diagonal, and does randomized paired T-test. Maybe log-likelihood ratio too. 
+  5. Read Dan Butz NIM paper and package
+  6. Add a button to LOADSTIMFROMBAPHY that plays the sound or stimulus selected
+  7. Write a generalized hook-in for constraints that pack_fittables calls and resets values as they are re-inserted
+  8. General purpose scatter + marginals plot (Reuse scatter comparison?)
+  9. Check that all the fit_* stuff still works,
+  10. Roll fit_splits together
+  11. Simple-Delay FIR keyword.
+  12. Modelstring bug.
+  13. Bisection algorithm for finding BF of a neuron. (Elliptical filters, iteratively)
   14. Make split modules visible/editable from the GUI
   15. A plot of # of free parameters (put in database)
   16. Profile code and look for optimizations that would speed up each iteration
@@ -88,6 +84,7 @@
           + [ ] WHATEVER IS GOING INTO XXX{1} should be given to fit_single_model as well! When I'm not using BAPHY it should still be able to work.
 	  + [ ] Name convention of STACK vs stack, XXX vs xxx and the difficulty in understanding which one we are looking at! 
 		Lots of hidden assumptions here which are a problem. Plot modules have access to AFTER data, too.
+	  + [ ] Dangerous Naming: score_corr is used for optimization, but it looks like a metric!
   21. Outlier rejection. Exclude worst 1% in MSE calculations? Start at L2, gradually switch to L1 as time goes on? Remove each data point and use fitdist() to estimate it's effect on the noise model probability. Sort these effects. Mark the n% worst data points for plotting as "outliers" and also for removal during MSE or CORR calculations.
   22. Narf Batch categories. 
          - Easier creation of sub-populations through the GUI I prototyped
@@ -103,6 +100,16 @@
           - fit_sparsebayes.m, fit_lsq.m, and fit_lsqnonlin.m do not respect META.performance_metric()
           - Use keywords and VARARGIN instead of structs or long lists of many arguments
   24. Write a crash course guide on using NARF
+  25. Use wavelets instead of FFT when computing coherence...because it would be cool?
+
+* Eternal Problems with fitters
+  - If the FIR filter doesn't get initialized, it outputs all zeros, which messes up many fitting algorithms. 
+  - Sparsity applied too early locks in the user into a particular subdomain of solutions (It should be applied towards end?) 
+  - Nonlinear parameters require TWO things to change simulatanously, which boosting can't do. 
+  - Scaling of parameters means some are much larger than others, which boosting can't do (and effect-normalization had flaws for some reason, such as certain small parameters having ZERO effect on output due to binning problems)
+  - It may not be able to fit dep1 so that it is 100% of the time better than FIR
+  - We may overfit our data because the stopping criterion is absolute, and all neurons have different noise levels (...higher EST scores don't always translate to VAL scores)
+  - We should compare fitters by their EST scores, not their VAL scores
 
 * Metric-taking Ideas being developed in update_metrics();
   1. [X] metric_lnorm.m: Takes an L norm metric (MSE, L1, Linfty, etc)
@@ -128,6 +135,12 @@
   21. [ ] Geometric mean bias
   22. [ ] Geometric variance
   23. [ ] Fraction with a factor of 2 (FAC2)
+  24. [ ] Coherence
+  25. [ ] Measure the percent by which the noise variance decreases when this feature is added
+** Naive Bayes
+  The more I think about it, just using naked probabilities (MAP) seems more and more attractive.
+  For example, when we calculate MSE, the stupid "prestim-silence" distorts the histograms because so many equivalent values come in.
+  These would be naturally weighted less if we were using the bayesian approach to marginalize by the expected data. 
 
 * Using Residuals to Estimate Noise Floor
   1. Make a prediction p(t).
@@ -136,7 +149,26 @@
   4. Add w to p(t) and check to see if your response improves it as well.
   5. Repeat steps 2 and 3 as many times as is needed to estimate that it improves the 95% of the time. 
 ** Expected Problem
-   There are MANY more samples at the 0 (prestim silence) input level...and residual is often a function of input amplitude, so this biases answer?
+   There are MANY more samples at the 0 (prestim silence) input level...and residual is often a function of input amplitude, so this biases the answer?
+
+* Using 2D gaussians to parametrize an STRF
+  % Ivar thinks: I should pick out a large collection of 2D gaussians
+  %  centered at representative points. This would be a like non averaging
+  %  FIR filter... 4 points per gaussian: mu_x, mu_y, sigma_x, sigma_y
+  % 
+  % A fast way of computing this is to simply pick mu_x and mu_y as each
+  % point. This takes N calculations. I then estimate different values of
+  % sigma_x, sigma_y, based on the M nearest neighbors. Finally, in step
+  % three, maybe I float the parameters and allow the overall probability 
+  % to be optimized using boosting or something? 
+  
+* De-jittering Idea?
+  - Take a channel
+    - Do a spike-triggered stimulus heatmap (STSH)
+    - Do the same after passing the channel through various leaky integrators
+    - My hope is that one of these will de-jitter the thing enough that we see more structure
+    - Find a way to parameterize the de-jittered (STSH) with simple kernel (truncated gaussian, a quadratic in log space, etc?)
+  - Goal: Accomodate time-varyingness and start to extract OTHER dimensions from a stimulus. 
 
 * New Experiments:
   1. Gain-changing module ideas: 
@@ -204,6 +236,9 @@
   Generalized Additive models
   Bayesian model comparison
   Bayesian neural modeling
+
+* UNSOLVED PROBLEMS
+  Modifying a module (adding new fields) breaks compatability with previous versions.
 
 * ----------------------------------------------------------------------------
 * DISCARDED/ABANDONED IDEAS

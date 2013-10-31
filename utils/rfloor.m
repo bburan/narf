@@ -15,7 +15,7 @@ if ~exist('maxlag','var'),
    maxlag=0;
 end
 if ~exist('N','var'),
-   N=100;
+   N=1000;
 end
 if ~exist('Nerr','var'),
    Nerr=0.05;

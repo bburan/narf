@@ -32,6 +32,9 @@ sel_models = {};
 sel_batch = [];
 sel_cellids = {};
 sel_results = [];
+sel_columns = {'id', 'batch', 'cellid', 'modelname', ...
+               'r_test', 'r_ceiling', 'r_floor', 'r_fit', ...
+               'lastmod'};    
 preview_fig = [];
 
 left_panel = uipanel('Parent', parent_handle, ...
@@ -142,13 +145,15 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
         set(handles.short_desc, 'String', char(sel_analysis.question));
         set(handles.long_desc, 'String', char(sel_analysis.answer));
         
-        available_batches = get(handles.batch, 'String');
+        displayed_batches = get(handles.batch, 'String');
         batch_numbers = get(handles.batch, 'UserData');
+        
         if isempty(sel_analysis.batch) || ...
-                isempty(strcmp(available_batches, sel_analysis.batch))
-            set(handles.batch, 'Value', 1);
+                isempty(strcmp(displayed_batches, sel_analysis.batch))
+            set(handles.batch, 'Value', 1); % No matching batch found
         else
-            vec = strcmp(available_batches, sel_analysis.batch);
+            % Find the actual batch number that matches the displayed one
+            vec = strcmp(displayed_batches, sel_analysis.batch);
             idx = 1:length(vec);
             idx = idx(vec);
             if isempty(idx) || idx>length(batch_numbers),
@@ -690,30 +695,35 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
 % Bottom Panel
 
 ButtonWidth=75;
+             
+handles.tableconfigbutton = uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Configure Table', ...
+          'Value', 1, 'Position', [pad bh-ts ButtonWidth*2 ts-pad], ...
+          'Callback', @table_config_callback);
 
-uicontrol('Parent', bottom_panel, 'Style', 'text', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'SortBy:', ...
-          'Position', [pad bh-ts-pad 50 ts-pad]);
-              
-handles.sortby = uicontrol('Parent', bottom_panel, 'Style', 'popupmenu', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', {'batch', 'cellid', 'id', 'lastmod', 'modelname' 'r_fit', 'r_test', 'sparsity'}, ...
-          'Value', 2, 'Position', [50+pad bh-ts 150 ts-pad], ...
-          'Callback', @sort_callback);
-
-    function sort_callback(~,~,~)
+    function table_config_callback(~,~,~)       
+        % Build a list of the available columns
+        dbopen();
+        sql = 'SHOW COLUMNS FROM NarfResults';
+        ret = mysql(sql);        
+        % First add existing, selected columns. Then add unselected ones.
+        columns = sel_columns(cellfun(@(a) ismember(a, {ret.Field}), sel_columns));
+        columns = cat(2, columns, setdiff({ret.Field}, columns)); 
+        % Build the proper structure and query the user
+        columnquery = cellfun(@(a) {a ismember(a, sel_columns)}, columns, 'UniformOutput', false);
+        userselections = struct_selector_popup(columnquery);
+        % Unpack the structure and set the columns to be displayed.
+        userselections = userselections(cellfun(@(a) a{2}, userselections));
+        sel_columns = cellfun(@(a) a{1}, userselections, 'UniformOutput', false);        
+        % Finally, update the display
         update_query_results_table();
-        any_condition_changed_callback();
     end
-
-handles.sortdir = uicontrol('Parent', bottom_panel, 'Style', 'popupmenu', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', {'ASC', 'DESC'}, ...
-          'Value', 1, 'Position', [50+150+pad bh-ts 60 ts-pad], ...
-          'Callback', @sort_callback);
 
 uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Preview', ...
           'Position', [300 bh-ts ButtonWidth ts-pad], ...
           'Callback', @preview_model_callback);
+      
     function clear_preview_fig_handle(f,~)
         preview_fig = [];
         delete(f);
@@ -1040,12 +1050,8 @@ function custom_model_analysis(~,~,~)
 end
 
 db_results_table = uitable('Parent', bottom_panel, ...
-        'Enable', 'on',  'Units', 'pixels', 'RowName', [],...
-        'ColumnWidth', {60, 40, 100, 300, ...
-                        10, 10, ...
-                        60, 60, 60, 60, ...
-                        60, 60, 60, ...
-                        150, 50}, ...
+        'Enable', 'on', 'RowName', [], 'Units','pixels', ...
+        'ColumnWidth', 'auto', ... {60, 40, 100, 300,  10, 10, 60, 60, 60, 60, 60, 60, 60, 150, 50}, 
         'ColumnName', {'ID', 'Batch', 'CellID', 'Modelname', ...
                        'est_set', 'val_set', ...
                        'val_corr', 'r_floor', 'r_ceiling', 'val_nlogl',...
@@ -1062,6 +1068,12 @@ hJTable.setRowSelectionAllowed(true);
 hJTablecb = handle(hJTable, 'CallbackProperties');
 set(hJTablecb, 'MouseReleasedCallback', {@get_selected_row, gcf});
 set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
+ 
+% Turn JIDE sorting on, so we can sort by clicking on a column header.
+hJTable.setSortable(true);		% or: set(jtable,'Sortable','on');
+hJTable.setAutoResort(true);
+hJTable.setMultiColumnSortable(true);
+hJTable.setPreserveSelectionsAfterSorting(true);
 
     function get_selected_row(a,~,~)
         r = a.getSelectedRows();
@@ -1091,38 +1103,70 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
         sql = ['SELECT * FROM NarfResults WHERE batch=' num2str(sel_batch) ''];
         sql = [sql ' AND cellid in (' interleave_commas(sel_cellids) ')'];
         sql = [sql ' AND modelname in (' interleave_commas(sel_models) ')'];      
-
-        sortby = popup2str(handles.sortby);
-        sortdir = popup2str(handles.sortdir);
-        sql = [sql ' ORDER BY ' sortby ' ' sortdir ' LIMIT 0, 500'];
+        sql = [sql ' ORDER BY ID ASC'];
         
-        dbopen;        
+        dbopen;
         db_results = mysql(sql);       
-        
-        l = length(db_results);
-        c = cell(l,12);
-        for i = 1:l
-            c{i,1} = db_results(i).id;
-            c{i,2} = db_results(i).batch; 
-            c{i,3} = char(db_results(i).cellid);
-            c{i,4} = char(db_results(i).modelname);
-            %c{i,5} = char(db_results(i).est_set);
-            %c{i,6} = char(db_results(i).val_set);
-            %c{i,7} = db_results(i).val_corr;
-            c{i,7} = db_results(i).r_test;
-            c{i,8} = db_results(i).r_floor;
-            c{i,9} = db_results(i).r_ceiling;
-            %c{i,10} = db_results(i).val_nlogl;
-            %c{i,11} = db_results(i).est_corr;
-            c{i,11} = db_results(i).r_fit;
-            c{i,12} = db_results(i).sparsity;
-            %c{i,13} = db_results(i).smoothness;
-            c{i,14} = db_results(i).lastmod; 
-            %c{i,15} = char(db_results(i).notes);           
+        if isempty(db_results)
+            set(db_results_table, 'Data', {});
+            return;
         end
+        
+        % Get the column types
+        sql = 'SHOW COLUMNS FROM NarfResults';
+        columns = mysql(sql);        
+               
+        l = length(db_results);                
+        n_cols = length(sel_columns);
+        c = cell(l, n_cols);        
+        
+        % Quickly unpack the db_results into a cell array
+        for j = 1:n_cols
+            if (strcmp('text', char(columns(j).Type)))
+                tmp = cellstr(char(db_results.(sel_columns{j})));
+            else
+                tmp = {db_results.(sel_columns{j})};
+            end
+            c(:,j) = tmp(:);
+        end
+        
         set(db_results_table, 'Data', c);
-        sel_results = [];
-        drawnow;        
+        
+        % Adjust widths manually because 'ColumnWidth' = 'auto' doesn't
+        % work (although it is documented).       
+        widths = get(db_results_table, 'ColumnWidth');
+        maxwidth = [];           
+        d = c(1:(min(100, size(c,1))), :); % Speed Hack: only look through first 100 entries
+        for ii = 1:size(d,2) 
+            maxwidth(ii) = max(cellfun(@(a) length(anything2char(a)), d(:,ii)));
+        end              
+        % This next line is font-size dependent and hacky
+        set(db_results_table, 'ColumnWidth', num2cell(10+7*maxwidth));                
+        
+        set(db_results_table, 'ColumnName', sel_columns);
+        sel_results = [];        
+        fprintf('E:'); toc;
+        drawnow;
+    end
+
+    function c = fix_mysql_strings(a) 
+        if isnumeric(a) && length(a) ~= 1
+            c = char(a);
+        else
+            c = a;            
+        end
+    end
+
+    function c = anything2char(a) 
+        if isnumeric(a) && length(a) == 1
+            c = num2str(a);
+        elseif isnumeric(a)
+            c = char(a);
+        elseif ischar(a)
+            c = a;
+        else
+            error('Unknown Datatype!?');
+        end
     end
 
     function any_condition_changed_callback(~,~,~)

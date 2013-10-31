@@ -1,3 +1,43 @@
+* Pie Chart Scientific Objections
+  1. How do we know that a model isn't just better by chance (due to natural variation)?
+     - r_fir + r_floor < r_dep  (Our significance test)
+     - Give probabilities that this is actually true using actual variation distribution?
+  2. How do we know that two elements are really synergistic (and not due to increased parameter count)?
+     - Provide an "L0-normalized" weighting?
+     - Measure the percent by which the noise variance decreases when a feature is added?
+
+
+UNSOLVABLE PROBLEM? 
+Modifying a module (adding new fields) breaks compatability with previous versions.
+
+
+* Ideas on categorizing metrics
+** Avoid a tabular structure by stringifying the metrics
+   + Good: infinite compatability
+   + Bad: No MySQL sorting
+** Ideally
+   + [X] We could add extra columns to the SQLDB
+   + [X] We could dynamically display only desired columns in the GUI
+   + [X] We could sort by any of the desired columns quickly.
+      - Necessitates MySQL sorting (We have 250,000 models!)
+   + We could compare two model structures for a sub-population quickly 
+     - Necessitates MySQL sorting 
+     - Needs ability to dynamically specify sub-populations quickly 
+
+* Implementing Metrics
+** When?
+   - Minimally, do at the end of fitting process
+   - Extra: metrics/models need to be updated whenever they are changed, so a mechanism to re-run the metrics on outdated neurons would be nice
+** Idea 1: Metrics as a separate concept
+   - Clearly separates them, but harder to view
+   - Would allow automatic adding of all metrics
+** Idea 2: Use keywords for a "pack of metrics"
+   - Allows different measurement packages/sets
+   - Can be user-defined and updated easily. 
+   - Can be internal logic for each keywords 
+   - Problem: Not all will be ready for database insert. Solution: Allow null entries in database. 
+
+
 * The New Basic Fitter Interface Rules
   - All Fitters are varargin. If there is just one argument, it is assumed to be an options struct. If there are more, they are assumed to be field-value pairs. Arguments are converted into structs and used to update defaults. 
   - All fitters return: [termcond, score_best, n_iters, ending_options]. If desired, ending_options can be used to re-initialize the fitter next time. 
