@@ -1133,7 +1133,7 @@ hJTable.setPreserveSelectionsAfterSorting(true);
         % work (although it is documented).       
         widths = get(db_results_table, 'ColumnWidth');
         maxwidth = [];           
-        d = c(1:100, :); % Speed Hack: only look through first 100 entries
+        d = c(1:(min(100, size(c,1))), :); % Speed Hack: only look through first 100 entries
         for ii = 1:size(d,2) 
             maxwidth(ii) = max(cellfun(@(a) length(anything2char(a)), d(:,ii)));
         end              
