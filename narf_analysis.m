@@ -144,14 +144,16 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
         
         available_batches = get(handles.batch, 'String');
         batch_numbers = get(handles.batch, 'UserData');
-        if isempty(sel_analysis.batch) || isempty(strcmp(available_batches, sel_analysis.batch))
+        if isempty(sel_analysis.batch) || ...
+                isempty(strcmp(available_batches, sel_analysis.batch))
             set(handles.batch, 'Value', 1);
         else
             vec = strcmp(available_batches, sel_analysis.batch);
             idx = 1:length(vec);
             idx = idx(vec);
-            if isempty(idx)
+            if isempty(idx) || idx>length(batch_numbers),
                 idx(1) = 1;
+                keyboard
             end
             set(handles.batch, 'Value', idx(1));
             if strcmp(sel_analysis.batch, 'SELECT A BATCH')
@@ -254,7 +256,7 @@ set(hJTcb, 'KeyPressedCallback', {@analyses_table_row_selected, gcf});
         end
         %batches = cellstr(char(ret(:).batch));
         set(handles.batch, 'String', cat(1, {'SELECT A BATCH'}, batches));
-        set(handles.batch, 'UserData', userdata);
+        set(handles.batch, 'UserData', [0;userdata]);
    end
 
  
