@@ -481,6 +481,13 @@ set(batch_JTcb, 'KeyPressedCallback', {@batch_table_row_selected, gcf});
 
     function s = batch_table_row_selected(a, ~, ~)
         r = a.getSelectedRows();
+        if max(r+1)>length(cellids_found),
+            pause(0.01);
+            r = a.getSelectedRows();
+            if max(r+1)>length(cellids_found),
+                r=[];
+            end
+        end
         sel_cellids = cellids_found(r+1);
         update_query_results_table();
     end
@@ -1141,10 +1148,9 @@ hJTable.setPreserveSelectionsAfterSorting(true);
             maxwidth(ii) = max(cellfun(@(a) length(anything2char(a)), d(:,ii)));
         end              
         % This next line is font-size dependent and hacky
-        set(db_results_table, 'ColumnWidth', num2cell(10+7*maxwidth));                
-        
+        set(db_results_table, 'ColumnWidth', num2cell(10+7*maxwidth));        
         set(db_results_table, 'ColumnName', sel_columns);
-        sel_results = [];    
+        sel_results = [];        
         drawnow;
     end
 
