@@ -1144,8 +1144,7 @@ hJTable.setPreserveSelectionsAfterSorting(true);
         set(db_results_table, 'ColumnWidth', num2cell(10+7*maxwidth));                
         
         set(db_results_table, 'ColumnName', sel_columns);
-        sel_results = [];        
-        fprintf('E:'); toc;
+        sel_results = [];    
         drawnow;
     end
 
