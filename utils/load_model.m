@@ -18,4 +18,3 @@ XXX = {};
 XXX{1} = vars.xxx;
 META = vars.meta;
 STACK = vars.stack;  
-

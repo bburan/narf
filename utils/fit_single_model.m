@@ -1,7 +1,7 @@
-function success = fit_single_model(batch, cellid, modulekeys, training_set, test_set, filecodes, strict_git_logging)
-% success = fit_single_model(batch, cellid, modulekeys, training_set, test_set, filecodes, strict_git_logging)
+function success = fit_single_model(batch, cellid, keywords_to_exec, training_set, test_set, filecodes, strict_git_logging)
+% success = fit_single_model(batch, cellid, keywords_to_exec, training_set, test_set, filecodes, strict_git_logging)
 %
-% Fits a single model described by modulekeys
+% Fits a single model described by keywords_to_exec
 % 
 % fit_single_model() is used by the queuing system to train a single model
 % as a job which may be run on any machine. Doesn't check for the existence
@@ -11,8 +11,7 @@ function success = fit_single_model(batch, cellid, modulekeys, training_set, tes
 % ARGUMENTS:
 %    batch          Batch number.
 %    cellid         Cell ID.
-%    modulekeys     Cell array of keys to be deciphered by module_groups
-%                   and converted into an MM struct.
+%    keywords_to_exec     Cell array of keywords to be executed
 %    training_set   A cell array of respfiles to fit the model on.
 %    test_set       A cell array of respfiles to verify predictive performance.
 %    strict_git_logging    When true, throws an error if GIT has any non-
@@ -22,12 +21,13 @@ function success = fit_single_model(batch, cellid, modulekeys, training_set, tes
 %    success        True iff everything was fine
 
 global STACK XXX NARF_PATH META MODULES...
-    NARF_MODULES_PATH ...
+    NARF_MODULES_PATH NARF_KEYWORDS_PATH...
     NARF_SAVED_MODELS_PATH;
 
-if isempty(MODULES)
-    MODULES = scan_directory_for_modules(NARF_MODULES_PATH);
-end
+
+% New default is to scan every time for changes. This prevents stale
+% caching problem with memoization.
+MODULES = scan_directory_for_modules(NARF_MODULES_PATH);
 
 if ~exist([NARF_SAVED_MODELS_PATH filesep num2str(batch) filesep cellid], 'dir')
     mkdir([NARF_SAVED_MODELS_PATH filesep num2str(batch) filesep cellid]);
@@ -70,16 +70,11 @@ cmd = [git 'rev-parse HEAD'];
 META.git_commit  = regexprep(unix_string, '\n', '');
 
 % Build the modelname
-tmp = cellfun(@(n) sprintf('%s_', n), modulekeys, 'UniformOutput', false);
+tmp = cellfun(@(n) sprintf('%s_', n), keywords_to_exec, 'UniformOutput', false);
 modelname = strcat(tmp{:});
 modelname = modelname(1:end-1); % Remove trailing underscore
 
 META.batch = batch;
-META.modelname = modelname;
-META.modelfile = [num2str(batch) '_' cellid '_' modelname '.mat'];
-META.modelpath = [NARF_SAVED_MODELS_PATH filesep num2str(batch) ...
-                  filesep cellid filesep META.modelfile];
-
 % Verification of DB and modelfile synchronization
 sql=['SELECT * FROM NarfResults WHERE modelname="' modelname '"'...
     ' AND batch=' num2str(batch) ...
@@ -94,16 +89,39 @@ else
     
     tic;
     % Build and train the model
-    for ii = 1:length(modulekeys)
-        run_keyword(modulekeys{ii});
+    memoized_run_keyword = memoize(@run_keyword);
+    
+    % During development, we actually want to also check that no files have
+    % changed. It's too hard to figure out if a fitter has changed, or
+    % a module has changed, or a util has changed, or whatever.  
+    [~, filehash] = unix(['tar -cP ' NARF_PATH ' --exclude .git --to-stdout | md5sum']);
+    fprintf('Computing hash for all NARF files: %s\n', filehash)
+    
+    for ii = 1:length(keywords_to_exec)
+        % WAS: run_keyword(keywords_to_exec{ii}, STACK, XXX, META);
+        % NOW: Use memoization
+        fprintf('Calling Keyword: %s\n', keywords_to_exec{ii});
+        [so, xo, mo] = memoized_run_keyword(keywords_to_exec{ii}, ...
+                            filehash, STACK, XXX, META);
+        STACK = so;
+        XXX = xo;
+        META = mo;
     end
     
     % SVD hacked in from nmse
+    % IVAR TODO: Should there be a metric package check here instead?
     mods = find_modules(STACK, 'correlation', true);
     if isempty(mods)
         append_module(MODULES.correlation);    
     end
-    
+       
+    % Now model specifics occur AFTER all training is done, so that models
+    % otherwise similar can use the same memoized files.
+    META.modelname = modelname;
+    META.modelfile = [num2str(batch) '_' cellid '_' modelname '.mat'];
+    META.modelpath = [NARF_SAVED_MODELS_PATH filesep num2str(batch) ...
+                  filesep cellid filesep META.modelfile];
+
     META.fit_time = toc;    
 
     XXX{1}.test_set = test_set;
@@ -117,5 +135,6 @@ else
 end
 
 success = true;
+
 
 end

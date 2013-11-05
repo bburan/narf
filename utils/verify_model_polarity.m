@@ -13,18 +13,18 @@ global STACK XXX;
 
 [~, firmod_idxs] = find_modules(STACK, 'fir_filter');
 
-% if there are zero or mulitple filters, this is a more complex-form model
+% if there are zero or multiple filters, this is a more complex-form model
 % and not to be messed with here.
-if length(firmod_idxs)>1 || isempty(firmod_idxs)
+if length(firmod_idxs) > 1 || isempty(firmod_idxs)
     return
 end
 
 % If there are any free parameters after the FIR filter, we should NOT
-% try to flip anything, because it would mess up the model. 
-for kk = firmod_idxs{1}:length(STACK)
-	for ii = 1:length(STACK{kk})
+% try to flip anything, because it would mess up the model.
+for kk = (1+firmod_idxs{1}):length(STACK)
+    for ii = 1:length(STACK{kk})
         if isfield(STACK{kk}{ii}, 'fit_fields') && ~isempty(STACK{kk}{ii}.fit_fields)
-            fprintf('Free parameters found after the FIR filter. Flipping the polarity will probably break the model, so I am refusing!\n'); 
+            fprintf('Free parameters found after the FIR filter. Flipping the polarity will probably break the model, so I am refusing!\n');
             return;
         end
     end

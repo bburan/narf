@@ -1,3 +1,12 @@
+** Function Memoization
+   Problem to be solved: We are recomputing things too much. Also, we have no way of caching expensive things like gammatone filters short of using BAPHY. 
+   Goals: 
+   1. Cache things computed from the original signal without using MYSQL. 
+
+   WORKS! Some important notes:
+   1. Mostly the hack is a wrapper around run_keyword, which had to be hacked to include not only the keyword, but teh CONTENTS of the keyword file (as a string), so that changes in the file itself could be tracked as if it were a pure function. 
+
+
 * Pie Chart Scientific Objections
   1. How do we know that a model isn't just better by chance (due to natural variation)?
      - r_fir + r_floor < r_dep  (Our significance test)

@@ -1,28 +1,21 @@
 * UPCOMING
-  - Expanded figure for poster
   - Employee Health
-  - Venn Diagram? 
   - SVD: Overfitting (analysis 19, batch 246). 
-         depwct1perchan and depct1perchan are identical except for init conds. 
-         These should both subsume dep1, which should in turn subsumes fir. 
-
+    depwct1perchan and depct1perchan are identical except for init conds. 
+    These should both subsume dep1, which should in turn subsumes fir. 
+         
 * Engineering Mini Projects
+
 ** Additional Metrics
    Problem to be solved: Need a reliable way to add metrics, save to DB, and refresh when applicable. 
    Method: Apply a "Metric meta package keyword". It uses as many other as it can and adds appropriate columns to the DB. 
    
 ** 2-Model Comparison HUD
-   Problem to be solved: 
+   Problem to be solved: Place to hook on comparison analyses like SVD is doing already. 
   
 ** Sub-Batch Categorization
    Problem to be solved: Currently there is no way storing a categorization of neurons into groups, saving those groups as sub-batches, and then making a multi-scatterplot metric dashboard to compare them. 
    Goals:
-
-** Function Memoization
-   Problem to be solved: We are recomputing things too much. Also, we have no way of caching expensive things like gammatone filters short of using BAPHY. 
-   Goals: 
-   1. Cache things computed from the original signal without using MYSQL. 
-   2. 
 
 ** Fitter Scaling:
    Problem: (See Eternal Problems with Fitters, below)

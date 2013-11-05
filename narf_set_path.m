@@ -1,13 +1,14 @@
 function narf_set_path()
     global NARF_PATH NARF_MODULES_PATH NARF_SAVED_MODELS_PATH ...
            NARF_SAVED_IMAGES_PATH NARF_SCRIPTS_PATH...
-           NARF_KEYWORDS_PATH NARF_FITTERS_PATH;
+           NARF_KEYWORDS_PATH NARF_FITTERS_PATH NARF_MEMOIZATION_PATH;
     NARF_PATH = fileparts(which('narf_set_path'));   
     NARF_FITTERS_PATH = [NARF_PATH filesep 'fitters'];
     NARF_KEYWORDS_PATH = [NARF_PATH filesep 'keywords'];
     NARF_MODULES_PATH = [NARF_PATH filesep 'modules'];   
     NARF_SAVED_MODELS_PATH   = '/auto/data/code/saved_models';
     NARF_SAVED_IMAGES_PATH   = '/auto/data/code/saved_images';
+    NARF_MEMOIZATION_PATH    = '/auto/data/code/memoization';
     NARF_SCRIPTS_PATH = [NARF_PATH filesep 'scripts'];
     
     warning off MATLAB:dispatcher:nameConflict;
