@@ -1056,16 +1056,6 @@ function custom_model_analysis(~,~,~)
     feval(cust_function_name,STACK,XXX,META,sel_results);
 end
 
-% db_results_table = uitable('Parent', bottom_panel, ...
-%         'Enable', 'on', 'RowName', [], 'Units','pixels', ...
-%         'ColumnWidth', 'auto', ... {60, 40, 100, 300,  10, 10, 60, 60, 60, 60, 60, 60, 60, 150, 50}, 
-%         'ColumnName', {'ID', 'Batch', 'CellID', 'Modelname', ...
-%                        'est_set', 'val_set', ...
-%                        'val_corr', 'r_floor', 'r_ceiling', 'val_nlogl',...
-%                        'est_corr', 'Sparse', 'Smooth', ...
-%                        'Last Mod.', 'Note'}, ...
-%         'Position', [pad pad w-pad*2 bh-ts-pad*2]);
-    
 db_results_table = createTable(bottom_panel, {},  {}, false, ...
         'Enable', 'on', 'Units','pixels', ...
         'Editable', false, ...
@@ -1116,7 +1106,7 @@ tca = TableColumnAdjuster(hJTable);
     function sql = update_query_results_table()
         if isempty(sel_batch) || isempty(sel_cellids) || isempty(sel_models)
             db_results = [];
-            set(db_results_table, 'Data', {});
+            db_results_table.setData({});
             sel_results = [];
             drawnow;
             return
@@ -1130,7 +1120,7 @@ tca = TableColumnAdjuster(hJTable);
         dbopen;
         db_results = mysql(sql);       
         if isempty(db_results)
-            set(db_results_table, 'Data', {});
+            db_results_table.setData({});
             return;
         end
         
@@ -1152,12 +1142,8 @@ tca = TableColumnAdjuster(hJTable);
             c(:,j) = tmp(:);
         end
         
-        set(db_results_table, 'Data', c);
-        set(db_results_table, 'ColumnName', sel_columns);
-%         pause(0.1); % Race condition! 
-%         % Use a Java table column adjuster for speed and reliability. 
-%         
-
+        db_results_table.setData(c);
+        db_results_table.setColumnNames(sel_columns);
         sel_results = [];        
         drawnow;
         tca.adjustColumns();  % Must be done after redraw to avoid race       
