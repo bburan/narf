@@ -1,8 +1,8 @@
 function parent_handle = narf_analysis(parent_handle)
 % A GUI to edit the contents of the MySQL NarfAnalysis table
 
-global MODULES;
 narf_set_path;
+global MODULES;
 dbopen;
 MODULES = scan_directory_for_modules();   
 
@@ -1056,34 +1056,50 @@ function custom_model_analysis(~,~,~)
     feval(cust_function_name,STACK,XXX,META,sel_results);
 end
 
-db_results_table = uitable('Parent', bottom_panel, ...
-        'Enable', 'on', 'RowName', [], 'Units','pixels', ...
-        'ColumnWidth', 'auto', ... {60, 40, 100, 300,  10, 10, 60, 60, 60, 60, 60, 60, 60, 150, 50}, 
-        'ColumnName', {'ID', 'Batch', 'CellID', 'Modelname', ...
-                       'est_set', 'val_set', ...
-                       'val_corr', 'r_floor', 'r_ceiling', 'val_nlogl',...
-                       'est_corr', 'Sparse', 'Smooth', ...
-                       'Last Mod.', 'Note'}, ...
-        'Position', [pad pad w-pad*2 bh-ts-pad*2]);
+% db_results_table = uitable('Parent', bottom_panel, ...
+%         'Enable', 'on', 'RowName', [], 'Units','pixels', ...
+%         'ColumnWidth', 'auto', ... {60, 40, 100, 300,  10, 10, 60, 60, 60, 60, 60, 60, 60, 150, 50}, 
+%         'ColumnName', {'ID', 'Batch', 'CellID', 'Modelname', ...
+%                        'est_set', 'val_set', ...
+%                        'val_corr', 'r_floor', 'r_ceiling', 'val_nlogl',...
+%                        'est_corr', 'Sparse', 'Smooth', ...
+%                        'Last Mod.', 'Note'}, ...
+%         'Position', [pad pad w-pad*2 bh-ts-pad*2]);
     
-% Set up the DB Results table widget behavior
-hJScroll = findjobj(db_results_table); 
-hJTable = hJScroll.getViewport.getView; 
-hJTable.setNonContiguousCellSelection(false);
+db_results_table = createTable(bottom_panel, {},  {}, false, ...
+        'Enable', 'on', 'Units','pixels', ...
+        'Editable', false, ...
+        'Position', [pad pad w-pad*2 bh-ts-pad*2], ...
+        'AutoResizeMode',javax.swing.JTable.AUTO_RESIZE_OFF, ...
+        'SelectionMode', javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+
+% Get a handle to the underlying java object to set its properties
+hJTable = db_results_table.getTable; % methodsview(hJTable);
 hJTable.setColumnSelectionAllowed(false);
 hJTable.setRowSelectionAllowed(true);
 hJTablecb = handle(hJTable, 'CallbackProperties');
 set(hJTablecb, 'MouseReleasedCallback', {@get_selected_row, gcf});
 set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
- 
-% Turn JIDE sorting on, so we can sort by clicking on a column header.
-hJTable.setSortable(true);		% or: set(jtable,'Sortable','on');
-hJTable.setAutoResort(true);
-hJTable.setMultiColumnSortable(true);
-hJTable.setPreserveSelectionsAfterSorting(true);
 
-    function get_selected_row(a,~,~)
-        r = a.getSelectedRows();
+% Create a java column adjuster class. Ivar compiled JAR using:
+% wget http://www.camick.com/java/source/TableColumnAdjuster.java
+% mkdir ./tca
+% javac -source 1.6 -target 1.6 -d ./tca TableColumnAdjuster.java 
+% cd tca;
+% jar cvf TableColumnAdjuster.jar *
+% cp TableColumnAdjuster.jar ~/path/to/narf/libs
+% (Then added it to the java path in matlab)
+tca = TableColumnAdjuster(hJTable);
+        
+    function get_selected_row(a,e,~)
+  	    rows = hJTable.getSelectedRows;
+        
+        % Because java sorting is on, we need to find the position of the
+        % original row before Java's sort method was called.
+        for ii = 1:length(rows)
+            r(ii) = hJTable.getModel.modelIndex(rows(ii));
+        end
+        
         sel_results = db_results(r+1);
         if ~isempty(sel_results) && any(ishandle(preview_fig))
             sfigure(preview_fig);
@@ -1096,7 +1112,6 @@ hJTable.setPreserveSelectionsAfterSorting(true);
             set(preview_fig,'Position',g);
          end
     end
-
 
     function sql = update_query_results_table()
         if isempty(sel_batch) || isempty(sel_cellids) || isempty(sel_models)
@@ -1138,20 +1153,14 @@ hJTable.setPreserveSelectionsAfterSorting(true);
         end
         
         set(db_results_table, 'Data', c);
-        
-        % Adjust widths manually because 'ColumnWidth' = 'auto' doesn't
-        % work (although it is documented).       
-        widths = get(db_results_table, 'ColumnWidth');
-        maxwidth = [];           
-        d = c(1:(min(100, size(c,1))), :); % Speed Hack: only look through first 100 entries
-        for ii = 1:size(d,2) 
-            maxwidth(ii) = max(cellfun(@(a) length(anything2char(a)), d(:,ii)));
-        end              
-        % This next line is font-size dependent and hacky
-        set(db_results_table, 'ColumnWidth', num2cell(10+7*maxwidth));        
         set(db_results_table, 'ColumnName', sel_columns);
+%         pause(0.1); % Race condition! 
+%         % Use a Java table column adjuster for speed and reliability. 
+%         
+
         sel_results = [];        
         drawnow;
+        tca.adjustColumns();  % Must be done after redraw to avoid race       
     end
 
     function c = fix_mysql_strings(a) 
