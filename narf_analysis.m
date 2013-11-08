@@ -677,21 +677,26 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         
         cells = request_celldb_batch(thebatch);
         
-        for ii = 1:length(cells)
-            if isempty(find(ismember(sel_cellids, cells{ii}.cellid), 1))
-                continue;
-            end                            
-            for jj = 1:length(modulekeys)     
+        
+        for jj = 1:length(modulekeys)  
+            for ii = 1:length(cells)
+                % Skip this if it's not a selected cell
+                if isempty(find(ismember(sel_cellids, cells{ii}.cellid), 1))
+                    continue;
+                end 
+
+                % Skip if it's not a selected modelname
                 tmp = cellfun(@(n) sprintf('%s_', n), modulekeys{jj}, 'UniformOutput', false);
                 modelname = strcat(tmp{:});
-                modelname = modelname(1:end-1); % Remove trailing underscore
-  
+                modelname = modelname(1:end-1); % Remove trailing underscore 
                 if isempty(find(ismember(sel_models, modelname), 1))
                     continue;
                 end
                 
+                % Otherwise, queue up the cell
                 enqueue_single_model(thebatch, cells{ii}.cellid, modulekeys{jj}, ...
                     cells{ii}.training_set, cells{ii}.test_set, cells{ii}.filecode, force);
+                
             end
         end
         enable_or_disable_children(parent_handle, 'on');
