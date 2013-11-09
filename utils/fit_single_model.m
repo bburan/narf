@@ -21,9 +21,7 @@ function success = fit_single_model(batch, cellid, keywords_to_exec, training_se
 %    success        True iff everything was fine
 
 global STACK XXX NARF_PATH META MODULES...
-    NARF_MODULES_PATH NARF_KEYWORDS_PATH...
-    NARF_SAVED_MODELS_PATH;
-
+    NARF_MODULES_PATH NARF_SAVED_MODELS_PATH;
 
 % New default is to scan every time for changes. This prevents stale
 % caching problem with memoization.
@@ -122,7 +120,7 @@ else
     META.modelpath = [NARF_SAVED_MODELS_PATH filesep num2str(batch) ...
                   filesep cellid filesep META.modelfile];
 
-    META.fit_time = toc;    
+    META.fit_time = toc;
 
     XXX{1}.test_set = test_set;
     calc_xxx(1);
