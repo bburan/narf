@@ -1,9 +1,9 @@
 function narf_set_path()   
     % Bad side effect of javaaddpath: it clears all variables!
-    if ~isempty(which('TableSorter'))
+    if isempty(which('TableSorter'))
         javaaddpath('/home/ivar/matlab/narf/libs/TableSorter.jar');
     end
-    if ~isempty(which('TableColumnAdjuster'))
+    if isempty(which('TableColumnAdjuster'))
         javaaddpath('/home/ivar/matlab/narf/libs/TableColumnAdjuster.jar');
     end
     

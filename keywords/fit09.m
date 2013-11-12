@@ -29,7 +29,7 @@ function fn = make_subfitter(del)
                 [a,b,c,d] = fit_scaat(prev_opts);
             else
                 [a,b,c,d] = fit_scaat('StopAtAbsScoreDelta', del, ...
-                                      'StopAtStepNumber', 1);
+                                      'StopAtStepNumber', 10);
             end
         end
     end

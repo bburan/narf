@@ -27,6 +27,12 @@ m.is_splittable = true;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_single_default_output;
 m.plot_fns{1}.pretty_name = 'Output vs Time';
+m.plot_fns{2}.fn = @do_plot_abcd_impulse_response;
+m.plot_fns{2}.pretty_name = 'Impulse Response';
+m.plot_fns{3}.fn = @do_plot_abcd_step_response;
+m.plot_fns{3}.pretty_name = 'Step Response';
+m.plot_fns{4}.fn = @do_plot_abcd_bodemag_plot;
+m.plot_fns{4}.pretty_name = 'Bode Mag. Plot';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -36,17 +42,16 @@ end
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
-function x = do_state_space_diffeq(mdl, x, stack, xxx)
-    
+function sys = makesys(mdl)
     % Create a delay term matrix just to delay the inputs slightly.
     delayterms = struct('delay', abs(mdl.delay_B_amount), ...
         'a',[],'b', mdl.delay_B,'c', [],'d', []); 
+    sys = delayss(mdl.A, mdl.B, mdl.C,mdl.D, delayterms);
+end
 
-    try
-        sys=delayss(mdl.A, mdl.B, mdl.C,mdl.D, delayterms);
-    catch
-        keyboard
-    end
+function x = do_state_space_diffeq(mdl, x, stack, xxx)
+    
+    sys = makesys(mdl);
     
     % Apply the FIR filter across every stimfile
     for sf = fieldnames(x.dat)', sf=sf{1};
@@ -58,20 +63,45 @@ function x = do_state_space_diffeq(mdl, x, stack, xxx)
             error('Dimensions of A don''t match channel count.');
          end
              
-         tmp = zeros(T, S, 1);        
+         tmp = zeros(T, S, 1);
          
          for s = 1:S
-             
-             % TODO: FIND x_0 for each model?
-             
-             tmp(:,s) = lsim(sys, ...
-                                squeeze(x.dat.(sf).(mdl.input)(:, s, :)), ...
-                                x.dat.(sf).(mdl.time)(:,1), ...
-                                mdl.x_0);
-             
+             x0 = mdl.x_0;    % TODO: FIND x_0 for each stim case. 
+             t = x.dat.(sf).(mdl.time)(:,1);
+             u = squeeze(x.dat.(sf).(mdl.input)(:, s, :));             
+             tmp(:,s) = lsim(sys, u, t, x0);             
          end
          % The output is the sum of the filtered channels
          x.dat.(sf).(mdl.output) = tmp;
     end
 end
+
+function do_plot_abcd_impulse_response(sel, stack, xxx)
+    mdls = stack{end};
+    xins = {xxx(1:end-1)};        
+    sys = makesys(mdls{1});
+    impulse(sys);   
+    do_xlabel('Time [s]');
+    do_ylabel('Impulse Response');
+end
+
+function do_plot_abcd_step_response(sel, stack, xxx)
+    mdls = stack{end};
+    xins = {xxx(1:end-1)};    
+    sys = makesys(mdls{1});
+    step(sys);
+    do_xlabel('Time [s]');
+    do_ylabel('Step Response');
+    
+end
+
+function do_plot_abcd_bodemag_plot(sel, stack, xxx)
+    mdls = stack{end};
+    xins = {xxx(1:end-1)};        
+    sys = makesys(mdls{1});
+    bodemag(sys);
+    do_xlabel('Freq [Hz]');
+    do_ylabel('Freq Response');
+end
+
 end

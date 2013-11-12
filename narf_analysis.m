@@ -675,8 +675,7 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         mm = eval(get(handles.modeltree, 'String'));
         modulekeys = keyword_combos(mm);
         
-        cells = request_celldb_batch(thebatch);
-        
+        cells = request_celldb_batch(thebatch);        
         
         for jj = 1:length(modulekeys)  
             for ii = 1:length(cells)
@@ -1084,7 +1083,7 @@ set(hJTablecb, 'KeyPressedCallback', {@get_selected_row, gcf});
 % jar cvf TableColumnAdjuster.jar *
 % cp TableColumnAdjuster.jar ~/path/to/narf/libs
 % (Then added it to the java path in matlab)
-tca = TableColumnAdjuster(hJTable);
+tca = TableColumnAdjuster(hJTable);            
         
     function get_selected_row(a,e,~)
   	    rows = hJTable.getSelectedRows;
@@ -1108,10 +1107,12 @@ tca = TableColumnAdjuster(hJTable);
          end
     end
 
-    function sql = update_query_results_table()
+    function sql = update_query_results_table()        
+        ts = hJTable.getModel();
+        ts.setRowCount(0); % Clears the table. Stupid Java APIs!
+
         if isempty(sel_batch) || isempty(sel_cellids) || isempty(sel_models)
             db_results = [];
-            db_results_table.setData({});
             sel_results = [];
             drawnow;
             return
@@ -1123,10 +1124,10 @@ tca = TableColumnAdjuster(hJTable);
         sql = [sql ' ORDER BY ID ASC'];
         
         dbopen;
-        db_results = mysql(sql);       
+        db_results = mysql(sql);
         if isempty(db_results)
-            db_results_table.setData({});
-            return;
+            drawnow;
+            return;  
         end
         
         % Get the column types
