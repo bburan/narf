@@ -44,8 +44,8 @@ end
 
 function sys = makesys(mdl)
     % Create a delay term matrix just to delay the inputs slightly.
-    delayterms = struct('delay', abs(mdl.delay_B_amount), ...
-        'a',[],'b', mdl.delay_B / 1000,'c', [],'d', []); 
+    delayterms = struct('delay', abs(mdl.delay_B_amount ./ 1000), ...
+        'a',[],'b', mdl.delay_B,'c', [],'d', []); 
     sys = delayss(mdl.A, mdl.B, mdl.C,mdl.D, delayterms);
 end
 
