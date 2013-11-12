@@ -6,21 +6,23 @@ m.mdl = @pole_zeros;
 m.name = 'pole_zeros';
 m.fn = @do_pole_zeros;
 m.pretty_name = 'Pole/Zeros';
-m.editable_fields = {'poles', 'zeros', 'delay', ...
-                     'input', 'time', 'output'};                 
+m.editable_fields = {'poles', 'zeros', 'delay', 'y_offset', 'delay_per_chan', ...
+                     'input', 'time', 'output'};  
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.order = 2;
+m.order = 3;
 m.poles = [];
 m.zeros = [];
 m.A = [];
 m.B = [];
 m.C = [];
 m.D = [];
-m.delay = 20; % ms
+m.delay = [20]; % ms
+m.delay_per_chan = false;
 m.x_0     = [];
-m.num_dims = 0;
+m.y_offset = 0;
+m.num_inputs = 0;
 m.input =  'stim';
 m.time =   'stim_time';
 m.output = 'stim';
@@ -64,21 +66,34 @@ function mdl = auto_init_pz(stack, xxx)
     
     mdl.num_inputs = C;         
     mdl.poles = ones(mdl.order,1);
-    mdl.A = zeros(mdl.order, mdl.num_inputs); 
-    mdl.B = zeros(mdl.order, mdl.num_inputs);
+    mdl.A = zeros(mdl.order, mdl.order); 
+    mdl.B = zeros(mdl.order, mdl.num_inputs + 1);
     mdl.B(1,:) = 1; % Set all rows to ones as a bad initial condition
+    mdl.B(:, end) = 0; % Set the last column (constant x_offset) to zero
     mdl.C = zeros(1, mdl.order);
     mdl.C(1) = 1;
-    mdl.D = zeros(1, mdl.num_inputs);
-        
+    mdl.D = zeros(1, mdl.num_inputs+1);
+    if mdl.delay_per_chan
+        mdl.delay = zeros(mdl.num_inputs, 1);
+    end
 end
 
 function sys = makesys(mdl)    
-    mdl.A = zeros(mdl.order, mdl.num_inputs);
     mdl.A(:, 1) = -(mdl.poles); % Set first column to poles
-    delayterms = struct('delay', abs(mdl.delay ./ 1000), ...
-                               'a',[],'b', mdl.B, 'c', [],'d', []);    
-    sys = delayss(mdl.A, zeros(size(mdl.B)), mdl.C,mdl.D, delayterms);
+    rhs = diag(ones(mdl.order - 1,1));
+    rhs(end+1, :) = 0;
+    mdl.A = [-(mdl.poles) rhs];
+    %delayterms = struct('delay', abs(mdl.delay ./ 1000), ...
+    %                           'a',[],'b', mdl.B, 'c', [],'d', []);    
+    %sys = delayss(mdl.A, zeros(size(mdl.B)), mdl.C, mdl.D, delayterms);
+    sys = ss(mdl.A, mdl.B, mdl.C, mdl.D);
+    tmp = abs(mdl.delay) / 1000;
+    tmp(end+1) = 0; % No delay for the constant offset
+    if (mdl.delay_per_chan)
+        sys.InputDelay = tmp;
+    else
+        sys.InputDelay(:) = abs(mdl.delay) / 1000; % (milliseconds)
+    end    
 end
 
 function x = do_pole_zeros(mdl, x, stack, xxx)
@@ -99,14 +114,17 @@ function x = do_pole_zeros(mdl, x, stack, xxx)
          
          for s = 1:S
              x0 = mdl.x_0;    % TODO: FIND x_0 for each stim case. 
+             
              t = x.dat.(sf).(mdl.time)(:,1);
-             u = squeeze(x.dat.(sf).(mdl.input)(:, s, :));     
+             u = squeeze(x.dat.(sf).(mdl.input)(:, s, :)); 
+             u(:, end+1) = 1; % Append on a constant 1 
+             
              warning off Control:analysis:LsimStartTime;
-             tmp(:,s) = lsim(sys, u, t, x0);             
+             tmp(:,s) = lsim(sys, u, t, x0);
              warning on Control:analysis:LsimStartTime;
          end
          % The output is the sum of the filtered channels
-         x.dat.(sf).(mdl.output) = tmp;
+         x.dat.(sf).(mdl.output) = tmp + mdl.y_offset;
     end
 end
 
