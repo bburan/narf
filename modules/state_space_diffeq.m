@@ -16,7 +16,7 @@ m.B = [0 0; 0 0];
 m.C = [1 0];
 m.D = [0 0];
 m.delay_B        = [0 0; 1 -1];
-m.delay_B_amount = 0.5;
+m.delay_B_amount = 20;  % In ms
 m.x_0     = [0 0];
 m.input =  'stim';
 m.time =   'stim_time';
@@ -45,7 +45,7 @@ end
 function sys = makesys(mdl)
     % Create a delay term matrix just to delay the inputs slightly.
     delayterms = struct('delay', abs(mdl.delay_B_amount), ...
-        'a',[],'b', mdl.delay_B,'c', [],'d', []); 
+        'a',[],'b', mdl.delay_B / 1000,'c', [],'d', []); 
     sys = delayss(mdl.A, mdl.B, mdl.C,mdl.D, delayterms);
 end
 
@@ -68,8 +68,10 @@ function x = do_state_space_diffeq(mdl, x, stack, xxx)
          for s = 1:S
              x0 = mdl.x_0;    % TODO: FIND x_0 for each stim case. 
              t = x.dat.(sf).(mdl.time)(:,1);
-             u = squeeze(x.dat.(sf).(mdl.input)(:, s, :));             
+             u = squeeze(x.dat.(sf).(mdl.input)(:, s, :));     
+             warning off Control:analysis:LsimStartTime;
              tmp(:,s) = lsim(sys, u, t, x0);             
+             warning on Control:analysis:LsimStartTime;
          end
          % The output is the sum of the filtered channels
          x.dat.(sf).(mdl.output) = tmp;
