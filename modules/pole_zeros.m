@@ -1,38 +1,42 @@
-function m = state_space_diffeq(args)
+function m = pole_zeros(args)
 
 % Module fields that must ALWAYS be defined
 m = [];
-m.mdl = @state_space_diffeq;
-m.name = 'state_space_diffeq';
-m.fn = @do_state_space_diffeq;
-m.pretty_name = 'State Space Diff Eq.';
-m.editable_fields = {'A', 'B', 'C', 'D', 'delay_B', 'delay_B_amount', ...
-                     'input', 'time', 'output'};
+m.mdl = @pole_zeros;
+m.name = 'pole_zeros';
+m.fn = @do_pole_zeros;
+m.pretty_name = 'Pole/Zeros';
+m.editable_fields = {'poles', 'zeros', 'delay', ...
+                     'input', 'time', 'output'};                 
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.A = [-0.1 -.1; .1 -0.1];
-m.B = [0 0; 0 0];
-m.C = [1 0];
-m.D = [0 0];
-m.delay_B        = [0 0; 1 -1];
-m.delay_B_amount = 20;  % In ms
-m.x_0     = [0 0];
+m.order = 2;
+m.poles = [];
+m.zeros = [];
+m.A = [];
+m.B = [];
+m.C = [];
+m.D = [];
+m.delay = 20; % ms
+m.x_0     = [];
+m.num_dims = 0;
 m.input =  'stim';
 m.time =   'stim_time';
 m.output = 'stim';
 
 % Optional fields
 m.is_splittable = true;
-m.auto_plot = @do_plot_abcd_impulse_response;
+m.auto_plot = @do_plot_pz_impulse_response;
+m.auto_init = @auto_init_pz;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_single_default_output;
 m.plot_fns{1}.pretty_name = 'Output vs Time';
-m.plot_fns{2}.fn = @do_plot_abcd_impulse_response;
+m.plot_fns{2}.fn = @do_plot_pz_impulse_response;
 m.plot_fns{2}.pretty_name = 'Impulse Response';
-m.plot_fns{3}.fn = @do_plot_abcd_step_response;
+m.plot_fns{3}.fn = @do_plot_pz_step_response;
 m.plot_fns{3}.pretty_name = 'Step Response';
-m.plot_fns{4}.fn = @do_plot_abcd_bodemag_plot;
+m.plot_fns{4}.fn = @do_plot_pz_bodemag_plot;
 m.plot_fns{4}.pretty_name = 'Bode Mag. Plot';
 
 % Overwrite the default module fields with arguments 
@@ -43,14 +47,41 @@ end
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
-function sys = makesys(mdl)
-    % Create a delay term matrix just to delay the inputs slightly.
-    delayterms = struct('delay', abs(mdl.delay_B_amount ./ 1000), ...
-        'a',[],'b', mdl.delay_B,'c', [],'d', []); 
-    sys = delayss(mdl.A, mdl.B, mdl.C,mdl.D, delayterms);
+function mdl = auto_init_pz(stack, xxx)
+    % NOTE: Unlike most plot functions, auto_init functions get a 
+    % STACK and XXX which do not yet have this module or module's data
+    % added to them.    
+    if ~isfield(m, 'fit_fields') 
+        return
+    end
+    
+    % Init the coefs to have the right dimensionality
+    mdl = m;
+    x = xxx{end};
+    fns = fieldnames(x.dat);
+    sf = fns{1};
+    [T, S, C] = size(x.dat.(sf).(mdl.input));               
+    
+    mdl.num_inputs = C;         
+    mdl.poles = ones(mdl.order,1);
+    mdl.A = zeros(mdl.order, mdl.num_inputs); 
+    mdl.B = zeros(mdl.order, mdl.num_inputs);
+    mdl.B(1,:) = 1; % Set all rows to ones as a bad initial condition
+    mdl.C = zeros(1, mdl.order);
+    mdl.C(1) = 1;
+    mdl.D = zeros(1, mdl.num_inputs);
+        
 end
 
-function x = do_state_space_diffeq(mdl, x, stack, xxx)
+function sys = makesys(mdl)    
+    mdl.A = zeros(mdl.order, mdl.num_inputs);
+    mdl.A(:, 1) = -(mdl.poles); % Set first column to poles
+    delayterms = struct('delay', abs(mdl.delay ./ 1000), ...
+                               'a',[],'b', mdl.B, 'c', [],'d', []);    
+    sys = delayss(mdl.A, zeros(size(mdl.B)), mdl.C,mdl.D, delayterms);
+end
+
+function x = do_pole_zeros(mdl, x, stack, xxx)
     
     sys = makesys(mdl);
     
@@ -79,7 +110,7 @@ function x = do_state_space_diffeq(mdl, x, stack, xxx)
     end
 end
 
-function do_plot_abcd_impulse_response(sel, stack, xxx)
+function do_plot_pz_impulse_response(sel, stack, xxx)
     mdls = stack{end};
     xins = {xxx(1:end-1)};        
     sys = makesys(mdls{1});
@@ -88,7 +119,7 @@ function do_plot_abcd_impulse_response(sel, stack, xxx)
     do_ylabel('Impulse Response');
 end
 
-function do_plot_abcd_step_response(sel, stack, xxx)
+function do_plot_pz_step_response(sel, stack, xxx)
     mdls = stack{end};
     xins = {xxx(1:end-1)};    
     sys = makesys(mdls{1});
@@ -98,7 +129,7 @@ function do_plot_abcd_step_response(sel, stack, xxx)
     
 end
 
-function do_plot_abcd_bodemag_plot(sel, stack, xxx)
+function do_plot_pz_bodemag_plot(sel, stack, xxx)
     mdls = stack{end};
     xins = {xxx(1:end-1)};        
     sys = makesys(mdls{1});

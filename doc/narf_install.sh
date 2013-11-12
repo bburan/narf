@@ -17,6 +17,8 @@ scp capybara:~/matlab/baphy/Config/BaphyConfigPath.m ~/matlab/baphy/Config/
 git clone /auto/data/code/narf-bare/ narf
 cp /auto/data/code/
 
-# Then make sure your SSH keys are on the destination machine.
+# Then make sure your SSH keys are on the destination machine. Do this on Hyrax, if you are just getting set up
+ssh-keygen   # Then leave a blank password
+ssh-copy-id -i ~/.ssh/id_rsa.pub MICROBAT    # Replace microbat with the names of each machine, one at a time
 
 # Finally, make sure that your .bash_login is copied over too
