@@ -1,15 +1,106 @@
-* UPCOMING
-  - Employee Health
-  - SVD: Overfitting (analysis 19, batch 246). 
-    depwct1perchan and depct1perchan are identical except for init conds. 
-    These should both subsume dep1, which should in turn subsumes fir. 
-         
-* Engineering Mini Projects
+* ABCD
+  Model additions that may help improve ABCD:
+  1. [X] Y offset.  (Not needed now that there is a constant x offset built into B)
+  2. [X] Per-channel latencies. 
+  3. [ ] Per-channel input nonlinearities. 
+  4. [ ] An output nonlinearity. However, I think this should be added and fit AFTER the ABCD. It's hard enough to fit ABCD already. 
+  5. [ ] Comparing things at 200Hz not 100Hz....no extra parameters!
+  6. [ ] 
 
+
+* Current Project: Metrics
+** Metrics on Responses
+*** Problems
+   The big problems with R_avg is that the "Average" may not be representative of any trial. 
+   1. The source of variation is unknown, and therefore cannot be compensated for. Possible sources of variation that we COULD account for9:
+      - Variation due to minor time jitter 
+      - Variation due to slowly changing state (ie, a dying cell)
+      - Variation due to our binning method (when spikes fall near edges of bins)
+   2. The distribution of variation may not be gaussian. (There may be multiple "modes" present, attentive and not, tired or not) 
+   3. Outliers may be present due to spike-sorting best-effort, but are no longer relevant.
+   4. Larger bin-sizes makes artificially better predictions
+
+*** Modules Needed
+    - FFT module
+    - Sliding FFT module
+    - Wavelet module
+    - Bandpass Filter module
+    - De-Jittering Module
+    - Module to compare distributions. 
+    - Integrating module (for computing integrated ISIs). Should have a "leakiness" term. 
+    - Differentating module (for computing ?? )
+
+*** Tricks
+    h = dfilt.delay(4) ;
+    sig = 1:7      % Create some simple signal data
+    states = h.states    % Filter states before filtering
+    filter(h,sig)       % Filter using the delay filter
+    states=h.states     % Filter states after filtering
+
+* Metric-taking Ideas being developed in update_metrics();
+  1. [X] metric_lnorm.m: Takes an L norm metric (MSE, L1, Linfty, etc)
+  2. [X] metric_corr.m: Takes respavg correlation
+  3. [X] metric_spike_count: Compute the spike count
+  4. [X] metric_self_dist: Compute distance between trials for a data set
+  5. [X] metric_log_likelihood.m: Scale by # of points & distribution so neurons are comparable?
+  6. [X] metric_AIC: Akaike information criteria
+  7. [X] metric_BIC: Bayes information criteria
+  8. [X] metric_sparsity: The sum of all the FIR filter sparsity values
+  9. [X] metric_smoothness: The summed smoothness of all the FIR filter smoothness values.
+  10. [X] metric_mutual_info.m: Empirically derive P(X,R)
+  11. [X] metric_nmse: "Normalized mean squared error" (R_pred - R)^2 / var(R)
+  12. [ ] metric_binned_resp_corr: RESP's variance with itself at this bin size
+  13. [ ] metric that assumes a gaussian noise interfering with prediction and RESPAVG, and gives back an "improbability" score that is to be minimized
+  14. [ ] metric_corr_homoskedastic: Ensure homodskedasticity before taking correlation by reweighting
+  15. [ ] metric_corr_trim_outliers: Remove outliers from the correlation
+  16. [ ] metric_mse_trim_outliers.m: Takes the MSE without outliers
+  17. [ ] metric_vr.m: Distance metric between predicted and actual spike trains
+  18. [ ] metric_rectified: Rectified correlation approximation
+  19. [ ] metric_SNR.m: Somehow compute the SNR?
+  20. [ ] Fractional bias
+  21. [ ] Geometric mean bias
+  22. [ ] Geometric variance
+  23. [ ] Fraction with a factor of 2 (FAC2)
+  24. [ ] Coherence
+  25. [ ] Measure the percent by which the noise variance decreases when this feature is added
+  26. [ ] Confidence interval in a bayesian way using Highest Density Interval (Contains 95% of spaces)
+
+** Naive Bayes
+  The more I think about it, just using naked probabilities (MAP) seems more and more attractive.
+  For example, when we calculate MSE, the stupid "prestim-silence" distorts the histograms because so many equivalent values come in.
+  These would be naturally weighted less if we were using the bayesian approach to marginalize by the expected data. 
+
+* Engineering Mini Projects
 ** Additional Metrics
+   ARGUMENTS: CELLS, MODELA, MODELB, 
    Problem to be solved: Need a reliable way to add metrics, save to DB, and refresh when applicable. 
    Method: Apply a "Metric meta package keyword". It uses as many other as it can and adds appropriate columns to the DB. 
-   
+   - Sparsity, Smoothness
+   - Metrics are responsible for 
+   - Potential Problems:  
+     + We absolutely don't want one metric fucking up an entire save
+     + Metrics must know when they can be applied and when not
+     + Metrics should save themselves in META at the appropriate location
+     + Metrics should be insertable into the DB 
+     + Metrics should be refreshable with minimal effort, through the GUI. 
+     + It would be nice if I could just add metrics in one place, create a new table entry, and everything would be hunky dory. 
+     + 
+  19. Scatter plots of two models being compared. One plot for each performance metric.
+  20. Updated DB Insertion and Great Name Replacing proposal
+	  + [ ] calc_all_metrics()  function
+          + [ ] Make est/val standard across everything, and move perf metric stuff from XXX{end} to META
+	  + [ ] Rename: VALIDATION/TEST and EST/TRAINING 
+	  + [ ] New table:  NarfModels
+	  + [ ] Import useful models by scanning the directories, copying files and getting relevant metadata
+          + [ ] "training set" -> "estimation set"
+          + [ ] "test set" -> "Validation set"
+          + [ ] NarfResults -> NarfModels table
+          + [ ] WHATEVER IS GOING INTO XXX{1} should be given to fit_single_model as well! When I'm not using BAPHY it should still be able to work.
+	  + [ ] Name convention of STACK vs stack, XXX vs xxx and the difficulty in understanding which one we are looking at! 
+		Lots of hidden assumptions here which are a problem. Plot modules have access to AFTER data, too.
+	  + [ ] Dangerous Naming: score_corr is used for optimization, but it looks like a metric!
+
+
 ** 2-Model Comparison HUD
    Problem to be solved: Place to hook on comparison analyses like SVD is doing already. 
   
@@ -20,16 +111,35 @@
 ** Fitter Scaling:
    Problem: (See Eternal Problems with Fitters, below)
 
+** Per-module memoization
+   + Could be done by memoizing calc_xxx() or add_module(), as appropriate
+   + Would speed up 
+   + Reasons why it would be nice to do this:
+     1. narf_modelpane could go very fast, so inspections would become really quick. 
+   + Reasons why I don't want to do this:
+     1. It would entail storing additional megs per model file, and would have to be run ONCE, AFTER the fitting, to create the cached files. 
+     2. If we change a module later, do we want to load the saved version or the new one?
+     3. We could achieve much the same functionality by asking load_model and save_model to store XXX anyway, instead of re-building it. 
+   + Problem workaround:
+     1. I think I will just memoize INSIDE the gt100 module. 
+
+** Memoization Clearing
+   + I don't know if I like the idea of managing this by hand. It doesn't really hurt anything, though. 
+
+* WORK QUEUE
+  - SVD: Overfitting (analysis 19, batch 246). 
+    depwct1perchan and depct1perchan are identical except for init conds. 
+    These should both subsume dep1, which should in turn subsumes fir. 
+
 * Ideas:
   - Try to understand the information content in correlated noise
   - FIR filter with a gain term, so that all FIR coefficients are relative to that. Or even, for ALL of the modules, having a scaling and shifting term like that. 
   - What about NONLINEAR FIR filters? Replace each simple convolution coefficient with a NL function, like quadratic?
   - Go through modules and REMOVE any absolute scaling term, since it can be accomodated by the filter. 
-  - Paper on Streaming as actually being a result of time varying dynamics
+  - Paper on streaming as actually being a result of time varying dynamics
   - Make a plot of stimulus correlation vs response correlation (to show how much is leaking through)
   - Try asymetric sigmoid differential equations
   - Stephen added a Gain term to depression, (depression bank nonorm). But didn't try the depression offset yet.
-  - When put into ABCD form, can any of the matrices be decomposed?
   - Could parameterizations be explicitly built into a matrix form?
   - What effects will be modeled and where?
     | delays              | wavelet parameter                        |
@@ -64,20 +174,6 @@
   16. Profile code and look for optimizations that would speed up each iteration
   17. Why does SENL drop to keyboard?
   18. Heatmaps: loadstimfrombaphy, FIR, nonlinearity
-  19. Scatter plots of two models being compared. One plot for each performance metric.
-  20. Updated DB Insertion and Great Name Replacing proposal
-	  + [ ] calc_all_metrics()  function
-          + [ ] Make est/val standard across everything, and move perf metric stuff from XXX{end} to META
-	  + [ ] Rename: VALIDATION/TEST and EST/TRAINING 
-	  + [ ] New table:  NarfModels
-	  + [ ] Import useful models by scanning the directories, copying files and getting relevant metadata
-          + [ ] "training set" -> "estimation set"
-          + [ ] "test set" -> "Validation set"
-          + [ ] NarfResults -> NarfModels table
-          + [ ] WHATEVER IS GOING INTO XXX{1} should be given to fit_single_model as well! When I'm not using BAPHY it should still be able to work.
-	  + [ ] Name convention of STACK vs stack, XXX vs xxx and the difficulty in understanding which one we are looking at! 
-		Lots of hidden assumptions here which are a problem. Plot modules have access to AFTER data, too.
-	  + [ ] Dangerous Naming: score_corr is used for optimization, but it looks like a metric!
   21. Outlier rejection. Exclude worst 1% in MSE calculations? Start at L2, gradually switch to L1 as time goes on? Remove each data point and use fitdist() to estimate it's effect on the noise model probability. Sort these effects. Mark the n% worst data points for plotting as "outliers" and also for removal during MSE or CORR calculations.
   22. Narf Batch categories. 
          - Easier creation of sub-populations through the GUI I prototyped
@@ -94,6 +190,7 @@
           - Use keywords and VARARGIN instead of structs or long lists of many arguments
   24. Write a crash course guide on using NARF
   25. Use wavelets instead of FFT when computing coherence...because it would be cool?
+  26. See if I can build a clojure JAR file with java 6, put it into matlab, and call clojure methods!
 
 * Eternal Problems with fitters
   - If the FIR filter doesn't get initialized, it outputs all zeros, which messes up many fitting algorithms. 
@@ -103,37 +200,6 @@
   - It may not be able to fit dep1 so that it is 100% of the time better than FIR
   - We may overfit our data because the stopping criterion is absolute, and all neurons have different noise levels (...higher EST scores don't always translate to VAL scores)
   - We should compare fitters by their EST scores, not their VAL scores
-
-* Metric-taking Ideas being developed in update_metrics();
-  1. [X] metric_lnorm.m: Takes an L norm metric (MSE, L1, Linfty, etc)
-  2. [X] metric_corr.m: Takes respavg correlation
-  3. [X] metric_spike_count: Compute the spike count
-  4. [X] metric_self_dist: Compute distance between trials for a data set
-  5. [X] metric_log_likelihood.m: Scale by # of points & distribution so neurons are comparable?
-  6. [X] metric_AIC: Akaike information criteria
-  7. [X] metric_BIC: Bayes information criteria
-  8. [X] metric_sparsity: The sum of all the FIR filter sparsity values
-  9. [X] metric_smoothness: The summed smoothness of all the FIR filter smoothness values.
-  10. [X] metric_mutual_info.m: Empirically derive P(X,R)
-  11. [X] metric_nmse: "Normalized mean squared error" (R_pred - R)^2 / var(R)
-  12. [ ] metric_binned_resp_corr: RESP's variance with itself at this bin size
-  13. [ ] metric that assumes a gaussian noise interfering with prediction and RESPAVG, and gives back an "improbability" score that is to be minimized
-  14. [ ] metric_corr_homoskedastic: Ensure homodskedasticity before taking correlation by reweighting
-  15. [ ] metric_corr_trim_outliers: Remove outliers from the correlation
-  16. [ ] metric_mse_trim_outliers.m: Takes the MSE without outliers
-  17. [ ] metric_vr.m: Distance metric between predicted and actual spike trains
-  18. [ ] metric_rectified: Rectified correlation approximation
-  19. [ ] metric_SNR.m: Somehow compute the SNR?
-  20. [ ] Fractional bias
-  21. [ ] Geometric mean bias
-  22. [ ] Geometric variance
-  23. [ ] Fraction with a factor of 2 (FAC2)
-  24. [ ] Coherence
-  25. [ ] Measure the percent by which the noise variance decreases when this feature is added
-** Naive Bayes
-  The more I think about it, just using naked probabilities (MAP) seems more and more attractive.
-  For example, when we calculate MSE, the stupid "prestim-silence" distorts the histograms because so many equivalent values come in.
-  These would be naturally weighted less if we were using the bayesian approach to marginalize by the expected data. 
 
 * Using Residuals to Estimate Noise Floor
   1. Make a prediction p(t).

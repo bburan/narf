@@ -82,7 +82,7 @@ function sys = makesys(mdl)
     mdl.A(:, 1) = -(mdl.poles); % Set first column to poles
     rhs = diag(ones(mdl.order - 1,1));
     rhs(end+1, :) = 0;
-    mdl.A = [-(mdl.poles) rhs];
+    mdl.A = [-abs(mdl.poles) rhs];
     %delayterms = struct('delay', abs(mdl.delay ./ 1000), ...
     %                           'a',[],'b', mdl.B, 'c', [],'d', []);    
     %sys = delayss(mdl.A, zeros(size(mdl.B)), mdl.C, mdl.D, delayterms);
