@@ -7,7 +7,7 @@ function_name = func2str(F);
 memoization_dir = [NARF_MEMOIZATION_PATH '/' function_name '/'];
 
     function varargout = INEEDAGENSYM (varargin) 
-        save('/tmp/ineedagensymdump', 'varargin', '-mat');
+        %save('/tmp/ineedagensymdump', 'varargin', '-mat');
         %[s, h] = unix('md5sum /tmp/ineedagensymdump.mat | cut -d " " -f1');
         %h = h(1:end-1); % Remove newline
         h = DataHash(varargin);       % Calc MD5 sum hash of arguments
