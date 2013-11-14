@@ -64,7 +64,7 @@ function mdl = auto_init_pz(stack, xxx)
     [T, S, C] = size(x.dat.(sf).(mdl.input));               
     
     mdl.num_inputs = C;         
-    mdl.poles = ones(mdl.order - 1,1);
+    mdl.poles = ones(mdl.order,1);
     mdl.A = zeros(mdl.order, mdl.order); 
     mdl.B = zeros(mdl.order, mdl.num_inputs + 1);
     mdl.B(1,:) = 1; % Set all rows to ones as a bad initial condition
@@ -79,7 +79,7 @@ end
 
 function sys = makesys(mdl)    
     mdl.A(:, 1) = -(mdl.poles); % Set first column to poles
-    rhs = diag(ones(mdl.order,1));
+    rhs = diag(ones(mdl.order - 1,1));
     rhs(end+1, :) = 0;
     mdl.A = [-abs(mdl.poles) rhs];
     %delayterms = struct('delay', abs(mdl.delay ./ 1000), ...
