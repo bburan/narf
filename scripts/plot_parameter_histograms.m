@@ -25,7 +25,7 @@ n = ceil(sqrt(n_params));
 for ii = 1:n_params
     subplot(n, n, ii);
     data = cellfun(@(c) c(ii), params);
-    hist(data, ceil(n_params / 5));
+    hist(data, 50);
     xlabel(sprintf('Parameter %d', ii));
 end
 

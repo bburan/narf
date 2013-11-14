@@ -6,14 +6,13 @@ m.mdl = @pole_zeros;
 m.name = 'pole_zeros';
 m.fn = @do_pole_zeros;
 m.pretty_name = 'Pole/Zeros';
-m.editable_fields = {'poles', 'zeros', 'delay', 'y_offset', 'delay_per_chan', ...
+m.editable_fields = {'poles', 'B', 'delay', 'y_offset', 'delay_per_chan', ...
                      'input', 'time', 'output'};  
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.order = 3;
 m.poles = [];
-m.zeros = [];
 m.A = [];
 m.B = [];
 m.C = [];
@@ -65,7 +64,7 @@ function mdl = auto_init_pz(stack, xxx)
     [T, S, C] = size(x.dat.(sf).(mdl.input));               
     
     mdl.num_inputs = C;         
-    mdl.poles = ones(mdl.order,1);
+    mdl.poles = ones(mdl.order - 1,1);
     mdl.A = zeros(mdl.order, mdl.order); 
     mdl.B = zeros(mdl.order, mdl.num_inputs + 1);
     mdl.B(1,:) = 1; % Set all rows to ones as a bad initial condition

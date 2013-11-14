@@ -38,6 +38,7 @@ end
 
 % Optional fields
 m.plot_fns = {};
+m.auto_plot = @do_plot_inputs_and_mse;
 m.plot_fns{1}.fn = @do_plot_inputs_and_mse;
 m.plot_fns{1}.pretty_name = 'Inputs, Error vs Time';
 m.plot_fns{2}.fn = @do_plot_error_histogram;

@@ -6,7 +6,7 @@ m.mdl = @state_space_diffeq;
 m.name = 'state_space_diffeq';
 m.fn = @do_state_space_diffeq;
 m.pretty_name = 'State Space Diff Eq.';
-m.editable_fields = {'A', 'B', 'C', 'D', 'delay_B', 'delay_B_amount', ...
+m.editable_fields = {'A', 'B', 'C', 'D', 'delay_B', 'delay_B_amount', 'y_offset', ...
                      'input', 'time', 'output'};
 m.isready_pred = @isready_always;
 
@@ -18,6 +18,7 @@ m.D = [0 0];
 m.delay_B        = [0 0; 1 -1];
 m.delay_B_amount = 20;  % In ms
 m.x_0     = [0 0];
+m.y_offset = 0;
 m.input =  'stim';
 m.time =   'stim_time';
 m.output = 'stim';
@@ -75,7 +76,7 @@ function x = do_state_space_diffeq(mdl, x, stack, xxx)
              warning on Control:analysis:LsimStartTime;
          end
          % The output is the sum of the filtered channels
-         x.dat.(sf).(mdl.output) = tmp;
+         x.dat.(sf).(mdl.output) = tmp + mdl.y_offset;;
     end
 end
 
