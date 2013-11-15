@@ -6,22 +6,20 @@ m.mdl = @pole_zeros;
 m.name = 'pole_zeros';
 m.fn = @do_pole_zeros;
 m.pretty_name = 'Pole/Zeros';
-m.editable_fields = {'poles', 'B', 'delay', 'y_offset', 'delay_per_chan', ...
-                     'input', 'time', 'output'};  
+m.editable_fields = {'order', 'poles_real', 'poles_img', 'zeros_real', 'zeros_img', ...
+                     'delays', 'gains', 'y_offset', 'input', 'time', 'output'};  
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.order = 3;
-m.poles = [];
-m.A = [];
-m.B = [];
-m.C = [];
-m.D = [];
-m.delay = [20]; % ms
-m.delay_per_chan = false;
-m.x_0     = [];
-m.y_offset = 0;
-m.num_inputs = 0;
+m.n_inputs    = 1;
+m.order       = 2;
+m.poles_real  = [1]; 
+m.poles_img   = [0];
+m.zeros_real  = [0];
+m.zeros_img   = [0];
+m.delays      = [5]; % Input delays in ms
+m.gains       = [1];
+m.y_offset    = 0;
 m.input =  'stim';
 m.time =   'stim_time';
 m.output = 'stim';
@@ -61,65 +59,59 @@ function mdl = auto_init_pz(stack, xxx)
     x = xxx{end};
     fns = fieldnames(x.dat);
     sf = fns{1};
-    [T, S, C] = size(x.dat.(sf).(mdl.input));               
+    [T, S, C] = size(x.dat.(sf).(mdl.input)); 
+      
+    mdl.n_inputs = C;
+    mdl.gains  = 10 * ones(mdl.n_inputs, 1);
+    mdl.delays = 5 + zeros(mdl.n_inputs, 1);
     
-    mdl.num_inputs = C;         
-    mdl.poles = ones(mdl.order,1);
-    mdl.A = zeros(mdl.order, mdl.order); 
-    mdl.B = zeros(mdl.order, mdl.num_inputs + 1);
-    mdl.B(1,:) = 1; % Set all rows to ones as a bad initial condition
-    mdl.B(:, end) = 0; % Set the last column (constant x_offset) to zero
-    mdl.C = zeros(1, mdl.order);
-    mdl.C(1) = 1;
-    mdl.D = zeros(1, mdl.num_inputs+1);
-    if mdl.delay_per_chan
-        mdl.delay = zeros(mdl.num_inputs, 1);
+    if ~(mod(mdl.order,2)  == 0)
+        error('Order must be an even number because I hacked this together.');
     end
+    
+    mdl.poles_real  = randn(mdl.n_inputs, mdl.order/2); 
+    mdl.poles_img   = randn(mdl.n_inputs, mdl.order/2);
+    mdl.zeros_real  = randn(mdl.n_inputs, mdl.order);
+    mdl.zeros_img   = []; % randn(mdl.n_inputs, mdl.order/2);            
+    
 end
 
-function sys = makesys(mdl)    
-    mdl.A(:, 1) = -(mdl.poles); % Set first column to poles
-    rhs = diag(ones(mdl.order - 1,1));
-    rhs(end+1, :) = 0;
-    mdl.A = [-abs(mdl.poles) rhs];
-    %delayterms = struct('delay', abs(mdl.delay ./ 1000), ...
-    %                           'a',[],'b', mdl.B, 'c', [],'d', []);    
-    %sys = delayss(mdl.A, zeros(size(mdl.B)), mdl.C, mdl.D, delayterms);
-    sys = ss(mdl.A, mdl.B, mdl.C, mdl.D);
-    tmp = abs(mdl.delay) / 1000;
-    tmp(end+1) = 0; % No delay for the constant offset
-    if (mdl.delay_per_chan)
-        sys.InputDelay = tmp;
-    else
-        sys.InputDelay(:) = abs(mdl.delay) / 1000; % (milliseconds)
+function sys = makesys(mdl)   
+    p = {};
+    z = {};
+    for ii = 1:mdl.n_inputs
+        for jj = 1:mdl.order/2
+            % Create poles in conjugate pairs            
+            p{ii}(2*jj-1) = -abs(mdl.poles_real(ii,jj)) + 1i * abs(mdl.poles_img(ii,jj));
+            p{ii}(2*jj) = -abs(mdl.poles_real(ii,jj)) - 1i * abs(mdl.poles_img(ii,jj));
+            
+
+            % TODO: Create zeros in conjugate pairs too? Is that physical?
+            % z{ii} = [mdl.zeros_real + i*abs(mdl.zeros_img)...
+            %          mdl.zeros_real - i*abs(mdl.zeros_img)];                        
+            % z{ii}(jj+1) = mdl.zeros_real(ii);             
+            % TODO: Try this?
+            %  z{ii}(1) = [0];   % ALWAYS put a zero at DC frequency
+            z{ii}(2*jj-1) = mdl.zeros_real(ii, 2*jj-1);  
+            z{ii}(2*jj) = mdl.zeros_real(ii, 2*jj);  
+        end
     end    
+    sys = zpk(z, p, mdl.gains');
+    sys.InputDelay = abs(mdl.delays) / 1000; % (milliseconds)
 end
 
-function x = do_pole_zeros(mdl, x, stack, xxx)
-    
-    sys = makesys(mdl);
-    
-    % Apply the FIR filter across every stimfile
-    for sf = fieldnames(x.dat)', sf=sf{1};
-        
-        % Compute the size of the filter
-         [T, S, C] = size(x.dat.(sf).(mdl.input));
-         
-         if ~isequal(C, size(mdl.A, 1))
-            error('Dimensions of A don''t match channel count.');
-         end
-             
-         tmp = zeros(T, S, 1);
-         
-         for s = 1:S
-             x0 = mdl.x_0;    % TODO: FIND x_0 for each stim case. 
-             
+function x = do_pole_zeros(mdl, x, stack, xxx)    
+    sys = makesys(mdl);    
+    for sf = fieldnames(x.dat)', sf=sf{1};        
+         [T, S, C] = size(x.dat.(sf).(mdl.input));         
+         tmp = zeros(T, S, 1);         
+         for s = 1:S            
              t = x.dat.(sf).(mdl.time)(:,1);
              u = squeeze(x.dat.(sf).(mdl.input)(:, s, :)); 
-             u(:, end+1) = 1; % Append on a constant 1 
+             % u(:, end+1) = 1; % Append on a constant 1 
              
              warning off Control:analysis:LsimStartTime;
-             tmp(:,s) = lsim(sys, u, t, x0);
+             tmp(:,s) = lsim(sys, u, t);
              warning on Control:analysis:LsimStartTime;
          end
          % The output is the sum of the filtered channels
@@ -142,8 +134,7 @@ function do_plot_pz_step_response(sel, stack, xxx)
     sys = makesys(mdls{1});
     step(sys);
     do_xlabel('Time [s]');
-    do_ylabel('Step Response');
-    
+    do_ylabel('Step Response');    
 end
 
 function do_plot_pz_bodemag_plot(sel, stack, xxx)

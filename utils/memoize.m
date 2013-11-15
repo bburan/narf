@@ -27,7 +27,7 @@ memoization_dir = [NARF_MEMOIZATION_PATH '/' function_name '/'];
                 [thedir h]);
             varargout = vars.varargout;
             return
-        end        
+        end 
         % If not, run function and cache result
         nouts = nargout(F);
         if (nouts == 1)
