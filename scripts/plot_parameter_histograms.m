@@ -12,6 +12,9 @@ for ii = 1:numel(params)
     if isempty(n_params) 
         n_params = length(prms);
     else
+        if isempty(prms)
+            continue;
+        end
         if n_params ~= length(prms)
             error(['plot_parameter_histograms.m requires all models ' ...
                    'to have the same number of free parameters.']);
