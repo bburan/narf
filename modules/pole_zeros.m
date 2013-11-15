@@ -128,12 +128,12 @@ function do_plot_zplane(sel, stack, xxx)
     mdls = stack{end};
     xins = {xxx(1:end-1)};        
     sys = makesys(mdls{1});
-    z = [];
-    for ii = 1:length(sys.z)
-        z(:,ii) = sys.z{ii};
-        p(:,ii) = sys.p{ii};
-    end
-    zplane(z,p);
+    %z = [];
+    %for ii = 1:length(sys.z)
+    %    z(:,ii) = sys.z{ii};
+    %    p(:,ii) = sys.p{ii};
+    %end
+    zplane(mdls{1}.zeros', mdls{1}.poles');
     do_xlabel('Real Axis');
     do_ylabel('Imaginary Axis');
 end
