@@ -23,7 +23,7 @@ m.output = 'stim';
 
 % Optional fields
 m.is_splittable = true;
-m.auto_plot = @do_plot_zplane;
+m.auto_plot = @do_plot_pz_impulse_response;
 m.auto_init = @auto_init_pz;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_single_default_output;

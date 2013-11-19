@@ -1121,7 +1121,7 @@ tca = TableColumnAdjuster(hJTable);
         sql = ['SELECT * FROM NarfResults WHERE batch=' num2str(sel_batch) ''];
         sql = [sql ' AND cellid in (' interleave_commas(sel_cellids) ')'];
         sql = [sql ' AND modelname in (' interleave_commas(sel_models) ')'];      
-        sql = [sql ' ORDER BY ID ASC'];
+        sql = [sql ' ORDER BY CELLID ASC'];
         
         dbopen;
         db_results = mysql(sql);
