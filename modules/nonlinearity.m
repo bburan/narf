@@ -80,6 +80,7 @@ function x = do_nonlinearity(mdl, x, stack, xxx)
         % TODO: Find a better solution than this hacky way of zeroing nans
         % so that optimization continue in the presence of singularities
         y(isnan(y)) = 0;
+        y(isinf(y)) = 10^6;
 
         x.dat.(sf).(mdl.output) = y;
     end

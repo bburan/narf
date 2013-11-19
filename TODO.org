@@ -1,20 +1,18 @@
 * Work Queue
-  1. Fix bug related to size of matrix 
-  2. Refit things at 200Hz
-  3. Double check scatter/bar plot accuracy
-  4. Investigate
-  5. Add normalization by default just before the nonlinearities.
-  6. Multiple p1z0 summed together (Start with 2)
+  1. Refit/Queue things at 200Hz. 
+  2. Double check scatter/bar plot accuracy
+  4. Add normalization by default just before the nonlinearities to make fitting faster
+  5. Multiple p1z0 summed together (Start with 2)
      1) [ ] Per-channel input nonlinearities
      2) [ ] Try p2z0 or the best in general 
-  7. A function to "store" current fittables, and then "restore" fittables, so I can quickly fit just the most recent module in a keyword
-  8. Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
-  9. Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
-  10. Metric: Log-likelihood
-  11. Nonlinearity: F(x) = alpha * log ( 1 + exp(beta*(x-theta))), where scale is alpha, shape is beta, and offset is theta. 
-  12. Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
-  13. Fitter: skipping some model parameters each step.
-  14. SVD Request: Study overfitting (analysis 19, batch 246). 
+  6. A function to "store" current fittables, and then "restore" fittables, so I can quickly fit just the most recent module in a keyword
+  7. Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
+  8. Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
+  9. Metric: Log-likelihood
+  10. Nonlinearity: F(x) = alpha * log ( 1 + exp(beta*(x-theta))), where scale is alpha, shape is beta, and offset is theta. 
+  11. Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
+  12. Fitter: skipping some model parameters each step.
+  13. SVD Request: Study overfitting (analysis 19, batch 246). 
       depwct1perchan and depct1perchan are identical except for init conds. 
       These should both subsume dep1, which should in turn subsumes fir. 
 

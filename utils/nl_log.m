@@ -15,5 +15,5 @@ function ret = nl_log(phi, z)
         adjoffset=offset;
     end
     
-    ret = log(z + 10^offset) + zeroer;
+    ret = log(z + 10^adjoffset) + zeroer;
 end
