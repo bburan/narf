@@ -1,12 +1,22 @@
-* ABCD
-  Model additions that may help improve ABCD:
-  1. [X] Y offset.  (Not needed now that there is a constant x offset built into B)
-  2. [X] Per-channel latencies. 
-  3. [ ] Per-channel input nonlinearities. 
-  4. [ ] An output nonlinearity. However, I think this should be added and fit AFTER the ABCD. It's hard enough to fit ABCD already. 
-  5. [ ] Comparing things at 200Hz not 100Hz....no extra parameters!
-  6. [ ] 
-
+* Work Queue
+  1. Fix bug related to size of matrix 
+  2. Refit things at 200Hz
+  3. Double check scatter/bar plot accuracy
+  4. Investigate
+  5. Add normalization by default just before the nonlinearities.
+  6. Multiple p1z0 summed together (Start with 2)
+     1) [ ] Per-channel input nonlinearities
+     2) [ ] Try p2z0 or the best in general 
+  7. A function to "store" current fittables, and then "restore" fittables, so I can quickly fit just the most recent module in a keyword
+  8. Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
+  9. Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
+  10. Metric: Log-likelihood
+  11. Nonlinearity: F(x) = alpha * log ( 1 + exp(beta*(x-theta))), where scale is alpha, shape is beta, and offset is theta. 
+  12. Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
+  13. Fitter: skipping some model parameters each step.
+  14. SVD Request: Study overfitting (analysis 19, batch 246). 
+      depwct1perchan and depct1perchan are identical except for init conds. 
+      These should both subsume dep1, which should in turn subsumes fir. 
 
 * Current Project: Metrics
 ** Metrics on Responses
@@ -64,11 +74,7 @@
   24. [ ] Coherence
   25. [ ] Measure the percent by which the noise variance decreases when this feature is added
   26. [ ] Confidence interval in a bayesian way using Highest Density Interval (Contains 95% of spaces)
-
-** Naive Bayes
-  The more I think about it, just using naked probabilities (MAP) seems more and more attractive.
-  For example, when we calculate MSE, the stupid "prestim-silence" distorts the histograms because so many equivalent values come in.
-  These would be naturally weighted less if we were using the bayesian approach to marginalize by the expected data. 
+  27. [ ] Naive Bayes and MAP (The more I think about it, just using naked probabilities (MAP) seems more and more attractive. For example, when we calculate MSE, the stupid "prestim-silence" distorts the histograms because so many equivalent values come in. These would be naturally weighted less if we were using the bayesian approach to marginalize by the expected data. 
 
 * Engineering Mini Projects
 ** Additional Metrics
@@ -111,27 +117,11 @@
 ** Fitter Scaling:
    Problem: (See Eternal Problems with Fitters, below)
 
-** Per-module memoization
-   + Could be done by memoizing calc_xxx() or add_module(), as appropriate
-   + Would speed up 
-   + Reasons why it would be nice to do this:
-     1. narf_modelpane could go very fast, so inspections would become really quick. 
-   + Reasons why I don't want to do this:
-     1. It would entail storing additional megs per model file, and would have to be run ONCE, AFTER the fitting, to create the cached files. 
-     2. If we change a module later, do we want to load the saved version or the new one?
-     3. We could achieve much the same functionality by asking load_model and save_model to store XXX anyway, instead of re-building it. 
-   + Problem workaround:
-     1. I think I will just memoize INSIDE the gt100 module. 
-
-** Memoization Clearing
-   + I don't know if I like the idea of managing this by hand. It doesn't really hurt anything, though. 
-
-* WORK QUEUE
-  - SVD: Overfitting (analysis 19, batch 246). 
-    depwct1perchan and depct1perchan are identical except for init conds. 
-    These should both subsume dep1, which should in turn subsumes fir. 
-
 * Ideas:
+  - Check scatter & bar plot accuracy
+  - Think about linear wavelets using complex pole/zero systems. 
+  - Put git hashtag as the working directory of the memoization
+  - Use normalization throughout the model to make it easier to fit. After fitting is done, go back and rescale/remove them except for at the very end. 
   - Try to understand the information content in correlated noise
   - FIR filter with a gain term, so that all FIR coefficients are relative to that. Or even, for ALL of the modules, having a scaling and shifting term like that. 
   - What about NONLINEAR FIR filters? Replace each simple convolution coefficient with a NL function, like quadratic?
@@ -140,7 +130,6 @@
   - Make a plot of stimulus correlation vs response correlation (to show how much is leaking through)
   - Try asymetric sigmoid differential equations
   - Stephen added a Gain term to depression, (depression bank nonorm). But didn't try the depression offset yet.
-  - Could parameterizations be explicitly built into a matrix form?
   - What effects will be modeled and where?
     | delays              | wavelet parameter                        |
     | threshold           | zthresh of input (u)                     |
@@ -160,7 +149,6 @@
   2. Is there a way to weight data points by NOVELTY? We want to discard outliers, but also don't want to weight repetitive signals so strongly that we overfit to the repetitive signals and not the new data.
   3. Mutual Information fits queued up
   4. Add a two-model comparison function which scatter-plots many matrices, does a histogram of collapsed scatter plot along diagonal, and does randomized paired T-test. Maybe log-likelihood ratio too. 
-  5. Read Dan Butz NIM paper and package
   6. Add a button to LOADSTIMFROMBAPHY that plays the sound or stimulus selected
   7. Write a generalized hook-in for constraints that pack_fittables calls and resets values as they are re-inserted
   8. General purpose scatter + marginals plot (Reuse scatter comparison?)
@@ -200,26 +188,6 @@
   - It may not be able to fit dep1 so that it is 100% of the time better than FIR
   - We may overfit our data because the stopping criterion is absolute, and all neurons have different noise levels (...higher EST scores don't always translate to VAL scores)
   - We should compare fitters by their EST scores, not their VAL scores
-
-* Using Residuals to Estimate Noise Floor
-  1. Make a prediction p(t).
-  2. Subtract neural response r(t) from p(t) to get residual s(t). 
-  3. Shuffle s(t) in time, so that the same marginal is kept but all time correlation is lost. Call this w.
-  4. Add w to p(t) and check to see if your response improves it as well.
-  5. Repeat steps 2 and 3 as many times as is needed to estimate that it improves the 95% of the time. 
-** Expected Problem
-   There are MANY more samples at the 0 (prestim silence) input level...and residual is often a function of input amplitude, so this biases the answer?
-
-* Using 2D gaussians to parametrize an STRF
-  % Ivar thinks: I should pick out a large collection of 2D gaussians
-  %  centered at representative points. This would be a like non averaging
-  %  FIR filter... 4 points per gaussian: mu_x, mu_y, sigma_x, sigma_y
-  % 
-  % A fast way of computing this is to simply pick mu_x and mu_y as each
-  % point. This takes N calculations. I then estimate different values of
-  % sigma_x, sigma_y, based on the M nearest neighbors. Finally, in step
-  % three, maybe I float the parameters and allow the overall probability 
-  % to be optimized using boosting or something? 
   
 * De-jittering Idea?
   - Take a channel
@@ -498,3 +466,13 @@ do?
   13. Mixfit variations explored more.
   21. Better initial conditions.
   12. Queue up a few different smooth_respavg kernels at 200Hz  
+** Using 2D gaussians to parametrize an STRF
+  % Ivar thinks: I should pick out a large collection of 2D gaussians
+  %  centered at representative points. This would be a like non averaging
+  %  FIR filter... 4 points per gaussian: mu_x, mu_y, sigma_x, sigma_y
+  % 
+  % A fast way of computing this is to simply pick mu_x and mu_y as each
+  % point. This takes N calculations. I then estimate different values of
+  % sigma_x, sigma_y, based on the M nearest neighbors. Finally, in step
+  % three, maybe I float the parameters and allow the overall probability 
+  % to be optimized using boosting or something? 

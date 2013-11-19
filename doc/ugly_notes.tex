@@ -1,3 +1,33 @@
+** Per-module memoization
+   + Could be done by memoizing calc_xxx() or add_module(), as appropriate
+   + Would speed up 
+   + Reasons why it would be nice to do this:
+     1. narf_modelpane could go very fast, so inspections would become really quick. 
+   + Reasons why I don't want to do this:
+     1. It would entail storing additional megs per model file, and would have to be run ONCE, AFTER the fitting, to create the cached files. 
+     2. If we change a module later, do we want to load the saved version or the new one?
+     3. We could achieve much the same functionality by asking load_model and save_model to store XXX anyway, instead of re-building it. 
+   + Problem workaround:
+     1. I think I will just memoize INSIDE the gt100 module. 
+
+** Memoization Clearing
+   + I don't know if I like the idea of managing this by hand. It doesn't really hurt anything, though. 
+
+
+Q: Which starting features yield the best performance for a simple compressor+FIR model? Does removing the prestim silence improve model performance?
+A: Removing prestim silence does not help performance. {{'env100', 'env100n'}, 'log2b', 'firno', 'initrc', 'nonl', 'mse', 'boost'}
+
+
+* Using Residuals to Estimate Noise Floor
+  1. Make a prediction p(t).
+  2. Subtract neural response r(t) from p(t) to get residual s(t). 
+  3. Shuffle s(t) in time, so that the same marginal is kept but all time correlation is lost. Call this w.
+  4. Add w to p(t) and check to see if your response improves it as well.
+  5. Repeat steps 2 and 3 as many times as is needed to estimate that it improves the 95% of the time. 
+** Expected Problem
+   There are MANY more samples at the 0 (prestim silence) input level...and residual is often a function of input amplitude, so this biases the answer?
+
+
 ** Function Memoization
    Problem to be solved: We are recomputing things too much. Also, we have no way of caching expensive things like gammatone filters short of using BAPHY. 
    Goals: 

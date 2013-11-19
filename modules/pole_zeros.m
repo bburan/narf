@@ -88,14 +88,18 @@ function x = do_pole_zeros(mdl, x, stack, xxx)
          tmp = zeros(T, S, 1);         
          for s = 1:S            
              t = x.dat.(sf).(mdl.time)(:,1);
-             u = squeeze(x.dat.(sf).(mdl.input)(:, s, :));         
+             u = squeeze(x.dat.(sf).(mdl.input)(:, s, :));             
+             % If there are NANs in the input, treat them like 0's when
+             % simulating with lsim, then NAN out the output later.
+             % This is kind of an ugly hack. 
              u_nan = isnan(u);
-             u(u_nan) = 0; % TODO: REPLACE THIS HACK?
+             u(u_nan) = 0;
              u(isinf(u)) = 10^6;
              warning off Control:analysis:LsimStartTime;
              tmp(:,s) = lsim(sys, u, t);
              warning on Control:analysis:LsimStartTime;
-             tmp(:,u_nan) = nan;
+             nanidxs = any(u_nan,2);
+             tmp(nanidxs,s) = nan;
          end
          x.dat.(sf).(mdl.output) = tmp + mdl.y_offset;
     end
