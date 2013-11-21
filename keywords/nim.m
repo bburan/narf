@@ -2,7 +2,7 @@ function nim()
 
 global MODULES STACK XXX;
 
-NMMPATH = '/home/ivar/matlab/nmm/';
+NMMPATH = '/auto/users/ivar/matlab/nmm/';
 addpath(genpath(NMMPATH));
 
 % TODO: Assumes 200Hz for now. 

@@ -28,7 +28,7 @@ end
 
 function x = do_nim_wrapper(mdl, x, stack, xxx)   
     
-    NMMPATH = '/home/ivar/matlab/nmm/';
+    NMMPATH = '/auto/user/ivar/matlab/nmm/';
     addpath(genpath(NMMPATH));
     
     for sf = fieldnames(x.dat)', sf=sf{1};
