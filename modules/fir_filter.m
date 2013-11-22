@@ -16,13 +16,15 @@ m.name = 'fir_filter';
 m.fn = @do_fir_filtering;
 m.pretty_name = 'FIR Filter';
 m.editable_fields = {'coefs', 'num_coefs', 'num_dims', 'baseline', ...
-                     'input', 'filtered_input', 'time', 'output'};
+                     'sum_channels',...
+                    'input', 'filtered_input', 'time', 'output'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.num_coefs = 20;
 m.num_dims = 2;
 m.baseline = 0;
+m.sum_channels=1;
 m.coefs = zeros(m.num_dims, m.num_coefs);
 m.input =  'stim';
 m.filtered_input = 'stim_filtered';
@@ -81,6 +83,9 @@ end
 
 function x = do_fir_filtering(mdl, x, stack, xxx)   
     % Apply the FIR filter across every stimfile
+    if ~isfield(mdl, 'sum_channels') 
+        mdl.sum_channels=1;
+    end
     fns = fieldnames(x.dat);
     for ii = 1:length(fns)
          sf=fns{ii};
@@ -116,7 +121,11 @@ function x = do_fir_filtering(mdl, x, stack, xxx)
          x.dat.(sf).(mdl.filtered_input) = tmp;
          
          % The output is the sum of the filtered channels
-         x.dat.(sf).(mdl.output) = squeeze(sum(tmp, 3)) + mdl.baseline; 
+         if mdl.sum_channels
+             x.dat.(sf).(mdl.output) = squeeze(sum(tmp, 3)) + mdl.baseline; 
+         else
+             x.dat.(sf).(mdl.output) = tmp + mdl.baseline; 
+         end
     end
 end
 
