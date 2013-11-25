@@ -50,5 +50,5 @@ end
 
 % OPTIONAL TODO: Sum the two y_offsets together here before final fit.
 
-fit04b();
+fit04a();
 end
