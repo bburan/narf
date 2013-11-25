@@ -849,7 +849,9 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                     continue;
                 end
                 if length(ret) > 1
-                    error('More than one matching model found!');
+                    
+                    fprintf('More than one matching model found!');
+                    keyboard;
                 end
                 
                 for kk = 1:length(fieldstoget)

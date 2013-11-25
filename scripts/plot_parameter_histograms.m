@@ -25,10 +25,12 @@ end
 figure('Name', 'Parameter Histograms', 'NumberTitle', 'off', 'Position', [20 50 900 900]);
 n = ceil(sqrt(n_params));
 
+dat = [params{:}];
+csvwrite('/tmp/parameter_histogram.csv', dat);
+
 for ii = 1:n_params
     subplot(n, n, ii);
     data = cellfun(@(c) c(ii), params);
     hist(data, 50);
     xlabel(sprintf('Parameter %d', ii));
 end
-
