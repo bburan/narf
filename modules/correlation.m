@@ -84,9 +84,9 @@ function x = do_correlation(mdl, x, stack, xxx)
             [A, B, C] = size(x.dat.(x.test_set{ii}).resp);
             M = reshape(x.dat.(x.test_set{ii}).resp, A*B, C);
             if ~isempty(respmat) && C > size(respmat, 2)
-                respmat = cat(1, [respmat nan(size(respmat,1), M-size(respmat,2))] , M);
+                respmat = cat(1, [respmat nan(size(respmat,1), size(M,2)-size(respmat,2))] , M);
             elseif C < size(respmat, 2)
-                respmat = cat(1, respmat, [M nan(size(M,1), size(respmat,2) - M)]);
+                respmat = cat(1, respmat, [M nan(size(M,1), size(respmat,2) - size(M,2))]);
             else
                 respmat = cat(1, respmat, M);
             end

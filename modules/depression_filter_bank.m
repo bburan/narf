@@ -72,6 +72,7 @@ function x = do_depression_filter(mdl, x, stack, xxx)
         T=T+sum(sum(~isnan(ts(:,:,1)),1),2);
     end
     stimmax=stimmax./T;
+    stimmax(stimmax==0)=1;
     
     [T, S, N] = size(x.dat.(sf).(mdl.input));
     if isfield(mdl,'per_channel') && mdl.per_channel,
