@@ -61,10 +61,6 @@ function x = do_state_space_diffeq(mdl, x, stack, xxx)
         % Compute the size of the filter
          [T, S, C] = size(x.dat.(sf).(mdl.input));
          
-         if ~isequal(C, size(mdl.A, 1))
-            error('Dimensions of A don''t match channel count.');
-         end
-             
          tmp = zeros(T, S, 1);
          
          for s = 1:S

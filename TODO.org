@@ -1,20 +1,52 @@
+* Current Experiment on Batch 179 (SPN single channel)  
+  Try various pre-nonlinearities and post-nonlinearities with p1z0 at 200Hz on the vocalization data. 
+  The goal is to learn the best pre- and post- nonlinearities to use with p1z0. 
+  This information will be then used to build a new center keyword, similar to p1z0x2 (With explicit fast/slow filters)
+  On this new center keyword, we will again test various pre- and post- nonlinearities just for the SLOW filter
+  At that point, we should have two filters per channel: a "fast dynamics" filter and a "slow dynamics" filter, with custom nonlinearities for each.
+  Then we can add a simple 2-input weighting and "output nonlinearity" on the second stage. This will essentially replicate the NIM model. 
+  Then perhaps we can improve the "fast dynamics" filter to be either:
+         + p3z2 model 
+         + p1z0 but operate on original and quadratic terms, concatenated as extra channel
+         + Have different nonlinearities
+         + p1z2x2 (Initialize second as inhibitory)
+  We could also	improve the "Slow dynamics" filter by 
+         + Trying different nonlinearities
+         + Adding more orders to the filter
+  We could also improve the output weighting and output nonlinearity by:
+         + Trying different nonlinearities
+         + Trying more 
+
+* Problems that are unresolved
+** GENERAL SCIENCE / METHODOLOGY
+  1. RESPAVG:
+     1) Looking more closely at the variation could tell us more about the neurons. 
+     2) We don't know the distributions of the RESPAVG impacting the filter (which takes the average and blends it together), and extracting/splitting those two would be  ideal.
+  2. Fitting Parameters
+     1) We aren't verifying we can actually fit synthetic data
+     2) We have no confidence intervals or noise distribution hypotheses for most parameters. 
+  3. First half /second half stationarity has not been verified yet.
+  4. We aren't extracting info from the sound wave directly yet, we are using an artifical feature. 
+
+** TECHNICAL
+  1. We only have one metric. 
+  2. 100Hz is too rough to see many details. 
+  3. Outliers are a problem. 
+
+* Write
+  1. Experimentation in stateful models. 
+  2. Perhaps I could save the "state" of the ABCD/PZ models in XXX and use it later with a quadratic term?
+
 * Work Queue
-  1. Refit/Queue things at 200Hz. 
-  2. Double check scatter/bar plot accuracy
-  4. Add normalization by default just before the nonlinearities to make fitting faster
-  5. Multiple p1z0 summed together (Start with 2)
-     1) [ ] Per-channel input nonlinearities
-     2) [ ] Try p2z0 or the best in general 
-  6. A function to "store" current fittables, and then "restore" fittables, so I can quickly fit just the most recent module in a keyword
+  1. Add normalization by default just before the nonlinearities to make fitting faster
+  2. Metric: Log-likelihood
+  3. Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
+  4. Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
+  5. Fitter: skipping some model parameters each step.
+  6. SVD Request: Study overfitting (analysis 19, batch 246). 
+     depwct1perchan and depct1perchan are identical except for init conds. 
+     These should both subsume dep1, which should in turn subsumes fir. 
   7. Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
-  8. Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
-  9. Metric: Log-likelihood
-  10. Nonlinearity: F(x) = alpha * log ( 1 + exp(beta*(x-theta))), where scale is alpha, shape is beta, and offset is theta. 
-  11. Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
-  12. Fitter: skipping some model parameters each step.
-  13. SVD Request: Study overfitting (analysis 19, batch 246). 
-      depwct1perchan and depct1perchan are identical except for init conds. 
-      These should both subsume dep1, which should in turn subsumes fir. 
 
 * Current Project: Metrics
 ** Metrics on Responses
@@ -37,13 +69,6 @@
     - Module to compare distributions. 
     - Integrating module (for computing integrated ISIs). Should have a "leakiness" term. 
     - Differentating module (for computing ?? )
-
-*** Tricks
-    h = dfilt.delay(4) ;
-    sig = 1:7      % Create some simple signal data
-    states = h.states    % Filter states before filtering
-    filter(h,sig)       % Filter using the delay filter
-    states=h.states     % Filter states after filtering
 
 * Metric-taking Ideas being developed in update_metrics();
   1. [X] metric_lnorm.m: Takes an L norm metric (MSE, L1, Linfty, etc)
@@ -73,8 +98,15 @@
   25. [ ] Measure the percent by which the noise variance decreases when this feature is added
   26. [ ] Confidence interval in a bayesian way using Highest Density Interval (Contains 95% of spaces)
   27. [ ] Naive Bayes and MAP (The more I think about it, just using naked probabilities (MAP) seems more and more attractive. For example, when we calculate MSE, the stupid "prestim-silence" distorts the histograms because so many equivalent values come in. These would be naturally weighted less if we were using the bayesian approach to marginalize by the expected data. 
+  28. [ ] Predictive Power (Sahani, Linden, 2003 "How linear are auditory cortical responses")
 
 * Engineering Mini Projects
+** Realization
+   Consider a BUNCH of FIR filters that sum together at the end (A tree structure)
+   If I am fitting them with my current iterative structure, when the first filter is being modified, the second is being recalculated unnecessarily
+   Is there a way to avoid this unnecessary recomputation without hacking into something like split/unifiers? 
+   Lazy evaluation or tree-traversal is probably the real solution. 
+
 ** Additional Metrics
    ARGUMENTS: CELLS, MODELA, MODELB, 
    Problem to be solved: Need a reliable way to add metrics, save to DB, and refresh when applicable. 
@@ -88,7 +120,6 @@
      + Metrics should be insertable into the DB 
      + Metrics should be refreshable with minimal effort, through the GUI. 
      + It would be nice if I could just add metrics in one place, create a new table entry, and everything would be hunky dory. 
-     + 
   19. Scatter plots of two models being compared. One plot for each performance metric.
   20. Updated DB Insertion and Great Name Replacing proposal
 	  + [ ] calc_all_metrics()  function
@@ -104,7 +135,6 @@
 		Lots of hidden assumptions here which are a problem. Plot modules have access to AFTER data, too.
 	  + [ ] Dangerous Naming: score_corr is used for optimization, but it looks like a metric!
 
-
 ** 2-Model Comparison HUD
    Problem to be solved: Place to hook on comparison analyses like SVD is doing already. 
   
@@ -119,6 +149,7 @@
   - Check scatter & bar plot accuracy
   - Think about linear wavelets using complex pole/zero systems. 
   - Put git hashtag as the working directory of the memoization
+  - Add histograms to nonlinear curves to see where the inputs fall. 
   - Use normalization throughout the model to make it easier to fit. After fitting is done, go back and rescale/remove them except for at the very end. 
   - Try to understand the information content in correlated noise
   - FIR filter with a gain term, so that all FIR coefficients are relative to that. Or even, for ALL of the modules, having a scaling and shifting term like that. 

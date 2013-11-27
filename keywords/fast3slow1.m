@@ -22,7 +22,7 @@ append_module(MODULES.pole_zeros.mdl(...
 fit04a(); pop_module();
     
 % Now cache those new params, EXCEPT FOR THE Y_OFFSET!
-savefitparms{end+1}={{'poles', 'zeros', 'gains', 'delays'}};
+savefitparms{end+1}={'poles', 'zeros', 'gains', 'delays'};
 STACK{end}{1}.fit_fields = {};
 STACK{end}{1}.output = 'stim1';
 calc_xxx(length(STACK)); 
