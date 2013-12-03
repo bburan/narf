@@ -53,8 +53,8 @@ append_module(MODULES.pz_synapse.mdl(...
                        'output', 'stim3'))); 
 
 append_module(MODULES.sum_fields.mdl(struct('inputs', {{'stim1', 'stim2', 'stim3'}})));
-fit04a(); pop_module(); 
-STACK{end-1}{1} = rmfield(STACK{end}{1}, 'fit_fields');
+fit04a(); pop_module();
+STACK{end-1}{1} = rmfield(STACK{end-1}{1}, 'fit_fields');
 
 siglog();
 fit04a(); 
