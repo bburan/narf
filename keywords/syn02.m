@@ -53,36 +53,24 @@ append_module(MODULES.pz_synapse.mdl(...
                        'output', 'stim3'))); 
 
 append_module(MODULES.sum_fields.mdl(struct('inputs', {{'stim1', 'stim2', 'stim3'}})));
-fit04a(); pop_module(); pop_module();
+fit04a(); pop_module(); 
 STACK{end}{1} = rmfield(STACK{end}{1}, 'fit_fields');
 
 siglog();
-fit04a(); pop_module();
+fit04a(); 
 
 % Now go through and re-fit everything.
-[~, mod_idxs] = find_modules(STACK, 'pz_synapes');
-N = 10;
-for ii = 1:N
-    fprintf('\n\nFITTING MODULES INDIVIDUALLY...%d of %d\n', ii, N);
-    for jj = 1:length(mod_idxs)
-        idx = mod_idxs{jj};
-        
-        % Put the module to be fit in last place
-        tmp = STACK{mod_idxs{end}};        
-        STACK{mod_idxs{end}} = STACK{mod_idxs{jj}}; 
-        STACK{mod_idxs{jj}} = tmp;
-        calc_xxx(mod_idxs{1});
-        
-        STACK{idx}{1}.fit_fields = {'poles', 'zeros', 'gain', 'delayms', ...
-                                    'prephi', 'postphi'};
-        fit04a();
-        
-        % Restore the modules to their rightful positions
-        tmp = STACK{mod_idxs{end}};        
-        STACK{mod_idxs{end}} = STACK{mod_idxs{jj}}; 
-        STACK{mod_idxs{jj}} = tmp;
-        calc_xxx(mod_idxs{1});
-    end
+[~, mod_idxs] = find_modules(STACK, 'pz_synapse');
+
+for jj = 1:length(mod_idxs)
+    idx = mod_idxs{jj};
+    STACK{idx}{1}.fit_fields = {'poles', 'zeros', 'gain', 'delayms', ...
+                                'prephi', 'postphi'};
 end
+
+calc_xxx(2);
+[a,b,c,d] = fit_scaat('InitStepSize', 100.0, ...
+                      'StopAtAbsScoreDelta', 10^-4);
+
 
 end
