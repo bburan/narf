@@ -1,0 +1,46 @@
+* 200Hz Experiments on Batch 179 using Continuous Linear Filters
+** Experiment 0: Which linear filter gives us the best bang for our buck?
+   p1z0 is pretty good. 
+   p3z2 is better.
+   p1z0x3 is best. Something about adding three "directions" is really nice. 
+
+** Experiment 1: Which are the best nonlinearities to pair
+   Compressors: {'null', 'exp', 'logfree', 'rootfree', 'zthresh'}
+   Nonlinearities:  {'null', 'siglog', 'siglog100', 'zthresh', 'zsoft', 'npfnl0'}
+   Fitter: fit04a    (Starts at stepsize of 100, bisection search, until a single step is forced on each coefficient. Iterative.)  
+   Compressor: logfree
+   Nonlinearity: npfnl0, followed by siglog
+
+** Observations:
+  1. Siglog100 doesn't work well after a normalization. Probably it is optimized for SVD's code. 
+  2. depct1_siglog100 beats fir_siglog almost always. However, it loses to fir_npfnl0 occasionally enough that it suggests fitting could be improved.
+  3. nim would probably exactly meet or slightly exceed fir_npfnl0 if there weren't a few really bad outliers for which NIM fails. 
+  4. p1z0x3 slightly beats fir. When there is an npfnl0 appended, FIR slightly wins. 
+  5. abcdv2_npfnl0 vs fir_npfnl0
+  6. fast3slow1_npfnl0 vs p1z0x3: Scatterplot suggests that although fast3slow1 has lower mean, it's a better model (excluding outliers)
+  7. fir_npfnl0
+  8. Siglog fits are pretty loose and look like they need to be fit "harder". Maybe down to 10^-6?
+
+** How many parameters does each model have?
+   For batch 179, the number of parameters and average correlation for each model are:
+   | Params | R | Model                                         |
+   |--------+---+-----------------------------------------------|
+   |      5 |   | logfree_p1z0                                  |
+   |      8 |   | logfree_p1z0x2                                |
+   |     11 |   | logfree_p1z0x3                                |
+   |        |   | logfree_abcdv2                                |
+   |        |   | logfree_fast3slow1                            |
+   |     19 |   | logfree_fir_siglog_fit05                      |
+   |     22 |   | logfree_depct1_siglog100_fit05                |
+   |    163 |   | NIM = 2*(30 FIR, 25x2 NL) + 3 for spiking NL) |
+
+** Things that should be tried
+   1. A comparison between adding slow exponential kernel as a 'leaky, suppressive integrator' vs using a depression filter.
+   3. Adding a sigmoid to the end that is more tightly fit
+   4. Replicating NIM with p1z0 filters and FIR filters
+
+* Opinion
+  My hunch is that the big discovery of NIM (Two curves, one with "delayed inhibition") is just some depression effect being aliased into the linear model somehow.
+  My testable prediction bet if we explicitly include depression of the right type, it will largely disappear. 
+  On the other hand, I also bet that using multiple filters + thresholding is the real discovery.
+  Probably the more simple filters and simple thresholds you use, the better. 
