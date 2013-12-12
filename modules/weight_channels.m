@@ -31,7 +31,7 @@ end
 function x = do_weight_channels(mdl, x, stack, xxx)   
     fns = fieldnames(x.dat);
     for ii = 1:length(fns)
-         sf=fns{ii};             
+         sf=fns{ii};
          
          % Check dimensions are OK
          [T, S, C] = size(x.dat.(sf).(mdl.input));
