@@ -12,6 +12,7 @@ m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.inputs = {'stim1', 'stim2'}; 
+m.time   = 'stim_time';
 m.output = 'stim';
 
 % Optional fields
