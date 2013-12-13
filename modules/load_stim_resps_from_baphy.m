@@ -48,9 +48,8 @@ m.plot_fns{3}.fn = @do_plot_respavg;
 m.plot_fns{3}.pretty_name = 'Response Average';
 m.plot_fns{4}.fn = @do_plot_response_raster;
 m.plot_fns{4}.pretty_name = 'Response Raster';
-
-% m.plot_fns{6}.fn = @do_plot_stim_log_spectrogram;
-% m.plot_fns{6}.pretty_name = 'Stimulus Log Spectrogram';
+m.plot_fns{5}.fn = @do_plot_stim_log_spectrogram;
+m.plot_fns{5}.pretty_name = 'Stimulus Log Spectrogram';
 % m.plot_fns{7}.fn = @do_plot_spectro_and_raster;
 % m.plot_fns{7}.pretty_name = 'Spectrogram + Raster';
 
@@ -364,30 +363,23 @@ end
 % 
 % end
 
-% function do_plot_stim_log_spectrogram(stack, xxx)
-%     mdl = stack{end};    
-%     x = xxx{end};
-%     
-%     if strcmp(mdl.stimulus_format, 'envelope')
-%         text(0.35, 0.5, 'Cannot visualize envelope as spectrogram');
-%         axis([0, 1, 0 1]);
-%         return;
-%     end
-%     
-%     % Read the GUI to find out the selected stim files
-%     sf = popup2str(mdl.plot_gui.selected_stimfile_popup);
-%     stim = popup2num(mdl.plot_gui.selected_stim_idx_popup);
-%     chan = popup2num(mdl.plot_gui.selected_stim_chan_popup);
-%     
-%     dat = x.dat.(sf);
-%    
-%     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
-%     logfsgram(dat.(mdl.output_stim)(:, stim, chan), ...
-%               4048, mdl.raw_stim_fs, [], [], 500, 12); 
-%     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
-%     axis tight;
-% end
-% 
+function do_plot_stim_log_spectrogram(sel, stack, xxx)
+    mdl = stack{end}{1};    
+    x = xxx{end};
+     
+     if ~strcmp(mdl.stimulus_format, 'wav')
+         text(0.35, 0.5, 'Cannot visualize non-wav stimulus as spectrogram');
+         axis([0, 1, 0 1]);
+         return;
+     end
+               
+     % From 500Hz, 12 bins per octave, 4048 sample window w/half overlap
+     logfsgram(x.dat.(sel.stimfile).(mdl.output_stim)(:, sel.stim_idx, sel.chan_idx), ...
+               4048/2, mdl.raw_stim_fs, [], [], 200, 12); 
+     caxis([-20,40]);  % TODO: use a 'smarter' caxis here
+     axis tight;
+ end
+ 
 % function do_plot_spectro_and_raster(stack, xxx)
 %     mdl = stack{end};    
 %     x = xxx{end};

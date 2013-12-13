@@ -6,11 +6,12 @@ m.mdl = @weight_channels;
 m.name = 'weight_channels';
 m.fn = @do_weight_channels;
 m.pretty_name = 'Weight Channels';
-m.editable_fields = {'weights', 'input', 'time', 'output'};
+m.editable_fields = {'weights', 'y_offset', 'input', 'time', 'output'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.weights = [1]; % Each column weights several channels to produce
+m.y_offset = [0]; % A column of y-offsets to be added to each output chan. 
 m.input =  'stim';
 m.time =   'stim_time';
 m.output = 'stim';
@@ -45,7 +46,7 @@ function x = do_weight_channels(mdl, x, stack, xxx)
              in = squeeze(x.dat.(sf).(mdl.input)(:, s, :));
              tmp(:,s,:) = in * mdl.weights;
          end         
-         x.dat.(sf).(mdl.output) = tmp;
+         x.dat.(sf).(mdl.output) = tmp + mdl.y_offset;
     end
 end
 

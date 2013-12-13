@@ -6,7 +6,7 @@ m.mdl = @pz_wavelet;
 m.name = 'pz_wavelet';
 m.fn = @do_pz_wavelet;
 m.pretty_name = 'PZ Wavelet';
-m.editable_fields = {'N_zeros', 'center_freq', 'Q_factor', 'N_order', ...
+m.editable_fields = {'N_zeros', 'center_freq_khz', 'Q_factor', 'N_order', ...
                      'delayms', 'gain', 'y_offset', ...
                      'input', 'time', 'output'};  
 m.isready_pred = @isready_always;
@@ -15,7 +15,7 @@ m.isready_pred = @isready_always;
 m.poles       = [];
 m.zeros       = [];
 m.N_zeros     = 0;
-m.center_freq = 200; % In decihertz
+m.center_freq_khz = 2;
 m.Q_factor    = 3; % Actually the offset from sqrt(2)
 m.N_order     = 4; 
 m.delayms     = 5; % Input delays in ms
@@ -50,7 +50,7 @@ end
 % INSTANCE METHODS
 
 function sys = makesys(mdl)
-    CF = abs(mdl.center_freq) * 10;
+    CF = abs(mdl.center_freq_khz) * 1000;
     Q  = 0.71 + abs(mdl.Q_factor);
     N  = ceil(abs(mdl.N_order));
     
@@ -97,8 +97,9 @@ function x = do_pz_wavelet(mdl, x, stack, xxx)
              u(u_nan) = 0;
              u(isinf(u)) = 10^6;
              warning off Control:analysis:LsimStartTime;
+             warning off Control:analysis:LsimUndersampled;
              tmp(:,s) = lsim(sys, u, t);
-             
+             warning on Control:analysis:LsimUndersampled;
              warning on Control:analysis:LsimStartTime;
              nanidxs = any(u_nan,2);
              tmp(nanidxs,s) = nan;
