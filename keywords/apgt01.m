@@ -37,6 +37,6 @@ fit_boo('StopAtAbsScoreDelta', 10^-3, 'StepGrowth', 1.3);
 pop_module(); pop_module();
 
 % Stop fitting the PZ wavelet.
-STACK{end-2}.fit_fields = {};
+STACK{end-2}{1}.fit_fields = {};
 
 end
