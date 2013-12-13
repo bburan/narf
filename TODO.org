@@ -1,22 +1,14 @@
 * Work Queue
-  1. Try to get "channel weighting" module working
-  1. For Vocalization Data:
-     + 12CH gammatone
-     + channel smoothing with 6 gaussians
-     + Depct1
-     + NIM with polezero and/or FIR
-  5. Add normalization by default just before the nonlinearities to make fitting faster
-  6. Metric: Log-likelihood
-  7. Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
-  8. Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
-  9. Fitter: skipping some model parameters each step.
-  10. SVD Request: Study overfitting (analysis 19, batch 246). 
-      depwct1perchan and depct1perchan are identical except for init conds. 
-      These should both subsume dep1, which should in turn subsumes fir. 
-  11. Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
-
-* Done
-  1. Try adding a clojure app to the java classpath and calling a clj function from matlab.
+  1. Keep hammering on Vocalization Data w/12CH gammatone, smoothing, dep, NIM
+  2. Frankly, I think NORMALIZATION AT EVERY SINGLE STEP, except for the last step which has shift and scale, would be an excellent idea.
+  4. Metric: Log-likelihood
+  5. Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
+  6. Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
+  7. Fitter: skipping some model parameters each step.
+  8. SVD Request: Study overfitting (analysis 19, batch 246). 
+     depwct1perchan and depct1perchan are identical except for init conds. 
+     These should both subsume dep1, which should in turn subsumes fir. 
+  9. Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
 
 * Current Project: Metrics
 ** Metrics on Responses
