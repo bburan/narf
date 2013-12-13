@@ -2,6 +2,8 @@ function syn12 ()
 
 global MODULES STACK XXX META;
 
+append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));
+
 % FAST EXCITATORY DYNAMICS 
 append_module(MODULES.pz_synapse.mdl(...
                 struct('fit_fields', {{'poles', 'zeros', 'gain', 'delayms', ...
