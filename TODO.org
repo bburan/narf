@@ -1,14 +1,16 @@
 * Work Queue
-  1. Keep hammering on Vocalization Data w/12CH gammatone, smoothing, dep, NIM
-  2. Frankly, I think NORMALIZATION AT EVERY SINGLE STEP, except for the last step which has shift and scale, would be an excellent idea.
-  4. Metric: Log-likelihood
-  5. Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
-  6. Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
-  7. Fitter: skipping some model parameters each step.
-  8. SVD Request: Study overfitting (analysis 19, batch 246). 
-     depwct1perchan and depct1perchan are identical except for init conds. 
-     These should both subsume dep1, which should in turn subsumes fir. 
-  9. Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
+  1. Check queued data (see report)
+  2. Figure out problem with syn12
+  3. Metric: Log-likelihood
+  4. Metric: NMSE in DB
+  5. Metric: Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
+  6. Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
+  7. Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
+  8. Fitter: skipping some model parameters each step.
+  9. [ ] END PLOT: Heatmap + raster of resp
+  10. Plot R/sigma^2 vs spike isolation level 
+  11. Plot noise ceiling vs spike isolation
+  12. Plot # params vs avg performance
 
 * Current Project: Metrics
 ** Metrics on Responses
@@ -119,7 +121,6 @@
    Problem: (See Eternal Problems with Fitters, below)
 
 * Ideas:
-  - Check scatter & bar plot accuracy
   - Include a "Fitter" field for each module to enable it to fit itself?
   - Put git hashtag as the working directory of the memoization
   - Add histograms to nonlinear curves to see where the inputs fall. 

@@ -1,10 +1,10 @@
-function wc02()
+function wc04()
 % Weight all input channels, producing 1 output channel
 % Works on 'stim' by default. 
 global MODULES STACK XXX;
 
 signal = 'stim';
-n_output_chans = 2;
+n_output_chans = 4;
 
 % Compute number of input channels
 fns = fieldnames(XXX{end}.dat);

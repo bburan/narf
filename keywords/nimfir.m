@@ -52,6 +52,10 @@ append_module(MODULES.fir_filter.mdl(struct('num_coefs', 12, ...
                                 'input', 'stim', 'output', 'stim2',...
                                 'fit_fields', {{'coefs','baseline'}})));
 
+% Initialize inhibitory filter to be a delayed version of excitatory.
+A = STACK{end-3}{1}.coefs;
+STACK{end}{1}.coefs = cat(2, zeros(size(A,1),1), A(:, 1:end-1));
+
 append_module(MODULES.normalize_channels.mdl(struct('input', 'stim2', ...
                                                     'output', 'stim2')));
                                                 

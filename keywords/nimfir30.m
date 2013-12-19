@@ -1,4 +1,4 @@
-function nimp1z0 ()
+function nimfir30 ()
 
 global MODULES STACK XXX;
 
@@ -15,16 +15,15 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PATHWAY 1 (EXCITATORY)
-% Start by fitting the fast part of the filter
-append_module(MODULES.pole_zeros.mdl(...
-                struct('fit_fields', {{'poles', 'gains', 'delays'}}, ...
-                       'n_poles', 1, ...
-                       'n_zeros', 0)));                               
-fit04a(); pop_module();
+append_module(MODULES.fir_filter.mdl(struct('num_coefs', 30, ...
+                                'baseline', 0,...
+                                'fit_fields', {{'coefs','baseline'}})));
 
+fit05(); pop_module();
+                            
 % Save the params for later, EXCEPT FOR THE Y_OFFSET!
-savefitparms{end+1}={'poles', 'gains', 'delays'}; % Remove yoffset
-STACK{end}{1}.fit_fields = {}; % Stop fitting poles
+savefitparms{end+1}=STACK{end}{1}.fit_fields;
+STACK{end}{1}.fit_fields = {};
 calc_xxx(length(STACK));
 
 % Add normalization and a simple zsoft, then fit
@@ -32,14 +31,14 @@ append_module(MODULES.normalize_channels);
 append_module(MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
                                               'phi', [1 1 0 0], ...
                                               'nlfn', @nl_softzero)));
-fit04a(); pop_module();
+fit05(); pop_module();
 
 % Change the outputs to be named stim1
-STACK{end-2}{1}.output = 'stim1'; % polezero
+STACK{end-2}{1}.output = 'stim1'; % FIR
 STACK{end-1}{1}.output = 'stim1'; % Normalizer
 STACK{end-1}{1}.input = 'stim1';
 STACK{end}{1}.output = 'stim1'; % Nonlinearity
-STACK{end}{1}.input = 'stim1';
+STACK{end}{1}.input_stim = 'stim1';
 savefitparms{end+1} = {}; % For the damn normalizer
 savefitparms{end+1} = STACK{end}{1}.fit_fields; % Push 
 STACK{end}{1}.fit_fields = {}; % Don't fit nonlinearity now
@@ -48,15 +47,17 @@ calc_xxx(length(STACK)-2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PATHWAY 2 (FAST INHIBITORY)
 
-append_module(MODULES.pole_zeros.mdl(...
-                struct('fit_fields', {{'poles', 'gains', 'delays'}}, ...
-                       'input', 'stim', ...
-                       'output', 'stim2', ...
-                       'n_poles', 1, ...
-                       'n_zeros', 0)));    
+append_module(MODULES.fir_filter.mdl(struct('num_coefs', 30, ...
+                                'baseline', 0,...
+                                'input', 'stim', 'output', 'stim2',...
+                                'fit_fields', {{'coefs','baseline'}})));
+% Initialize inhibitory filter to be a delayed version of excitatory.
+A = STACK{end-3}{1}.coefs;
+STACK{end}{1}.coefs = cat(2, zeros(size(A,1),1), A(:, 1:end-1));
 
 append_module(MODULES.normalize_channels.mdl(struct('input', 'stim2', ...
                                                     'output', 'stim2')));
+                                                
 append_module(MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
                                               'phi', [-1 1 0 0], ...
                                               'input_stim', 'stim2', ...
@@ -65,13 +66,17 @@ append_module(MODULES.nonlinearity.mdl(struct('fit_fields', {{'phi'}}, ...
                                               
 append_module(MODULES.sum_fields.mdl(struct('inputs', {{'stim1', 'stim2'}})));
 
-fit04a(); pop_module(); 
+fit05(); 
 
-for ii=1:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Now fit everything together
+
+for ii=1:6 % WONKY WONKY MAGIC NUMBER
     if isfield(STACK{ii}{1},'fit_fields'),
         STACK{ii}{1}.fit_fields=savefitparms{ii};
     end
 end
 
-fit04a(); pop_module();
+fit05();
+
 end
