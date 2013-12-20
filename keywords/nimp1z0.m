@@ -67,7 +67,7 @@ append_module(MODULES.sum_fields.mdl(struct('inputs', {{'stim1', 'stim2'}})));
 
 fit04a(); pop_module(); 
 
-for ii=1:
+for ii=1:length(STACK)-4
     if isfield(STACK{ii}{1},'fit_fields'),
         STACK{ii}{1}.fit_fields=savefitparms{ii};
     end
