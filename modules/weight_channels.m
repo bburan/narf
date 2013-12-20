@@ -44,9 +44,9 @@ function x = do_weight_channels(mdl, x, stack, xxx)
          tmp = zeros(T, S, size(mdl.weights, 2));
          for s = 1:S
              in = squeeze(x.dat.(sf).(mdl.input)(:, s, :));
-             tmp(:,s,:) = in * mdl.weights;
+             tmp(:,s,:) = bsxfun(@plus, (in * mdl.weights)', mdl.y_offset)';
          end         
-         x.dat.(sf).(mdl.output) = bsxfun(@plus, tmp', mdl.y_offset)';
+         x.dat.(sf).(mdl.output) = tmp;
     end
 end
 
