@@ -1,6 +1,9 @@
 * Work Queue
   1. Check queued data (see report)
-  2. Figure out problem with syn12
+     DON'T trust the results completely yet.
+     NEED to inspect 2-3 of each model type to ensure keyword is doing what we think. 
+
+  2. Blah. 
   3. Metric: Log-likelihood
   4. Metric: NMSE in DB
   5. Metric: Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
