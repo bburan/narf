@@ -1,0 +1,134 @@
+* Scientific Questions Answered for now
+
+** FEATURE EXTRACTION: Does the gaussian parameterization work as well as a linear transform?
+   No. The gaussian parameterization needs 2 params (center, width) per channel and results suggest this probably isn't the best approach to take. A simple weighting of the 12 input channels worked better and was easy enough to fit.
+
+* Scientific Questions Outstanding
+
+** Which pole-zero model performance best matches FIR performance?
+   Approach: Use single channel data. Try ONLY linear models and sums. See which does the best given just a few parameters.
+   Constraints: Normalize after each PZ filters so gain/offset. Prediction is a linear weighting + offset of normalized outputs.
+   Experimental dimensions to test:
+   1. Sampling rate (100, 200, 500, 1000Hz)
+   2. Number of filters (1,2,3,4) summed
+   3. Pole-Zero Quantity (p1z0, p1z1, p2z0, p2z1, p2z2, p3z2, p4z3)
+   4. Are the zeros locked at the origin or not (y/n)? (Refers to blocking DC inputs)
+
+   | Rate   | FIR | FIR30 | FIR50 | p1z0 | p1z1 | p1z0x2 | p1z0x3 | p1z0x4 | p2z0 | p2z0x2 | p2z0x3 | p2z0x4 | p2z1 | p2z2 | p3z2 | p4z3 |
+   |--------+-----+-------+-------+------+------+--------+--------+--------+------+--------+--------+--------+------+------+------+------|
+   | 100Hz  |     |       |       |      |      |        |        |        |      |        |        |        |      |      |      |      |
+   | 200Hz  |     |       |       |      |      |        |        |        |      |        |        |        |      |      |      |      |
+   | 500Hz  |     |       |       |      |      |        |        |        |      |        |        |        |      |      |      |      |
+
+** How close do we get to Butts' NIM performance with FIR?
+   Basically, can we replicate his results?
+
+   Careful! NIMP1z0 uses FIT04B, not FIT04A
+
+   | Rate | NIM | NIMFIR30 | NIMFIR30_npnl | NIMFIR30_zsoft | 
+   |------+-----+----------+---------------+----------------|
+   |  100 |     |          |               |                |
+   |  200 |     |          |               |                |
+   |  500 |     |          |               |                |
+   
+** How many principal channels are needed to meet/exceed naive 12-channel FIR performance?
+   Experimental Variables:
+   1. Principal Components (1,2,3,4)
+   2. Sampling Rate (100,200,500Hz)
+   3. Filter Length (FIR30)
+
+   | Rate | FIR30 | WC01_FIR30 | WC02_FIR30 | WC03_FIR30 | WC04_FIR30 |
+   |------+-------+------------+------------+------------+------------|
+   |  100 |       |            |            |            |            |
+   |  200 |       |            |            |            |            |
+   |  500 |       |            |            |            |            |
+
+** How many principal channels feeding into p1z0's or p2z0's are needed to beat a 12-channel STRF?
+   Experimental Variables:
+   1. Principal Components (1,2,3,4)
+   2. Sampling Rate (100,200,500Hz)
+   3. Filter pole count (FIR30, P1Z0, P2Z0, or something else from above)
+
+   | Rate | FIR30 | WC01_P1Z0 | WC02_P1Z0X2 | WC03_p1z0x3 | WC04_p1z0x4 | WC01_P2Z0 | WC02_P2Z0X2 | WC03_p2z0x3 | WC04_p2z0x4 |
+   |------+-------+-----------+-------------+-------------+-------------+-----------+-------------+-------------+-------------|
+   |  100 |       |           |             |             |             |           |             |             |             |
+   |  200 |       |           |             |             |             |           |             |             |             |
+   |  500 |       |           |             |             |             |           |             |             |             |
+
+** What is the minimum number of gammatone filterbank channels we can get away with?
+   Unsure how to answer this question. 
+   Experimental variables: 
+   1. Input channel count (GT12CH, GT24CH, GT48CH, GT120CH)
+   2. Best-performing "standard" model.
+
+** Does a gamma kernel (representing time jitter) convolved with P1Z0 (representing linear decaying effects) work very well?
+   Analysis #. 
+   Approach: Try each of the following ideas:
+   1. Nonparametric approach: Using the best-fitting p1z0 filter output, find the prediction-scaled the inter-spike interval. Use this as the kernel. 
+   2. Gamma/exponential/inv gaussian distributions, with/without minimum refractory time truncations. 
+
+** Which global pre-post nonlinearities work best for the synaptic models?
+   Preliminary answer was: Logfree-null,   Logfree-siglog,   Logfree-zsoft.
+   {'env200', {'null', 'exp', 'logfree', 'rootfree', 'zthresh'}, 'p1z0', 'fit04a', 'norm', {'null', 'siglog', 'siglog100', 'zthresh', 'zsoft', 'npfnl0'}, 'fit04a'}
+   Run a full analysis again with best new "standard" linear filters. 
+
+** Does a slow pole indeed correlate with depression? Is there correlation between terms of: NIM, depression, or slow-pole?
+   A plot of the slowest pole (slow pole model) vs depression latency might show the way. 
+   Another potential hack would be to show that adding depression doesn't help slow-pole or NIM models very much. 
+   
+** Which specific pre-post nonlinearities work best for the synaptic models?
+   Not yet studied. This will re-vamp the SYN line of models I guess. 
+
+** Which architecture is better? Chain, NIM, or SYN?
+   I'm not sure how to answer this question yet.
+
+* Work to do
+  - [ ] SCRIPT PLOT: Try plotting all PZ impulse responses as a single trace. For multiple channels, as an overlaid heatmap. 
+  - [ ] SCRIPT PLOT: Add NIM plot data to saved results?
+  - [ ] Try using Dan Butts' toolboxes to build new fitting routines
+  - [ ] Derive the wave equation from PZ model dynamics, relate to cochlea
+
+* Batch 179: Single Channel
+  Summary at 200Hz: (* means NPFNL used)
+  | Model                              |  Mean | Params | Note                                                  |
+  |------------------------------------+-------+--------+-------------------------------------------------------|
+  | logfree_dep2ifn_siglog100_fit05    |     ? |        | Was best model at 100Hz.                              |
+  | logfree_depct2volt_siglog100_fit05 | 0.326 | 48     |                                                       |
+  | syn11                              | 0.317 | 41     | Likely improvable with normalization, fitters (Syn12) |
+  | logfree_depct1_siglog100           | 0.303 | 22     |                                                       |
+  | logfree_nimp1z0_npfnl0_fit04a      | 0.294 | *      | Best NIM-like model                                   |
+  | logfree_fir_npfnl0_fit05           | 0.292 | 14*    |                                                       |
+  | nim                                | 0.284 | ~170   | Butts'.                                               |
+  | logfree_fir_siglog_fit05           | 0.277 | 19     |                                                       |
+  | logfree_nimfir_npfnl0_fit05        | 0.276 | 35*    | Initialization problems?                              |
+
+* Batch 246: Vocalizations
+  Summary at 100Hz: (A little too rough)
+  | Model                                            |  Mean | Params | Note                   |
+  |--------------------------------------------------+-------+--------+------------------------|
+  | gt12ch_logfree_depwc1perchan_siglog100           | 0.338 |    176 |                        |
+  | gt12ch_logfree_wc02_depoct1_nimfir_npfnl0_fit12  | 0.338 |        | 2 channels help.       |
+  | gt12ch_logfree_wc01_depoct1_nimfir_npfnl0_fit12  | 0.327 |        |                        |
+  | gt12ch_logfree_wcg01_depoct1_nimfir_npfnl0_fit12 | 0.320 |        | Gaussians hard to fit? |
+  | gt12ch_logfree_wc01_depoctl_nimp1z0_npfnl0_fit12 | 0.286 |        | Does poorly at 100Hz?  |
+  | gt12ch_fir_siglog_fit05                          |    ?? |        |                        |
+  | gt12ch_wc01_syn11                                |    ?? |        |                        |
+  
+* Future Talking Points
+  1. Tendency of correlation to heavily weight a few very extreme events. 
+  2. Ideas for outlier removal?
+  3. Ideas for depression or gain control?
+  6. A vs B model comparsions (Collapse scatter distributions along diagonal)
+  7. Try different initial conditions for NIM models?
+  8. Compare a slow pole vs depression vs other depression ideas
+  9. Work on fitters. Try Conjugate gradient descent routines?
+  10. Optimize the Pole-Zero models so that they run faster
+  11. Keep debugging fittable gammatones
+  12. Show that "delayed inhibition" effect is an aliasing of something else.
+  13. Start using XXX to transmit time-varying gain levels or parameters.
+  14. Try different parameterizations of existing, successful modules. 
+
+
+{'env200', 'logfree', {{'fir', 'fit05'}, {'abc', 'fit04a'}, {'abcdv2', 'fit04a'}, {'p1z0', 'fit04a'}, {'p2z0', 'fit04a'}, {'p3z0', 'fit04a'}, {'p4z0', 'fit04a'} , {'p5z0', 'fit04a'},  {'p2z1', 'fit04a'} , {'p3z1', 'fit04a'}, {'p4z1', 'fit04a'}, {'p5z1', 'fit04a'}, {'p3z2', 'fit04a'}, {'p4z2', 'fit04a'} {'p5z2', 'fit04a'} {'p4z3', 'fit04a'} {'p5z4', 'fit04a'}, {'p1z0x2'}, {'p1z0x3'}, {'fast3slow1'}}}
+{'env200', {{'nim'}, {'logfree', 'depct2volt', 'siglog100', 'fit05'}, {'syn03'},{'syn12'} {'syn11'} {'logfree', 'nimfir'},{'logfree', 'nimfir', 'npfnl0', 'fit05'}, {'logfree', 'nimp1z0'}, {'logfree', 'nimp1z0', 'npfnl0', 'fit04a'},{'logfree', 'fir', 'fit05'}, {'logfree', 'fir','siglog' 'fit05'},{'logfree', 'fir','npfnl0' 'fit05'} {'logfree', 'p1z0', 'fit04a', 'norm', 'npfnl0', 'fit04a'},  {'logfree', 'p1z0', 'fit04a', 'norm', 'siglog', 'fit04a'}, {'logfree', 'p1z0x2'}, {'logfree', 'p1z0x2', 'npfnl0', 'fit04a'}, {'logfree', 'p1z0x3'}, {'logfree', 'p1z0x3', 'npfnl0', 'fit04a'}, {'logfree', 'fast3slow1'}, {'logfree', 'fast3slow1', 'npfnl0', 'fit04a'}, {'logfree', 'abcdv2', 'fit04a'}, {'logfree', 'abcdv2', 'npfnl0', 'fit04a'}, {'logfree', 'depct1', 'siglog100', 'fit05'} }}
+{'env400', 'logfree', {{'fir30', 'norm', 'siglog', 'fit05'}, {'regtent400', 'fir30', 'norm', 'siglog', 'fit05'}, {'p3z2', 'norm', 'siglog', 'fit04a'}, {'regtent400', 'p3z2', 'norm', 'siglog', 'fit04a'}}}

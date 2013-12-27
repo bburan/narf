@@ -44,3 +44,15 @@
   My testable prediction bet if we explicitly include depression of the right type, it will largely disappear. 
   On the other hand, I also bet that using multiple filters + thresholding is the real discovery.
   Probably the more simple filters and simple thresholds you use, the better. 
+
+
+* Observations
+  1. Parameters like "y_offset" never tell us a damn thing, but help fitters. So let's always have a scale/offset term be fittable (or use normalization always).
+  2. SoftZ doesn't need Yoffset, nor slope. Just put the zthresh point and a curvature.
+  3. ANNs work. Our model is ironically starting to look like one. 
+     + Extract frequency band and essential dynamics with APGT, OZGT, or other 4 pole 3 zero model. (parametrize: Q, CF, order N?)
+     + Capture other aspects of the signal (perhaps nearby elements) using NL->filt->NL chains that are summed.
+     + Using a variety of DIFFERENT nonlinear features probably helps the most
+     + This resembles a 2-layer artificial neural network
+     + Frankly, using multiple "feature extractors" (APGT + NL), which are then normalized, summed, and weighted, probably works better than single APGT with splitting.
+  4. Higher sampling rates are good.

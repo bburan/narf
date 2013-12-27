@@ -1,4 +1,4 @@
-function fit04b()
+function fit12()
 
 global STACK;
 
@@ -16,7 +16,8 @@ function fn = make_subfitter(del)
             end
         end
     
-        if strcmp(module_being_fit, 'fir_filter')   
+        if strcmp(module_being_fit, 'fir_filter') || ...
+                strcmp(module_being_fit, 'weight_channels')
             if exist('prev_opts', 'var')
                 [a,b,c,d] = fit_boo(prev_opts);
             else
@@ -28,8 +29,8 @@ function fn = make_subfitter(del)
             if exist('prev_opts', 'var')
                 [a,b,c,d] = fit_scaat(prev_opts);
             else
-                [a,b,c,d] = fit_scaat('InitStepSize', 100.0, ...
-                                      'StopAtAbsScoreDelta', del);
+                [a,b,c,d] = fit_scaat('StopAtAbsScoreDelta', del, ...
+                                      'StopAtStepNumber', 1);
             end
         end
     end
@@ -40,13 +41,19 @@ end
 
 fit_boo('StopAtAbsScoreDelta', 10^-2, 'StepGrowth', 1.3);
 fit_iteratively(make_subfitter(10^1), create_term_fn('StopAtAbsScoreDelta', 10^1));
+fit_iteratively(make_subfitter(10^0.5), create_term_fn('StopAtAbsScoreDelta', 10^0.5));
 fit_iteratively(make_subfitter(10^0), create_term_fn('StopAtAbsScoreDelta', 10^0));
+fit_iteratively(make_subfitter(10^-0.5), create_term_fn('StopAtAbsScoreDelta', 10^-0.5));
 fit_iteratively(make_subfitter(10^-1), create_term_fn('StopAtAbsScoreDelta', 10^-1));
+fit_iteratively(make_subfitter(10^-1.5), create_term_fn('StopAtAbsScoreDelta', 10^-1.5));
 fit_iteratively(make_subfitter(10^-2), create_term_fn('StopAtAbsScoreDelta', 10^-2));
+fit_iteratively(make_subfitter(10^-2.5), create_term_fn('StopAtAbsScoreDelta', 10^-2.5));
 fit_iteratively(make_subfitter(10^-3), create_term_fn('StopAtAbsScoreDelta', 10^-3));
+fit_iteratively(make_subfitter(10^-3.5), create_term_fn('StopAtAbsScoreDelta', 10^-3.5));
 fit_iteratively(make_subfitter(10^-4), create_term_fn('StopAtAbsScoreDelta', 10^-4));
-fit_iteratively(make_subfitter(10^-5), create_term_fn('StopAtAbsScoreDelta', 10^-5));           
+fit_iteratively(make_subfitter(10^-4.5), create_term_fn('StopAtAbsScoreDelta', 10^-4.5));
+fit_iteratively(make_subfitter(10^-5), create_term_fn('StopAtAbsScoreDelta', 10^-5));        
+fit_iteratively(make_subfitter(10^-5.5), create_term_fn('StopAtAbsScoreDelta', 10^-5.5));            
 fit_iteratively(make_subfitter(10^-6), create_term_fn('StopAtAbsScoreDelta', 10^-6));
-%fit_iteratively(make_subfitter(10^-7), create_term_fn('StopAtAbsScoreDelta', 10^-7));
 
 end

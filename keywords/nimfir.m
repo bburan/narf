@@ -38,7 +38,7 @@ STACK{end-2}{1}.output = 'stim1'; % FIR
 STACK{end-1}{1}.output = 'stim1'; % Normalizer
 STACK{end-1}{1}.input = 'stim1';
 STACK{end}{1}.output = 'stim1'; % Nonlinearity
-STACK{end}{1}.input = 'stim1';
+STACK{end}{1}.input_stim = 'stim1';
 savefitparms{end+1} = {}; % For the damn normalizer
 savefitparms{end+1} = STACK{end}{1}.fit_fields; % Push 
 STACK{end}{1}.fit_fields = {}; % Don't fit nonlinearity now
@@ -51,6 +51,10 @@ append_module(MODULES.fir_filter.mdl(struct('num_coefs', 12, ...
                                 'baseline', 0,...
                                 'input', 'stim', 'output', 'stim2',...
                                 'fit_fields', {{'coefs','baseline'}})));
+
+% Initialize inhibitory filter to be a delayed version of excitatory.
+A = STACK{end-3}{1}.coefs;
+STACK{end}{1}.coefs = cat(2, zeros(size(A,1),1), A(:, 1:end-1));
 
 append_module(MODULES.normalize_channels.mdl(struct('input', 'stim2', ...
                                                     'output', 'stim2')));

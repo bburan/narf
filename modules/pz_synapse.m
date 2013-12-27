@@ -81,6 +81,7 @@ function x = do_pz_synapse(mdl, x, stack, xxx)
              tmp(nanidxs,s) = nan;
                           
          end
+         
          % Apply the post-filter function
          x.dat.(sf).(mdl.output) = mdl.postfn(mdl.postphi, tmp) + mdl.y_offset;
     end

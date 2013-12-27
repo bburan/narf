@@ -1,4 +1,4 @@
-function p1z0x3 ()
+function p1z0x4 ()
 
 global MODULES STACK XXX;
                    
@@ -12,7 +12,7 @@ append_module(MODULES.pole_zeros.mdl(...
 fitlastpz({'stim'});
 STACK{end}{1}.fit_fields = {}; 
 STACK{end}{1}.output = 'stim1'; 
-calc_xxx(length(STACK)); % Recalc last element
+calc_xxx(length(STACK)); % Recalc last element because output changed
 
 % Add a second p1z0
 append_module(MODULES.pole_zeros.mdl(...
@@ -32,6 +32,17 @@ append_module(MODULES.pole_zeros.mdl(...
                        'n_zeros', 0)));
 
 fitlastpz({'stim1', 'stim2', 'stim3'});
+STACK{end}{1}.fit_fields = {}; 
+calc_xxx(length(STACK)); % Recalc last element
+
+% Add a 3rd p1z0
+append_module(MODULES.pole_zeros.mdl(...
+                struct('fit_fields', {{'poles', 'delays'}}, ...
+                       'output', 'stim4', ...
+                       'n_poles', 1, ...
+                       'n_zeros', 0)));
+
+fitlastpz({'stim1', 'stim2', 'stim3', 'stim4'});
 
 % Refit all PZ models 
 [~, mod_idxs] = find_modules(STACK, 'pole_zeros');
@@ -41,7 +52,7 @@ for jj = 1:length(mod_idxs)
 end
 
 % The output is a normalized, weighted linear combination of all PZ modules
-append_module(MODULES.concatenate_channels.mdl(struct('inputs', {{'stim1', 'stim2', 'stim3'}})));
+append_module(MODULES.concatenate_channels.mdl(struct('inputs', {{'stim1', 'stim2', 'stim3', 'stim4'}})));
 append_module(MODULES.normalize_channels);
 wc01(); fitSubstack(length(STACK),10^-5); % Fit just the weights
 

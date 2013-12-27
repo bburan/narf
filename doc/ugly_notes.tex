@@ -1,3 +1,37 @@
+We are modeling our neurons with a FIR filter, which is a linear, stationary model. Is that really true? By grouping neurons according to the time since the previous spike, we should be able to divide a dataset into multiple groups (paramsets). If the FIR filters trained on each of these datasets differs significantly, it implies that the model is not stationary. Such FIR filters may also hint at a simple mechanism which we can use to model the time-varying dynamics of the neuron.
+{'env400', 'logfree', {{'fir30', 'norm', 'siglog', 'fit05'}, {'regtent400', 'fir30', 'norm', 'siglog', 'fit05'}, {'p3z2', 'norm', 'siglog', 'fit04a'}, {'regtent400', 'p3z2', 'norm', 'siglog', 'fit04a'}}}
+
+Smooth Respavg (SMRAV keyword) appears to help improve fits at 200Hz. INFERP did not appear to help at all. {'env200', {'null', 'smrav', 'inferp', 'inferp2', 'inferp4', 'inferp6', 'inferp10', 'inferp20'}, 'logfree', 'firno16', 'siglog', 'mixfit0'}
+
+* Current Experiment on Batch 179 (SPN single channel)  
+  Try various pre-nonlinearities and post-nonlinearities with p1z0 at 200Hz on the vocalization data. 
+  The goal is to learn the best pre- and post- nonlinearities to use with p1z0. 
+  This information will be then used to build a new center keyword, similar to p1z0x2 (With explicit fast/slow filters)
+  On this new center keyword, we will again test various pre- and post- nonlinearities just for the SLOW filter
+  At that point, we should have two filters per channel: a "fast dynamics" filter and a "slow dynamics" filter, with custom nonlinearities for each.
+  Then we can add a simple 2-input weighting and "output nonlinearity" on the second stage. This will essentially replicate the NIM model. 
+  Then perhaps we can improve the "fast dynamics" filter to be either:
+         + p3z2 model 
+         + p1z0 but operate on original and quadratic terms, concatenated as extra channel
+         + Have different nonlinearities
+         + p1z2x2 (Initialize second as inhibitory)
+  We could also	improve the "Slow dynamics" filter by 
+         + Trying different nonlinearities
+         + Adding more orders to the filter
+  We could also improve the output weighting and output nonlinearity by:
+         + Trying different nonlinearities
+         + Trying more 
+
+* Current Best Idea: 
+  Feature extractors (All-Pole Gammatone filter), sigmoidal nonlinearities functions (compressor) forms input layer. 
+  Second layer of network is the linear filter and output nonlinearity.
+
+* Idea:
+  When we use gammatones, we find the amplitude at a particular frequency. 
+  However, it's probably just as important to find the amplitude at a variety of frequencies. 
+  Probably, using a wide frequency filter as well as a notch filter will help model neural activity.
+
+
 ** Per-module memoization
    + Could be done by memoizing calc_xxx() or add_module(), as appropriate
    + Would speed up 

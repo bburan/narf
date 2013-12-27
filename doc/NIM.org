@@ -1,0 +1,13 @@
+* Notes on NIM
+  Interesting similarities between their methods and ours:
+  1. They hold some parameters constant while fitting others, in an iterative manner.
+  2. They use line search (one of the matlab methods we tried), but prefer the version developed by Mark Schmidt.
+  3. They use a pair of L2 norms on their STRFs: one which penalizes horizontal (temporal) changes as you move left to right, and one which penalizes vertical (spatial/frequency) changes.
+  4. They simply add the L1 norm to the cost function to try to create some sparsity, and normalize their filter coefs each loop iteration to have vector magnitude 1. I think this is exactly equivalent to the L1/L2 ratio we are using. 
+  5. Their nonparametric nonlinearities are simply a linearly interpolated combinations of tent basis functions. 
+  6. They "regularize" or "normalize" between blocks as we do, to make fitting easier. 
+  7. Their nonlinearity is a "soft" zero-threshold 
+     
+* Followups
+** What is iSTAC?
+   Some work by Pillow et al that tries to identify the most important stimulus dimensions.
