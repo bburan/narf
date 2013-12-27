@@ -28,6 +28,13 @@ else,
    cellargs=cat(2,cellargs,{'speed'},{params.stimspeedid});
 end
 
+if isfield(params,'cellid') && ~isempty(params.cellid),
+   cellargs=cat(2,cellargs,{'cellid'},{params.cellid});
+end
+
+if isfield(params,'ReferenceClass') && ~isempty(params.ReferenceClass),
+   cellargs=cat(2,cellargs,{'ReferenceClass'},{params.ReferenceClass});
+end
 if isfield(params,'stimsnr') && ~isempty(params.stimsnr),
    cellargs=cat(2,cellargs,{'stimsnr'},{params.stimsnr});
 end

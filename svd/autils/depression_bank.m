@@ -1,6 +1,9 @@
-% function dstim=depression_bank(stim,u,tau,fixu,crosstalk)
+% function dstim=depression_bank(stim,u,tau,fixu[=0],crosstalk[=0])
 %
-% on each time step,
+% Apply the Tsodyks & Markram synaptic depression model to a
+% spectrogram or some other collection of stimulus envelopes.
+%
+% On each time step,
 %  dstim(t) = stim(t) * d(t)
 % where d(t) is the amount of depression from previous inputs,
 %  d(t)=d(t-1) - stim(t-1)*d(t-1)*u + (1-d(t-1))/tau
@@ -8,10 +11,18 @@
 %
 % inputs:
 %  stim -spectrogram freq X time
-%  u - depression strength as fraction of max of stim
-%  tau - recovery time constant in units of time bins
+%  u - vector of depression strengths as fraction of max of stim
+%  tau - vector of recovery time constants in units of time bins
 %  fixu - (default 0) if 1, don't normalize u to max of stim, just
 %         use absolute value
+%  crosstalk - (default 0) calculate depression using <crosstalk>% of
+%              neighboring spectral channels rather than just the 
+%              current channel
+%
+% returns:
+%  dstim - depressed stimulus (freq*length(u)) X time matrix. ie, if
+%          multiple depression synapses specified, stack the output
+%          matrices for the different synapses on top of each other.
 % 
 % created svd 2010-07-08
 %
@@ -100,7 +111,7 @@ for jj=1:dcount,
       elseif ui(1)>10,
           % tau too small, effectively no depression.
           % otherwise this will create unstable oscillations
-          ui(:)=taui(:)./10*1000
+          ui(:)=taui(:)./10*1000;
           subsample=100;
       else
           % tau too small, effectively no depression.
@@ -134,9 +145,4 @@ for jj=1:dcount,
    end
 end
 
-%if size(stim,1)>1,
-%    dstim=reshape(dstim,size(stim,1),dcount,size(stim,2));
-%    dstim=permute(dstim,[2 1 3]);
-%    dstim=reshape(dstim,dcount*size(stim,1),size(stim,2));
-%end
 

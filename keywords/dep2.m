@@ -28,7 +28,6 @@ meanresp = nanmean(flatten_field(XXX{end}.dat,XXX{end}.training_set,'respavg'));
 append_module(MODULES.fir_filter.mdl(struct('num_coefs', fir_num_coefs, ...
                             'baseline',meanresp,...
                             'fit_fields', {{'coefs','baseline'}})));
-
 fitSubstack([],10^-(stop_exp));
 fitSubstack(length(STACK)-2,10^-(stop_exp+0.5));
 
