@@ -1,0 +1,213 @@
+* Holiday Simulation Results
+
+** Which pole-zero model performance best matches FIR performance?
+*** Approach
+    Use single channel data (Batch 179). Try ONLY linear models and sums. See which filter does the best.
+    Constraints: Normalize after each linear filter and use a linear weighting + offset of normalized outputs to make predictions.
+    Experimental dimensions to test:
+    1. Sampling rate (100, 200, 500, 1000Hz)
+    2. Number of filters (1,2,3,4) summed
+    3. Pole-Zero Quantity (p1z0, p1z1, p2z0, p2z1, p2z2, p3z2, p4z3)
+    4. Are the zeros locked at the origin or not (y/n)? (Refers to blocking DC inputs)
+
+*** Results
+   | Rate  | FIR | FIR30 | FIR50 | p1z0 | p1z0x2 | p1z0x3 | p1z0x4 | p2z0 | p2z0x2 | p2z0x3 | p2z0x4 | p1z1 | p2z1 | p2z2 | p3z2 | p4z3 |
+   |-------+-----+-------+-------+------+--------+--------+--------+------+--------+--------+--------+------+------+------+------+------|
+   | 100Hz |     |       |       |      |        |        |        |      |        |        |        |      |      |      |      |      |
+   | 200Hz | 263 |   274 |   276 |  229 |    270 |    276 | *278*  |  226 |    261 |    243 |    253 | -    |  221 |  266 |  237 |  241 |
+   | 500Hz | 169 |   190 |   194 |  164 |    196 |    200 | *200*  |  161 |    183 |    184 |    180 | -    |  157 |  189 |  160 |  166 |
+
+*** Conclusions
+    - p1z0x4 does the best.
+    - p2z2 is very simple and beats FIR. 
+
+*** Follow Up Questions
+    1. Are the poles and zeros consistently in the same place?
+       I tried to answer this using the script "plot_polezeros_vs_latency.m", which does a loglog plot of latency and pole/zero positions. 
+
+    2. Since p2z2 does well, perhaps p3z3 works better? Or p4z4?
+
+    3. Which models use the fewest parameters? Graph of parameter count vs performance across the population needed.
+
+** How close do the NIMFIR30 and NIMP1Z0 models get to Butts' NIM performance?
+*** Results  
+   |                   | 200Hz | 500Hz | Notes                    |
+   |-------------------+-------+-------+--------------------------|
+   | NIM               |   288 | ERROR |                          |
+   | NIMFIR30          |   305 |   217 |                          |
+   | NIMFIR30_NPNL     |   304 | *219* |                          |
+   | NIMFIR30_NPFNL0   | *308* |   210 |                          |
+   | NIMFIR30_SIGLOG   |   271 |   190 |                          |
+   | NIMFIR30_ZSOFT    |   305 |   217 |                          |
+   | NIMNIMP1Z0        |   241 |   174 | Uses FIT04B, not FIT04A  |
+   | NIMNIMP1Z0_NPNL   | ERROR | ERROR |                          |
+   | NIMNIMP1Z0_NPFNL0 |   267 |   187 |                          |
+   | NIMNIMP1Z0_SIGLOG |   255 |   184 |                          |
+   | NIMNIMP1Z0_ZSOFT  |   245 |   177 |                          |
+   
+*** Conclusions
+    - We can reliably beat NIM's performance with our own fitting algorithms. 
+    - Strangely, NPNL and NPFNL don't really help that much. 
+
+*** Follow Up
+    - Is p1z0x4_siglog or p1z0x4_npfnl0 competitive with this? 
+    - Is the NIM architecture's gift to the world (the double nonlinearity at the end) really better than the alternatives (single nonlinearity, no nonlinearity, etc)?
+    - Look at scatter plots of NIMFIR30 results to ensure that NPFNL results are accurate and not influenced by outliers. 
+
+** How many principal channels are needed to meet/exceed naive 12-channel FIR performance?   
+*** Approach
+    Experimental Variables:
+    1. Compressor (Logfree or not) 
+    2. Principal Components (1,2,3,4)
+    3. Sampling Rate (100,200,500Hz)
+    4. Filter Length (FIR30)
+
+*** Results   
+
+    | LOGFREE | 100Hz | 200Hz | 500Hz |
+    |---------+-------+-------+-------|
+    | FIR30   |   310 |   258 |   187 |
+    | WC01    |   302 |   248 |   178 |
+    | WC02    |   310 |   257 |   186 |
+    | WC03    |   314 |   259 |   187 |
+    | WC04    | *315* | *260* | *188* |
+
+    | No compressor | 100Hz | 200Hz | 500Hz |
+    |---------------+-------+-------+-------|
+    | FIR30         |   266 |   220 |   160 |
+    |---------------+-------+-------+-------|
+    | WC01          |   263 |   217 |   159 |
+    | WC02          |   274 |   228 |   165 |
+    | WC03          |   275 |   230 |   166 |
+    | WC04          | *275* | *230* | *166* |
+
+*** Conclusions
+    - Clear benefit to using a logfree compressor. 
+    - Two principal components seem to be enough (regardless of sampling rate)
+    - 3 or 4 channels does even better.
+
+*** Follow up
+    1. Should we try starting from 24, 36, 48 channels instead of just 12?
+
+** Is it better to do one P1Z0 filter per spectral channel?
+
+*** Results
+    |             | 200Hz | 200Hz Logfree | 500Hz | 500Hz Logfree |
+    |-------------+-------+---------------+-------+---------------|
+    | wc01_p1z0   |   180 |           202 |   125 |           136 |
+    |-------------+-------+---------------+-------+---------------|
+    | wc01_p1z0x2 |   215 |           234 |   157 |           173 |
+    | wc01_p1z0x3 |   219 |           237 |   161 |           176 |
+    | wc01_p1z0x4 |   220 |           238 |   162 |           177 |
+    |-------------+-------+---------------+-------+---------------|
+    | wc02p1z0    |   222 |           241 |   165 |           176 |
+    | wc03p1z0    |   229 |         *246* |   169 |           178 |
+    | wc04p1z0    | *231* |           245 | *170* |         *181* |
+    
+*** Conclusions
+    - Logfree clearly helps
+    - One P1Z0 filter per PCA channel is clearly the way to go. 
+
+*** Follow up
+    - Direction of spectral vectors consistent?
+
+** What is the minimum number of gammatone filterbank channels we can get away with?
+   Unsure how to answer this question. 
+   Experimental variables: 
+   1. Input channel count (GT6CH, GT12CH, GT24CH)
+   2. Sampling Rate (200Hz, 500Hz)
+
+   |            | 200Hz | 500Hz |
+   |------------+-------+-------|
+   | GT06_FIR30 |   200 |   145 |
+   | GT06_WC01  |   204 |   145 |
+   | GT06_WC02  | *208* | *150* |
+   |------------+-------+-------|
+   | GT12_FIR30 |   220 |   160 |
+   | GT12_WC01  |   217 |   159 |
+   | GT12_WC02  | *228* | *165* |
+   |------------+-------+-------|
+   | GT24_FIR30 |   234 |   169 |
+   | GT24_WC01  |   240 |   174 |
+   | GT24_WC02  | *248* | *183* |
+
+* Unanswered Scientific Questions
+
+** What is the new standard, low-parameter model? Are its parameters clearly different based on behavioral condition?
+
+** Does a slow pole achieve much of the same effect as modeling depression? Is there correlation between terms of: NIM, depression, or slow-pole?
+   A plot of the slowest pole (slow pole model) vs depression latency might show the way. 
+   Another potential hack would be to show that adding depression doesn't help slow-pole or NIM models very much. 
+
+** Is the shape of the time jitter a gamma distribution? Does a gamma kernel (representing time jitter) convolved with P1Z0 (representing linear decaying effects) work very well?
+   Before answering this, make sure that we have good comparisons between impulse responses of P1Z0 filters and FIR30 filters.
+   Analysis #. 
+   Approach: Try each of the following ideas:
+   1. Nonparametric approach: Using the best-fitting p1z0 filter output, find the prediction-scaled the inter-spike interval. Use this as the kernel. 
+   2. Gamma/exponential/inv gaussian distributions, with/without minimum refractory time truncations. 
+
+** Which global pre-post nonlinearities work best for the synaptic models?
+   Preliminary answer was: Logfree-null,   Logfree-siglog,   Logfree-zsoft.
+   {'env200', {'null', 'exp', 'logfree', 'rootfree', 'zthresh'}, 'p1z0', 'fit04a', 'norm', {'null', 'siglog', 'siglog100', 'zthresh', 'zsoft', 'npfnl0'}, 'fit04a'}
+   Run a full analysis again with best new "standard" linear filters. 
+   
+** Which specific pre-post nonlinearities work best for the synaptic models?
+   Not yet studied. This will re-vamp the SYN line of models I guess. 
+
+** Which architecture is better? Chain, NIM, or SYN?
+   I'm not sure how to answer this question yet.
+
+** Gain control study: Use XXX to transmit time-varying gain levels or parameters.
+
+** Show that "delayed inhibition" effect is an aliasing of something else.
+
+
+* Future Directions
+
+** Scientific Questions (See Above)
+   Stephen needs to focus on the architectural questions:
+   1. A paper about the minimal number of PCA channels needed with a standard STRF/FIR approach.
+   2. Does synaptic depression work across all channels separately, so one input depresses but not the other; or is depression affected by all?
+   3. Are the channels going into an inhibitory filter the same as the channels going into the excitatory filter?
+   4. How independent are depression, NIM, and output nonlinearities?
+
+** Paper Draft
+  - Summary: Demonstrate efficacy of low-dimensional models for vocalization data. Show the best low dimensional compressor, linear filter, and output nonlinearities that we found.
+  - Problem: STRF dimensionality in time, frequency
+  - Propose feature: APGT (start from cochlear dynamics)
+  - Propose soln for time: IIR filter.
+  - Propose soln for frequency: 2 channels of PCA (or fittable gammatones)
+  - Demonstrate how these linear filters can meet or exceed the STRF's performance.
+  - Demonstrate best low-dimensional compressor
+  - Demonstrate best low-dimensional nonlinearity
+  - Apply to different behavioral data sets and find parameters that change the most. 
+  - Have extra graphs to show reliability, consistency, edge cases?
+   
+** Fitters
+   1. Try using Dan Butts' toolboxes to build new fitting routines
+   2. Weighted step sizes
+   3. Try different parameterizations of existing, successful modules. 
+   4. Outlier removal keyword
+   5. Dropping some input channels (NANing out a chan) or skipping some model parameters each update step
+
+** Plotting
+   1. A vs B model comparison
+   2. Try plotting all scaled PZ impulse responses as a single trace. For multiple channels, as an overlaid heatmap. 
+   3. Add NIM plot data to saved results?
+   4. Heatmap + raster of resp
+   5. Plot R/sigma^2 vs spike isolation level 
+   6. Plot noise ceiling vs spike isolation
+   7. Plot # params vs avg performance
+
+** NARF Capabilities
+   1. Representing computation as a tree, not a chain?
+
+** Optimization
+   1. Custom fast pole-zero model simulator
+
+** Metrics   
+   Log in DB
+   Display
+   A vs B
+ 
+

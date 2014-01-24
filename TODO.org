@@ -1,19 +1,37 @@
-* Work Queue
-  1. Check queued data (see report)
-     DON'T trust the results completely yet.
-     NEED to inspect 2-3 of each model type to ensure keyword is doing what we think. 
+* Latest from SVD
+  1. Queue up GT36, GT48, and WC03 to Analysis 40 and tally results
+  2. Rebuild Pole-Zero module to work on multiple channels, with multiple PZ filters per channel. Aggregated IIR plots needed for comparison with FIR. 
+  3. Make a script that runs on 2 models over a whole population and compares (1) inner product of FIR filters (2) R value of predictions. 
+  4. Fit a filter, 1D at a time, using Log-likelihood. 
+     - Read about what a bernoulli distribution becomes in the limit of many samples
+     - Try to figure out if I could infer the stimulus autocorrelation as well, and remove it, much like the Ising models.
 
-  2. Blah. 
-  3. Metric: Log-likelihood
-  4. Metric: NMSE in DB
-  5. Metric: Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
-  6. Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
-  7. Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
-  8. Fitter: skipping some model parameters each step.
-  9. [ ] END PLOT: Heatmap + raster of resp
-  10. Plot R/sigma^2 vs spike isolation level 
-  11. Plot noise ceiling vs spike isolation
-  12. Plot # params vs avg performance
+* Work Queue
+  1. [ ] Heat map or line plot of the FIR filters vs the combined impulse responses of multiple PZs. 
+  2. [ ] Look just at histograms for >10^-2 latencies (less than that is probably a fitting bug)
+  3. [ ] Plot Pole1 vs Pole2 for p1z0x2 to see if we have fast/slow pole cluster
+  4. [ ] Run the best PZ models on 259, and then later on 240 and verify PZ model conclusions.
+  5. [ ] Module: Take the FFT of a spike train, then filter out frq components above some threshold to make a smoothed RESPAVG.
+  6. [ ] Verify that the fittable gammatones use Hilbert Envelope correctly
+  7. [ ] Try a siglog parameterized like page 374 of bayesian book
+  8. [ ] Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
+  9. [ ] Metric: Log-likelihood
+  10. [ ] Metric: NMSE in DB
+  11. [ ] Metric: Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
+  12. [ ] Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
+  13. [ ] Fitter: skipping some model parameters each step.
+  14. [ ] END PLOT: Heatmap + raster of resp
+  15. [ ] Plot R/sigma^2 vs spike isolation level 
+  16. [ ] Plot noise ceiling vs spike isolation
+  17. [ ] Plot # params vs avg performance
+  18. [ ] A vs B model comparsions (Collapse scatter distributions along diagonal)
+  19. [ ] Try different initial conditions for NIM models?
+  20. [ ] Compare a slow pole vs depression vs other depression ideas
+  21. [ ] Optimize the Pole-Zero models so that they run faster
+  22. [ ] Ideas for depression or gain control?
+  23. [ ] Show that "delayed inhibition" effect is an aliasing of something else.
+  24. [ ] Start using XXX to transmit time-varying gain levels or parameters.
+  25. [ ] Try different parameterizations of existing, successful modules. 
 
 * Current Project: Metrics
 ** Metrics on Responses
@@ -25,7 +43,7 @@
       - Variation due to our binning method (when spikes fall near edges of bins)
    2. The distribution of variation may not be gaussian. (There may be multiple "modes" present, attentive and not, tired or not) 
    3. Outliers may be present due to spike-sorting best-effort, but are no longer relevant.
-   4. Larger bin-sizes makes artificially better predictions
+   4. Larger bin-sizes makes artificially better predictions.
 
 *** Modules Needed
     - FFT module
@@ -91,7 +109,7 @@
    Method: Apply a "Metric meta package keyword". It uses as many other as it can and adds appropriate columns to the DB. 
    - Sparsity, Smoothness
    - Metrics are responsible for 
-   - Potential Problems:  
+   - Potential Problems: 
      + We absolutely don't want one metric fucking up an entire save
      + Metrics must know when they can be applied and when not
      + Metrics should save themselves in META at the appropriate location
@@ -450,26 +468,25 @@ Didn't work well: test/train scatter plot with dot coloring by cellid or model t
   6. [ ] Add error handling (catch/throw) around EVERY CALL to a user defined function, trigger popup?
   7. [ ] MODULE: Build a non-cheating model which extracts envelopes directly from the WAV files using an elliptic or gammatone prefilter
   8. [ ] MODULE: Add a module which can pick out a particular dimension from a vector and give it a name as a signal
-  10. [ ] MODULE: Standardized single/multi channel gammatone filter
-  11. [ ] MODULE: Standardized single/multi channel elliptic filter 
-  12. [ ] FN: Cover an input space logarithmically with filters
-  4. Parameterize and interpret. (or punt and say per-cell intepretability is irrelevant; relative performance across a population is all that matters for determining model importance? )
-do?
-  - Try qboost->boostirel->qfmin->qlsq->qboost->qlsq->qboost->qlsq->qboost (on the theory that that last qboost helps avoid local minima)
-  6. Could we get a data set with a very high number of reps?
-  7. SSH tunnel, neuropredict, inferring I from V or vice versa
-    1) Function: est_set_as_vector(), est_set_as_matrix()
-  - Keeping parameterizations near -5 to +5ish
-  - Ask stephen for a better metric than the trial-to-trial correlation become EXTREMELY low with small bin sizes?
-     - Ideally, projecting responses backward to find the filter nonlinearity in a NPNL style would be sweet
-  16. Boost algorithmic improvements. Comparison of Boost algorithms efficiency Per step, over time. 
-  - Keep "dead jobs" thing near zero  
-- Improve siglog curvature initial further by setting it to 1/variance?
-  1. Add Debug mode flag in META, plot function hooks, so I can watch fits go. Test on my best results for today. 
-  3. Relative stopping criteria are possibly not being properly re-initialized during iterative fits.
-  13. Mixfit variations explored more.
-  21. Better initial conditions.
-  12. Queue up a few different smooth_respavg kernels at 200Hz  
+  9. [ ] MODULE: Standardized single/multi channel gammatone filter
+  10. [ ] MODULE: Standardized single/multi channel elliptic filter 
+  11. [ ] FN: Cover an input space logarithmically with filters
+  12. Parameterize and interpret. (or punt and say per-cell intepretability is irrelevant; relative performance across a population is all that matters for determining model importance? ) 
+  13. Try qboost->boostirel->qfmin->qlsq->qboost->qlsq->qboost->qlsq->qboost (on the theory that that last qboost helps avoid local minima)
+  14. Could we get a data set with a very high number of reps?
+  15. SSH tunnel, neuropredict, inferring I from V or vice versa
+     1) Function: est_set_as_vector(), est_set_as_matrix()
+  16. Keeping parameterizations near -5 to +5ish
+  17. Ask stephen for a better metric than the trial-to-trial correlation become EXTREMELY low with small bin sizes?
+       - Ideally, projecting responses backward to find the filter nonlinearity in a NPNL style would be sweet
+  18. Boost algorithmic improvements. Comparison of Boost algorithms efficiency Per step, over time. 
+  19. Keep "dead jobs" thing near zero  
+  20. Improve siglog curvature initial further by setting it to 1/variance?
+  21. Add Debug mode flag in META, plot function hooks, so I can watch fits go. Test on my best results for today. 
+  22. Relative stopping criteria are possibly not being properly re-initialized during iterative fits.
+  23. Mixfit variations explored more.
+  24. Better initial conditions.
+  25. Queue up a few different smooth_respavg kernels at 200Hz  
 ** Using 2D gaussians to parametrize an STRF
   % Ivar thinks: I should pick out a large collection of 2D gaussians
   %  centered at representative points. This would be a like non averaging

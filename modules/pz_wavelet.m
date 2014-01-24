@@ -98,7 +98,11 @@ function x = do_pz_wavelet(mdl, x, stack, xxx)
              u(isinf(u)) = 10^6;
              warning off Control:analysis:LsimStartTime;
              warning off Control:analysis:LsimUndersampled;
-             tmp(:,s) = lsim(sys, u, t);
+             
+             blah = lsim(sys, u, t);
+             blah2 = hilbert(blah);
+             tmp(:,s) = abs(blah2);
+
              warning on Control:analysis:LsimUndersampled;
              warning on Control:analysis:LsimStartTime;
              nanidxs = any(u_nan,2);
