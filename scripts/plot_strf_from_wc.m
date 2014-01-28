@@ -22,7 +22,7 @@ global META;
             w = [1];
         else
             % w = w./repmat(sum(w), size(w,1), 1); 
-            % w 
+            w = w;
         end
         strf = w * h;
         
