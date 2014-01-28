@@ -53,9 +53,9 @@ function [posterior, z, N] = bernoulli_bayes(theta, prior, data)
     evidence = sum(likelihood .* prior);   % Marginalizes out    
     posterior = likelihood .* prior ./ evidence; % Bayes Theorem
     % BROKEN ATTEMPT TO USE LOGS all the way through.
-    %logprior = log(prior);
-    %posterior = logprior + loglikelihood - sum(loglikelihood + logprior);
-    %prob = z/N;
+    % logprior = log(prior);
+    % posterior = logprior + loglikelihood - sum(loglikelihood + logprior);
+    % prob = z/N;
 end
 
 function x = do_bernoulli_trials(mdl, x, stack, xxx)    
@@ -73,7 +73,7 @@ function x = do_bernoulli_trials(mdl, x, stack, xxx)
         % Delay the stimulus by some amount, truncate the response
         s = stim(1+mdl.delay_bins:end);
         r = resp(1:end-mdl.delay_bins);
-        D = [s r]; 
+        D = [s r];
     
         % Set up probabilistic analysis
         stim_bin_edges  = linspace(min(s), max(s), mdl.n_stimbins + 1);

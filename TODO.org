@@ -1,16 +1,17 @@
 * Latest from SVD
-  1. Queue up GT36, GT48, and WC03 to Analysis 40 and tally results
+  1. Analysis 40 results
   2. Rebuild Pole-Zero module to work on multiple channels, with multiple PZ filters per channel. Aggregated IIR plots needed for comparison with FIR. 
   3. Make a script that runs on 2 models over a whole population and compares (1) inner product of FIR filters (2) R value of predictions. 
-  4. Fit a filter, 1D at a time, using Log-likelihood. 
+  5. Fit a filter, 1D at a time, using Log-likelihood. 
+     - Try to make a 1D filter model that projects forward. 
      - Read about what a bernoulli distribution becomes in the limit of many samples
      - Try to figure out if I could infer the stimulus autocorrelation as well, and remove it, much like the Ising models.
 
 * Work Queue
   1. [ ] Heat map or line plot of the FIR filters vs the combined impulse responses of multiple PZs. 
-  2. [ ] Look just at histograms for >10^-2 latencies (less than that is probably a fitting bug)
-  3. [ ] Plot Pole1 vs Pole2 for p1z0x2 to see if we have fast/slow pole cluster
-  4. [ ] Run the best PZ models on 259, and then later on 240 and verify PZ model conclusions.
+  2. [ ] Run the best PZ models on 259, and then later on 240 and verify PZ model conclusions.
+  3. [ ] Look just at histograms for >10^-2 latencies (less than that is probably a fitting bug)
+  4. [ ] Plot Pole1 vs Pole2 for p1z0x2 to see if we have fast/slow pole cluster
   5. [ ] Module: Take the FFT of a spike train, then filter out frq components above some threshold to make a smoothed RESPAVG.
   6. [ ] Verify that the fittable gammatones use Hilbert Envelope correctly
   7. [ ] Try a siglog parameterized like page 374 of bayesian book
