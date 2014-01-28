@@ -1,14 +1,15 @@
-function plot_fit_time_histogram(batch, cellids, modelnames)
+function plot_fit_times(batch, cellids, modelnames)
 
 % CHANGE THESE VALUES HERE TO CHANGE THE PLOT AS DESIRED
 PLOT_SORTED = true;
 PLOT_LOGTIME = true;
+PLOT_JITTER = true;
 
     function ret = getfitval(x)
-        if ~isfield(x, 'fit_time')
-            ret = [nan nan];
-        else
+        if isfield(x, 'fit_time') && ~isempty(x.fit_time);
             ret = x.fit_time;
+        else
+            ret = nan;
         end
     end
 
@@ -18,6 +19,7 @@ meta_extractor = @getfitval;
 [~, times, ~] = load_model_batch(batch, cellids, modelnames, ...
                        stack_extractor, meta_extractor);
 
+times(cellfun(@iscell, times)) = {nan}
 times = cell2mat(times)';
 
 figure('Name', 'Fit Time Histogram', 'NumberTitle', 'off', 'Position', [20 50 900 900]);
@@ -41,20 +43,21 @@ else
 end
 
 hold on; 
-%bar(1:n, nanmean(data), 0.3, 'w'); 
-%         plot(1:n, data, 'k.'); 
-plot(1:n, data, 'k.');
+B = repmat(1:n, size(data,1), 1);
+if PLOT_JITTER
+    B = B - 0.1 + 0.2*rand(size(B));
+end    
+plot(B, data, 'k.')
 errorbar(nanmean(data), nanstd(data), 'r.'); 
 hold off;
 
+title(sprintf('Average and Std Dev of Model Fit Time, Batch %d', batch));
 set(gca,'XTick',1:n);        
 set(gca,'XTickLabel', modelnames(idxs));
 if PLOT_LOGTIME
     set(gca,'YScale','log');
 end
 set(gca,'CameraUpVector',[-1,0,0]);
-
-title(sprintf('Average and Std Dev of Model Fit Time, Batch %d', batch));
 
 end
 
