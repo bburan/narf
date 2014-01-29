@@ -1,14 +1,22 @@
 * Latest from SVD
-  1. Analysis 40 results
-  2. Rebuild Pole-Zero module to work on multiple channels, with multiple PZ filters per channel. Aggregated IIR plots needed for comparison with FIR. 
-  3. Make a script that runs on 2 models over a whole population and compares (1) inner product of FIR filters (2) R value of predictions. 
-  5. Fit a filter, 1D at a time, using Log-likelihood. 
-     - Try to make a 1D filter model that projects forward. 
+  1. [X] Analysis 40 results in spreadsheet
+  2. [X] Reconstitute an STRF from the spectrotemporal vectors
+  3. [X] Try to remove the b vector from fitting entirely if it doesn't help. 
+  4. [ ] Rebuild Pole-Zero module to work on multiple channels, with multiple PZ filters per channel. 
+	 Have a function that can sample IIR filter. 
+  5. [ ] Make a log-likelihood fitter that varies each parameter and tests log-likelihood ratios. 
+	 It tries to find a "gaussian-like" log likelihood ratio. 
+	 Or it tries to find the variance at which the sample probability is half
+  6. Make a script that runs on 2 models over a whole population and compares 
+     (1) inner product of FIR filters
+     (2) R value of predictions. 
+  7. Fit a filter, 1D at a time, using Log-likelihood. 
+     - [ ] Try to make a 1D filter model that projects forward. 
      - Read about what a bernoulli distribution becomes in the limit of many samples
      - Try to figure out if I could infer the stimulus autocorrelation as well, and remove it, much like the Ising models.
 
 * Work Queue
-  1. [ ] Heat map or line plot of the FIR filters vs the combined impulse responses of multiple PZs. 
+  1. [ ] Push changes in BAPHY back to SVD
   2. [ ] Run the best PZ models on 259, and then later on 240 and verify PZ model conclusions.
   3. [ ] Look just at histograms for >10^-2 latencies (less than that is probably a fitting bug)
   4. [ ] Plot Pole1 vs Pole2 for p1z0x2 to see if we have fast/slow pole cluster

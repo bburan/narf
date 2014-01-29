@@ -15,14 +15,13 @@ global META;
                 h = m.coefs;
             end
         end
-        
-        % I'm not sure I'm doing this normalization right, but it's a good
-        % first try.
+                
         if isempty(w)
             w = [1];
         else
-            % w = w./repmat(sum(w), size(w,1), 1); 
-            w = w;
+            % TODO: Proper normalization uses the stimulus power
+            % w = w./repmat(sum(w), size(w,1), 1);  % Normalize wrongly
+            w = w; % Don't normalize
         end
         strf = w * h;
         
