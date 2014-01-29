@@ -20,17 +20,15 @@ m.output = 'stim';
 
 % Optional fields
 m.plot_fns = {};
-m.plot_fns{1}.fn = @(stack, xxx) do_plot_signal(stack, xxx, m.output);
-m.plot_fns{1}.pretty_name = 'Output vs Time';
+% m.plot_fns{1}.fn = @(stack, xxx) do_plot_signal(stack, xxx, m.output);
+% m.plot_fns{1}.pretty_name = 'Output vs Time';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_sum_vector_elements(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
+function x = do_sum_vector_elements(mdl, x, stack, xxx)
 
     for sf = fieldnames(x.dat)', sf=sf{1};
         x.dat.(sf).(mdl.output) = sum(x.dat.(sf).(mdl.input), 3);

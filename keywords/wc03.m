@@ -13,7 +13,7 @@ n_input_chans = size(XXX{end}.dat.(fns{1}).(signal), 3);
 append_module(MODULES.weight_channels.mdl(...
        struct('weights', zeros(n_input_chans, n_output_chans), ...
               'y_offset', zeros(n_output_chans, 1), ...
-              'fit_fields', {{'weights', 'y_offset'}})));
-
-fitSubstack([],10^-2);
-STACK{end}{1}.fit_fields = {'weights'}; % No more y_offset
+              'fit_fields', {{'weights'}})));
+append_module(MODULES.sum_vector_elements);
+fitSubstack(length(STACK)-1,10^-2); pop_module();
+% STACK{end}{1}.fit_fields = {'weights'}; % No more y_offset
