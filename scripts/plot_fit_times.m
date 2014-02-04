@@ -1,43 +1,63 @@
 function plot_fit_times(batch, cellids, modelnames)
 
-    function ret = getit(x, idx)
-        if isempty(x)
-            ret = nan;
-        else
-            ret = x(idx);
-        end
-    end
+% CHANGE THESE VALUES HERE TO CHANGE THE PLOT AS DESIRED
+PLOT_SORTED = true;
+PLOT_LOGTIME = true;
+PLOT_JITTER = true;
 
     function ret = getfitval(x)
-        if ~isfield(x, 'fit_time') || ~isfield(x, 'perf_val_corr')
-            ret = [nan nan];
+        if isfield(x, 'fit_time') && ~isempty(x.fit_time);
+            ret = x.fit_time;
         else
-            ret = [x.fit_time x.perf_val_corr];
+            ret = nan;
         end
     end
 
 stack_extractor = @(x) 0;
 meta_extractor = @getfitval;
 
-[~, metas, ~] = load_model_batch(batch, cellids, modelnames, ...
+[~, times, ~] = load_model_batch(batch, cellids, modelnames, ...
                        stack_extractor, meta_extractor);
 
-times = cellfun(@(x) getit(x,1), metas);
-corrs = cellfun(@(x) getit(x,2), metas);
+times(cellfun(@iscell, times)) = {nan}
+times = cell2mat(times)';
 
-figure('Name', 'Fit Time vs Corr', 'NumberTitle', 'off', 'Position', [20 50 900 900]);
-plot(times', corrs', '.');
-h = legend(modelnames);
-set(h, 'Interpreter', 'none');
-xlabel('Fit Time');
-ylabel('Val. Set Correlation');
-title('Val. Set Correlation vs Fit Time');
-n = ceil(sqrt(size(times,1)));
-figure;
-for ii = 1:size(times, 1)
-    subplot(n,n,ii);
-	hist(times(ii,:), ceil(size(times,2)/5));
-    title([modelnames{ii} '(' num2str(nanmean(times(ii))) ')'], 'Interpreter', 'none');
+figure('Name', 'Fit Time Histogram', 'NumberTitle', 'off', 'Position', [20 50 900 900]);
+n = size(times,2);
+for ii = 1:n
+    subplot(n,1,ii);
+    hist(times(:,ii), 50);   
+    ll = xlabel(sprintf('Fit Time for %s', modelnames{ii}));
+    set(ll, 'Interpreter', 'none');
 end
 
+figure('Name', 'Fit Time Bars', 'NumberTitle', 'off', 'Position', [20 50 900 900]);
+if PLOT_SORTED
+    means = nanmean(times);
+    stds = nanstd(times);
+    D = [means' times'];
+    [sD, idxs] = sortrows(D, -1);
+    data = sD(:, 2:end)';
+else
+    data = times;
 end
+
+hold on; 
+B = repmat(1:n, size(data,1), 1);
+if PLOT_JITTER
+    B = B - 0.1 + 0.2*rand(size(B));
+end    
+plot(B, data, 'k.')
+errorbar(nanmean(data), nanstd(data), 'r.'); 
+hold off;
+
+title(sprintf('Average and Std Dev of Model Fit Time, Batch %d', batch));
+set(gca,'XTick',1:n);        
+set(gca,'XTickLabel', modelnames(idxs));
+if PLOT_LOGTIME
+    set(gca,'YScale','log');
+end
+set(gca,'CameraUpVector',[-1,0,0]);
+
+end
+
