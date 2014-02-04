@@ -119,6 +119,13 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             end
         end
         
+        if ~isempty(findstr('RDT',fname)) | ~isempty(findstr('SNS',fname)),
+            loadbytrial=1;
+            RDT=1;
+        else
+            RDT=0;
+        end
+        
         % Load the raw_stim part of the data structure
         stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
         fprintf('Loading stimulus: %s\n', stimfile);
@@ -128,6 +135,12 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             options.fsout=mdl.raw_stim_fs;
             options.chancount=mdl.stimulus_channel_count;
             [stim,stimparam] = loadstimbytrial(stimfile,options);
+
+            if RDT,
+                disp('special stimulus processing for RDT');
+                stim=stim(:,:,:,3);
+            end
+                
         else
             [stim,stimparam] = loadstimfrombaphy(stimfile, [], [], ...
                   mdl.stimulus_format, mdl.raw_stim_fs, ...
@@ -177,7 +190,36 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         options.rasterfs = mdl.raw_resp_fs;
         respfile = [cfd(idx).path, cfd(idx).respfile];
         fprintf('Loading response: %s\n', respfile);
-        if loadbytrial,
+        if loadbytrial && RDT,
+            [resp,rparms]=load_RDT_by_trial(stimfile,respfile,options); 
+            resp=permute(resp,[1 3 2])./options.rasterfs;
+            % resp already only has correct trials.  Need to select
+            % that subset of stim trials
+            CorrectTrials=rparms.CorrectTrials;
+            stim=stim(:,CorrectTrials,:);
+            TargetStartBin=rparms.TargetStartBin(rparms.CorrectTrials);
+            ThisTarget=rparms.ThisTarget(rparms.CorrectTrials);
+            BigSequenceMatrix=rparms.BigSequenceMatrix(:,:,rparms.CorrectTrials);
+            TarRepCount=rparms.SamplesPerTrial-max(TargetStartBin)+1;
+            TarDur=rparms.PreStimSilence+TarRepCount.*rparms.SampleDur+...
+                   rparms.PostStimSilence;
+            TarBins=round(rparms.rasterfs.*TarDur);
+            mr=1;
+            for tt=1:length(TargetStartBin),
+                if TargetStartBin(tt)>0,
+                    refend=(TargetStartBin(tt)-1).*rparms.SampleDur+...
+                           rparms.PreStimSilence;
+                    refend=round(refend.*rparms.rasterfs)-1;
+                    resp((refend+1):end,tt)=nan;
+                    mr=max(refend,mr);
+                else
+                    mr=max(mr,max(find(~isnan(resp(:,tt)))));
+                end
+            end
+            resp=resp(1:mr,:,:);
+            stim=stim(1:mr,:,:);
+            
+        elseif loadbytrial,
             options.tag_masks={'SPECIAL-TRIAL'};
             [resp, tags,trialset] = loadspikeraster(respfile, options);
             resp=permute(resp,[1 3 2]);
@@ -253,6 +295,7 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         % SVD 2013-03-08 - if specified, pull out either estimation (fit) or
         % validation (test) subset of the data
         if datasubset,
+            
             repcount=squeeze(sum(~isnan(resp(1,:,:)),2));
             %if max(repcount)>2,
             %    validx=min(find(repcount==max(repcount)));

@@ -8,7 +8,7 @@ function ret = nl_zerothresh(phi, z)
     elseif length(phi)==2,
         ret = (z - phi(1));
         ret(ret<0)=0;
-        ret=ret.*phi(2)./100;   
+        ret=ret.*phi(2)./100;
     elseif length(phi)==3,
         ret = (z - phi(1));
         ret(ret<0)=0;
