@@ -961,11 +961,26 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
     end
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Rank Plot', ...
+          'HorizontalAlignment', 'left', 'String', 'Diff Plot', ...
           'Position', [300+ButtonWidth*7 bh-ts ButtonWidth ts-pad], ...
           'Callback', @elite_plot_callback);
       
     function elite_plot_callback(~,~,~)
+        data = compute_data_matrix({'r_test'});
+        if isempty(data)
+            return;
+        end
+        % Query the DB and record a single data point
+        fig_title=sprintf('Collapsed (Batch %d, %s)',...
+                          sel_batch,datestr(now));
+
+        figure('Name', fig_title, 'NumberTitle', 'off', ...
+               'Position', [10 10 900 900]);
+        plot_model_difference(data, sel_models); 
+       
+    end   
+
+    function elite_plot_callback_old(~,~,~)
         data = compute_data_matrix({'r_fit', 'r_test'});
         if isempty(data)
             return;
@@ -989,7 +1004,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
             Ys(ii,:) = hist(val_rank(:, order(ii)), 1:len);
         end
         
-        figure('Name', 'Rank Plot', 'NumberTitle', 'off', ...
+        figure('Name', 'Diff Plot', 'NumberTitle', 'off', ...
                'Position', [10 10 1000 500]);
         bar(Ys,'stacked');
         set(gca,'XTick', 1:length(sel_models));

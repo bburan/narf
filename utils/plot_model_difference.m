@@ -1,10 +1,4 @@
-function plot_scatter(X, names)
-% CORRPLOT  Plots a big correlation graph of correlations and residuals
-%   Each column of X is a different data set that you want to plot
-%   names is a cell array, with strings for each.
-
-% 2012/10/03, Ivar Thorson.
-
+function plot_model_difference(X, names)
 % Set plot borders and sizes
 tmargin = 0.1;
 lmargin = 0.1;
@@ -43,31 +37,42 @@ for i = 1:Nsets
             continue;
         end
         
-        axis([axmin, axmax, axmin, axmax]);
         
         hold on;
-        if j == Nsets
-             qtys = hist(X(:,i), bins);
-             bar(bins, (qtys ./ sum(qtys)), 'g');
-        end
-
-        if i == 1
-             qtys = hist(X(:,j), bins);
-             bh = barh(bins, (qtys ./ sum(qtys)), 'y');
-         end
-         
-        plot(X(:,i),X(:,j), 'k.', [axmin, axmax], [axmin, axmax], 'k--');
+        dd = X(:,i) - X(:,j);
+        d = sign(dd) .* sqrt(0.5 * abs(dd).^2);
+        lim = max(abs(d));
+        xlim([-lim lim]);
+        histfit(d, ceil(Npoints/5));
         
-        % Plot the CDFs versus each other, like a Kolmogorov Smirnov plot
-        [cdfi, i_values] = ecdf(X(:,i));
-        [cdfj, j_values] = ecdf(X(:,j));
-        grid = linspace(axmin, axmax, 100);
-        [~, iix] = unique(i_values);
-        [~, ijx] = unique(j_values);
-        ipts = interp1(i_values(iix), cdfi(iix), grid, 'linear');
-        jpts = interp1(j_values(ijx), cdfj(ijx), grid, 'linear');
-        plot(jpts, ipts, 'r-');
-                      
+        hh = get(gca,'Children');
+        set(hh(2),'FaceColor',[.8 .8 .9]);
+        
+        % set(gca,'CameraUpVector',[-1,0,1]);
+
+        % Test if it's a gaussian
+        [hchi, pchi] = chi2gof(d);
+        if hchi, isgauss = 'true'; else isgauss = 'false'; end
+        
+        % Test if the gaussian is zero mean
+        [htt, ptt] = ttest(d);
+        bias = nanmean(d);
+        if htt, 
+            istt = 'true';
+            if bias >= 0
+                winner = names{i};
+            else
+                winner = names{j};
+            end
+        else
+            istt = 'false';             
+            winner = 'Uncertain';            
+        end
+        
+        textLoc(sprintf('Gaussian? %5s (Chi-Square p-value: %f)\nMean not 0? %5s (T-test p-value: %f)\nMean: %f\nWinner: %s', ...
+            isgauss, pchi, istt, ptt, bias, winner), ...
+            'NorthWest', 'interpreter', 'none');        
+        
         % Turn off tick labels unless in the bottom or leftmost rows
         if j == Nsets 
             hl = xlabel(sprintf('%s\nmean:%f', names{i}, nanmean(X(:,i))));
@@ -82,7 +87,6 @@ for i = 1:Nsets
         else
             set(gca, 'YTickLabel', '');
         end
-        
         hold off;
     end
 end

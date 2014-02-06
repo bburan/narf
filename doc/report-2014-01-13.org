@@ -186,7 +186,6 @@
 
 ** Show that "delayed inhibition" effect is an aliasing of something else.
 
-
 * Future Directions
 
 ** Scientific Questions (See Above)
@@ -235,4 +234,3 @@
    Display
    A vs B
  
-
