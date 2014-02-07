@@ -1,58 +1,49 @@
 function compare_models(batch, cellids, modelnames)
+% Computes several interesting graphs for a combination of models
 
-    function ret = getfitval(x)
-        if isfield(x, 'fit_time') && ~isempty(x.fit_time);
-            ret = x.fit_time;
-        else
-            ret = nan;
-        end
+    function ret = eval_perfmetric(x)
+        global META;
+        calc_xxx(1);
+        ret = META.perf_metric();        
     end
 
 stack_extractor = @(x) 0;
-meta_extractor = @getfitval;
+meta_extractor = @eval_perfmetric;
 
-[~, times, ~] = load_model_batch(batch, cellids, modelnames, ...
+[~, score, ~] = load_model_batch(batch, cellids, modelnames, ...
                        stack_extractor, meta_extractor);
 
-times(cellfun(@iscell, times)) = {nan}
-times = cell2mat(times)';
+%times(cellfun(@iscell, score)) = {nan};
+score = cell2mat(score)';
 
-figure('Name', 'Fit Time Histogram', 'NumberTitle', 'off', 'Position', [20 50 900 900]);
-n = size(times,2);
+score(score>2) = 2;
+
+figure('Name', 'Model Comparison', 'NumberTitle', 'off', 'Position', [20 50 900 900]);
+n = size(score,2);
 for ii = 1:n
     subplot(n,1,ii);
-    hist(times(:,ii), 50);   
-    ll = xlabel(sprintf('Fit Time for %s', modelnames{ii}));
+    hist(score(:,ii), 50);   
+    ll = xlabel(sprintf('NMSE for %s', modelnames{ii}));
     set(ll, 'Interpreter', 'none');
 end
 
-figure('Name', 'Fit Time Bars', 'NumberTitle', 'off', 'Position', [20 50 900 900]);
-if PLOT_SORTED
-    means = nanmean(times);
-    stds = nanstd(times);
-    D = [means' times'];
-    [sD, idxs] = sortrows(D, -1);
-    data = sD(:, 2:end)';
-else
-    data = times;
+figure('Name', 'Model Comparison', 'NumberTitle', 'off', 'Position', [20 50 900 900]);
+n = size(score,2);
+for ii = 1:n
+    subplot(n,1,ii);
+    hist(log(score(:,ii)), 50);   
+    ll = xlabel(sprintf('log(NMSE) for %s', modelnames{ii}));
+    set(ll, 'Interpreter', 'none');
 end
 
-hold on; 
-B = repmat(1:n, size(data,1), 1);
-if PLOT_JITTER
-    B = B - 0.1 + 0.2*rand(size(B));
-end    
-plot(B, data, 'k.')
-errorbar(nanmean(data), nanstd(data), 'r.'); 
-hold off;
-
-title(sprintf('Average and Std Dev of Model Fit Time, Batch %d', batch));
-set(gca,'XTick',1:n);        
-set(gca,'XTickLabel', modelnames(idxs));
-if PLOT_LOGTIME
-    set(gca,'YScale','log');
+figure('Name', 'Model Comparison', 'NumberTitle', 'off', 'Position', [20 50 900 900]);
+n = size(score,2);
+for ii = 1:n
+    subplot(n,1,ii);
+    hist(1./(score(:,ii)), 50);   
+    ll = xlabel(sprintf('1/(NMSE) for %s', modelnames{ii}));
+    set(ll, 'Interpreter', 'none');
 end
-set(gca,'CameraUpVector',[-1,0,0]);
 
 end
 

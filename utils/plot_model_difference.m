@@ -22,6 +22,9 @@ if not(exist('names')) || length(names) ~= Nsets
     error('I need as many names as the size of the y dimension!');
 end
 
+% Shrink the names to their minimum
+names = shorten_modelnames(names);
+
 R = corrcoef(X);
 
 w = (1.0 - lmargin - rmargin) / (Nsets - 1);    % Plot width
@@ -40,38 +43,55 @@ for i = 1:Nsets
         
         hold on;
         dd = X(:,i) - X(:,j);
-        d = sign(dd) .* sqrt(0.5 * abs(dd).^2);
+        % d = sign(dd) .* sqrt(0.5 * abs(dd).^2);
+        d = dd;
         lim = max(abs(d));
         xlim([-lim lim]);
-        histfit(d, ceil(Npoints/5));
-        
-        hh = get(gca,'Children');
-        set(hh(2),'FaceColor',[.8 .8 .9]);
+        histfit(d, ceil(Npoints/10));        
         
         % set(gca,'CameraUpVector',[-1,0,1]);
 
         % Test if it's a gaussian
         [hchi, pchi] = chi2gof(d);
-        if hchi, isgauss = 'true'; else isgauss = 'false'; end
+        if ~hchi,
+            isgauss = 'Probably';
+            saturation = 0;
+        else
+            isgauss = 'false';
+            saturation = 0.8;
+        end
         
         % Test if the gaussian is zero mean
         [htt, ptt] = ttest(d);
         bias = nanmean(d);
         if htt, 
-            istt = 'true';
+            istt = 'Probably';
             if bias >= 0
                 winner = names{i};
+                barcolor = [saturation 1 saturation];
             else
                 winner = names{j};
+                barcolor = [1 saturation saturation];
             end
         else
             istt = 'false';             
-            winner = 'Uncertain';            
+            winner = 'Uncertain';    
+            barcolor = [0.8 0.8 0.8];
         end
+
+        % Change the color of the histogram to indicate the winner
+        hh = get(gca,'Children');
+        set(hh(1),'Color', [0 0 0]);
+        set(hh(2),'FaceColor', barcolor);
+        v=axis;
+        plot([0,0], [0, v(4)], 'k--');
         
-        textLoc(sprintf('Gaussian? %5s (Chi-Square p-value: %f)\nMean not 0? %5s (T-test p-value: %f)\nMean: %f\nWinner: %s', ...
-            isgauss, pchi, istt, ptt, bias, winner), ...
-            'NorthWest', 'interpreter', 'none');        
+        %textLoc(sprintf('Gaussian? %5s (Chi-Square p-value: %f)\nNonzero mean? %5s (T-test p-value: %f)\nMean: %f\nWinner: %s', ...
+        %    isgauss, pchi, istt, ptt, bias, winner), ...
+        %    'NorthWest', 'interpreter', 'none');
+        
+        textLoc(sprintf('Winner: %s', winner), ...
+            'NorthWest', 'interpreter', 'none');
         
         % Turn off tick labels unless in the bottom or leftmost rows
         if j == Nsets 

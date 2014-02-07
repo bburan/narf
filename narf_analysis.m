@@ -880,8 +880,21 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Heat Map', ...
           'Position', [300+ButtonWidth*5 bh-ts ButtonWidth ts-pad], ...
           'Callback', @heatmap_plot_callback);
-      
+
     function heatmap_plot_callback(~,~,~)
+        data = compute_data_matrix({'r_test'});
+        if isempty(data)
+            return;
+        end
+        figure('Name', 'Heat Map Comparison', 'NumberTitle', 'off', ...
+               'Position', [10 10 900 900]);
+        
+        data = log(1./data);
+        hist(data(:,1), 50);
+        
+    end
+
+    function heatmap_plot_callback_old(~,~,~)
         data = compute_data_matrix({'r_test'});
         if isempty(data)
             return;
@@ -890,8 +903,8 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                'Position', [10 10 900 900]);      
         ns = 1:size(data,2);
         D = sortrows([nanmean(data)' ns' data'], [-1]);
-        idxs = D(:,2);
-        heatmap(D(:, 3:end), sel_cellids, sel_models(idxs),  '', 'TickAngle', 90, 'ShowAllTicks', true); 
+        idxs = D(:,2);       
+        heatmap(D(:, 3:end), sel_cellids, sel_models(idxs),  '', 'TickAngle', 90, 'ShowAllTicks', true);         
     end
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
@@ -963,20 +976,25 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Diff Plot', ...
           'Position', [300+ButtonWidth*7 bh-ts ButtonWidth ts-pad], ...
-          'Callback', @elite_plot_callback);
+          'Callback', @diff_plot_callback);
       
-    function elite_plot_callback(~,~,~)
+    function diff_plot_callback(~,~,~)
         data = compute_data_matrix({'r_test'});
         if isempty(data)
             return;
         end
         % Query the DB and record a single data point
-        fig_title=sprintf('Collapsed (Batch %d, %s)',...
+        fig_title=sprintf('Difference Plots (Batch %d, %s)',...
                           sel_batch,datestr(now));
 
         figure('Name', fig_title, 'NumberTitle', 'off', ...
                'Position', [10 10 900 900]);
-        plot_model_difference(data, sel_models); 
+        % Sort to make the winners slightly more obvious
+        mn = mean(data);
+        [~,idxs] = sort(mn, 2, 'descend');
+        data = data(:, idxs);
+        names = sel_models(idxs);        
+        plot_model_difference(data, names); 
        
     end   
 
