@@ -15,5 +15,9 @@ append_module(MODULES.nonlinearity.mdl(...
            'phi', [0 meanresp*2 meanpred curvature curvature], ...
            'nlfn', @nl_sig_logistic)));
 
-fitSubstack();
+% If STIM has the right number of channels, we
+% can fit it. If not, don't fit it. 
+if size(XXX{end}.dat.(ff).stim, 3) == 1
+    fitSubstack();
+end
 

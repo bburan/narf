@@ -50,22 +50,24 @@ for i = 1:Nsets
              qtys = hist(X(:,i), bins);
              bar(bins, (qtys ./ sum(qtys)), 'g');
         end
-%          
+
         if i == 1
              qtys = hist(X(:,j), bins);
              bh = barh(bins, (qtys ./ sum(qtys)), 'y');
          end
          
         plot(X(:,i),X(:,j), 'k.', [axmin, axmax], [axmin, axmax], 'k--');
-% 
-%         xtmp = sort(X(:,i));
-%         ytmp = sort(X(:,j));
-%         
-%         cs = 2* cumsum((xtmp > ytmp) - 0.5);
-        %plot(linspace(0, 1, length(cs)), cs / length(cs), 'r-');
-            %[N,X]
-%                 sprintf('r=%f', R(i,j)));
         
+        % Plot the CDFs versus each other, like a Kolmogorov Smirnov plot
+        [cdfi, i_values] = ecdf(X(:,i));
+        [cdfj, j_values] = ecdf(X(:,j));
+        grid = linspace(axmin, axmax, 100);
+        [~, iix] = unique(i_values);
+        [~, ijx] = unique(j_values);
+        ipts = interp1(i_values(iix), cdfi(iix), grid, 'linear');
+        jpts = interp1(j_values(ijx), cdfj(ijx), grid, 'linear');
+        plot(jpts, ipts, 'r-');
+                      
         % Turn off tick labels unless in the bottom or leftmost rows
         if j == Nsets 
             hl = xlabel(sprintf('%s\nmean:%.3f med:%.3f', names{i}, ...
@@ -82,6 +84,7 @@ for i = 1:Nsets
         else
             set(gca, 'YTickLabel', '');
         end
+        
         hold off;
     end
 end
