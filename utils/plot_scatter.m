@@ -70,14 +70,16 @@ for i = 1:Nsets
                       
         % Turn off tick labels unless in the bottom or leftmost rows
         if j == Nsets 
-            hl = xlabel(sprintf('%s\nmean:%f', names{i}, nanmean(X(:,i))));
+            hl = xlabel(sprintf('%s\nmean:%.3f med:%.3f', names{i}, ...
+                                nanmean(X(:,i)),nanmedian(X(:,i))));
             set(hl,'interpreter','none');
         else
             set(gca, 'XTickLabel', '');
         end
         
         if i == 1 
-            hl = ylabel(sprintf('%s\nmean:%f', names{j}, nanmean(X(:,j))));
+            hl = ylabel(sprintf('%s\nmean:%.3f med:%.3f', names{j}, ...
+                                nanmean(X(:,j)),nanmedian(X(:,j))));
             set(hl,'interpreter','none');
         else
             set(gca, 'YTickLabel', '');

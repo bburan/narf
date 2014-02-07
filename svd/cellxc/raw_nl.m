@@ -37,8 +37,14 @@ for dd=1:dimcount,
       inrange=find(pred(:,dd)>=xx(1) & pred(:,dd)<xx(end));
       
       %I = INTERP1(X,Y,XI,'method','extrap')
-      if sum(diff(xx)==0)>0,
-          xx=xx+eps.*(1:length(xx))';
+      %if sum(diff(xx)==0)>0,
+      %    xx=xx+eps.*(1:length(xx))';
+      %end
+      ff=find(diff(round(xx./max(xx).*1000000))==0);
+      if ~isempty(ff),
+          keepidx=setdiff(1:length(xx),ff+1);
+          xx=xx(keepidx);
+          yy=yy(keepidx);
       end
       tp=interp1(xx,yy,pred(inrange,dd),'linear');
       

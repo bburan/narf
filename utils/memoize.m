@@ -5,7 +5,7 @@ global NARF_MEMOIZATION_PATH;
 
 function_name = func2str(F);
 memoization_dir = [NARF_MEMOIZATION_PATH '/' function_name '/'];
-unix(['chmod 777 ' memoization_dir]);
+[s,w]=unix(['chmod 777 ' memoization_dir]);
 
     function varargout = INEEDAGENSYM (varargin) 
         %save('/tmp/ineedagensymdump', 'varargin', '-mat');

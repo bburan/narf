@@ -334,6 +334,7 @@ function x = do_load_wehr(mdl, x, stack, xxx)
                     end
                     ri=ri(:)-y;
                     ri=sqrt(abs(ri)).*sign(ri);
+                    ri=ri;
                 elseif 0,
                     % remove linear trend
                     ri=detrend(ri);

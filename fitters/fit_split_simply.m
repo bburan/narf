@@ -30,7 +30,7 @@ phi_init = pack_fittables(STACK);
 if isempty(phi_init)
     fprintf('Skipping because there are no parameters to fit.\n');
     termcond = NaN;  
-    return 
+    return
 end
 
 [fit_start_depth, fit_end_depth] = find_fit_start_depth(STACK);

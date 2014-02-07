@@ -228,6 +228,45 @@ for nn = 1:length(rundata)
                 pcounter=pcounter+1;
             end                                             
         end
+    elseif ismember(rundata(nn).batch,[262])
+        % RDT data
+        cellfiledata=dbbatchcells(rundata(nn).batch,cellid);
+        activefile=strcmpi({cellfiledata.behavior},'active');
+           
+        acounter=1;
+        pcounter=0;
+        for ii=1:length(cellfiledata),
+            train_set{ii}=[cellfiledata(ii).stimfile,'_est'];
+            test_set{ii}=[cellfiledata(ii).stimfile,'_val'];
+            rawid(ii)=cellfiledata(ii).rawid;
+            
+            if activefile(ii),
+                Aidx=1;
+                file_code{ii}=['A',num2str(Aidx)];
+             elseif ~pcounter,
+                file_code{ii}=['P',num2str(acounter)];
+                pcounter=1;
+            else
+                file_code{ii}=['P',num2str(acounter)];
+                pcounter=pcounter+1;
+            end                            
+        end
+    elseif ismember(rundata(nn).batch,[263])
+        % noisy vocalization data
+        cellfiledata=dbbatchcells(rundata(nn).batch,cellid);
+        pcounter=1;
+        
+        for ii=1:length(cellfiledata),
+            
+            train_set{ii}=[cellfiledata(ii).stimfile,'_est'];
+            test_set{ii}=[cellfiledata(ii).stimfile,'_val'];
+            rawid(ii)=cellfiledata(ii).rawid;
+            if cellfiledata(ii).stimsnr<100,
+                file_code{ii}=['N',num2str(pcounter)];
+            else
+                file_code{ii}=['C',num2str(pcounter)];
+            end
+        end
     else
         % figure out what files to use for what stage of the analysis
         %[cellfiledata, times, params] = cellfiletimes(cellid, rundata(nn).batch);

@@ -143,8 +143,9 @@ function plotpath = plot_model_comparison(stack,xxx,meta,sel_results)
             rr=dat.respavg(:,1);
             pp=dat.stim(:,1);
             
+            plen=min(round(STACK{1}{1}.raw_resp_fs.*3.5),...
+                     size(rr,1));
             if SPECIAL_FORMAT,
-                plen=round(STACK{1}{1}.raw_resp_fs.*3.5);
                 rr=rr(1:plen,:);
                 pp=pp(1:plen,:);
             end

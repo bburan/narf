@@ -142,12 +142,14 @@ end
 % % Plot the filter responses
 function do_depression_cartoon(sel, stack, xxx)
     
+    global XXX
+    
     mdl = stack{end}{1};
     mdls = stack{end};
     fs=stack{1}{1}.raw_stim_fs;
     tau=[];
     strength=[];
-        
+    
     x = struct();
     x.dat.demo.stim=[zeros(fs./2,1);ones(fs,1)./2;zeros(fs,1);
                      ones(round(fs./10),1);zeros(round(fs./10),1);
@@ -156,6 +158,12 @@ function do_depression_cartoon(sel, stack, xxx)
         x.dat.demo.stim=repmat(x.dat.demo.stim,[1 1 length(mdl.tau)]);
     end
     x.dat.demo.(mdl.input)=x.dat.demo.stim;
+    
+    if isfield(XXX{1},'filecodes') && ~isempty(XXX{1}.filecodes),
+        unique_codes = unique(XXX{1}.filecodes);
+    else
+        unique_codes={''};
+    end
     
     data=[];
     for jj=1:length(mdls),
@@ -186,14 +194,15 @@ function do_depression_cartoon(sel, stack, xxx)
         plot(timeaxis,data);
         axis([timeaxis([1 end])' -0.1 2.1]);
         for jj=1:length(mdls),
-            text(1.5+(jj-1)*3.5,2,'stim','VerticalAlign','top');
+            text(0.5+(jj-1)*3.5,2,[unique_codes{jj} ' stim'],...
+                                'VerticalAlign','top');
             legstr={};
             for ii=1:length(mdls{jj}.tau);
                 legstr{ii}=sprintf('%2d:u=%.1f,{\\tau}=%.0f',...
                         ii,abs(mdls{jj}.strength(ii)),...
                         abs(mdls{jj}.tau(ii)./mdls{jj}.tau_norm.*1000));
             end
-            text(1.5+(jj-1)*3.5,1,legstr,'VerticalAlign','top');
+            text(0.5+(jj-1)*3.5,1,legstr,'VerticalAlign','top');
         end
     end
 end

@@ -28,6 +28,13 @@ else,
    cellargs=cat(2,cellargs,{'speed'},{params.stimspeedid});
 end
 
+if isfield(params,'cellid') && ~isempty(params.cellid),
+   cellargs=cat(2,cellargs,{'cellid'},{params.cellid});
+end
+
+if isfield(params,'ReferenceClass') && ~isempty(params.ReferenceClass),
+   cellargs=cat(2,cellargs,{'ReferenceClass'},{params.ReferenceClass});
+end
 if isfield(params,'stimsnr') && ~isempty(params.stimsnr),
    cellargs=cat(2,cellargs,{'stimsnr'},{params.stimsnr});
 end
@@ -104,7 +111,6 @@ if isfield(params,'specialbatch'),
     switch lower(params.specialbatch),
       case 'voc',
         
-        % spn / center-surround
         keepfiles=zeros(size(cellfiledata));
         cleanfiles=zeros(size(cellfiledata));
         keepcellids={};
@@ -130,6 +136,24 @@ if isfield(params,'specialbatch'),
         cellfiledata=cellfiledata(keepidx);
         cellids=keepcellids;
         
+      case 'vocnoise',
+        
+        keepfiles=zeros(size(cellfiledata));
+        cleanfiles=zeros(size(cellfiledata));
+        keepcellids={};
+        for ii=1:length(cellfiledata),
+            parms=dbReadData(cellfiledata(ii).rawid);
+            if isfield(parms,'Ref_SNR') && parms.Ref_SNR==0,
+                keepfiles(ii)=1;
+                keepcellids=union(keepcellids,cellfiledata(ii).cellid);
+            end
+        end
+        allcellids={cellfiledata.cellid};
+        keepidx=find(ismember(allcellids,keepcellids));
+        
+        cellfileids=cellfileids(keepidx);
+        cellfiledata=cellfiledata(keepidx);
+        cellids=keepcellids;
       case 'cs',
         
         % spn / center-surround

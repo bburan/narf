@@ -88,7 +88,7 @@ function [phi,outbinserr] = init_nonparm_nonlinearity(mdl, x)
             bincount=length(edges1)-1;
         else
             % scale edges based on number of samples
-            while length(b)<bincount && tb<length(si1),
+            while length(b)<bincount && tb<bincount*10,
                 tb=tb+1;
                 edges1=round(linspace(1,length(si1)+1,tb));
                 [b,ui,uj]=unique(ps(edges1(1:(end-1)))');

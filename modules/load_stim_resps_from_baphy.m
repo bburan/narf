@@ -11,9 +11,10 @@ m.name = 'load_stim_resps_from_baphy';
 m.fn = @do_load_from_baphy;
 m.pretty_name = 'Load stim+resp from BAPHY';
 m.editable_fields = {'raw_stim_fs', 'raw_resp_fs', 'include_prestim', ...
-                     'stimulus_format','stimulus_channel_count', ...
-                     'output_stim', 'output_stim_time', ...
-                     'output_resp', 'output_resp_time', 'output_respavg'};
+                    'response_format',...
+                    'stimulus_format','stimulus_channel_count', ...
+                    'output_stim', 'output_stim_time', ...
+                    'output_resp', 'output_resp_time', 'output_respavg'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
@@ -23,12 +24,12 @@ m.include_prestim = 1;
 m.exclude_target_phase = 1;
 m.stimulus_channel_count=0; % 0 should be 'autodetect'
 m.stimulus_format = 'wav';  % Can be 'wav' or 'envelope'
+m.response_format = 'spike';  % Can be 'wav' or 'envelope'
 m.output_stim = 'stim';
 m.output_stim_time = 'stim_time';
 m.output_resp = 'resp';
 m.output_resp_time = 'resp_time';
 m.output_respavg = 'respavg';
-m.include_prestim = 1;
 m.is_data_loader = true; % Special marker used by jackknifing routine
 
 % Overwrite the default module fields with arguments 
@@ -59,6 +60,10 @@ m.plot_gui_create_fn = @create_gui;
 % Define the 'methods' of this module, as if it were a class
 
 function x = do_load_from_baphy(mdl, x, stack, xxx)
+    
+    if ~isfield(mdl,'response_format'),
+        mdl.response_format='spike';
+    end
     
     % Merge the training and test set names, which may overlap
     files_to_load = unique({x.training_set{:}, x.test_set{:}});
@@ -114,6 +119,13 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             end
         end
         
+        if ~isempty(findstr('RDT',fname)) | ~isempty(findstr('SNS',fname)),
+            loadbytrial=1;
+            RDT=1;
+        else
+            RDT=0;
+        end
+        
         % Load the raw_stim part of the data structure
         stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
         fprintf('Loading stimulus: %s\n', stimfile);
@@ -123,12 +135,17 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             options.fsout=mdl.raw_stim_fs;
             options.chancount=mdl.stimulus_channel_count;
             [stim,stimparam] = loadstimbytrial(stimfile,options);
+
+            if RDT,
+                disp('special stimulus processing for RDT');
+                stim=stim(:,:,:,3);
+            end
+                
         else
             [stim,stimparam] = loadstimfrombaphy(stimfile, [], [], ...
                   mdl.stimulus_format, mdl.raw_stim_fs, ...
                   mdl.stimulus_channel_count, 0, mdl.include_prestim);
         end
-        
         if strcmp(mdl.stimulus_format, 'wav')
             stim = squeeze(stim);
         end
@@ -138,8 +155,11 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         % compressor results in complex numbers being developed. This
         % should be fixed on the baphy side, but for now let's just
         % add a workaround here.
-        if strcmp(mdl.stimulus_format, 'envelope') ||...
+        if strcmp(mdl.stimulus_format, 'wav')
+            stim = squeeze(stim);
+        elseif strcmp(mdl.stimulus_format, 'envelope') ||...
                 strcmpi(mdl.stimulus_format, 'gamma') ||...
+                strcmpi(mdl.stimulus_format, 'gamma264') ||...
                 strcmpi(mdl.stimulus_format, 'specgram') ||...
                 strcmpi(mdl.stimulus_format, 'specgramv'),
             stim = permute(stim, [2 3 1]);
@@ -170,7 +190,36 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         options.rasterfs = mdl.raw_resp_fs;
         respfile = [cfd(idx).path, cfd(idx).respfile];
         fprintf('Loading response: %s\n', respfile);
-        if loadbytrial,
+        if loadbytrial && RDT,
+            [resp,rparms]=load_RDT_by_trial(stimfile,respfile,options); 
+            resp=permute(resp,[1 3 2])./options.rasterfs;
+            % resp already only has correct trials.  Need to select
+            % that subset of stim trials
+            CorrectTrials=rparms.CorrectTrials;
+            stim=stim(:,CorrectTrials,:);
+            TargetStartBin=rparms.TargetStartBin(rparms.CorrectTrials);
+            ThisTarget=rparms.ThisTarget(rparms.CorrectTrials);
+            BigSequenceMatrix=rparms.BigSequenceMatrix(:,:,rparms.CorrectTrials);
+            TarRepCount=rparms.SamplesPerTrial-max(TargetStartBin)+1;
+            TarDur=rparms.PreStimSilence+TarRepCount.*rparms.SampleDur+...
+                   rparms.PostStimSilence;
+            TarBins=round(rparms.rasterfs.*TarDur);
+            mr=1;
+            for tt=1:length(TargetStartBin),
+                if TargetStartBin(tt)>0,
+                    refend=(TargetStartBin(tt)-1).*rparms.SampleDur+...
+                           rparms.PreStimSilence;
+                    refend=round(refend.*rparms.rasterfs)-1;
+                    resp((refend+1):end,tt)=nan;
+                    mr=max(refend,mr);
+                else
+                    mr=max(mr,max(find(~isnan(resp(:,tt)))));
+                end
+            end
+            resp=resp(1:mr,:,:);
+            stim=stim(1:mr,:,:);
+            
+        elseif loadbytrial,
             options.tag_masks={'SPECIAL-TRIAL'};
             [resp, tags,trialset] = loadspikeraster(respfile, options);
             resp=permute(resp,[1 3 2]);
@@ -210,12 +259,15 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             resp=resp(:,:,keepidx);
             stim=stim(:,keepidx,:);
             
-        else
+        elseif strcmpi(mdl.response_format,'spike'),
             options.tag_masks={'Reference'};
             [resp, tags] = loadspikeraster(respfile, options);
+        elseif strcmpi(mdl.response_format,'lfp'),
+            options.tag_masks={'Reference'};
+            options.lfp=1;
+            [resp, tags] = loadevpraster(respfile, options);
+            resp=resp./10000;
         end
-        
-        %keyboard
         
         % SVD pad response with nan's in case reference responses
         % were truncated because of target overlap during behavior.
@@ -238,9 +290,12 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             stim=stim(:,1:size(resp,3),:);
         end
         
+        
+        
         % SVD 2013-03-08 - if specified, pull out either estimation (fit) or
         % validation (test) subset of the data
         if datasubset,
+            
             repcount=squeeze(sum(~isnan(resp(1,:,:)),2));
             %if max(repcount)>2,
             %    validx=min(find(repcount==max(repcount)));
@@ -249,13 +304,31 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
                 ff=cumsum(ff)./sum(ff);
                 validx=ii(1:min(find(ff>=1/15)));
             %end
-            %keyboard
-            if datasubset==2
+            global META
+            if META.batch==261,
+                SUBTORC=1;
+            else
+                SUBTORC=0;
+            end
+            
+            if SUBTORC && datasubset==2,
+
+                keepidx=1;
+                % KLUDGE ALERT! convert stim to envelope
+                resp(1:round(0.5.*mdl.raw_stim_fs),:,:)=nan;
+                stim=mean(stim,3);
+            elseif SUBTORC && datasubset==1,
+                keepidx=3;
+                % KLUDGE ALERT! convert stim to envelope
+                resp(1:round(0.25.*mdl.raw_stim_fs),:,:)=nan;
+                stim=mean(stim,3);
+                
+            elseif datasubset==2
                 keepidx=validx;
             else
                 keepidx=setdiff(find(repcount>0),validx);
             end
-            %keyboard
+            
             stim=stim(:,keepidx,:);
             resp=resp(:,:,keepidx);
         end
@@ -265,13 +338,15 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             disp('WARNING: nan-valued stims are being set to zero');
             stim(nanstim)=0;
         end
+        
         x.dat.(f).(mdl.output_stim) = stim;
         x.dat.(f).(mdl.output_resp) = permute(resp, [1, 3, 2]);
-        x.dat.(f).(mdl.output_respavg) = squeeze(nanmean(x.dat.(f).(mdl.output_resp), ...
-                                            3));
-                                        
+        x.dat.(f).(mdl.output_respavg) = ...
+            squeeze(nanmean(x.dat.(f).(mdl.output_resp),3));
+        
         % Scale respavg so it is a spike rate in Hz
-        x.dat.(f).(mdl.output_respavg) = (mdl.raw_resp_fs) .* x.dat.(f).(mdl.output_respavg);
+        x.dat.(f).(mdl.output_respavg) = ...
+            (mdl.raw_resp_fs) .* x.dat.(f).(mdl.output_respavg);
         
         % Create time signals for later convenience
         [s1 s2 s3] = size(x.dat.(f).(mdl.output_stim));
