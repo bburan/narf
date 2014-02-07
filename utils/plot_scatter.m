@@ -76,7 +76,7 @@ for i = 1:Nsets
         end
         
         if i == 1 
-            hl = ylabel(sprintf('%s\nmean:%.3f med:%.3f', names{i}, ...
+            hl = ylabel(sprintf('%s\nmean:%.3f med:%.3f', names{j}, ...
                                 nanmean(X(:,j)),nanmedian(X(:,j))));
             set(hl,'interpreter','none');
         else
