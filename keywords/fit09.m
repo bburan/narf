@@ -16,7 +16,8 @@ function fn = make_subfitter(del)
             end
         end
     
-        if strcmp(module_being_fit, 'fir_filter')   
+        if strcmp(module_being_fit, 'fir_filter') || ...
+                strcmp(module_being_fit, 'weight_channels')   
             if exist('prev_opts', 'var')
                 [a,b,c,d] = fit_boo(prev_opts);
             else
@@ -55,7 +56,7 @@ fit_boo('StopAtAbsScoreDelta', 10^-2, 'StepGrowth', 1.3);
 
 % Now gradually shrink the stopping criterion
 scale=10^1;
-stop_at=10^-5;
+stop_at=10^-6;
 
 while(scale > stop_at)
     fit_iteratively(make_subfitter(scale), create_term_fn('StopAtAbsScoreDelta', scale));
