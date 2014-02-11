@@ -1,11 +1,8 @@
 function aroplot_stim_strf_resp(batch, cellids, modelnames)
-global STACK XXX META;
+global STACK XXX META MODULES;
 
-if length(cellids) > 1
-    error('I can only support a single cellid at one time!');
-end
-cellid = cellids{1};
-
+for kk = 1:length(cellids)
+    cellid = cellids{kk};
 for ii = 1:length(modelnames)
     model = modelnames{ii};
     
@@ -101,13 +98,17 @@ for ii = 1:length(modelnames)
     
     % ----------------------------
     % Plot the Final prediction and response
-    subplot(1,5,5);
-    plot(XXX{end}.dat.(sf).stim_time, XXX{end}.dat.(sf).respavg(:,1,1), 'k-', ...
-         XXX{end}.dat.(sf).stim_time, XXX{end}.dat.(sf).stim(:,1,1), 'r-');
+    subplot(1,5,5);  
+    append_module(MODULES.smooth_respavg.mdl(struct('window', [1 2 4 2 1]))); % SMOOTH RESPAVG
+
+    rp = XXX{end}.dat.(sf).respavg(:,1,1);
+    st = XXX{end}.dat.(sf).stim(:,1,1);
+    plot(XXX{end}.dat.(sf).stim_time, rp, 'k-', ...
+         XXX{end}.dat.(sf).stim_time, st, 'r-');
     xlabel('Time'); 
     ylabel('Spike Rate');
-    
-    
+        
+end
 end
 end
 
