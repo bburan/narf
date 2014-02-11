@@ -990,7 +990,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         figure('Name', fig_title, 'NumberTitle', 'off', ...
                'Position', [10 10 900 900]);
         % Sort to make the winners slightly more obvious
-        mn = mean(data);
+        mn = nanmean(data);
         [~,idxs] = sort(mn, 2, 'descend');
         data = data(:, idxs);
         names = sel_models(idxs);        
