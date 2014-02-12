@@ -32,6 +32,7 @@ sel_models = {};
 sel_batch = [];
 sel_cellids = {};
 sel_results = [];
+sel_metric  = 'r_test';
 sel_columns = {'id', 'batch', 'cellid', 'modelname', ...
                'r_test', 'r_ceiling', 'r_floor', 'r_fit', ...
                'lastmod'};    
@@ -730,6 +731,20 @@ handles.tableconfigbutton = uicontrol('Parent', bottom_panel, 'Style', 'pushbutt
         update_query_results_table();
     end
 
+uicontrol('Parent', bottom_panel, 'Style', 'text', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Metric:', ...
+          'Position', [pad+ButtonWidth*2 bh-ts 50 ts-pad]);
+      
+handles.metric_selector = uicontrol('Parent', bottom_panel, 'Style', 'popupmenu', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left',...
+          'Position', [pad+ButtonWidth*2+50 bh-ts 90 ts-pad], ...
+          'String', {'r_test', 'r_fit', 'r_ceiling'}, ...
+          'Callback', @metric_selector_callback);    
+      
+    function metric_selector_callback(~,~,~)
+        sel_metric = popup2str(handles.metric_selector);  
+    end               
+
 uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Preview', ...
           'Position', [300 bh-ts ButtonWidth ts-pad], ...
@@ -863,7 +878,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
     end
       
     function scatter_plot_callback(~,~,~)        
-        data = compute_data_matrix({'r_test'});
+        data = compute_data_matrix({sel_metric});
         if isempty(data)
             return;
         end
@@ -882,7 +897,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'Callback', @heatmap_plot_callback);
 
     function heatmap_plot_callback(~,~,~)
-        data = compute_data_matrix({'r_test'});
+        data = compute_data_matrix({sel_metric});
         if isempty(data)
             return;
         end
@@ -895,7 +910,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
     end
 
     function heatmap_plot_callback_old(~,~,~)
-        data = compute_data_matrix({'r_test'});
+        data = compute_data_matrix({sel_metric});
         if isempty(data)
             return;
         end
@@ -929,7 +944,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
     end
       
     function bar_plot_callback(~,~,~)
-        data = compute_data_matrix({'r_test'});
+        data = compute_data_matrix({sel_metric});
         if isempty(data)
             return;
         end
@@ -979,7 +994,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'Callback', @diff_plot_callback);
       
     function diff_plot_callback(~,~,~)
-        data = compute_data_matrix({'r_test'});
+        data = compute_data_matrix({sel_metric});
         if isempty(data)
             return;
         end
@@ -999,12 +1014,12 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
     end   
 
     function elite_plot_callback_old(~,~,~)
-        data = compute_data_matrix({'r_fit', 'r_test'});
+        data = compute_data_matrix({sel_metric});
         if isempty(data)
             return;
         end
         
-        vals = data(:,:,2);
+        vals = data(:,:,1);
         num_neurons = size(data,1);
         
         len = length(sel_models);

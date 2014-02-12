@@ -99,8 +99,9 @@ for ii = 1:length(modelnames)
     % ----------------------------
     % Plot the Final prediction and response
     subplot(1,5,5);  
-    append_module(MODULES.smooth_respavg.mdl(struct('window', [1 2 4 2 1]))); % SMOOTH RESPAVG
-
+    %append_module(MODULES.smooth_respavg.mdl(struct('window', [.2 .2 .2 .2 .2]))); % SMOOTH RESPAVG
+    %calc_xxx(length(STACK) -1);
+    
     rp = XXX{end}.dat.(sf).respavg(:,1,1);
     st = XXX{end}.dat.(sf).stim(:,1,1);
     plot(XXX{end}.dat.(sf).stim_time, rp, 'k-', ...
