@@ -16,7 +16,8 @@ function fn = make_subfitter(del)
             end
         end
     
-        if strcmp(module_being_fit, 'fir_filter')   
+        if strcmp(module_being_fit, 'fir_filter') || ...
+                strcmp(module_being_fit, 'weight_channels')     
             if exist('prev_opts', 'var')
                 [a,b,c,d] = fit_boo(prev_opts);
             else
