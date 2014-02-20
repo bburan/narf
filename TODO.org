@@ -1,46 +1,83 @@
+2. Use low-parameter models to characterize spectro-temporal encoding of vocalizations in controlled behavioral states, experiments for which data are often limited.
+
+* Ask SVD
+  - Can we have stimuli that are not just vocalizations, but really a variety of natural sounds?
+* TUESDAY
+  1. [ ] Make a bit plotting function using log-likelihood data
+  2. [ ] Make a module that computes log-likelihood in the simple gaussian way. 
+
+% Based on the keywords,
+%     For each position P, count the N different possibilities
+%     Create a Nx1 incidence vector to indicate presence
+%     Define an additive/multiplicative model
+%     Plot the constants
+
+* Criticism:
+  The "improvement" from multiplicative nonlinearities is probably due to our stupid way of fitting with MSE weighting a '2-spike error' four times more than a 1 spike error. This desperately needs to be fixed.
+
+* IMPORTANT ASSUMPTION TO CHECK
+  If the noise distribution of a PSTH does indeed approach a gaussian, (regardless of the poisson distribution or bernoulli per trial), how many trials are realistically needed before the distribution becomes really gaussian?
+
+* IMPORTANT REALIZATION WHILE DISCUSSING WITH DAN
+  I have been hesitant to use bayesian analysis (like the log likelihood) on my data because I didn't know how to convert a predicted spike rate P into an actual probability of a spike. But now I realize that is actually pretty damn simple; 1/P = lambda, the poisson process mean rate. From there it's a very simple step to compute the ISI of the spike train, and using the inverse of CDF(lambda), to figure out how likely that spike train is. 
+
+  I should run this for many of the models, and try to work out the "neighboring likelihoods" of each of the parameters, so I can see how confident I am of each parameter.
+  
+* HOW TO COMPARE MODELS IN A BAYESIAN WAY:
+  I think the new perspective on fitting a neuron is to do this:
+  - Fit a variety of models to a neural data set using our non-bayesian approach. 
+  - These fits become the "prior" of the neurons.
+  - Start with 10 model hypotheses about the compressor (EXP, ZTHRESH, SIGLOG, ETC) (hyperprior: equal prob of models)
+  - Insert data. Refit model using MCMC to get posteriors. Throw out outliers. Repeat MCMC again.  
+    - Note that essentially this simultaneously searches a space with a number of dimensions equal to the sum total of # of params of all models, plus one dim to INDEX which model we are studying.
+    - This means models with more params be sampled as less believable (which kind of already incorporates regularization, which may be irritating)
+  - We can immediately say which model is the winner for a particular neuron. 
+  - Add another nonlinearity. Wash, rinse, repeat. 
+  - Interesting! We face the same problems we face now in a Bayesian system: regularization due to Bayes can cloud conclusions. I think I prefer ratios of likelihoods so I don't get confused by priors (Just the data, please).
+
+* Clojure MCMC
+  Ideally, we could represent a parameter space, (and it's associated prior/posterior probability distrubution) using something that is GRID-LIKE, SMOOTH, and SPARSE. 
+  Priors and hyperpriors are basically the same; terms express the relationship of dependencies.
+  Pseudopriors are basically a hack to use the posterior dist to make the sampling occur in the vicinity of believable values. The prior is still used in the end; but we need a hacky way of bootstrapping the sampling distribution when it is poorly known.
+    
 * Latest from SVD
-  1. [X] Analysis 40 results in spreadsheet
-  2. [X] Reconstitute an STRF from the spectrotemporal vectors
-  3. [X] Try to remove the b vector from fitting entirely if it doesn't help. 
-  4. [ ] Rebuild Pole-Zero module to work on multiple channels, with multiple PZ filters per channel. 
-	 Have a function that can sample IIR filter. 
-  5. [ ] Make a log-likelihood fitter that varies each parameter and tests log-likelihood ratios. 
+  1. [ ] Make a log-likelihood fitter that varies each parameter and tests log-likelihood ratios. 
 	 It tries to find a "gaussian-like" log likelihood ratio. 
 	 Or it tries to find the variance at which the sample probability is half
-  6. Make a script that runs on 2 models over a whole population and compares 
+  2. [ ] Rebuild Pole-Zero module to work on multiple channels, with multiple PZ filters per channel. 
+	 Have a function that can sample IIR filter. 
+  3. Make a script that runs on 2 models over a whole population and compares 
      (1) inner product of FIR filters
      (2) R value of predictions. 
-  7. Fit a filter, 1D at a time, using Log-likelihood. 
-     - [ ] Try to make a 1D filter model that projects forward. 
+  4. Fit a filter, 1D at a time, using Log-likelihood. 
+     - Try to make a 1D filter model that projects forward. 
      - Read about what a bernoulli distribution becomes in the limit of many samples
      - Try to figure out if I could infer the stimulus autocorrelation as well, and remove it, much like the Ising models.
 
 * Work Queue
-  1. [ ] Push changes in BAPHY back to SVD
-  2. [ ] Run the best PZ models on 259, and then later on 240 and verify PZ model conclusions.
-  3. [ ] Look just at histograms for >10^-2 latencies (less than that is probably a fitting bug)
-  4. [ ] Plot Pole1 vs Pole2 for p1z0x2 to see if we have fast/slow pole cluster
-  5. [ ] Module: Take the FFT of a spike train, then filter out frq components above some threshold to make a smoothed RESPAVG.
-  6. [ ] Verify that the fittable gammatones use Hilbert Envelope correctly
-  7. [ ] Try a siglog parameterized like page 374 of bayesian book
-  8. [ ] Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
-  9. [ ] Metric: Log-likelihood
-  10. [ ] Metric: NMSE in DB
-  11. [ ] Metric: Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
-  12. [ ] Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
-  13. [ ] Fitter: skipping some model parameters each step.
-  14. [ ] END PLOT: Heatmap + raster of resp
-  15. [ ] Plot R/sigma^2 vs spike isolation level 
-  16. [ ] Plot noise ceiling vs spike isolation
-  17. [ ] Plot # params vs avg performance
-  18. [ ] A vs B model comparsions (Collapse scatter distributions along diagonal)
-  19. [ ] Try different initial conditions for NIM models?
-  20. [ ] Compare a slow pole vs depression vs other depression ideas
-  21. [ ] Optimize the Pole-Zero models so that they run faster
-  22. [ ] Ideas for depression or gain control?
-  23. [ ] Show that "delayed inhibition" effect is an aliasing of something else.
-  24. [ ] Start using XXX to transmit time-varying gain levels or parameters.
-  25. [ ] Try different parameterizations of existing, successful modules. 
+  1. [ ] Run the best PZ models on 259, and then later on 240 and verify PZ model conclusions.
+  2. [ ] Look just at histograms for >10^-2 latencies (less than that is probably a fitting bug)
+  3. [ ] Plot Pole1 vs Pole2 for p1z0x2 to see if we have fast/slow pole cluster
+  4. [ ] Module: Take the FFT of a spike train, then filter out frq components above some threshold to make a smoothed RESPAVG.
+  5. [ ] Verify that the fittable gammatones use Hilbert Envelope correctly
+  6. [ ] Try a siglog parameterized like page 374 of bayesian book
+  7. [ ] Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
+  8. [ ] Metric: Log-likelihood
+  9. [ ] Metric: NMSE in DB
+  10. [ ] Metric: Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
+  11. [ ] Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
+  12. [ ] Fitter: skipping some model parameters each step.
+  13. [ ] END PLOT: Heatmap + raster of resp
+  14. [ ] Plot R/sigma^2 vs spike isolation level 
+  15. [ ] Plot noise ceiling vs spike isolation
+  16. [ ] Plot # params vs avg performance
+  18. [ ] Try different initial conditions for NIM models?
+  19. [ ] Compare a slow pole vs depression vs other depression ideas
+  20. [ ] Optimize the Pole-Zero models so that they run faster
+  21. [ ] Ideas for depression or gain control?
+  22. [ ] Show that "delayed inhibition" effect is an aliasing of something else.
+  23. [ ] Start using XXX to transmit time-varying gain levels or parameters.
+  24. [ ] Try different parameterizations of existing, successful modules. 
 
 * Current Project: Metrics
 ** Metrics on Responses
@@ -94,6 +131,9 @@
   27. [ ] Naive Bayes and MAP (The more I think about it, just using naked probabilities (MAP) seems more and more attractive. For example, when we calculate MSE, the stupid "prestim-silence" distorts the histograms because so many equivalent values come in. These would be naturally weighted less if we were using the bayesian approach to marginalize by the expected data. 
   28. [ ] Predictive Power (Sahani, Linden, 2003 "How linear are auditory cortical responses")
 
+* Clustering
+  God, it would be nice if I could peek on results that aren't complete yet.
+  Or, if when MATLAB "crashes", it dumps the state so that you can recover all the work that was done.
 * Problems that are unresolved
 ** GENERAL SCIENCE / METHODOLOGY
   1. RESPAVG:
@@ -104,7 +144,6 @@
      2) We have no confidence intervals or noise distribution hypotheses for most parameters. 
   3. First half /second half stationarity has not been verified yet.
   4. We aren't extracting info from the sound wave directly yet, we are using an artificial feature. 
-
 * Engineering Mini Projects
 ** Realization
    Consider a BUNCH of FIR filters that sum together at the end (A tree structure)

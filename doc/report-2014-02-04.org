@@ -1,1 +1,60 @@
-* 
+* Batch 179 Results (352 Neurons) 
+  How much better is fit10 vs fit05 at 283 200Hz?
+  |                             | fit05 | fit10 |
+  |-----------------------------+-------+-------|
+  | fir30                       |   244 |   244 |
+  | fir30_siglog                |   274 |   283 |
+  | logfree_fir30               |   275 |   276 |
+  | logfree_fir30_siglog        |   286 |   294 |
+  |                             |       |       |
+  | logfree_dep1pc_fir30_siglog |   304 |   315 |
+  
+  Note how siglog is more important than a compressor with fit10. 
+  This suggests that fit10 does a better job with the nonlinear elements.
+
+* Batch 259 Results (46 neurons)
+
+ |                                  | fit05 | fit10 |
+ |----------------------------------+-------+-------|
+ | fir30                            |   290 |   287 |
+ | logfree_fir30                    |   330 |   322 |
+ | fir30_siglog                     |   334 |   339 |
+ | logfree_fir30_siglog             |   354 |   365 |
+ |                                  |       |       |
+ | logfree_volt_fir30_siglog        |   368 |   371 |
+ | logfree_voltp_fir30_siglog       |       |       |
+ |                                  |       |       |
+ | logfree_dep1pc_fir30_siglog      |     Q |     Q |
+ |                                  |       |       |
+ | logfree_volt_dep1pc_fir30_siglog |     Q |     Q |
+
+  How about depression?
+  Just depression and FIR
+  Depression with compressor
+  Depression with NL
+  Depression with mult
+  Depression with Compressor + NL  
+  Depression with mult + compressor + NL
+  
+* IIR Linear Fits Equivalent to FIR fits
+  P2Z2 Wins (0.296)
+  | p2z2   | 296 |
+  | p1z0x4 | 296 |
+  | fir30  | 294 |
+
+  Points to show:
+  - 1 pole or 1 zero insufficient
+  - 2 poles, 1 or 2 zeros good enough. 
+  - Noise ceiling appears to have been reached. We are equivalent!
+
+* Spectral Reduction
+  1. How many spectral vectors are needed?
+     Three spectral vectors is enough.
+  2. How long a vector do you need?
+     30 terms is enough to hit our noise ceiling and start overfitting
+
+* Analyses queued up
+** 179 
+** 259 
+** 246 
+** Linear fits for substandard values

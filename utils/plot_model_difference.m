@@ -90,7 +90,11 @@ for i = 1:Nsets
         %    isgauss, pchi, istt, ptt, bias, winner), ...
         %    'NorthWest', 'interpreter', 'none');
         
-        textLoc(sprintf('Winner: %s', winner), ...
+        % Total number of neurons favoring the x-axis model
+        total=sum(~isnan(d));        
+        above=sum(~isnan(d)&d>0);
+        
+        textLoc(sprintf('Winner: %s\np=%f\nXaxis_pop: %d/%d', winner, ptt, above, total), ...
             'NorthWest', 'interpreter', 'none');
         
         % Turn off tick labels unless in the bottom or leftmost rows

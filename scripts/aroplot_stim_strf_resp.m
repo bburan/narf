@@ -44,7 +44,7 @@ for ii = 1:length(modelnames)
         rms = compute_channel_normalizers(XXX{2}, 'stim', false);               
         w = w ./ repmat(rms', 1, size(w,2));
     end
-    strf = w * h;    
+    %strf = w * h;    
     
     % Open a figure and begin plotting
     figure('Name', sprintf('Diagram for %s', modelnames{ii}), ...
@@ -54,8 +54,8 @@ for ii = 1:length(modelnames)
     
     % ----------------------------
     % Plot the stimulus
-    sp = subplot(1,5,1);
-    imagesc(squeeze(XXX{2}.dat.(sf).stim(:,1,:))');    
+    sp = subplot(1,5,1); 
+    imagesc(log(squeeze(XXX{2}.dat.(sf).stim(:,1,:)+10^-2))');    
     set(gca,'YDir','normal');
     xlabel('Time'); 
     ylabel('Stimulus Channel');
@@ -63,6 +63,10 @@ for ii = 1:length(modelnames)
     % ----------------------------
     % Plot the weights
     subplot(1,5,2);
+    % For plotting, renormalize the weights
+    mm = sum(abs(w));
+    w = w ./ repmat(mm', 1, size(w,1))';
+    
     imagesc(w);
     set(gca,'YDir','normal');
     axis image;
@@ -87,15 +91,17 @@ for ii = 1:length(modelnames)
     % ----------------------------
     % Plot the reconstructed STRF
     subplot(1,5,4);
-    imagesc(strf);
-    axis image;
-    set(gca,'YDir','normal');
-    ca = caxis;
-    lim = max(abs(ca));
-    caxis([-lim, +lim]);    
-    xlabel('Time Latency'); 
-    ylabel('Input Channel');
-    
+    if size(w,2) == size(h,1)
+        imagesc(w*h);
+        axis image;
+        set(gca,'YDir','normal');
+        ca = caxis;
+        lim = max(abs(ca));
+        caxis([-lim, +lim]);    
+        xlabel('Time Latency'); 
+        ylabel('Input Channel');
+    end
+        
     % ----------------------------
     % Plot the Final prediction and response
     subplot(1,5,5);  
