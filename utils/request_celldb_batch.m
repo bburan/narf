@@ -20,7 +20,7 @@ if ~exist('batch', 'var'),
    error('syntax error: request_celldb_batch(batch) parameters required');
 end
 
-if batch==243 | batch==256,
+if batch==243 || batch==256,
     if batch==243,
         celllist={...
             'out121012_002_002',...
@@ -125,7 +125,7 @@ else
 end
 rundata = mysql(sql);
 
-if length(rundata) == 0,
+if isempty(rundata),
    fprintf('batch number %d not found!\n', batch);
    return
 end
@@ -197,7 +197,7 @@ for nn = 1:length(rundata)
                         Aidx=baphyparms.Trial_TargetChannel(commontargetid);
                     elseif isfield(baphyparms,'Tar_SplitChannels') &&...
                                 strcmpi(baphyparms.Tar_SplitChannels,'Yes')
-                        Aidx=commontargetid
+                        Aidx=commontargetid;
                     else
                         disp('unknown lr condition');
                         keyboard
@@ -206,8 +206,12 @@ for nn = 1:length(rundata)
                 elseif ismember(rundata(nn).batch,[241 252 255 258])
                     % lr/hl batches
                     % A1: attend band near BF, A2: attend away
-                    
-                    if max(res)>0 && res(commontargetid)==max(res),
+                    if isfield(baphyparms,'Trial_TargetChannel'),
+                        commontargetchan=baphyparms.Trial_TargetChannel(commontargetid);
+                    else
+                        commontargetchan=commontargetid;
+                    end
+                    if max(res)>0 && res(commontargetchan)==max(res),
                         Aidx=1;
                     else
                         Aidx=2;

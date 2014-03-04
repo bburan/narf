@@ -140,7 +140,6 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
                 disp('special stimulus processing for RDT');
                 stim=stim(:,:,:,3);
             end
-                
         else
             [stim,stimparam] = loadstimfrombaphy(stimfile, [], [], ...
                   mdl.stimulus_format, mdl.raw_stim_fs, ...
@@ -188,6 +187,10 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         options.unit = cfd(idx).unit;
         options.channel  = cfd(idx).channum;
         options.rasterfs = mdl.raw_resp_fs;
+        if ~isempty(cfd(idx).goodtrials),
+            options.trialrange=eval(cfd(idx).goodtrials);
+            %keyboard
+        end
         respfile = [cfd(idx).path, cfd(idx).respfile];
         fprintf('Loading response: %s\n', respfile);
         if loadbytrial && RDT,

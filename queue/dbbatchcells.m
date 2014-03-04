@@ -1,3 +1,6 @@
+%function [cellfiledata,cellids,params]=dbbatchcells(batchid,cellid);
+%
+% SVD 2013
 function [cellfiledata,cellids,params]=dbbatchcells(batchid,cellid);
 
 dbopen;

@@ -17,6 +17,7 @@ m.time =   'stim_time';
 m.output = 'stim';
 
 % Optional fields
+m.is_splittable = true;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_all_default_outputs;
 m.plot_fns{1}.pretty_name = 'Output Channels (All)';

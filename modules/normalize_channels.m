@@ -50,7 +50,6 @@ function x = do_normalize_channels(mdl, x, stack, xxx)
     end
     rms=nanstd(tstim);
     
-    
     % For every channel, remove DC offset and scale by RMS^-1
     fns = fieldnames(x.dat);
     for ii = 1:length(fns),
