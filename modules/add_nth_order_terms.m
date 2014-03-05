@@ -21,6 +21,7 @@ m.input = 'stim';
 m.time  = 'stim_time';
 m.output = 'stim';
 m.order = 2;
+m.selfterms = false; % Include terms like AA and BB instead of just AB
 
 % Optional fields
 m.plot_gui_create_fn = @create_chan_selector_gui;
@@ -43,11 +44,20 @@ function x = do_add_nth_order_terms(mdl, x, stack, xxx)
         terms = {};
         for o = 2:min(mdl.order, C)
             pairings = nchoosek([1:C], o);
+            
+            % Add pairings AB, AC, BC, etc
             for ii = 1:size(pairings, 1)
                 tmp = num2cell(pairings(ii,:));
                 terms{end+1} = tmp;
             end
-        end
+            
+            if isfield(mdl, 'selfterms') && mdl.selfterms
+                % Add AA, BB, CC, etc
+                for ss = 1:C
+                    terms{end+1} = num2cell(ss*ones(o,1));
+                end
+            end
+        end        
         
         % Build and append the nth order terms to the output
         for ii = 1:length(terms),
@@ -56,7 +66,8 @@ function x = do_add_nth_order_terms(mdl, x, stack, xxx)
                 p = p .* x.dat.(sf).(mdl.input)(:, :, terms{ii}{jj});
             end
             x.dat.(sf).(mdl.output)(:,:, ii+C) = p;
-        end
+        end               
+        
     end
 end
 
