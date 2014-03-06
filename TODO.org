@@ -1,26 +1,49 @@
-2. Use low-parameter models to characterize spectro-temporal encoding of vocalizations in controlled behavioral states, experiments for which data are often limited.
+* TO DO
+  1. [ ] Fit14: SCAAT fitting that starts out with a stepsize equal to the current parameter size
+	 Also, try to find the failure point in FIT10 relative to FIT05
+  2. [ ] Quadratic terms added via a tensor-type factorization
+  3. [ ] Mutual Info/Frac of variance (R^2 ceil)
+  4. [ ] Nonlinear Facilitation model
+  5. [ ] Gain control stateful model
+  6. [ ] Bayesian T-test
+  7. [ ] Make a script for inter-module overall contribution/comparion
+	 % Based on the keywords,
+	 %     For each position P, count the N different possibilities
+	 %     Create a Nx1 incidence vector to indicate presence
+	 %     Define an additive/multiplicative model
+	 %     Plot the constants
 
-* Ask SVD
+* Meeting with SVD 2014-03-03
+  - Three papers to work on
+    1. A methods paper on the NARF
+       - Show it works for ENV, WAV, and Hsin-Wei or Dan's Data
+    2. Dimensonality reduction
+       - Description of specifics of gammatone filters, what their overlap is, what their Q is, etc
+       - Equivocation to Rank-3 STRF
+    3. Relative importance of nonlinearities
+       - Read Rabinowitz, ??, Schnupp's depression model
+       - Proof of conclusion being valid: Superboost comparison and per-model validation give same results 
+
+  - NARF stripped down version
+    1) Built-in fitter and default model, single simple interface takes matrices
+    2) Be able to add other streams like "pupil diameter" and work on possibly interleaved data "blocks"
+    3) First fits one channel, then adds another as needed until no more significant improvements are found
+
+* BUG SVD ABOUT
   - Can we have stimuli that are not just vocalizations, but really a variety of natural sounds?
-* TUESDAY
-  1. [ ] Make a bit plotting function using log-likelihood data
-  2. [ ] Make a module that computes log-likelihood in the simple gaussian way. 
+  - Is there a plan to ever take recordings from the Cochlear Nucleus, Superior Olivary, Inferior Colliculus, Medial Geniculate Nucleus, (A1), or Non-A1 cortex?
+  - Is there XYZ positional data so I could start connecting best-fit parameters to cortical location?
 
-% Based on the keywords,
-%     For each position P, count the N different possibilities
-%     Create a Nx1 incidence vector to indicate presence
-%     Define an additive/multiplicative model
-%     Plot the constants
+* Papers to read
+- Tsodyks (cho-dex) and Markrem paper on facilitaiton and depression
+- 
 
-* Criticism:
+* ASSUMPTION TO CHECK
+  If the noise distribution of a PSTH does indeed approach a gaussian, (regardless of the poisson distribution or bernoulli per trial), how many trials are realistically needed before the distribution becomes really gaussian?
   The "improvement" from multiplicative nonlinearities is probably due to our stupid way of fitting with MSE weighting a '2-spike error' four times more than a 1 spike error. This desperately needs to be fixed.
 
-* IMPORTANT ASSUMPTION TO CHECK
-  If the noise distribution of a PSTH does indeed approach a gaussian, (regardless of the poisson distribution or bernoulli per trial), how many trials are realistically needed before the distribution becomes really gaussian?
-
-* IMPORTANT REALIZATION WHILE DISCUSSING WITH DAN
+* WHILE DISCUSSING WITH DAN
   I have been hesitant to use bayesian analysis (like the log likelihood) on my data because I didn't know how to convert a predicted spike rate P into an actual probability of a spike. But now I realize that is actually pretty damn simple; 1/P = lambda, the poisson process mean rate. From there it's a very simple step to compute the ISI of the spike train, and using the inverse of CDF(lambda), to figure out how likely that spike train is. 
-
   I should run this for many of the models, and try to work out the "neighboring likelihoods" of each of the parameters, so I can see how confident I am of each parameter.
   
 * HOW TO COMPARE MODELS IN A BAYESIAN WAY:
@@ -41,43 +64,42 @@
   Pseudopriors are basically a hack to use the posterior dist to make the sampling occur in the vicinity of believable values. The prior is still used in the end; but we need a hacky way of bootstrapping the sampling distribution when it is poorly known.
     
 * Latest from SVD
-  1. [ ] Make a log-likelihood fitter that varies each parameter and tests log-likelihood ratios. 
-	 It tries to find a "gaussian-like" log likelihood ratio. 
-	 Or it tries to find the variance at which the sample probability is half
-  2. [ ] Rebuild Pole-Zero module to work on multiple channels, with multiple PZ filters per channel. 
-	 Have a function that can sample IIR filter. 
+  1. Make a log-likelihood fitter that varies each parameter and tests log-likelihood ratios. 
+     It tries to find a "gaussian-like" log likelihood ratio. 
+     Or it tries to find the variance at which the sample probability is half
+  2. Rebuild Pole-Zero module to work on multiple channels, with multiple PZ filters per channel. 
+     Have a function that can sample IIR filter. 
   3. Make a script that runs on 2 models over a whole population and compares 
-     (1) inner product of FIR filters
-     (2) R value of predictions. 
+     1) inner product of FIR filters
+     2) R value of predictions. 
   4. Fit a filter, 1D at a time, using Log-likelihood. 
      - Try to make a 1D filter model that projects forward. 
      - Read about what a bernoulli distribution becomes in the limit of many samples
      - Try to figure out if I could infer the stimulus autocorrelation as well, and remove it, much like the Ising models.
 
 * Work Queue
-  1. [ ] Run the best PZ models on 259, and then later on 240 and verify PZ model conclusions.
-  2. [ ] Look just at histograms for >10^-2 latencies (less than that is probably a fitting bug)
-  3. [ ] Plot Pole1 vs Pole2 for p1z0x2 to see if we have fast/slow pole cluster
-  4. [ ] Module: Take the FFT of a spike train, then filter out frq components above some threshold to make a smoothed RESPAVG.
-  5. [ ] Verify that the fittable gammatones use Hilbert Envelope correctly
-  6. [ ] Try a siglog parameterized like page 374 of bayesian book
-  7. [ ] Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
-  8. [ ] Metric: Log-likelihood
-  9. [ ] Metric: NMSE in DB
-  10. [ ] Metric: Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
-  11. [ ] Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
-  12. [ ] Fitter: skipping some model parameters each step.
-  13. [ ] END PLOT: Heatmap + raster of resp
-  14. [ ] Plot R/sigma^2 vs spike isolation level 
-  15. [ ] Plot noise ceiling vs spike isolation
-  16. [ ] Plot # params vs avg performance
-  18. [ ] Try different initial conditions for NIM models?
-  19. [ ] Compare a slow pole vs depression vs other depression ideas
-  20. [ ] Optimize the Pole-Zero models so that they run faster
-  21. [ ] Ideas for depression or gain control?
-  22. [ ] Show that "delayed inhibition" effect is an aliasing of something else.
-  23. [ ] Start using XXX to transmit time-varying gain levels or parameters.
-  24. [ ] Try different parameterizations of existing, successful modules. 
+  1. [ ] Look just at histograms for >10^-2 latencies (less than that is probably a fitting bug)
+  2. [ ] Plot Pole1 vs Pole2 for p1z0x2 to see if we have fast/slow pole cluster
+  3. [ ] Module: Take the FFT of a spike train, then filter out frq components above some threshold to make a smoothed RESPAVG.
+  4. [ ] Verify that the fittable gammatones use Hilbert Envelope correctly
+  5. [ ] Try a siglog parameterized like page 374 of bayesian book
+  6. [ ] Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
+  7. [ ] Metric: Log-likelihood
+  8. [ ] Metric: NMSE in DB
+  9. [ ] Metric: Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
+  10. [ ] Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
+  11. [ ] Fitter: skipping some model parameters each step.
+  12. [ ] END PLOT: Heatmap + raster of resp
+  13. [ ] Plot R/sigma^2 vs spike isolation level 
+  14. [ ] Plot noise ceiling vs spike isolation
+  15. [ ] Plot # params vs avg performance
+  16. [ ] Try different initial conditions for NIM models?
+  17. [ ] Compare a slow pole vs depression vs other depression ideas
+  18. [ ] Optimize the Pole-Zero models so that they run faster
+  19. [ ] Ideas for depression or gain control?
+  20. [ ] Show that "delayed inhibition" effect is an aliasing of something else.
+  21. [ ] Start using XXX to transmit time-varying gain levels or parameters.
+  22. [ ] Try different parameterizations of existing, successful modules. 
 
 * Current Project: Metrics
 ** Metrics on Responses
@@ -131,9 +153,7 @@
   27. [ ] Naive Bayes and MAP (The more I think about it, just using naked probabilities (MAP) seems more and more attractive. For example, when we calculate MSE, the stupid "prestim-silence" distorts the histograms because so many equivalent values come in. These would be naturally weighted less if we were using the bayesian approach to marginalize by the expected data. 
   28. [ ] Predictive Power (Sahani, Linden, 2003 "How linear are auditory cortical responses")
 
-* Clustering
-  God, it would be nice if I could peek on results that aren't complete yet.
-  Or, if when MATLAB "crashes", it dumps the state so that you can recover all the work that was done.
+
 * Problems that are unresolved
 ** GENERAL SCIENCE / METHODOLOGY
   1. RESPAVG:
@@ -144,6 +164,7 @@
      2) We have no confidence intervals or noise distribution hypotheses for most parameters. 
   3. First half /second half stationarity has not been verified yet.
   4. We aren't extracting info from the sound wave directly yet, we are using an artificial feature. 
+
 * Engineering Mini Projects
 ** Realization
    Consider a BUNCH of FIR filters that sum together at the end (A tree structure)
@@ -182,13 +203,6 @@
 ** 2-Model Comparison HUD
    Problem to be solved: Place to hook on comparison analyses like SVD is doing already. 
   
-** Sub-Batch Categorization
-   Problem to be solved: Currently there is no way storing a categorization of neurons into groups, saving those groups as sub-batches, and then making a multi-scatterplot metric dashboard to compare them. 
-   Goals:
-
-** Fitter Scaling:
-   Problem: (See Eternal Problems with Fitters, below)
-
 * Ideas:
   - Include a "Fitter" field for each module to enable it to fit itself?
   - Put git hashtag as the working directory of the memoization
@@ -244,7 +258,7 @@
          - Plots of params for each sub-population. 
          - Exclude crappy data (eliminate crappy behavior performance, then crappy isolation)
   24. Fix Irregularities
-	  - Grep around for {1} bugs
+	  - Grep around for STACK{X}{1} bugs
 	  - Narf analysis bugs out when you click delete and nothing is selected, because underneath something may still be selected.
           - Many functions still use STACK{N}{1} to compute things, which is probably wrong now.   
           - How will LSQ and sparsebayes modules work with a generic META.performance_metric() function?  
@@ -265,13 +279,6 @@
   - We may overfit our data because the stopping criterion is absolute, and all neurons have different noise levels (...higher EST scores don't always translate to VAL scores)
   - We should compare fitters by their EST scores, not their VAL scores
   
-* De-jittering Idea?
-  - Take a channel
-    - Do a spike-triggered stimulus heatmap (STSH)
-    - Do the same after passing the channel through various leaky integrators
-    - My hope is that one of these will de-jitter the thing enough that we see more structure
-    - Find a way to parameterize the de-jittered (STSH) with simple kernel (truncated gaussian, a quadratic in log space, etc?)
-  - Goal: Accomodate time-varyingness and start to extract OTHER dimensions from a stimulus. 
 
 * New Experiments:
   1. Gain-changing module ideas: 
@@ -319,6 +326,9 @@
          - Onsets, offturns (STRF)
 
 * Order these books Eventually
+  Nonlinear Regression, By George A. F. Seber, C. J. Wild
+  A Student's Guide to Vectors and Tensors 
+  Tensor Analysis on Manifolds (Dover Books on Mathematics)
   Wavelets (Gilbert Strang)
   Bayesian Data Analysis, Second Edition (Chapman & Hall/CRC Texts in Statistical Science) (Gelman)
   Doing Bayesian Data Analysis: A Tutorial with R and BUGS  (John K. Kruschke)
@@ -331,10 +341,9 @@
   Bayesian neural modeling
 
 * UNSOLVED ARCHITECTURAL PROBLEMS
-  Modifying a module (adding new fields) breaks compatability with previous versions.
-
-* Questions
-  Do we have good enough physiological data to fit the APGF to our data, plot all the cells together, and sort by location on cortex? Does it make a tiling or tonotopic map? 
+  1. Modifying a module (adding new fields) breaks compatability with previous versions.
+  2. No way of loading two modules simultaneously.
+  3. When a clustered thing crashes, I lose intermediate results. 
 
 * ----------------------------------------------------------------------------
 * DISCARDED/ABANDONED IDEAS
@@ -545,3 +554,13 @@ Didn't work well: test/train scatter plot with dot coloring by cellid or model t
   % sigma_x, sigma_y, based on the M nearest neighbors. Finally, in step
   % three, maybe I float the parameters and allow the overall probability 
   % to be optimized using boosting or something? 
+* De-jittering Idea?
+  - Take a channel
+    - Do a spike-triggered stimulus heatmap (STSH)
+    - Do the same after passing the channel through various leaky integrators
+    - My hope is that one of these will de-jitter the thing enough that we see more structure
+    - Find a way to parameterize the de-jittered (STSH) with simple kernel (truncated gaussian, a quadratic in log space, etc?)
+  - Goal: Accomodate time-varyingness and start to extract OTHER dimensions from a stimulus. 
+
+** Sub-Batch Categorization
+   Problem to be solved: Currently there is no way storing a categorization of neurons into groups, saving those groups as sub-batches, and then making a multi-scatterplot metric dashboard to compare them. 

@@ -18,9 +18,12 @@ m.output = 'stim';
 
 % Optional fields
 m.is_splittable = true;
+m.auto_plot = @do_plot_wc_weights_as_heatmap;
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_all_default_outputs;
-m.plot_fns{1}.pretty_name = 'Output Channels (All)';
+m.plot_fns{1}.fn = @do_plot_wc_weights_as_heatmap;
+m.plot_fns{1}.pretty_name = 'Heat Map';
+m.plot_fns{2}.fn = @do_plot_all_default_outputs;
+m.plot_fns{2}.pretty_name = 'Output Channels (All)';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -53,6 +56,39 @@ end
 
 % ------------------------------------------------------------------------
 % Plot methods
-% N/A
+
+
+function do_plot_wc_weights_as_heatmap(sel, stack, xxx)
+    mdls = stack{end};
+
+    % Find the min and max values so colors are scaled appropriately
+    c_max = 0;
+    for ii = 1:length(mdls)
+        c_max = max(c_max, max(abs(mdls{ii}.weights(:))));
+    end
+    
+    % Plot all parameter sets' coefficients. Separate them by white pixels.
+    xpos = 1;
+    hold on;
+    for ii = 1:length(mdls)
+        weights = mdls{ii}.weights';
+        [w, h] = size(weights');
+        imagesc([xpos xpos+w-1], [1, h], weights, [-c_max-eps c_max+eps]);
+        text(xpos, 1, sprintf('Sparsity: %f\nSmoothness: %f', ...
+             sparsity_metric(weights), ...
+             smoothness_metric(weights)));
+        xpos = xpos + 1 + size(mdls{ii}.weights, 2);
+    end
+    hold off;
+    set(gca,'YDir','normal');
+    ca = caxis;
+    lim = max(abs(ca));
+    caxis([-lim, +lim]);
+    axis tight;    
+    do_xlabel('Coef Time Index');
+    do_ylabel('Coef Channel Index');
+end
+
+
 
 end
