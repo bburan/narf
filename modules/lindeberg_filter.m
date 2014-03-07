@@ -12,7 +12,7 @@ m.mdl = @lindeberg_filter;
 m.name = 'lindeberg_filter';
 m.fn = @do_lindeberg_filtering;
 m.pretty_name = 'Tony Lindeberg Filter';
-m.editable_fields = {'coefs', 'num_coefs', 'num_dims', 'baseline', ...
+m.editable_fields = {'lincoefs', 'coefs', 'num_coefs', 'num_dims', 'baseline', ...
                      'sum_channels', ...
                     'input', 'filtered_input', 'time', 'output'};
 m.isready_pred = @isready_always;
@@ -22,7 +22,7 @@ m.num_coefs = 20;
 m.num_dims = 2;
 m.baseline = 0;
 m.sum_channels=1;
-m.lincoefs = ones(1, 3);
+m.lincoefs = ones(1, 4);
 m.coefs = zeros(m.num_dims, m.num_coefs);
 m.input =  'stim';
 m.filtered_input = 'stim_filtered';
@@ -33,10 +33,10 @@ m.init_fit_sig = 'respavg';
 % Optional fields
 m.is_splittable = true;
 m.plot_gui_create_fn = @create_chan_selector_gui;
-m.auto_plot = @do_plot_fir_coefs_as_heatmap;
-m.auto_init = @auto_init_fir_filter;
+m.auto_plot = @do_plot_lindeberg_coefs_as_heatmap;
+m.auto_init = @auto_init_lindeberg_filter;
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_fir_coefs_as_heatmap;
+m.plot_fns{1}.fn = @do_plot_lindeberg_coefs_as_heatmap;
 m.plot_fns{1}.pretty_name = 'FIR Coefs (Heat map)';
 m.plot_fns{2}.fn = @do_plot_fir_coefs;
 m.plot_fns{2}.pretty_name = 'FIR Coefficients (Stem)';
@@ -60,7 +60,7 @@ end
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
-function mdl = auto_init_fir_filter(stack, xxx)
+function mdl = auto_init_lindeberg_filter(stack, xxx)
     % NOTE: Unlike most plot functions, auto_init functions get a 
     % STACK and XXX which do not yet have this module or module's data
     % added to them.
@@ -82,12 +82,12 @@ function mdl = auto_init_fir_filter(stack, xxx)
     for (i=1:mdl.num_dims)
         for (j=1:mdl.num_coefs)
             % gauss([1,1],[1,0;0,1],[1,1])
-            mdl.coefs(i,j) = gauss([mdl.lincoefs(1),mdl.lincoefs(2)],[mdl.lincoefs(3),mdl.lincoefs(3)],[i,j]);
+            mdl.coefs(i,j) = mdl.lincoefs(4)*gauss([mdl.lincoefs(1)*mdl.num_dims,mdl.lincoefs(2)*mdl.num_coefs],[mdl.lincoefs(3),0;0,mdl.lincoefs(3)],[i,j]);
         end
     end
 end
 
-function x = do_fir_filtering(mdl, x, stack, xxx)
+function x = do_lindeberg_filtering(mdl, x, stack, xxx)
     % Apply the FIR filter across every stimfile
     if ~isfield(mdl, 'sum_channels')
         mdl.sum_channels=1;
@@ -96,14 +96,22 @@ function x = do_fir_filtering(mdl, x, stack, xxx)
     for ii = 1:length(fns)
         sf=fns{ii};
         
+
         % JL: hackish. should put that in the right place
         for (i=1:mdl.num_dims)
             for (j=1:mdl.num_coefs)
                 % gauss([1,1],[1,0;0,1],[1,1])
-                mdl.coefs(i,j) = gauss([mdl.lincoefs(1),mdl.lincoefs(2)],[mdl.lincoefs(3),mdl.lincoefs(3)],[i,j]);
+                mdl.coefs(i,j) = mdl.lincoefs(4)*gauss([mdl.lincoefs(1)*mdl.num_dims,mdl.lincoefs(2)*mdl.num_coefs],[mdl.lincoefs(3),0;0,mdl.lincoefs(3)],[i,j]);
             end
         end
         coefs = mdl.coefs;
+        
+        % JL: (hackish) be sure that no coeff is null or negative
+        for (i=1:4)
+            if (mdl.lincoefs(i)<=0)
+                coefs = zeros(mdl.num_dims, mdl.num_coefs);
+            end
+        end
         
          % Have a space allocated for computing initial filter conditions
          init_data_space = ones(size(coefs, 2) * 2, 1);
@@ -145,7 +153,7 @@ end
 % ------------------------------------------------------------------------
 % Plot methods
 
-function do_plot_fir_coefs_as_heatmap(sel, stack, xxx)
+function do_plot_lindeberg_coefs_as_heatmap(sel, stack, xxx)
     mdls = stack{end};
 
     % Find the min and max values so colors are scaled appropriately
@@ -158,6 +166,14 @@ function do_plot_fir_coefs_as_heatmap(sel, stack, xxx)
     xpos = 1;
     hold on;
     for ii = 1:length(mdls)
+        coefs = mdls{ii}.coefs;
+                % JL hackish
+            for (i=1:mdls{ii}.num_dims)
+        for (j=1:mdls{ii}.num_coefs)
+            % gauss([1,1],[1,0;0,1],[1,1])
+            mdls{ii}.coefs(i,j) = mdls{ii}.lincoefs(4)*gauss([mdls{ii}.lincoefs(1)*mdls{ii}.num_dims,mdls{ii}.lincoefs(2)*mdls{ii}.num_coefs],[mdls{ii}.lincoefs(3),0;0,mdls{ii}.lincoefs(3)],[i,j]);
+        end
+    end
         coefs = mdls{ii}.coefs;
         [w, h] = size(coefs');
         imagesc([xpos xpos+w-1], [1, h], coefs, [-c_max-eps c_max+eps]);
@@ -196,7 +212,7 @@ function do_plot_filter_output(sel, stack, xxx)
             sel, 'Time [s]', 'FIR Output [-]');
 end
 
-function do_plot_fir_coefs(sel, stack, xxx)
+function do_plot_lindeberg_coefs(sel, stack, xxx)
     mdls = stack{end};
     
     % Plot all parameter sets' coefficients. Separate them by white pixels    
@@ -206,6 +222,13 @@ function do_plot_fir_coefs(sel, stack, xxx)
     n_mdls = length(mdls)
     for ii = 1:n_mdls
         mdl = mdls{ii};
+        % JL hackish
+            for (i=1:mdl.num_dims)
+        for (j=1:mdl.num_coefs)
+            % gauss([1,1],[1,0;0,1],[1,1])
+            mdl.coefs(i,j) = mdl.lincoefs(4)*gauss([mdl.lincoefs(1)*mdl.num_dims,mdl.lincoefs(2)*mdl.num_coefs],[mdl.lincoefs(3),0;0,mdl.lincoefs(3)],[i,j]);
+        end
+    end
         coefs = mdl.coefs;
         [w, h] = size(coefs);
         for c = 1:w
