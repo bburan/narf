@@ -709,9 +709,13 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
 ButtonWidth=75;
              
 handles.tableconfigbutton = uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Configure Table', ...
-          'Value', 1, 'Position', [pad bh-ts ButtonWidth*2 ts-pad], ...
+          'HorizontalAlignment', 'left', 'String', 'Config', ...
+          'Value', 1, 'Position', [pad bh-ts ButtonWidth ts-pad], ...
           'Callback', @table_config_callback);
+
+handles.usefloor = uicontrol('Parent', bottom_panel, 'Style', 'checkbox', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', '>r_floor', ...
+          'Position', [pad+ButtonWidth bh-ts ButtonWidth ts-pad]);
 
     function table_config_callback(~,~,~)       
         % Build a list of the available columns
@@ -733,7 +737,7 @@ handles.tableconfigbutton = uicontrol('Parent', bottom_panel, 'Style', 'pushbutt
 
 uicontrol('Parent', bottom_panel, 'Style', 'text', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Metric:', ...
-          'Position', [pad+ButtonWidth*2 bh-ts 50 ts-pad]);
+          'Position', [pad+ButtonWidth*2 bh-ts-4 50 ts-pad]);
       
 handles.metric_selector = uicontrol('Parent', bottom_panel, 'Style', 'popupmenu', 'Units', 'pixels',...
           'HorizontalAlignment', 'left',...
@@ -863,10 +867,15 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                 if isempty(ret) 
                     continue;
                 end
-                if length(ret) > 1
-                    
+                
+                if length(ret) > 1    
                     fprintf('More than one matching model found!');
                     keyboard;
+                end
+                
+                % If "usefloor" is selected, drop cells with no signal
+                if get(handles.usefloor, 'value') && ret(1).r_test < ret(1).r_floor
+                    continue;
                 end
                 
                 for kk = 1:length(fieldstoget)
@@ -973,6 +982,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         decas = [deciles(end,:); decadiffs];
         bar(1:len, decas', 'stacked');          
         bar(1:len, nanmean(data), 0.3, 'r'); 
+        %errorbar(1:len, nanmean(data), var(data)); 
         plot(1:len, data, 'k.');        
         %errorbar(1:len, nanmean(data), nanvar(data), max(data) - nanmean(data), 'xk');
         hold off;
