@@ -717,6 +717,10 @@ handles.usefloor = uicontrol('Parent', bottom_panel, 'Style', 'checkbox', 'Units
           'HorizontalAlignment', 'left', 'String', '>r_floor', ...
           'Position', [pad+ButtonWidth bh-ts ButtonWidth ts-pad]);
 
+handles.onlyfair = uicontrol('Parent', bottom_panel, 'Style', 'checkbox', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Fair?', ...
+          'Position', [pad+ButtonWidth*2 bh-ts ButtonWidth ts-pad]);
+      
     function table_config_callback(~,~,~)       
         % Build a list of the available columns
         dbopen();
@@ -735,9 +739,9 @@ handles.usefloor = uicontrol('Parent', bottom_panel, 'Style', 'checkbox', 'Units
         update_query_results_table();
     end
 
-uicontrol('Parent', bottom_panel, 'Style', 'text', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Metric:', ...
-          'Position', [pad+ButtonWidth*2 bh-ts-4 50 ts-pad]);
+%uicontrol('Parent', bottom_panel, 'Style', 'text', 'Units', 'pixels',...
+%          'HorizontalAlignment', 'left', 'String', 'Metric:', ...
+%          'Position', [pad+ButtonWidth*2 bh-ts-4 50 ts-pad]);
       
 handles.metric_selector = uicontrol('Parent', bottom_panel, 'Style', 'popupmenu', 'Units', 'pixels',...
           'HorizontalAlignment', 'left',...
@@ -751,7 +755,7 @@ handles.metric_selector = uicontrol('Parent', bottom_panel, 'Style', 'popupmenu'
 
 uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Preview', ...
-          'Position', [300 bh-ts ButtonWidth ts-pad], ...
+          'Position', [300+ButtonWidth*0 bh-ts ButtonWidth ts-pad], ...
           'Callback', @preview_model_callback);
       
     function clear_preview_fig_handle(f,~)
@@ -844,7 +848,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
 
 uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Scatter Plot', ...
-          'Position', [300+ButtonWidth*4 bh-ts ButtonWidth ts-pad], ...
+          'Position', [300+ButtonWidth*5 bh-ts ButtonWidth ts-pad], ...
           'Callback', @scatter_plot_callback);
       
     function data = compute_data_matrix(fieldstoget)
@@ -883,6 +887,9 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                 end
             end
         end
+        if get(handles.onlyfair, 'value') 
+            data = excise(data);
+        end
         enable_or_disable_children(parent_handle, 'on');
     end
       
@@ -900,36 +907,36 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
         plot_scatter(data, sel_models); 
     end
 
-    uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Heat Map', ...
-          'Position', [300+ButtonWidth*5 bh-ts ButtonWidth ts-pad], ...
-          'Callback', @heatmap_plot_callback);
-
-    function heatmap_plot_callback(~,~,~)
-        data = compute_data_matrix({sel_metric});
-        if isempty(data)
-            return;
-        end
-        figure('Name', 'Heat Map Comparison', 'NumberTitle', 'off', ...
-               'Position', [10 10 900 900]);
-        
-        data = log(1./data);
-        hist(data(:,1), 50);
-        
-    end
-
-    function heatmap_plot_callback_old(~,~,~)
-        data = compute_data_matrix({sel_metric});
-        if isempty(data)
-            return;
-        end
-        figure('Name', 'Heat Map Comparison', 'NumberTitle', 'off', ...
-               'Position', [10 10 900 900]);      
-        ns = 1:size(data,2);
-        D = sortrows([nanmean(data)' ns' data'], [-1]);
-        idxs = D(:,2);       
-        heatmap(D(:, 3:end), sel_cellids, sel_models(idxs),  '', 'TickAngle', 90, 'ShowAllTicks', true);         
-    end
+%     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+%           'HorizontalAlignment', 'left', 'String', 'Heat Map', ...
+%           'Position', [300+ButtonWidth*5 bh-ts ButtonWidth ts-pad], ...
+%           'Callback', @heatmap_plot_callback);
+% 
+%     function heatmap_plot_callback(~,~,~)
+%         data = compute_data_matrix({sel_metric});
+%         if isempty(data)
+%             return;
+%         end
+%         figure('Name', 'Heat Map Comparison', 'NumberTitle', 'off', ...
+%                'Position', [10 10 900 900]);
+%         
+%         data = log(1./data);
+%         hist(data(:,1), 50);
+%         
+%     end
+% 
+%     function heatmap_plot_callback_old(~,~,~)
+%         data = compute_data_matrix({sel_metric});
+%         if isempty(data)
+%             return;
+%         end
+%         figure('Name', 'Heat Map Comparison', 'NumberTitle', 'off', ...
+%                'Position', [10 10 900 900]);      
+%         ns = 1:size(data,2);
+%         D = sortrows([nanmean(data)' ns' data'], [-1]);
+%         idxs = D(:,2);       
+%         heatmap(D(:, 3:end), sel_cellids, sel_models(idxs),  '', 'TickAngle', 90, 'ShowAllTicks', true);         
+%     end
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Bar Plot', ...
