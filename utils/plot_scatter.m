@@ -1,9 +1,13 @@
-function plot_scatter(X, names)
+function plot_scatter(X, names, plot_marginals)
 % CORRPLOT  Plots a big correlation graph of correlations and residuals
 %   Each column of X is a different data set that you want to plot
 %   names is a cell array, with strings for each.
 
 % 2012/10/03, Ivar Thorson.
+
+if ~exist('plot_marginals', 'var')
+    plot_marginals = false;
+end
 
 % Set plot borders and sizes
 tmargin = 0.1;
@@ -28,6 +32,8 @@ if not(exist('names')) || length(names) ~= Nsets
     error('I need as many names as the size of the y dimension!');
 end
 
+names = shorten_modelnames(names);
+
 R = corrcoef(X);
 
 w = (1.0 - lmargin - rmargin) / (Nsets - 1);    % Plot width
@@ -46,12 +52,12 @@ for i = 1:Nsets
         axis([axmin, axmax, axmin, axmax]);
         
         hold on;
-        if j == Nsets
+        if j == Nsets && plot_marginals
              qtys = hist(X(:,i), bins);
              bar(bins, (qtys ./ sum(qtys)), 'g');
         end
 
-        if i == 1
+        if i == 1 && plot_marginals
              qtys = hist(X(:,j), bins);
              bh = barh(bins, (qtys ./ sum(qtys)), 'y');
          end
@@ -59,18 +65,20 @@ for i = 1:Nsets
         plot(X(:,i),X(:,j), 'k.', [axmin, axmax], [axmin, axmax], 'k--');
         
         % Plot the CDFs versus each other, like a Kolmogorov Smirnov plot
-        [cdfi, i_values] = ecdf(X(:,i));
-        [cdfj, j_values] = ecdf(X(:,j));
-        grid = linspace(axmin, axmax, 100);
-        [~, iix] = unique(i_values);
-        [~, ijx] = unique(j_values);
-        ipts = interp1(i_values(iix), cdfi(iix), grid, 'linear');
-        jpts = interp1(j_values(ijx), cdfj(ijx), grid, 'linear');
-        plot(jpts, ipts, 'r-');
+        if ~all(isnan(X(:,i))) && ~all(isnan(X(:,j)))
+            [cdfi, i_values] = ecdf(X(:,i));
+            [cdfj, j_values] = ecdf(X(:,j));
+            grid = linspace(axmin, axmax, 100);
+            [~, iix] = unique(i_values);
+            [~, ijx] = unique(j_values);
+            ipts = interp1(i_values(iix), cdfi(iix), grid, 'linear');
+            jpts = interp1(j_values(ijx), cdfj(ijx), grid, 'linear');
+            plot(jpts, ipts, 'r-');
+        end
                       
         % Turn off tick labels unless in the bottom or leftmost rows
         if j == Nsets 
-            hl = xlabel(sprintf('%s\nmean:%.3f med:%.3f', names{i}, ...
+            hl = xlabel(sprintf('%s\n\nmean:%.3f\nmed:%.3f', names{i}, ...
                                 nanmean(X(:,i)),nanmedian(X(:,i))));
             set(hl,'interpreter','none');
         else
@@ -78,7 +86,7 @@ for i = 1:Nsets
         end
         
         if i == 1 
-            hl = ylabel(sprintf('%s\nmean:%.3f med:%.3f', names{j}, ...
+            hl = ylabel(sprintf('%s\n\nmean:%.3f\nmed:%.3f', names{j}, ...
                                 nanmean(X(:,j)),nanmedian(X(:,j))));
             set(hl,'interpreter','none');
         else

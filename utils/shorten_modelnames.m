@@ -23,7 +23,9 @@ end
 
 % Flatten the names again
 for ii = 1:length(names)
-    names{ii} = [mnames{ii}{:}];
+    mm = cellfun(@(x) [x '+'], mnames{ii}, 'UniformOutput', false);
+    names{ii} = [mm{:}];
+    names{ii} = names{ii}(1:end-1); % Trim off last +, if any    
 end
     
 end
