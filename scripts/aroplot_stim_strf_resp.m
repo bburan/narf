@@ -54,7 +54,7 @@ for ii = 1:length(modelnames)
     
     % ----------------------------
     % Plot the stimulus
-    sp = subplot(1,5,1); 
+    sp = subplot(1,6,1); 
     imagesc(log(squeeze(XXX{2}.dat.(sf).stim(:,1,:)+10^-2))');    
     set(gca,'YDir','normal');
     xlabel('Time'); 
@@ -62,7 +62,7 @@ for ii = 1:length(modelnames)
         
     % ----------------------------
     % Plot the weights
-    subplot(1,5,2);
+    subplot(1,6,2);
     % For plotting, renormalize the weights
     mm = sum(abs(w));
     w = w ./ repmat(mm', 1, size(w,1))';
@@ -78,7 +78,7 @@ for ii = 1:length(modelnames)
     
     % ----------------------------
     % Plot the FIR filter
-    subplot(1,5,3);
+    subplot(1,6,3);
     imagesc(h);
     set(gca,'YDir','normal');
     axis image;
@@ -90,7 +90,7 @@ for ii = 1:length(modelnames)
         
     % ----------------------------
     % Plot the reconstructed STRF
-    subplot(1,5,4);
+    subplot(1,6,4);
     if size(w,2) == size(h,1)
         imagesc(w*h);
         axis image;
@@ -103,8 +103,19 @@ for ii = 1:length(modelnames)
     end
         
     % ----------------------------
+    % Plot the nonlinearity
+    subplot(1,6,5);
+    sel = [];  
+    sel.stim_idx = 1;
+    sel.chan_idx = 1;
+    sel.stimfile = XXX{1}.test_set{1};  
+    STACK{end-2}{1}.auto_plot(sel, STACK(1:end-2), XXX(1:end-2));
+	xlabel('Stimulus'); 
+    ylabel('Prediction');
+    
+    % ----------------------------
     % Plot the Final prediction and response
-    subplot(1,5,5);  
+    subplot(1,6,6);  
     %append_module(MODULES.smooth_respavg.mdl(struct('window', [.2 .2 .2 .2 .2]))); % SMOOTH RESPAVG
     %calc_xxx(length(STACK) -1);
     
