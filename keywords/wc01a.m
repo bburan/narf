@@ -14,6 +14,6 @@ pop_module();
 
 append_module(MODULES.weight_channels.mdl(...
        struct('weights', V(:, 1:n_output_chans), ...
-              'fit_fields', {{'weights'}})));
+              'fit_fields', {{'weights', 'y_offset'}})));
 
 end
