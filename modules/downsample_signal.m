@@ -15,12 +15,12 @@ m.editable_fields = {'input', 'input_freq', 'input_time', ...
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.input = 'respavg';
+m.input = 'stim';
 m.input_freq = 10000;
-m.input_time = 'resp_time';
-m.output = 'respavg';
+m.input_time = 'stim_time';
+m.output = 'stim';
 m.output_freq = 200;
-m.output_time = 'respavg_time';
+m.output_time = 'stim_time';
 m.downsampler = @decimate; % Also try @decimate, or @conv_fn, or @resample
 
 % Overwrite the default module fields with arguments 

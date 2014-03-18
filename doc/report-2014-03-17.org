@@ -1,0 +1,31 @@
+* Using fit05, GT12, Compressor and NL
+  - A1: No significant difference between channels or FIR
+  - PPF: WC04>WC03>W02>WC01 
+  - PEG: No significant difference between channels, but WC3,4 > FIR
+  - Depression helps significantly always
+  - IFN helps, but is not significant
+
+* Using fit10, GT12, Compressor and NL
+  - A1: No significant difference between channels, but WC3,4 > FIR. 
+  - PPF: WC02,3 win significantly.
+  - PEG: No significant difference between channels, but WC02,3,4>FIR. Unusually, depression HURTS
+  - WC always helps
+  
+* Using fit10, GT36, 200Hz, No compressor or NL for WC comparisons
+  - A1:  WC02,3 > WC01. WC01 worse than FIR. 
+  - PPF: WC03 > w01. 
+  - PEG: No significant difference between channels, but all beat FIR.
+
+* Using fit10, GT36, 200Hz, CP and NL, but on Batch 246
+  - A1: No significant difference between channels
+
+* Best guesses:
+  - A1: 1 channel is enough if you have a compressor and NL.
+  - PPF: 3 channels is needed, even if you have a compressor and NL.
+  - PEG: 1 channel is enough, if you have a compressor and NL. 
+  - Depression usually helps (except PEG fit10 WC03 GT12)
+  - IFN helps but only barely significant with fit10 and >50 neurons
+
+* Other notes
+  - Multiplicative champ: env200_logfree_voltq_wc02a_fir30_siglog_fit10
+  - Weighting: wc01a beats wc01, suggesting initalization helps

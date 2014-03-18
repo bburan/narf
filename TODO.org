@@ -1,3 +1,47 @@
+* Status Report for 2014-03-11
+** (#1) Fitters
+   Fit10 is the current winner.
+   - [ ] Try single-dim Conjugate gradient descent
+   - [ ] Try multiple-dim conjugate gradient descent
+   - [ ] Try Variance-normalized boosting steps
+** (#2) Compressors
+   Sigumber/sigcauchy/sigell are winning, but logfree/dlog are cheaper.
+   - [ ] Try Per-channel compressors
+** (#3) Linear Filters
+   p4z4 is the winner. But p2z2 does very well and is cheaper.
+   - [ ] Try combining WC and p2z2
+** (#5) Nonlinearities
+   Siglog100 wins. But sigrich does very well and is slightly cheaper.
+   - [ ] Better sigrich initialization
+** (#6) Multiplicative
+   Voltq_logfree/logfree_voltq wins. But it expands from 2 to 5 chans. 
+   - [ ] Try a factorized version that doesn't increase channel count. 
+** (#8) Statefulness
+   dep1pc is winner. But we should try:
+   - [ ] Facilitation via leaky integration
+   - [ ] Push-Pull gain-control
+** (#11) Weighted Channels
+   Unclear for 246!!! I guess WC02, but this needs work
+   - [ ] 
+** (#??) Per-Chan Compressors, NLs
+   Not yet implemented. 
+   - [ ] Generalize NL module to allow per-chan Compressors, NLs.
+** (#??) Metrics
+   We need more metrics. 
+   - [ ] Log likelihood (gaussian)
+   - [ ] Log-likelihood (point process)
+   - [ ] NMSE with a "maximum"
+
+** Conclusions
+  - New Best Guess: logfree_wc02_voltq_dep1pc_p2z2_sigrich_fit10
+  - Bar chart with mean/deviation
+
+* Sure would be nice if...
+  The number of free parameters was stored in the DB!
+  The "ADD ANALYSIS" button still worked
+  There was a "DIRECT TO PRETTY FIGURE" plotter so figures were easier to make
+  There was a "publish" button that wrote a paper.
+  Elliptic Bandpass Filterbank was just Filterbank
 * TO DO
   1. [ ] Fit14: SCAAT fitting that starts out with a stepsize equal to the current parameter size
 	 Also, try to find the failure point in FIT10 relative to FIT05
@@ -5,13 +49,14 @@
   3. [ ] Mutual Info/Frac of variance (R^2 ceil)
   4. [ ] Nonlinear Facilitation model
   5. [ ] Gain control stateful model
-  6. [ ] Bayesian T-test
+  6. [ ] Bayesian nonparametric T-test instead of randttest
   7. [ ] Make a script for inter-module overall contribution/comparion
 	 % Based on the keywords,
 	 %     For each position P, count the N different possibilities
 	 %     Create a Nx1 incidence vector to indicate presence
 	 %     Define an additive/multiplicative model
 	 %     Plot the constants
+  - Low rank models paper by Ahrens and Sahani
 
 * Meeting with SVD 2014-03-03
   - Three papers to work on
@@ -31,12 +76,9 @@
 
 * BUG SVD ABOUT
   - Can we have stimuli that are not just vocalizations, but really a variety of natural sounds?
+  - Is there any raw data, unfiltered and before any processing occurs, recorded anywhere? Can you get delta/gamma waves from that? LFPs?
   - Is there a plan to ever take recordings from the Cochlear Nucleus, Superior Olivary, Inferior Colliculus, Medial Geniculate Nucleus, (A1), or Non-A1 cortex?
   - Is there XYZ positional data so I could start connecting best-fit parameters to cortical location?
-
-* Papers to read
-- Tsodyks (cho-dex) and Markrem paper on facilitaiton and depression
-- 
 
 * ASSUMPTION TO CHECK
   If the noise distribution of a PSTH does indeed approach a gaussian, (regardless of the poisson distribution or bernoulli per trial), how many trials are realistically needed before the distribution becomes really gaussian?
@@ -78,11 +120,11 @@
      - Try to figure out if I could infer the stimulus autocorrelation as well, and remove it, much like the Ising models.
 
 * Work Queue
+  1. [ ] Narf Analysis needs refactoring. Query DB based on selections, filter by >r_floor and by fairness/presence across all models, then display in bottom window. That restricted data can then be used directly for plotting rather than doing a new lookup every time, so things are faster.
   1. [ ] Look just at histograms for >10^-2 latencies (less than that is probably a fitting bug)
   2. [ ] Plot Pole1 vs Pole2 for p1z0x2 to see if we have fast/slow pole cluster
   3. [ ] Module: Take the FFT of a spike train, then filter out frq components above some threshold to make a smoothed RESPAVG.
   4. [ ] Verify that the fittable gammatones use Hilbert Envelope correctly
-  5. [ ] Try a siglog parameterized like page 374 of bayesian book
   6. [ ] Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
   7. [ ] Metric: Log-likelihood
   8. [ ] Metric: NMSE in DB
@@ -152,7 +194,6 @@
   26. [ ] Confidence interval in a bayesian way using Highest Density Interval (Contains 95% of spaces)
   27. [ ] Naive Bayes and MAP (The more I think about it, just using naked probabilities (MAP) seems more and more attractive. For example, when we calculate MSE, the stupid "prestim-silence" distorts the histograms because so many equivalent values come in. These would be naturally weighted less if we were using the bayesian approach to marginalize by the expected data. 
   28. [ ] Predictive Power (Sahani, Linden, 2003 "How linear are auditory cortical responses")
-
 
 * Problems that are unresolved
 ** GENERAL SCIENCE / METHODOLOGY
