@@ -15,7 +15,7 @@ if ANESTHETIZED_MOUSE==1,
     stop_exp=3.0;
 else
     dep_tau_norm=100;
-    fir_num_coefs=12;
+    fir_num_coefs=20; % was 12 previously (JL)
     stop_exp=2.0;
 end
 
@@ -23,7 +23,8 @@ append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));
 
 meanresp = nanmean(flatten_field(XXX{end}.dat,XXX{end}.training_set,'respavg'));
 append_module(MODULES.lindeberg_filter.mdl(struct('num_coefs', fir_num_coefs, ...
-                                'baseline',meanresp,...
+                                'baseline',meanresp,...    
                                 'fit_fields', {{'lincoefs','baseline'}})));
+%                                 'fit_fields', {{'lincoefs'}})));
 
 fitSubstack([],10^-(stop_exp));
