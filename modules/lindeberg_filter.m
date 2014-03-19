@@ -24,7 +24,7 @@ m.num_coefs = 20;
 m.num_dims = 2;
 m.baseline = 0;
 m.sum_channels=1;
-m.lincoefs = [9 0.5 1 2 0 1];
+m.lincoefs = [9 0.5 1 2 0 1 0];
 m.coefs = zeros(m.num_dims, m.num_coefs);
 m.input =  'stim';
 m.filtered_input = 'stim_filtered';
@@ -152,10 +152,13 @@ end
     end
 
 
-    function coefs = initialize_coefs(num_dims, num_coefs, xshift, tshift, s, tau, v, order_x, order_t, norm_factor)
+    function coefs = initialize_coefs(num_dims, num_coefs, xshift, tshift, s, tau, v, order_x, order_t, norm_factor, add_factor)
         
         if (~exist('norm_factor','var'))
             norm_factor = 1;
+        end
+        if (~exist('add_factor','var'))
+            add_factor = 0;
         end
         
         xshift = min(xshift, num_dims); xshift = max(xshift, 0);
@@ -178,7 +181,7 @@ end
         coefs = timecausal_vectorized((1:num_dims)-xshift, (1:num_coefs)-tshift, s, tau, v, order_x, order_t);
         
 %         coefs = coefs / max(max(coefs));
-        coefs = coefs * norm_factor;
+        coefs = add_factor + coefs * norm_factor;
     end
 
     function mdl = auto_init_lindeberg_filter(stack, xxx)
@@ -202,7 +205,8 @@ end
         tau = mdl.lincoefs(4);
         v = mdl.lincoefs(5);
         norm_factor = mdl.lincoefs(6);
-        mdl.coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor);
+        add_factor = mdl.lincoefs(7);
+        mdl.coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor, add_factor);
     end
 
     function x = do_lindeberg_filtering(mdl, x, stack, xxx)
@@ -230,7 +234,8 @@ end
             tau = mdl.lincoefs(4);
             v = mdl.lincoefs(5);
             norm_factor = mdl.lincoefs(6);
-            coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor);
+            add_factor = mdl.lincoefs(7);
+            coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor, add_factor);
             
             %             % JL: hackish. should put that in the right place
             %             for (i=1:mdl.num_dims)
@@ -308,7 +313,8 @@ end
             tau = mdls{ii}.lincoefs(4);
             v = mdls{ii}.lincoefs(5);
             norm_factor = mdls{ii}.lincoefs(6);
-            coefs = initialize_coefs(mdls{ii}.num_dims, mdls{ii}.num_coefs, xshift, tshift, s, tau, v, mdls{ii}.order_x, mdls{ii}.order_t, norm_factor);
+            add_factor = mdls{ii}.lincoefs(7);
+            coefs = initialize_coefs(mdls{ii}.num_dims, mdls{ii}.num_coefs, xshift, tshift, s, tau, v, mdls{ii}.order_x, mdls{ii}.order_t, norm_factor, add_factor);
             
             %             coefs = mdls{ii}.coefs;
             %             % JL hackish
@@ -373,7 +379,8 @@ end
             tau = mdl.lincoefs(4);
             v = mdl.lincoefs(5);
             norm_factor = mdl.lincoefs(6);
-            coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor);
+            add_factor = mdl.lincoefs(7);
+            coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor, add_factor);
             
             %             for (i=1:mdl.num_dims)
             %                 for (j=1:mdl.num_coefs)
