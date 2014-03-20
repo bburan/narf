@@ -43,18 +43,25 @@ m.plot_fns{2}.pretty_name = 'Filtered Channels';
 % m.plot_fns{2}.pretty_name = 'Output Spectrogram';
 
 % Helper function
-function [mdl, coefs] = build_coefs(mdl)
-       
+function [mdl, coefs] = build_coefs(mdl)              
     % Make sure the values are ordered as we expect
     mins = min(abs(mdl.low_freqs), abs(mdl.high_freqs));
     maxs = max(abs(mdl.low_freqs), abs(mdl.high_freqs));
     mdl.low_freqs = mins;
     mdl.high_freqs = maxs;
         
+    % Now bound the values (and perhaps swap them again if needed)
+    
     % Bound the values that may be fit.
-    mdl.low_freqs = max(mdl.low_freqs, 0.01); % Minimum is 10 Hz. 
-    mdl.high_freqs = min(mdl.high_freqs, 0.99999 * 0.001*(mdl.sampfs*0.5)*ones(size(mdl.high_freqs))); % Max is 1/2 sampfs
+    mdl.high_freqs = min(mdl.high_freqs, 0.99999999*0.001*(mdl.sampfs*0.5)*ones(size(mdl.high_freqs))); % Max is barely less than 1/2 sampfs
+    mdl.low_freqs = min(max(mdl.low_freqs, 0.01), 0.9999*mdl.high_freqs); % Minimum is 10 Hz, max is 99.99% of the max value    
     mdl.stop_dB = max(1, min(100, abs(mdl.stop_dB)));
+    
+    if mdl.low_freqs < 0 || mdl.high_freqs <= mdl.low_freqs
+        error('Ivar cannot reason very well anymore.');
+    end
+    
+    mdl    
     
     % Build the coefficients for the filters
     for i = 1:length(mdl.low_freqs);
@@ -127,6 +134,5 @@ end
 %     logfsgram(dat.(mdl.output)(:, stim_idx, chan_idx)', 4048, baphy_mod.raw_stim_fs, [], [], 500, 12);
 %     caxis([-20,40]);
 % end
-
 
 end
