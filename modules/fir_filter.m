@@ -102,22 +102,25 @@ function x = do_fir_filtering(mdl, x, stack, xxx)
             error('Dimensions of (mdl.input) don''t match channel count.');
          end
 
-         tmp = zeros(T, S, C);        
-         
+         tmp = zeros(T, S, C);     
+         zf = {};
+         for c = 1:C
+            % Find proper initial conditions for the filter
+            [~, zftmp] = filter(coefs(c,:)', [1], ...
+                     init_data_space .* x.dat.(sf).(mdl.input)(1, 1, c));
+            zf{c} = zftmp;
+         end
+                     
          % Filter!
          for s = 1:S
-             for c = 1:C,
-                 % Find proper initial conditions for the filter
-                 [~, Zf] = filter(coefs(c,:)', [1], ...
-                     init_data_space .* x.dat.(sf).(mdl.input)(1, s, c));
-                 
-                 tmp(:, s, c) = filter(coefs(c,:)', [1], ...
+             for c = 1:C,                 
+                 [tmp(:, s, c), zftmp] = filter(coefs(c,:)', [1], ...
                      x.dat.(sf).(mdl.input)(:, s, c), ...
-                     Zf);
+                     zf{c});
+                 zf{c} = zftmp;                 
              end
-         end
+         end        
          
-         % Now the input has been filtered.
          x.dat.(sf).(mdl.filtered_input) = tmp;
          
          % The output is the sum of the filtered channels
