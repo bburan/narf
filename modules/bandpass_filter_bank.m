@@ -55,13 +55,7 @@ function [mdl, coefs] = build_coefs(mdl)
     % Bound the values that may be fit.
     mdl.high_freqs = min(mdl.high_freqs, 0.99999999*0.001*(mdl.sampfs*0.5)*ones(size(mdl.high_freqs))); % Max is barely less than 1/2 sampfs
     mdl.low_freqs = min(max(mdl.low_freqs, 0.01), 0.9999*mdl.high_freqs); % Minimum is 10 Hz, max is 99.99% of the max value    
-    mdl.stop_dB = max(1, min(100, abs(mdl.stop_dB)));
-    
-    if mdl.low_freqs < 0 || mdl.high_freqs <= mdl.low_freqs
-        error('Ivar cannot reason very well anymore.');
-    end
-    
-    mdl    
+    mdl.stop_dB = max(1, min(100, abs(mdl.stop_dB)));   
     
     % Build the coefficients for the filters
     for i = 1:length(mdl.low_freqs);
@@ -112,15 +106,32 @@ function do_plot_bandpass_filter_bank_frq_resp(sel, stack, xxx)
 
     [mdl, coefs] = build_coefs(mdl);
     
+    N = 10000;
     hold on;
     for filt_idx = 1:length(mdl.low_freqs)
-        ww = 0:(pi/1000):pi;
+        ww = 0:(pi/N):pi;
         H = freqz(coefs{filt_idx}{1}, coefs{filt_idx}{2}, ww);
-        loglog(ww', abs(H)', 'Color', pickcolor(filt_idx));
-        setAxisLabelCallback('X', @(f) (f*mdl.sampfs/(3.14*2)));
+        H = abs(H)';
+        loglog(ww', H, 'Color', pickcolor(filt_idx));
+        setAxisLabelCallback('X', @(f) (f*mdl.sampfs/(pi*2)));
+        setAxisLabelCallback('Y', @(f) f);
         axis tight;
+        
+        % Add info about the CF and BW
+        idx = find(H == max(H(:)));
+        CF = N * ww(idx);
+        powerband = (H >= H(idx) * 0.5);
+        bot = find(powerband, 1, 'first');
+        top = find(powerband, 1, 'last');
+        BW = log2(ww(top) / ww(bot)); % In octaves   
+        hh = text(CF*2*pi/mdl.sampfs, max(H)-0.12*filt_idx, sprintf('          CF: %0.1f Hz, BW: %0.3f Oct\n', CF, BW));
+        set(hh, 'color', pickcolor(filt_idx));
     end 
     hold off;
+    
+    do_xlabel('Frequency');
+    do_ylabel('Amplitude');
+        
 end
 
 % function do_plot_filtered_spectrogram(sel, stack, xxx)
