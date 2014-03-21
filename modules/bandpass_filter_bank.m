@@ -118,7 +118,7 @@ function do_plot_bandpass_filter_bank_frq_resp(sel, stack, xxx)
         axis tight;
         
         % Add info about the CF and BW
-        idx = find(H == max(H(:)));
+        idx = find(H == max(H(:)), 1, 'first');
         CF = N * ww(idx);
         powerband = (H >= H(idx) * 0.5);
         bot = find(powerband, 1, 'first');
