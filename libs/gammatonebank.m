@@ -52,10 +52,14 @@ delays = zeros(numchans,1);
 
 cfs=MakeErbCFs(lowcf,highcf,numchans);
 for c=1:numchans
-  cf=cfs(c);
-  [bm,env,instf,delay]=gammatone(x,fs,cf,align);
+  cf=cfs(c);  
+  bw=1.019*erb(cf); % bandwidth    
+  [bm,env,instf,delay]=gammatone(x,fs,cf,bw,align);
   bms(c,:) = bm;
   envs(c,:) = env;
   instfs(c,:) = instf;
   delays(c) = delay;
 end
+
+function y=erb(x)
+    y=24.7*(4.37e-3*x+1);

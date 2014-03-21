@@ -1,4 +1,4 @@
-function [bm,env,instf,delay]=gammatone(x,fs,cf,align)
+function [bm,env,instf,delay]=gammatone(x,fs,cf,bw, align)
 
 % GAMMATONE Fourth order gammatone filter
 % 
@@ -59,7 +59,7 @@ phasealign=phasealign/(2*pi*cf);
 shift=envelopecomptime;
 intshift=round(shift*fs);
 
-bw=1.019*erb(cf); % bandwidth
+% bw=1.019*erb(cf); % bandwidth
 wcf=2*pi*cf; % radian frequency
 tpt=(2*pi)/fs;
 a=exp(-bw*tpt);
@@ -70,14 +70,12 @@ kT=(0:length(x)-1)/fs;
 
 q=exp(1i.*(-wcf.*kT)).*x; % shift down to d.c.
 p=filter([1 0],[1 -4*a 6*a^2 -4*a^3 a^4],q); % filter: part 1
-u=filter([1 4*a 4*a^2 0],[1 0],p); % filter: part 2
+u=filter([1 4*a 4*a^2 0],[1 0],p);           % filter: part 2
 bm=gain*real(exp(1i*wcf*(kT(intshift+1:end)+phasealign)).*u(intshift+1:end)); % shift up in frequency
 
 env=0; instf=0; delay=0;
 env = gain*abs(u(intshift+1:end));
-% TODO: Ivar zeroed these out to slightly speed analysis
+% Note: Ivar zeroed these out to slightly speed analysis
 %instf=real(cf+[diff(unwrap(angle(u(intshift+1:end)))) 0]./tpt);
 %delay = intshift;
 
-function y=erb(x)
-y=24.7*(4.37e-3*x+1);
