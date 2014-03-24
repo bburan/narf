@@ -1,4 +1,4 @@
-function but3ch200()
+function but1x200()
 
 global MODULES STACK;
 
@@ -31,5 +31,9 @@ append_module(MODULES.downsample_signal.mdl(...
                'downsampler', @decimate))); % Try @decimate, or @conv_fn, or @resample
 
 append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));
+
+append_module(MODULES.weight_channels.mdl(struct('weights', [1], ...
+                                                 'y_offset', 0, ...
+                                                 'fit_fields', {{'y_offset', 'weights'}})));
 
 fitell();
