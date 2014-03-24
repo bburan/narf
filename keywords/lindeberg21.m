@@ -7,7 +7,7 @@ function lindeberg21()
 global MODULES XXX;
 
 dep_tau_norm=100;
-fir_num_coefs=20; % was 12 previously (JL)
+fir_num_coefs=100; % was 12 previously (JL)
 stop_exp=2.0;
 
 

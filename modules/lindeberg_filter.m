@@ -162,9 +162,9 @@ end
         end
         
         xshift = min(xshift, num_dims); xshift = max(xshift, 0);
-        tshift = min(tshift, 5); tshift = max(tshift, 0);
+        tshift = min(tshift, num_coefs/4); tshift = max(tshift, 0);
         s = min(s,10); s = max(s,0.1);
-        tau = min(tau,10); tau = max(tau,0.5);
+        tau = min(tau,num_coefs/3); tau = max(tau,0.5);
         v = min(v,0.75); v = max(v,-0.75);
         norm_factor = max(norm_factor,0);
         
@@ -300,7 +300,15 @@ end
         % Find the min and max values so colors are scaled appropriately
         c_max = 0;
         for ii = 1:length(mdls)
-            c_max = max(c_max, max(abs(mdls{ii}.coefs(:))));
+            xshift = mdls{ii}.lincoefs(1); %xshift = min(xshift,10);
+            tshift = mdls{ii}.lincoefs(2); %tshift = min(tshift,10);
+            s = mdls{ii}.lincoefs(3);
+            tau = mdls{ii}.lincoefs(4);
+            v = mdls{ii}.lincoefs(5);
+            norm_factor = mdls{ii}.lincoefs(6);
+            add_factor = mdls{ii}.lincoefs(7);
+            coefs = initialize_coefs(mdls{ii}.num_dims, mdls{ii}.num_coefs, xshift, tshift, s, tau, v, mdls{ii}.order_x, mdls{ii}.order_t, norm_factor, add_factor);
+            c_max = max(c_max, max(abs(coefs(:))));
         end
         
         % Plot all parameter sets' coefficients. Separate them by white pixels.
