@@ -1,0 +1,36 @@
+* Status Report for 2014-03-11
+** (#1) Fitters
+   Fit10 is the current winner.
+   - [ ] Try single-dim Conjugate gradient descent
+   - [ ] Try multiple-dim conjugate gradient descent
+   - [ ] Try Variance-normalized boosting steps
+** (#2) Compressors
+   Sigumber/sigcauchy/sigell are winning, but logfree/dlog are cheaper.
+   - [ ] Try Per-channel compressors
+** (#3) Linear Filters
+   p4z4 is the winner. But p2z2 does very well and is cheaper.
+   - [ ] Try combining WC and p2z2?
+** (#5) Nonlinearities
+   Siglog100 wins. But sigrich does very well and is cheaper.
+   - [ ] Better sigrich initialization?
+** (#6) Multiplicative
+   Voltq_logfree/logfree_voltq wins. But it expands from 2 to 5 chans. 
+   - [ ] Try a factorized version that doesn't increase channel count. 
+** (#8) Statefulness
+   dep1pc is winner. But we should try:
+   - [ ] Facilitation via leaky integration
+   - [ ] Push-Pull gain-control
+** (#11) Weighted Channels
+   Unclear for 246!!! I guess WC02, but this needs work
+   - [ ] 
+** (#??) Per-Chan Compressors, NLs
+   Not yet implemented. 
+   - [ ] Generalize NL module to allow per-chan Compressors, NLs.
+** (#??) Metrics
+   We need more metrics. 
+   - [ ] Log likelihood (gaussian)
+   - [ ] Log-likelihood (point process)
+   - [ ] NMSE with a "maximum"
+
+** Conclusions
+  - New Best Guess: logfree_wc02_voltq_dep1pc_p2z2_sigrich_fit10

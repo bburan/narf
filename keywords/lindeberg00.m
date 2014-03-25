@@ -1,13 +1,13 @@
-function lindeberg()
+function lindeberg00()
 % March 2014 - lienard
 % modified from 'fir.m'
 
-% NOT TO BE USED %
-% kept as a way to test different hypotheses locally
+% Linderberg's time-causal kernels of order (dx=0,dt=0)
 
 global MODULES XXX;
 
-fir_num_coefs=20;
+dep_tau_norm=100;
+fir_num_coefs=100; % was 12 previously (JL)
 stop_exp=2.0;
 
 
@@ -17,8 +17,8 @@ meanresp = nanmean(flatten_field(XXX{end}.dat,XXX{end}.training_set,'respavg'));
 append_module(MODULES.lindeberg_filter.mdl(struct('num_coefs', fir_num_coefs, ...
                                 'order_x',0,...
                                 'order_t',0,...
-                                'baseline',meanresp,...    
-                                'fit_fields', {{'lincoefs'}})));
-%                                 'fit_fields', {{'lincoefs','baseline'}})));
+                                'baseline',meanresp,...
+                                'fit_fields', {{'lincoefs','baseline'}})));
+%                                 'fit_fields', {{'lincoefs'}})));
 
 fitSubstack([],10^-(stop_exp));

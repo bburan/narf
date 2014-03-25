@@ -6,11 +6,12 @@ signal = 'stim';
 n_output_chans = 2;
 
 % Fit an FIR filter first and use its principal components
-firtemp();
+firtemp(); % Adds normalization and FIR modules
 coefs = STACK{end}{1}.coefs';
 B = zscore(abs(coefs));
 V = princomp(B);
-pop_module();
+pop_module(); % Remove unneeded FIR 
+
 
 append_module(MODULES.weight_channels.mdl(...
        struct('weights', V(:, 1:n_output_chans), ...

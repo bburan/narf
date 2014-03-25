@@ -1,6 +1,6 @@
 function firtemp()
 % Fit a FIR filter temporarily
-global MODULES XXX;
+global STACK MODULES XXX;
 signal = 'stim';
 fns = fieldnames(XXX{end}.dat);
 
@@ -11,4 +11,4 @@ meanresp = nanmean(flatten_field(XXX{end}.dat,XXX{end}.training_set,'respavg'));
 append_module(MODULES.fir_filter.mdl(struct('num_coefs', fir_num_coefs, ...
                                 'baseline',meanresp,...
                                 'fit_fields', {{'coefs','baseline'}})));
-fitSubstacklsq();
+fitSubstack(length(STACK), 10^-4);

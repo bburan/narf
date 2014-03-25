@@ -49,7 +49,7 @@ function x = do_gammatone_filter(mdl, x, stack, xxx)
 
     for sf = fieldnames(x.dat)', sf = sf{1};
         [T, S, C] = size(x.dat.(sf).(mdl.input));
-        ret = zeros(T, C * mdl.num_channels, S);
+        ret = zeros(T, S, C * mdl.num_channels);
         for s = 1:S
             %fprintf('gammatone_filter_bank.m: [%d/%d]\n', s, S)
             for c = 1:C
@@ -58,16 +58,14 @@ function x = do_gammatone_filter(mdl, x, stack, xxx)
                                   mdl.bank_min_fs, mdl.bank_max_fs, ...
                                   mdl.num_channels, mdl.raw_stim_fs, ...
                                   mdl.align_phase);    
-                b = mdl.num_channels*(c-1) + 1;               
-                d = mdl.num_channels*(c);
                 if (mdl.use_env)
-                    ret(:, b:d, s) = gamma_envs';
+                    ret(:, s, c) = gamma_envs;
                 else
-                    ret(:, b:d, s) = gamma_bms';
+                    ret(:, s, c) = gamma_bms;
                 end
             end
         end
-        x.dat.(sf).(mdl.output) = abs(permute(ret, [1,3,2])); 
+        x.dat.(sf).(mdl.output) = ret;
     end
 end
 

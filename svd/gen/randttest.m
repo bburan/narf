@@ -34,22 +34,22 @@ mdiff=zeros(n,1);
 for ii=1:n,
    xshuff=shuffle(xall);
    
-   mdiff(ii)=median(xshuff(dcount1+1:end))-median(xshuff(1:dcount1));
+   mdiff(ii)=mean(xshuff(dcount1+1:end))-mean(xshuff(1:dcount1));
 end
 
-m=median(x2(:))-median(x1(:));
+m=mean(x2(:))-mean(x1(:));
 spos=round(n*0.66);
 if tail==0,
    mlist=sort(-abs([mdiff; m]));
-   bmin=max(find(mlist<=-abs(m)))
+   bmin=max(find(mlist<=-abs(m)));
    s=abs(mlist(end-spos));
 elseif tail==-1, % mean x2 < mean x1
    mlist=sort([mdiff; m]);
-   bmin=max(find(mlist<=m))
+   bmin=max(find(mlist<=m));
    s=abs(mlist(end-spos));
 elseif tail==1,
    mlist=sort(-[mdiff; m]);
-   bmin=min(find(mlist>=-m))
+   bmin=min(find(mlist>=-m));
    s=abs(mlist(spos));
 end
 

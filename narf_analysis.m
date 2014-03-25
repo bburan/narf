@@ -32,7 +32,7 @@ sel_models = {};
 sel_batch = [];
 sel_cellids = {};
 sel_results = [];
-sel_metric  = 'r_test';
+sel_metric  = 'r_ceiling';
 sel_columns = {'id', 'batch', 'cellid', 'modelname', ...
                'r_test', 'r_ceiling', 'r_floor', 'r_fit', ...
                'lastmod'};    
@@ -709,10 +709,18 @@ uicontrol('Parent', right_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
 ButtonWidth=75;
              
 handles.tableconfigbutton = uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Configure Table', ...
-          'Value', 1, 'Position', [pad bh-ts ButtonWidth*2 ts-pad], ...
+          'HorizontalAlignment', 'left', 'String', 'Config', ...
+          'Value', 1, 'Position', [pad bh-ts ButtonWidth ts-pad], ...
           'Callback', @table_config_callback);
 
+handles.usefloor = uicontrol('Parent', bottom_panel, 'Style', 'checkbox', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', '>r_floor', 'value', true,  ...
+          'Position', [pad+ButtonWidth bh-ts ButtonWidth ts-pad]);
+
+handles.onlyfair = uicontrol('Parent', bottom_panel, 'Style', 'checkbox', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Fair?', 'value', true, ...
+          'Position', [pad+ButtonWidth*2 bh-ts ButtonWidth ts-pad]);
+      
     function table_config_callback(~,~,~)       
         % Build a list of the available columns
         dbopen();
@@ -731,14 +739,14 @@ handles.tableconfigbutton = uicontrol('Parent', bottom_panel, 'Style', 'pushbutt
         update_query_results_table();
     end
 
-uicontrol('Parent', bottom_panel, 'Style', 'text', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Metric:', ...
-          'Position', [pad+ButtonWidth*2 bh-ts 50 ts-pad]);
+%uicontrol('Parent', bottom_panel, 'Style', 'text', 'Units', 'pixels',...
+%          'HorizontalAlignment', 'left', 'String', 'Metric:', ...
+%          'Position', [pad+ButtonWidth*2 bh-ts-4 50 ts-pad]);
       
 handles.metric_selector = uicontrol('Parent', bottom_panel, 'Style', 'popupmenu', 'Units', 'pixels',...
           'HorizontalAlignment', 'left',...
           'Position', [pad+ButtonWidth*2+50 bh-ts 90 ts-pad], ...
-          'String', {'r_test', 'r_fit', 'r_ceiling'}, ...
+          'String', {'r_ceiling', 'r_test', 'r_fit'}, ...
           'Callback', @metric_selector_callback);    
       
     function metric_selector_callback(~,~,~)
@@ -747,7 +755,7 @@ handles.metric_selector = uicontrol('Parent', bottom_panel, 'Style', 'popupmenu'
 
 uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Preview', ...
-          'Position', [300 bh-ts ButtonWidth ts-pad], ...
+          'Position', [300+ButtonWidth*0 bh-ts ButtonWidth ts-pad], ...
           'Callback', @preview_model_callback);
       
     function clear_preview_fig_handle(f,~)
@@ -840,7 +848,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
 
 uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Scatter Plot', ...
-          'Position', [300+ButtonWidth*4 bh-ts ButtonWidth ts-pad], ...
+          'Position', [300+ButtonWidth*5 bh-ts ButtonWidth ts-pad], ...
           'Callback', @scatter_plot_callback);
       
     function data = compute_data_matrix(fieldstoget)
@@ -863,16 +871,24 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                 if isempty(ret) 
                     continue;
                 end
-                if length(ret) > 1
-                    
+                
+                if length(ret) > 1    
                     fprintf('More than one matching model found!');
                     keyboard;
+                end
+                
+                % If "usefloor" is selected, drop cells with no signal
+                if get(handles.usefloor, 'value') && ret(1).r_test < ret(1).r_floor
+                    continue;
                 end
                 
                 for kk = 1:length(fieldstoget)
                     data(jj, ii, kk) = ret(1).(fieldstoget{kk});
                 end
             end
+        end
+        if get(handles.onlyfair, 'value') 
+            data = excise(data);
         end
         enable_or_disable_children(parent_handle, 'on');
     end
@@ -883,44 +899,15 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
             return;
         end
         % Query the DB and record a single data point
-        fig_title=sprintf('Validation Set Comparison (Batch %d, %s)',...
-                          sel_batch,datestr(now));
+        fig_title=sprintf('Model Performance: %s (Batch %d, %s)',...
+                          sel_metric, sel_batch, datestr(now));
 
         figure('Name', fig_title, 'NumberTitle', 'off', ...
-               'Position', [10 10 900 900]);
+               'Position', [10 10 1000 1000]);
+        
         plot_scatter(data, sel_models); 
     end
 
-    uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
-          'HorizontalAlignment', 'left', 'String', 'Heat Map', ...
-          'Position', [300+ButtonWidth*5 bh-ts ButtonWidth ts-pad], ...
-          'Callback', @heatmap_plot_callback);
-
-    function heatmap_plot_callback(~,~,~)
-        data = compute_data_matrix({sel_metric});
-        if isempty(data)
-            return;
-        end
-        figure('Name', 'Heat Map Comparison', 'NumberTitle', 'off', ...
-               'Position', [10 10 900 900]);
-        
-        data = log(1./data);
-        hist(data(:,1), 50);
-        
-    end
-
-    function heatmap_plot_callback_old(~,~,~)
-        data = compute_data_matrix({sel_metric});
-        if isempty(data)
-            return;
-        end
-        figure('Name', 'Heat Map Comparison', 'NumberTitle', 'off', ...
-               'Position', [10 10 900 900]);      
-        ns = 1:size(data,2);
-        D = sortrows([nanmean(data)' ns' data'], [-1]);
-        idxs = D(:,2);       
-        heatmap(D(:, 3:end), sel_cellids, sel_models(idxs),  '', 'TickAngle', 90, 'ShowAllTicks', true);         
-    end
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Bar Plot', ...
@@ -949,43 +936,10 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
             return;
         end
         
-        n_pieces = 10;
-        
-        % Sort the data
-        Dmeans = nanmean(data);
-        Dcount = sum(~isnan(data));
-        D = [nanmean(data)' data'];
-        [sD, idxs] = sortrows(D, -1);
-        data = sD(:, 2:end)';
-        data = abs(data); % Neg correlations are still FINE, I say!
-        figure('Name', 'Bar Plot', 'NumberTitle', 'off', ...
-               'Position', [10 10 900 300]);
-        hold on;
-        len = length(sel_models);
-        
-        if (mod(size(data,1), n_pieces) == 0)
-            np = max(1, floor(size(data, 1) / n_pieces));        
-        else
-            np = max(1, floor(size(data, 1) / (n_pieces-1)));
-        end
-        deciles = conv_fn(sort(data, 1, 'descend'), 1, @(x) max(x(:)), np, 0);
-        decadiffs = diff(flipud(deciles));
-        decas = [deciles(end,:); decadiffs];
-        bar(1:len, decas', 'stacked');          
-        bar(1:len, nanmean(data), 0.3, 'r'); 
-        plot(1:len, data, 'k.');        
-        %errorbar(1:len, nanmean(data), nanvar(data), max(data) - nanmean(data), 'xk');
-        hold off;
-        set(gca,'XTick', 1:len);
-        axis([0 len+1 -0.1 max(data(:))*1.1]);
-        thelabels = {};
-        for ii = 1:len
-            thelabels{ii} = [ '(' num2str(Dcount(ii)) ')[' sprintf('%5.3f', Dmeans(ii)) ']' sel_models{ii} ];  
-        end
-        set(gca,'XTickLabel', thelabels(idxs));
-        set(gca,'CameraUpVector',[-1,0,0]);
-        title(sprintf('Model Performance and Deciles (Batch %d, %s)',...
-                      sel_batch,datestr(now)));
+        ax = plot_bar_pretty(data, sel_models);
+        title(ax, sprintf('Model Performance: Mean/StdErr of %s (Batch %d, %s)',...
+              sel_metric, sel_batch,datestr(now)), 'interpreter', 'none');
+
     end
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
