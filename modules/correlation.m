@@ -102,8 +102,9 @@ function x = do_correlation(mdl, x, stack, xxx)
         qe = tmp(:,2);
         re = tmp(:,3:end);
         
-        x.(mdl.test_r_ceiling) = rceiling(pe, re);
-        [~, x.(mdl.test_r_floor)] = rfloor(pe, qe);
+        N=min(500,ceil(1000000./size(pe,1)));
+        x.(mdl.test_r_ceiling) = rceiling(pe, re, N);
+        [~, x.(mdl.test_r_floor)] = rfloor(pe, qe, N);
         
 %     else
 %         tmp = excise([ptest qtest]);

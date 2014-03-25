@@ -1,4 +1,11 @@
 function narf_set_path()   
+
+    % Back out of keywords directory if happened to have crashed there.
+    [pp,ppb]=fileparts(pwd);
+    if strcmpi(ppb,'keywords'),
+        cd('..');
+    end
+    
     % Bad side effect of javaaddpath: it clears all variables!
     if isempty(which('TableSorter'))
         javaaddpath('/home/ivar/matlab/narf/libs/TableSorter.jar');

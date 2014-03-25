@@ -35,7 +35,7 @@ if ~exist('user','var'),
 end
 
 if strcmp(user,'root') | strcmp(user,''),
-   user='queued';
+   user='svd';
 end
 if ~exist('updateloadbg','var'),
    updateloadbg=0;
@@ -87,8 +87,8 @@ else
    
    shorthostname=strsep(hostname,'.');
    shorthostname=shorthostname{1};
-   tuser=''; % [user '@'];
-   disp([SSHCMD,tuser,shorthostname,' /auto/users/svd/bin/qsetload',bgstring]);
+   tuser='svd@'; % [user '@'];
+   %disp([SSHCMD,tuser,shorthostname,' /auto/users/svd/bin/qsetload',bgstring]);
    [s,w]=unix([SSHCMD,tuser,shorthostname,' /auto/users/svd/bin/qsetload',bgstring]);
    
    if s>0,

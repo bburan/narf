@@ -1,6 +1,6 @@
 % function r=raw_nl(beta,pred);
 %
-function r=raw_nl(beta,pred);
+function r=raw_nl(beta,pred)
 
 pp=beta{1};
 rr=beta{2};

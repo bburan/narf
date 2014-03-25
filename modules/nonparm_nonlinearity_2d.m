@@ -65,7 +65,7 @@ function [phi,outbinserr] = init_nonparm_nonlinearity_2d(mdl, x, stack, xxx)
     rr=zeros(bincount,bincount);
     rre=zeros(bincount,bincount);
     
-    if nansum(resp)>0,
+    if nansum(resp),
         [ss1,si1]=sort(pred1);
         tb=bincount;
         b1=[];
@@ -152,7 +152,7 @@ function x = do_np_nonlinearity_2d(mdl, x, stack, xxx)
     for ii = 1:length(fns)
         sf = fns{ii};
         [T, S, C] = size(x.dat.(sf).(mdl.input_stim1));
-        y = raw_nl(phi2d, [x.dat.(sf).(mdl.input_stim1)(:) ...
+        y = raw_nl2(phi2d, [x.dat.(sf).(mdl.input_stim1)(:) ...
                      x.dat.(sf).(mdl.input_stim2)(:)]);                      
         y(isnan(y)) = 0;
         x.dat.(sf).(mdl.output) = reshape(y,[T,S,C]);

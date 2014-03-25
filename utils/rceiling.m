@@ -16,7 +16,7 @@
 %
 % created SVD 2013-10-24
 %
-function rnorm=rceiling(pred,resp);
+function rnorm=rceiling(pred,resp,N)
 
 global NARF_DEBUG
 
@@ -38,7 +38,10 @@ for p1=1:repcount,
         pairs(pp,:)=[p1 p2];
     end
 end
-N=min(500,size(pairs,1));
+if ~exist('N','var'),
+   N=500;
+end
+N=min(N,size(pairs,1));
 [~,sidx]=sort(rand(size(pairs,1),1));
 pairs=pairs(sidx(1:N),:);
 

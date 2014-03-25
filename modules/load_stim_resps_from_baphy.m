@@ -64,6 +64,9 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
     if ~isfield(mdl,'response_format'),
         mdl.response_format='spike';
     end
+    if mdl.include_prestim && length(mdl.include_prestim)==1,
+        mdl.include_prestim=1;
+    end
     
     % Merge the training and test set names, which may overlap
     files_to_load = unique({x.training_set{:}, x.test_set{:}});
@@ -269,7 +272,15 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             options.tag_masks={'Reference'};
             options.lfp=1;
             [resp, tags] = loadevpraster(respfile, options);
-            resp=resp./10000;
+            resp=resp./256;
+        elseif strcmpi(mdl.response_format,'lfp+pupil'),
+            options.tag_masks={'Reference'};
+            options.lfp=1;
+            [resp, tags] = loadevpraster(respfile, options);
+            resp=resp./256;
+            
+            options.lfp=4;
+            pupil = loadevpraster(respfile, options);
         end
         
         % SVD pad response with nan's in case reference responses
@@ -283,6 +294,13 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             elseif size(resp,1)>size(stim,1),
                 resp=resp(1:size(stim,1),:,:);
             end
+            if exist('pupil','var'),
+                if size(pupil,1)<size(stim,1),
+                    pupil((end+1):size(stim,1),:,:)=nan;
+                elseif size(pupil,1)>size(stim,1),
+                    pupil=pupil(1:size(stim,1),:,:);
+                end
+            end
         end
         
         % SVD 2013-10-14 for special case of vocalizations (subset 2) the
@@ -292,8 +310,6 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             disp('special case:  truncating stim to match resp stimcount');
             stim=stim(:,1:size(resp,3),:);
         end
-        
-        
         
         % SVD 2013-03-08 - if specified, pull out either estimation (fit) or
         % validation (test) subset of the data
@@ -318,12 +334,16 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
 
                 keepidx=1;
                 % KLUDGE ALERT! convert stim to envelope
-                resp(1:round(0.5.*mdl.raw_stim_fs),:,:)=nan;
+                %resp(1:round(0.5.*mdl.raw_stim_fs),:,:)=nan;
                 stim=mean(stim,3);
             elseif SUBTORC && datasubset==1,
-                keepidx=3;
+                if size(stim,2)>5,
+                    keepidx=[3 6];
+                else
+                    keepidx=3;
+                end
                 % KLUDGE ALERT! convert stim to envelope
-                resp(1:round(0.25.*mdl.raw_stim_fs),:,:)=nan;
+                %resp(1:round(0.25.*mdl.raw_stim_fs),:,:)=nan;
                 stim=mean(stim,3);
                 
             elseif datasubset==2
@@ -334,8 +354,54 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             
             stim=stim(:,keepidx,:);
             resp=resp(:,:,keepidx);
+            if exist('pupil','var'),
+                pupil=pupil(:,:,keepidx);
+            end
         end
         
+        if exist('pupil','var'),
+           disp('pupil processing...');
+           switch basename(stimfile),
+              case 'Mouse169_2013_10_23_TOR_8_cell2',
+                 bdset=[25 34 39 43 47 70];
+              case 'Mouse167_2013_10_23_TOR_9_cell1',
+                 bdset=[28 31 34 38 45 70];
+              case 'Mouse167_2013_10_24_TOR_5',
+                 bdset=[0 25 28 32 36 60];
+              case 'Mouse160_2013_11_25_TOR_1',
+                 bdset=[0 16.7 25 30.5 39 56];
+           end
+           %bdset=[bdset;bdset+[diff(bdset)./2 0]];
+           %bdset=bdset(1:(end-1));
+           
+           tr=nan(size(resp,1),length(bdset)-1,size(resp,3));
+           tp=nan(size(resp,1),length(bdset)-1,size(resp,3));
+           for bb=1:length(bdset)-1,
+              for s=1:size(resp,3),
+                 ff=find(pupil(1,:,s)>bdset(bb) & pupil(1,:,s)<=bdset(bb+1));
+                 tr(:,bb,s)=nanmean(resp(:,ff,s),2);
+                 tp(:,bb,s)=mean(bdset(bb+(0:1)));
+              end
+           end
+           resp=tr;
+           pupil=tp;
+           
+           stim=permute(stim,[1 3 2]);
+           stim=repmat(stim,[1 size(resp,2) 1]);
+           stim=reshape(stim,size(stim,1),size(stim,2)*size(stim,3));
+           pupil=reshape(pupil,size(stim));
+           resp=reshape(resp,size(stim,1),1,size(stim,2));
+           %stim=cat(2,stim,pupil);
+           %stim=permute(stim,[1 3 2]);
+           %pupil=permute(pupil,[1 3 2]);
+           
+           if f_idx==1,
+              mr=nanmin(resp(:));
+           end
+           %resp=resp-mr;
+           
+        end
+
         nanstim=find(isnan(stim(:)));
         if ~isempty(nanstim),
             disp('WARNING: nan-valued stims are being set to zero');
@@ -346,10 +412,17 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         x.dat.(f).(mdl.output_resp) = permute(resp, [1, 3, 2]);
         x.dat.(f).(mdl.output_respavg) = ...
             squeeze(nanmean(x.dat.(f).(mdl.output_resp),3));
-        
-        % Scale respavg so it is a spike rate in Hz
-        x.dat.(f).(mdl.output_respavg) = ...
-            (mdl.raw_resp_fs) .* x.dat.(f).(mdl.output_respavg);
+        if exist('pupil','var'),
+           x.dat.(f).stim2=pupil;
+           % don't scale respavg
+           % Scale respavg so it is a spike rate in Hz
+           x.dat.(f).(mdl.output_respavg) = ...
+              (mdl.raw_resp_fs) .* x.dat.(f).(mdl.output_respavg);
+        else
+           % Scale respavg so it is a spike rate in Hz
+           x.dat.(f).(mdl.output_respavg) = ...
+              (mdl.raw_resp_fs) .* x.dat.(f).(mdl.output_respavg);
+        end
         
         % Create time signals for later convenience
         [s1 s2 s3] = size(x.dat.(f).(mdl.output_stim));

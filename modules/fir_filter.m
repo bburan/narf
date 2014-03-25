@@ -67,6 +67,7 @@ function mdl = auto_init_fir_filter(stack, xxx)
     % STACK and XXX which do not yet have this module or module's data
     % added to them.    
     if ~isfield(m, 'fit_fields') 
+        mdl = m;
         return
     end
     

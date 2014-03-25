@@ -41,7 +41,7 @@
 % 6/24/04 SVD - switched from rsh to ssh connection
 %
 
-baphy_set_path
+narf_set_path
 
 % unix command for running on remote machine via ssh:
 SSHCMD=['ssh -q -x -o StrictHostKeyChecking=no',...
@@ -389,7 +389,7 @@ while 1,
          
          for ii=1:length(userdata),
             fprintf('user %s count %d/%d\n',userdata(ii).user, ...
-                    userdata(ii).qactive,userdata(ii).qcount);
+                    ifstr2num(userdata(ii).qactive),userdata(ii).qcount);
          end
          
          uid=0;
