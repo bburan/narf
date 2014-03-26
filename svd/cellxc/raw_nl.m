@@ -32,7 +32,7 @@ for dd=1:dimcount,
        yy;
        yy(end)+(yy(end)-yy(end-1))*10];
    
-   if std(xx)>0 && std(yy)>0,
+   if std(xx)>0,
       
       inrange=find(pred(:,dd)>=xx(1) & pred(:,dd)<xx(end));
       

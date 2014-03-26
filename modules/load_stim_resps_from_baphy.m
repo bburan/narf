@@ -191,7 +191,7 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         options.channel  = cfd(idx).channum;
         options.rasterfs = mdl.raw_resp_fs;
         if ~isempty(cfd(idx).goodtrials),
-            options.trialrange=eval(cfd(idx).goodtrials);
+            options.trialrange=eval(['[' cfd(idx).goodtrials ']']);
             %keyboard
         end
         respfile = [cfd(idx).path, cfd(idx).respfile];
@@ -619,7 +619,7 @@ function hs = create_gui(parent_handle, stack, xxx)
         is_test = any(strcmp(sf, x.test_set));
         is_training = any(strcmp(sf, x.training_set));
         
-        if is_training & is_test
+        if is_training && is_test
             str = 'Est&Val Set';
         elseif is_training
             str = 'Estimation Set';
