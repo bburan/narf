@@ -1,4 +1,4 @@
-function lindeberg10_20()
+function lindeberg10_40()
 % March 2014 - lienard
 % modified from 'fir.m'
 
@@ -7,7 +7,7 @@ function lindeberg10_20()
 global MODULES XXX;
 
 dep_tau_norm=100;
-fir_num_coefs=20; % was 12 previously (JL)
+fir_num_coefs=40; % was 12 previously (JL)
 stop_exp=2.0;
 
 
