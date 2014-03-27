@@ -86,4 +86,7 @@ while ~termcond
     fprintf('======================================================================\n');  
     n = n + 1;
     termcond = outer_loop_term_fn(n, s, d, n_iters);
+    
+    % tell the queue daemon that job is still alive
+    dbtickqueue;
 end
