@@ -26,7 +26,7 @@ function ret = nl_log(phi, z)
     % Zero below threshold
     if length(phi) > 2
         zbt = phi(3);
-        z(z<zbt) = 0;
+        z(z<zbt) = zbt;
         z = z-zbt;
     end
     
