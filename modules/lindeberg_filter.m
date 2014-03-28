@@ -163,7 +163,7 @@ end
         
         xshift = min(xshift, num_dims); xshift = max(xshift, 0);
         tshift = min(tshift, num_coefs/4); tshift = max(tshift, 0);
-        s = min(s,10); s = max(s,0.1);
+        s = min(s,num_dims/2); s = max(s,0.1);
         tau = min(tau,num_coefs/3); tau = max(tau,0.5);
         v = min(v,0.75); v = max(v,-0.75);
         norm_factor = max(norm_factor,0);

@@ -3,7 +3,7 @@ function firpupil()
 global MODULES STACK XXX;
 
 dep_tau_norm=100;
-fir_num_coefs=20;
+fir_num_coefs=30;
 stop_exp=3.0;
 
 append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));

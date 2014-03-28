@@ -1,4 +1,4 @@
-function lindeberg01()
+function lindeberg01_20()
 % March 2014 - lienard
 % modified from 'fir.m'
 

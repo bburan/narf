@@ -258,19 +258,41 @@ for nn = 1:length(rundata)
     elseif ismember(rundata(nn).batch,[263])
         % noisy vocalization data
         cellfiledata=dbbatchcells(rundata(nn).batch,cellid);
-        pcounter=1;
-        
-        for ii=1:length(cellfiledata),
-            
-            train_set{ii}=[cellfiledata(ii).stimfile,'_est'];
-            test_set{ii}=[cellfiledata(ii).stimfile,'_val'];
-            rawid(ii)=cellfiledata(ii).rawid;
-            if cellfiledata(ii).stimsnr<100,
-                file_code{ii}=['N',num2str(pcounter)];
-            else
-                file_code{ii}=['C',num2str(pcounter)];
-            end
+        snr=cat(1,cellfiledata.stimsnr);
+        repcount=cat(1,cellfiledata.reps);
+        ff=find(snr>=100);
+        if length(ff)==1,
+           train_set={[cellfiledata(ff).stimfile,'_est']};
+           test_set={[cellfiledata(ff).stimfile,'_val']};
+           rawid=cellfiledata(ff).rawid;
+           test_rawid=cellfiledata(ff).rawid;
+           file_code={'C1'};
+        else
+           ffm=ff(min(find(repcount(ff)==max(repcount(ff)))));
+           train_set={cellfiledata(setdiff(ff,ffm)).stimfile};
+           test_set={cellfiledata(ffm).stimfile};
+           rawid=cat(1,cellfiledata(setdiff(ff,ffm)).rawid);
+           test_rawid=cellfiledata(ffm).rawid;
+           file_code=repmat({'C1'},[1 length(ff)-1]);
         end
+        test_file_code={'C1'};
+
+        ff=find(snr<100);
+        if length(ff)==1,
+           train_set={train_set{:} [cellfiledata(ff).stimfile,'_est']};
+           test_set={test_set{:} [cellfiledata(ff).stimfile,'_val']};
+           rawid=cat(1,rawid,cellfiledata(ff).rawid);
+           test_rawid=cat(1,test_rawid,cellfiledata(ff).rawid);
+           file_code=cat(2,file_code,{'N1'});
+        else
+           ffm=ff(min(find(repcount(ff)==max(repcount(ff)))));
+           train_set={train_set{:} cellfiledata(setdiff(ff,ffm)).stimfile};
+           test_set={test_set{:} cellfiledata(ffm).stimfile};
+           rawid=cat(1,rawid,cellfiledata(setdiff(ff,ffm)).rawid);
+           test_rawid=cat(1,test_rawid,cellfiledata(ffm).rawid);
+           file_code=cat(2,file_code,repmat({'N1'},[1 length(ff)-1]));
+        end
+        test_file_code={'C1','N1'};
     else
         % figure out what files to use for what stage of the analysis
         %[cellfiledata, times, params] = cellfiletimes(cellid, rundata(nn).batch);
@@ -300,14 +322,24 @@ for nn = 1:length(rundata)
                 rawid(end+1)=cellfiledata(ii).rawid;
             end
             test_set{1}=cellfiledata(end).stimfile;
+            test_rawid=cellfiledata(end).rawid;
         end
     end
     
+    if ~exist('test_file_code','var')
+       test_file_code=file_code;
+    end
+    if ~exist('test_rawid','var')
+       test_rawid=rawid;
+    end
+
     ret{nn} = [];
     ret{nn}.cellid = cellid;
     ret{nn}.training_set = train_set;
     ret{nn}.test_set = test_set;
     ret{nn}.filecode = file_code;
+    ret{nn}.test_filecode = test_file_code;
     ret{nn}.training_rawid = rawid;
+    ret{nn}.test_rawid = test_rawid;
 end
 
