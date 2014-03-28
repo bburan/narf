@@ -12,5 +12,19 @@ function ret = nl_dlog(phi, z)
     
     d = 10^adjoffset;
     
-    ret = log(log(z+d)-log(d)+d);
+    % Offset from zero
+    if length(phi) > 1
+        zeroer = phi(2);
+    else
+        zeroer = 0;
+    end   
+    
+    % Zero below threshold
+    if length(phi) > 2
+        zbt = phi(3);
+        z(z<zbt) = 0;
+        z = z - zbt;
+    end
+    
+    ret = log(log(z+d)-log(d)+d) + zeroer;
 end

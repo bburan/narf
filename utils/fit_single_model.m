@@ -86,24 +86,30 @@ else
     fprintf('Training model...\n');
     
     tic;
-    % Build and train the model
-    memoized_run_keyword = memoize(@run_keyword);
     
+    % Build and train the model    
+    % Ivar says: Turning off memoization because disk activity too heavy
+    % for the high-resolution data sets that I am doing. March 27, 2014. 
+    memoized_run_keyword = @run_keyword;               % Uncomment for no memoization
+    %%memoized_run_keyword = memoize(@run_keyword);    % Uncomment for memoization
+       
     % During development, we actually want to also check that no files have
     % changed. It's too hard to figure out if a fitter has changed, or
     % a module has changed, or a util has changed, or whatever.  
-    [~, filehash] = unix(['tar -cP ' NARF_PATH ' --exclude .git --to-stdout | md5sum']);
-    fprintf('Computing hash for all NARF files: %s\n', filehash)
+    %%[~, filehash] = unix(['tar -cP ' NARF_PATH ' --exclude .git --to-stdout | md5sum']);
+    %%fprintf('Computing hash for all NARF files: %s\n', filehash)
     
     for ii = 1:length(keywords_to_exec)
-        % WAS: run_keyword(keywords_to_exec{ii}, STACK, XXX, META);
-        % NOW: Use memoization
-        fprintf('Calling Keyword: %s\n', keywords_to_exec{ii});
-        [so, xo, mo] = memoized_run_keyword(keywords_to_exec{ii}, ...
-                            filehash, STACK, XXX, META);
-        STACK = so;
-        XXX = xo;
-        META = mo;
+        % NON-MEMOIZED VERSION:
+        run_keyword(keywords_to_exec{ii}, STACK, XXX, META);
+        % MEMOIZED VERSION
+        %fprintf('Calling Keyword: %s\n', keywords_to_exec{ii});
+        %
+        %[so, xo, mo] = memoized_run_keyword(keywords_to_exec{ii}, ...
+        %                    filehash, STACK, XXX, META);
+        %STACK = so;
+        %XXX = xo;
+        %META = mo;
     end
     
     % SVD hacked in from nmse

@@ -6,6 +6,6 @@ function y = nl_dexp(phi, z)
     lrshift = phi(3); % Where the centerpoint of the sigmoid is
     kappa = phi(4);   % Curvature
     
-    y = peak * exp(-exp(-kappa.*(z-lrshift))); 
+    y = base + peak * exp(-exp(-kappa.*(z-lrshift))); 
 
 end

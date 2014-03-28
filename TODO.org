@@ -1,64 +1,7 @@
-* Status Report for 2014-03-11
-** (#1) Fitters
-   Fit10 is the current winner.
-   - [ ] Try single-dim Conjugate gradient descent
-   - [ ] Try multiple-dim conjugate gradient descent
-   - [ ] Try Variance-normalized boosting steps
-** (#2) Compressors
-   Sigumber/sigcauchy/sigell are winning, but logfree/dlog are cheaper.
-   - [ ] Try Per-channel compressors
-** (#3) Linear Filters
-   p4z4 is the winner. But p2z2 does very well and is cheaper.
-   - [ ] Try combining WC and p2z2
-** (#5) Nonlinearities
-   Siglog100 wins. But sigrich does very well and is slightly cheaper.
-   - [ ] Better sigrich initialization
-** (#6) Multiplicative
-   Voltq_logfree/logfree_voltq wins. But it expands from 2 to 5 chans. 
-   - [ ] Try a factorized version that doesn't increase channel count. 
-** (#8) Statefulness
-   dep1pc is winner. But we should try:
-   - [ ] Facilitation via leaky integration
-   - [ ] Push-Pull gain-control
-** (#11) Weighted Channels
-   Unclear for 246!!! I guess WC02, but this needs work
-   - [ ] 
-** (#??) Per-Chan Compressors, NLs
-   Not yet implemented. 
-   - [ ] Generalize NL module to allow per-chan Compressors, NLs.
-** (#??) Metrics
-   We need more metrics. 
-   - [ ] Log likelihood (gaussian)
-   - [ ] Log-likelihood (point process)
-   - [ ] NMSE with a "maximum"
+* GENERATE
+  - Generate a CSV file of all my non-parametric data sets so that when I download Eureqa, I can test everything for free. 
 
-** Conclusions
-  - New Best Guess: logfree_wc02_voltq_dep1pc_p2z2_sigrich_fit10
-  - Bar chart with mean/deviation
-
-* Sure would be nice if...
-  The number of free parameters was stored in the DB!
-  The "ADD ANALYSIS" button still worked
-  There was a "DIRECT TO PRETTY FIGURE" plotter so figures were easier to make
-  There was a "publish" button that wrote a paper.
-  Elliptic Bandpass Filterbank was just Filterbank
-* TO DO
-  1. [ ] Fit14: SCAAT fitting that starts out with a stepsize equal to the current parameter size
-	 Also, try to find the failure point in FIT10 relative to FIT05
-  2. [ ] Quadratic terms added via a tensor-type factorization
-  3. [ ] Mutual Info/Frac of variance (R^2 ceil)
-  4. [ ] Nonlinear Facilitation model
-  5. [ ] Gain control stateful model
-  6. [ ] Bayesian nonparametric T-test instead of randttest
-  7. [ ] Make a script for inter-module overall contribution/comparion
-	 % Based on the keywords,
-	 %     For each position P, count the N different possibilities
-	 %     Create a Nx1 incidence vector to indicate presence
-	 %     Define an additive/multiplicative model
-	 %     Plot the constants
-  - Low rank models paper by Ahrens and Sahani
-
-* Meeting with SVD 2014-03-03
+* PUBLISH PAPERS
   - Three papers to work on
     1. A methods paper on the NARF
        - Show it works for ENV, WAV, and Hsin-Wei or Dan's Data
@@ -69,88 +12,62 @@
        - Read Rabinowitz, ??, Schnupp's depression model
        - Proof of conclusion being valid: Superboost comparison and per-model validation give same results 
 
-  - NARF stripped down version
-    1) Built-in fitter and default model, single simple interface takes matrices
-    2) Be able to add other streams like "pupil diameter" and work on possibly interleaved data "blocks"
-    3) First fits one channel, then adds another as needed until no more significant improvements are found
-
-* BUG SVD ABOUT
+* SVD
   - Can we have stimuli that are not just vocalizations, but really a variety of natural sounds?
   - Is there any raw data, unfiltered and before any processing occurs, recorded anywhere? Can you get delta/gamma waves from that? LFPs?
-  - Is there a plan to ever take recordings from the Cochlear Nucleus, Superior Olivary, Inferior Colliculus, Medial Geniculate Nucleus, (A1), or Non-A1 cortex?
+  - Is there a plan to ever take recordings from the Cochlear Nucleus, Superior Olivary, Inferior Colliculus, Medial Geniculate Nucleus, (A1), or Non-A1 cortex? By When?
   - Is there XYZ positional data so I could start connecting best-fit parameters to cortical location?
 
-* ASSUMPTION TO CHECK
-  If the noise distribution of a PSTH does indeed approach a gaussian, (regardless of the poisson distribution or bernoulli per trial), how many trials are realistically needed before the distribution becomes really gaussian?
-  The "improvement" from multiplicative nonlinearities is probably due to our stupid way of fitting with MSE weighting a '2-spike error' four times more than a 1 spike error. This desperately needs to be fixed.
+* Full Day Projects
+** Comparisons
+   - [ ] Bayesian nonparameteric T-test instead of randttest
+   - [ ] Log-likelihood (gaussian). 
+   - [ ] Log-likelihood (point process). Predicted spike rate P gives 1/P = lambda, the poisson interval. Compute the ISI of the spike train, and using the inverse of CDF(lambda), figure out how likely that spike train is. 
+   - [ ] NMSE with a "maximum" level to make fitting more outlier-robust.
+** Fitters
+   - [ ] SCAAT with a stepsize equal to maximum current parameter size
+   - [ ] Boosting with step-size effect variance hack
+   - [ ] Try single-dim conjugate gradient descent
+   - [ ] Try multiple-dim conjugate gradient descent
+   - [ ] Try Variance-normalized boosting steps  
+** Models
+   - [ ] Per-PZ channel compressor and NL (and allow multiple PZ per channel?)
+   - [ ] Tensor module for arbitrary expansions
+   - [ ] Facilitation/Depression gain control
+** Freq-based filtering
+  - [ ] Module: Take the FFT of a spike train, then filter out frq components above some threshold to make a smoothed RESPAVG.
+* Multi-Day Projects
 
-* WHILE DISCUSSING WITH DAN
-  I have been hesitant to use bayesian analysis (like the log likelihood) on my data because I didn't know how to convert a predicted spike rate P into an actual probability of a spike. But now I realize that is actually pretty damn simple; 1/P = lambda, the poisson process mean rate. From there it's a very simple step to compute the ISI of the spike train, and using the inverse of CDF(lambda), to figure out how likely that spike train is. 
-  I should run this for many of the models, and try to work out the "neighboring likelihoods" of each of the parameters, so I can see how confident I am of each parameter.
-  
-* HOW TO COMPARE MODELS IN A BAYESIAN WAY:
-  I think the new perspective on fitting a neuron is to do this:
-  - Fit a variety of models to a neural data set using our non-bayesian approach. 
-  - These fits become the "prior" of the neurons.
-  - Start with 10 model hypotheses about the compressor (EXP, ZTHRESH, SIGLOG, ETC) (hyperprior: equal prob of models)
-  - Insert data. Refit model using MCMC to get posteriors. Throw out outliers. Repeat MCMC again.  
-    - Note that essentially this simultaneously searches a space with a number of dimensions equal to the sum total of # of params of all models, plus one dim to INDEX which model we are studying.
-    - This means models with more params be sampled as less believable (which kind of already incorporates regularization, which may be irritating)
-  - We can immediately say which model is the winner for a particular neuron. 
-  - Add another nonlinearity. Wash, rinse, repeat. 
-  - Interesting! We face the same problems we face now in a Bayesian system: regularization due to Bayes can cloud conclusions. I think I prefer ratios of likelihoods so I don't get confused by priors (Just the data, please).
+** ENDGAME MODEL-BUILDER
+   - SELECT DATA: Try to remove obvious outliers during spike sorting was good
+   - INIT: Span the space of parameters, boost to find the best one(s)
+   - REDUCE: Select the best one(s), strip out everything but that, and make it fittable
+   - FIT. 
+   - Compute residuals, and go back to INIT, fitting on the (N+1)th dimension.
+   - Discard new dimension and halt if improvement below some threshold. 
+   - SWARM: Compute confidence intervals on parameters using MCMC
+   - Go back to the beginning and double check spike-sorting
+   - MEASURE: When all done, record: performance metrics, residuals/noise distributions. 
 
-* Clojure MCMC
-  Ideally, we could represent a parameter space, (and it's associated prior/posterior probability distrubution) using something that is GRID-LIKE, SMOOTH, and SPARSE. 
-  Priors and hyperpriors are basically the same; terms express the relationship of dependencies.
-  Pseudopriors are basically a hack to use the posterior dist to make the sampling occur in the vicinity of believable values. The prior is still used in the end; but we need a hacky way of bootstrapping the sampling distribution when it is poorly known.
-    
-* Latest from SVD
-  1. Make a log-likelihood fitter that varies each parameter and tests log-likelihood ratios. 
-     It tries to find a "gaussian-like" log likelihood ratio. 
-     Or it tries to find the variance at which the sample probability is half
-  2. Rebuild Pole-Zero module to work on multiple channels, with multiple PZ filters per channel. 
-     Have a function that can sample IIR filter. 
-  3. Make a script that runs on 2 models over a whole population and compares 
-     1) inner product of FIR filters
-     2) R value of predictions. 
-  4. Fit a filter, 1D at a time, using Log-likelihood. 
-     - Try to make a 1D filter model that projects forward. 
-     - Read about what a bernoulli distribution becomes in the limit of many samples
-     - Try to figure out if I could infer the stimulus autocorrelation as well, and remove it, much like the Ising models.
+* Small TODO Tasks
+  - [ ] Add to DB:
+    - number of free parameters to the DB
+    - Frac of Variance 
+  - Try to improve sigrich initialization
+  - Improve BARPLOT and SCATTER even further for making EPS figs quickly, then add PUBLISH button
+  - [ ] Analyze pole and zero placements again 
+  - [ ] Narf Analysis needs refactoring. Query DB based on selections, filter by >r_floor and by fairness/presence across all models, then display in bottom window. That restricted data can then be used directly for plotting rather than doing a new lookup every time, so things are faster.
+  21. [ ] Start using XXX to transmit time-varying gain levels or parameters.
 
-* Work Queue
-  1. [ ] Narf Analysis needs refactoring. Query DB based on selections, filter by >r_floor and by fairness/presence across all models, then display in bottom window. That restricted data can then be used directly for plotting rather than doing a new lookup every time, so things are faster.
-  1. [ ] Look just at histograms for >10^-2 latencies (less than that is probably a fitting bug)
-  2. [ ] Plot Pole1 vs Pole2 for p1z0x2 to see if we have fast/slow pole cluster
-  3. [ ] Module: Take the FFT of a spike train, then filter out frq components above some threshold to make a smoothed RESPAVG.
-  4. [ ] Verify that the fittable gammatones use Hilbert Envelope correctly
-  6. [ ] Fitter: Boosting with param size scaling (Take variance between current point and slight deviation. Take a VERY SMALL deviation (10^-6, at first. If that's too small, try factors of 10)
-  7. [ ] Metric: Log-likelihood
-  8. [ ] Metric: NMSE in DB
-  9. [ ] Metric: Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
-  10. [ ] Fitter: Not using an input channel to each module on some steps. (NAN out a chan?)
-  11. [ ] Fitter: skipping some model parameters each step.
-  12. [ ] END PLOT: Heatmap + raster of resp
+** Scientific Plots
   13. [ ] Plot R/sigma^2 vs spike isolation level 
   14. [ ] Plot noise ceiling vs spike isolation
   15. [ ] Plot # params vs avg performance
-  16. [ ] Try different initial conditions for NIM models?
-  17. [ ] Compare a slow pole vs depression vs other depression ideas
-  18. [ ] Optimize the Pole-Zero models so that they run faster
-  19. [ ] Ideas for depression or gain control?
-  20. [ ] Show that "delayed inhibition" effect is an aliasing of something else.
-  21. [ ] Start using XXX to transmit time-varying gain levels or parameters.
   22. [ ] Try different parameterizations of existing, successful modules. 
 
 * Current Project: Metrics
 ** Metrics on Responses
 *** Problems
-   The big problems with R_avg is that the "Average" may not be representative of any trial. 
-   1. The source of variation is unknown, and therefore cannot be compensated for. Possible sources of variation that we COULD account for:
-      - Variation due to minor time jitter 
-      - Variation due to slowly changing state (ie, a dying cell)
-      - Variation due to our binning method (when spikes fall near edges of bins)
    2. The distribution of variation may not be gaussian. (There may be multiple "modes" present, attentive and not, tired or not) 
    3. Outliers may be present due to spike-sorting best-effort, but are no longer relevant.
    4. Larger bin-sizes makes artificially better predictions.
@@ -194,17 +111,8 @@
   26. [ ] Confidence interval in a bayesian way using Highest Density Interval (Contains 95% of spaces)
   27. [ ] Naive Bayes and MAP (The more I think about it, just using naked probabilities (MAP) seems more and more attractive. For example, when we calculate MSE, the stupid "prestim-silence" distorts the histograms because so many equivalent values come in. These would be naturally weighted less if we were using the bayesian approach to marginalize by the expected data. 
   28. [ ] Predictive Power (Sahani, Linden, 2003 "How linear are auditory cortical responses")
+  29. [ ] Metric: Classifer model (spike = 1, nospike = -1, error function = (1-r_hat*r)^2
 
-* Problems that are unresolved
-** GENERAL SCIENCE / METHODOLOGY
-  1. RESPAVG:
-     1) Looking more closely at the variation could tell us more about the neurons. 
-     2) We don't know the distributions of the RESPAVG impacting the filter (which takes the average and blends it together), and extracting/splitting those two would be  ideal.
-  2. Fitting Parameters
-     1) We aren't verifying we can actually fit synthetic data
-     2) We have no confidence intervals or noise distribution hypotheses for most parameters. 
-  3. First half /second half stationarity has not been verified yet.
-  4. We aren't extracting info from the sound wave directly yet, we are using an artificial feature. 
 
 * Engineering Mini Projects
 ** Realization
@@ -245,8 +153,6 @@
    Problem to be solved: Place to hook on comparison analyses like SVD is doing already. 
   
 * Ideas:
-  - Include a "Fitter" field for each module to enable it to fit itself?
-  - Put git hashtag as the working directory of the memoization
   - Add histograms to nonlinear curves to see where the inputs fall. 
   - Use normalization throughout the model to make it easier to fit. After fitting is done, go back and rescale/remove them except for at the very end. 
   - Try to understand the information content in correlated noise
@@ -605,3 +511,12 @@ Didn't work well: test/train scatter plot with dot coloring by cellid or model t
 
 ** Sub-Batch Categorization
    Problem to be solved: Currently there is no way storing a categorization of neurons into groups, saving those groups as sub-batches, and then making a multi-scatterplot metric dashboard to compare them. 
+  - Include a "Fitter" field for each module to enable it to fit itself?
+  - Put git hashtag as the working directory of the memoization
+- Make a script for inter-module overall contribution/comparion
+	 % Based on the keywords,
+	 %     For each position P, count the N different possibilities
+	 %     Create a Nx1 incidence vector to indicate presence
+	 %     Define an additive/multiplicative model
+	 %     Plot the constants
+  19. MSE isn't a good metric for non-gaussian noise. (While the sum of many additive things like spikes may tend toward gaussianness, individual neurons may not)
