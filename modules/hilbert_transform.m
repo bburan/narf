@@ -1,5 +1,5 @@
 function m = hilbert_transform(args)
-% A module that does not do anything, just passes the signals on thru.
+% Hilbert Transform. Takes the signal envelope.
 %
 % Returns a function module 'm' which implements the MODULE interface.
 % See documentation for more information on how modules are typically used.
