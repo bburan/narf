@@ -49,7 +49,7 @@ function x = do_fourier_transform(mdl, x, stack, xxx)
                
         WIN = ceil(mdl.input_freq / mdl.output_freq); % Window Size        
         N = 2^nextpow2(WIN);  % Number of FFT points
-        NOV = WIN*0;        % Overlap points       
+        NOV = WIN/2;        % Overlap points       
         SR = mdl.input_freq;  % Source sample rate
         FMIN = mdl.min_freq;  % Minimum frequency to display
         FMAX = SR/2;
