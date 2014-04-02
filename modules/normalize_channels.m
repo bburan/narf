@@ -22,12 +22,12 @@ m.is_splittable = true;  % Has different effects depending on whether you
                          % use fit_split_simply or fit_split_generally
 %m.plot_gui_create_fn = @create_chan_selector_gui;
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_all_normalized_channels;
-m.plot_fns{1}.pretty_name = 'Normalized Chan (All)';
+m.plot_fns{1}.fn = @do_plot_channels_as_heatmap;
+m.plot_fns{1}.pretty_name = 'Normalized Channels (Heatmap)';
 m.plot_fns{2}.fn = @do_plot_single_normalized_channel;
 m.plot_fns{2}.pretty_name = 'Normalized Chan (Single)';
-m.plot_fns{3}.fn = @do_plot_channels_as_heatmap;
-m.plot_fns{3}.pretty_name = 'Normalized Channels (Heatmap)';
+m.plot_fns{3}.fn = @do_plot_all_normalized_channels;
+m.plot_fns{3}.pretty_name = 'Normalized Chan (All)';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -55,14 +55,19 @@ function x = do_normalize_channels(mdl, x, stack, xxx)
     for ii = 1:length(fns),
         sf = fns{ii};
         [T, S, C] = size(x.dat.(sf).(mdl.input));
-        out = zeros(size(x.dat.(sf).(mdl.input)));
+               
+        out = zeros(T*S,C);
+        scale = 1./rms;
+        tmp = reshape(x.dat.(sf).(mdl.input), T*S,C);
         for c = 1:C,
             if (rms(c) == 0)
-                out(:,:,c) = x.dat.(sf).(mdl.input)(:,:,c); % div/0 error
+                out(:,c) = tmp(:,c); % div/0 error, just push original data through (doesn't matter anyway)
             else
-                out(:,:,c) = (1/rms(c)) .* (-mm(c) + x.dat.(sf).(mdl.input)(:,:,c));
+                out(:,c) = scale(c) .* (-mm(c) + tmp(:,c));
             end
         end
+        out = reshape(tmp,T,S,C);
+        
         if any(isnan(rms))
             % error('divide by zero errors in normalize_channels');
             % We'll just zero everything out so it keeps running and the
@@ -72,6 +77,7 @@ function x = do_normalize_channels(mdl, x, stack, xxx)
             x.dat.(sf).(mdl.output) = out;
         end
     end
+    
 end
 
 function do_plot_all_normalized_channels(sel, stack, xxx)       

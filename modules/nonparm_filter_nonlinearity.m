@@ -148,25 +148,25 @@ function help_plot_npfnl(sel, mdls, xins, xouts)
     for ii = 1:length(mdls)    
         npfnl = calc_npfnl(mdls{ii}, xins{ii}{end});
         
-        %xs = xins{ii}{end}.dat.(sel.stimfile).(mdls{ii}.input_stim)(:);  
-        %xmin = min(xs);
-        %xmax = max(xs);
+        xs = xins{ii}{end}.dat.(sel.stimfile).(mdls{ii}.input_stim)(:);  
+        xmin = min(xs);
+        xmax = max(xs);
         aa = linspace(xmin, xmax, 100);        
         z = npfnl(aa);
         
-        xouts{ii}.dat.(sel.stimfile).forprinting_in = v';
+        xouts{ii}.dat.(sel.stimfile).forprinting_in = aa;
         xouts{ii}.dat.(sel.stimfile).forprinting_out = z';
     end
     
     hold on;
-    do_plot(xouts, 'npfnlstim', 'npfnlpred', ...
+    do_plot(xouts, 'forprinting_in', 'forprinting_out', ...
             sel, 'NPFNL Input [-]', 'RespAvg Prediction [Hz]');   
-	hold off;
+	%hold off;
 end
 
 function do_plot_smooth_scatter_npfnl(sel, stack, xxx)
     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
-    do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100);  
+    %do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100);  
     help_plot_npfnl(sel, mdls, xins, xouts); 
 end
 

@@ -936,7 +936,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
             return;
         end
         
-        ax = plot_bar_pretty(data, sel_models);
+        ax = plot_bar_pretty(data, sel_models, false);
         title(ax, sprintf('Model Performance: Mean/StdErr of %s (Batch %d, %s)',...
               sel_metric, sel_batch,datestr(now)), 'interpreter', 'none');
 
