@@ -44,19 +44,20 @@ function x = do_weight_channels(mdl, x, stack, xxx)
             error('Dimensions of (mdl.input) don''t match weights.');
          end
 
-         % Sum the weighted values of each stream to create new channels
-         tmp = zeros(T, S, size(mdl.weights, 2));
-         for s = 1:S
-             in = squeeze(x.dat.(sf).(mdl.input)(:, s, :));
-             tmp(:,s,:) = bsxfun(@plus, (in * mdl.weights)', mdl.y_offset)';
-         end         
-         x.dat.(sf).(mdl.output) = tmp;
+         D = size(mdl.weights, 2);
+                  
+         % Rewritten to avoid squeeze and to have improved performance
+         % Simple matrix multiplies, reshapes, and bsxfuns are fastest
+         d = reshape(x.dat.(sf).(mdl.input), T*S, C);
+         tmp = d*mdl.weights;
+         tmp2 = reshape(tmp, T,S,D);
+         x.dat.(sf).(mdl.output) = bsxfun(@plus, tmp2, reshape(mdl.y_offset, 1,1,D));
+
     end
 end
 
 % ------------------------------------------------------------------------
 % Plot methods
-
 
 function do_plot_wc_weights_as_heatmap(sel, stack, xxx)
     mdls = stack{end};
