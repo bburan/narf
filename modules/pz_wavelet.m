@@ -15,9 +15,9 @@ m.isready_pred = @isready_always;
 m.poles       = [];
 m.zeros       = [];
 m.N_zeros     = 0;
+m.N_order     = 4;  % aka, number of pairs of poles
 m.center_freq_khz = 2;
-m.Q_factor    = 3; % Actually the offset from sqrt(2)
-m.N_order     = 4; 
+m.Q_factor    = 3; % Actually the offset from 1/sqrt(2)
 m.delayms     = 5; % Input delays in ms
 m.gain        = 1;
 m.y_offset    = 0;
@@ -51,7 +51,7 @@ end
 
 function sys = makesys(mdl)
     CF = abs(mdl.center_freq_khz) * 1000;
-    Q  = 0.71 + abs(mdl.Q_factor);
+    Q  = 1/sqrt(2) + 0.00001 + abs(mdl.Q_factor); %.00001 is for numerical stability
     N  = ceil(abs(mdl.N_order));
     
     % Calculate useful parameterizations
@@ -84,31 +84,53 @@ function x = do_pz_wavelet(mdl, x, stack, xxx)
     sys = makesys(mdl);    
     for sf = fieldnames(x.dat)', sf=sf{1};        
          [T, S, C] = size(x.dat.(sf).(mdl.input));         
-         tmp = zeros(T, S, 1);                                  
-                  
-         for s = 1:S            
-             t = x.dat.(sf).(mdl.time)(:,1);
-             u = squeeze(x.dat.(sf).(mdl.input)(:, s, :));
-             
-             % If there are NANs in the input, treat them like 0's when
-             % simulating with lsim, then NAN out the output later.
-             % This is kind of an ugly hack. 
-             u_nan = isnan(u);
-             u(u_nan) = 0;
-             u(isinf(u)) = 10^6;
-             warning off Control:analysis:LsimStartTime;
-             warning off Control:analysis:LsimUndersampled;
-             
-             blah = lsim(sys, u, t);
-             blah2 = hilbert(blah);
-             tmp(:,s) = abs(blah2);
-
-             warning on Control:analysis:LsimUndersampled;
-             warning on Control:analysis:LsimStartTime;
-             nanidxs = any(u_nan,2);
-             tmp(nanidxs,s) = nan;
-                          
+         if C ~= 1
+             error('There must be only one input channel');
          end
+          
+%          tic;
+%          fprintf('New');
+%          % This method was slower than per-stimulus, actually. Why?
+%          u = reshape(x.dat.(sf).(mdl.input), T*S, C);
+%          dt = x.dat.(sf).(mdl.time)(2) - x.dat.(sf).(mdl.time)(1);         
+%          t = dt * [0:size(u,1)-1];         
+%          u_nan = isnan(u);
+%          u(u_nan) = 0;
+%          u(isinf(u)) = 10^6;
+%          tmp = lsim(sys, u, t);         
+%          tmp = abs(hilbert(tmp));      
+%          tmp(u_nan) = nan;
+%          toc;
+         
+%        OLD WAY
+%        tic;
+%        fprintf('Old');
+         tmp = zeros(T,S,C);
+        
+         for s = 1:S
+            t = x.dat.(sf).(mdl.time)(:,1);
+            u = squeeze(x.dat.(sf).(mdl.input)(:, s, :));
+             
+            % If there are NANs in the input, treat them like 0's when
+            % simulating with lsim, then NAN out the output later.
+            % This is kind of an ugly hack. 
+            u_nan = isnan(u);
+            u(u_nan) = 0;
+            u(isinf(u)) = 10^6;
+            warning off Control:analysis:LsimStartTime;
+            warning off Control:analysis:LsimUndersampled;
+             
+            blah = lsim(sys, u, t);
+            blah2 = hilbert(blah);
+            tmp(:,s) = abs(blah2);
+ 
+            warning on Control:analysis:LsimUndersampled;
+            warning on Control:analysis:LsimStartTime;
+            nanidxs = any(u_nan,2);
+            tmp(nanidxs,s) = nan;                           
+         end
+         %toc;
+          
          % Apply the post-filter function
          x.dat.(sf).(mdl.output) = mdl.gain * abs(tmp) + mdl.y_offset;
     end
