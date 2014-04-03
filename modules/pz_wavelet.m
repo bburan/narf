@@ -6,7 +6,7 @@ m.mdl = @pz_wavelet;
 m.name = 'pz_wavelet';
 m.fn = @do_pz_wavelet;
 m.pretty_name = 'PZ Wavelet';
-m.editable_fields = {'N_zeros', 'center_freq_khz', 'Q_factor', 'N_order', ...
+m.editable_fields = {'center_freq_khz', 'Q_factor', 'N_order', ...
                      'delayms', 'gain', 'y_offset', ...
                      'input', 'time', 'output'};  
 m.isready_pred = @isready_always;
@@ -14,7 +14,6 @@ m.isready_pred = @isready_always;
 % Module fields that are specific to THIS MODULE
 m.poles       = [];
 m.zeros       = [];
-m.N_zeros     = 0;
 m.N_order     = 4;  % aka, number of pairs of poles
 m.center_freq_khz = 2;
 m.Q_factor    = 3; % Actually the offset from 1/sqrt(2)
@@ -67,12 +66,12 @@ function sys = makesys(mdl)
     % Replicate the number of poles depending on the order of the filter
     poles = repmat(poles, N, 1);    
     
-    if (mdl.N_zeros == 0)
+    if isempty(mdl.zeros)
         % Create the APGF to have a gain of 1 at DC
         sys = zpk([], poles, 1);
         sys = zpk([], poles, 1/dcgain(sys));
     else
-        z = zeros(N, 1);
+        z = mdl.zeros;
         sys = zpk(z, poles, 1);
         sys = zpk(z, poles, (1/cos(theta))/real(evalfr(sys, w_c*1j))); 
     end
@@ -140,7 +139,8 @@ function do_plot_pz_impulse_response(sel, stack, xxx)
     mdls = stack{end};
     xins = {xxx(1:end-1)};        
     sys = makesys(mdls{1});
-    impulse(sys);   
+    h = impulseplot(sys);   
+    setoptions(h, 'Grid', 'on');      
     do_xlabel('Time [s]');
     do_ylabel('Impulse Response');
 end
@@ -149,7 +149,8 @@ function do_plot_pz_step_response(sel, stack, xxx)
     mdls = stack{end};
     xins = {xxx(1:end-1)};    
     sys = makesys(mdls{1});
-    step(sys);
+    stepplot(sys);
+    setoptions(h, 'Grid', 'on');
     do_xlabel('Time [s]');
     do_ylabel('Step Response');    
 end
@@ -159,16 +160,17 @@ function do_plot_pz_bodemag_plot(sel, stack, xxx)
     xins = {xxx(1:end-1)};        
     sys = makesys(mdls{1});
     h = bodeplot(sys);
-    setoptions(h,'FreqUnits','Hz','PhaseVisible','off');
+    setoptions(h,'FreqUnits','Hz','PhaseVisible','off', 'Grid', 'on');
     do_xlabel('Freq [Hz]');
     do_ylabel('Freq Response');
+    axis tight;
 end
 
 function do_plot_zplane(sel, stack, xxx)
     mdls = stack{end};
     xins = {xxx(1:end-1)};        
     sys = makesys(mdls{1});
-    zplane(sys.z, sys.p);
+    zplane(sys.z{1}, sys.p{1});
     do_xlabel('Real Axis');
     do_ylabel('Imaginary Axis');
 end
