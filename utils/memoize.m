@@ -29,7 +29,9 @@ memoization_dir = [NARF_MEMOIZATION_PATH '/' function_name '/'];
             varargout = vars.varargout;
             return
         end 
-        % If not, run function and cache result
+        % If not, run function and cache result if results take longer than
+        % 5 minutes to run. 
+        t_start = tic;
         nouts = nargout(F);
         if (nouts == 1)
             [arg1] = F(varargin{:});
@@ -45,14 +47,17 @@ memoization_dir = [NARF_MEMOIZATION_PATH '/' function_name '/'];
             varargout = {arg1 arg2 arg3 arg4};
         else
             error('Only supports 4 output args right now because MATLAB has crappy syntax, wonky destructuring binds, and I cannot figure out how to use varargout.');
-        end       
-        
-        if ~exist(thedir, 'dir')
-            mkdir(thedir);
-            unix(['chmod 777 ' thedir]);
         end
-        save(f, 'varargin', 'varargout', '-mat');
-        unix(['chmod 777 ' f]);
+        t_elapsed = toc(t_start);   
+        
+        if t_elapsed > 300 % Ensure that we only save if it was longer than 5 minutes
+            if ~exist(thedir, 'dir')
+                mkdir(thedir);
+                unix(['chmod 777 ' thedir]);
+            end
+            save(f, 'varargin', 'varargout', '-mat');
+            unix(['chmod 777 ' f]);
+        end
     end
 
 MF = @(varargin) INEEDAGENSYM(varargin{:});    
