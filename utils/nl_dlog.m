@@ -16,7 +16,7 @@ function ret = nl_dlog(phi, z)
     if length(phi) > 1
         zeroer = phi(2);
     else
-        zeroer = 0;
+        zeroer = -log(log(0+d)-log(d)+d);
     end   
     
     % Zero below threshold
