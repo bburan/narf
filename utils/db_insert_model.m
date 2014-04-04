@@ -8,7 +8,7 @@ function db_insert_model()
 %
 % No arguments or return values.
 
-global XXX META;
+global XXX META STACK;
 
 % -----------------------------------------------------------------------
 % Require values for some and give defaults for others
