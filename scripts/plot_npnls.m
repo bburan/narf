@@ -27,13 +27,10 @@ for ii = 1:length(stacks)
     sel.stimfile = XXX{1}.test_set{1};  
     pfn = m.auto_plot;   
     pfn(sel, STACK(1:(mod_idx)), XXX(1:(mod_idx+1)));
-    %keyboard;
-
-    
+    %keyboard;  
     
 end
-%keyboard;
-
+% keyboard;
 % end
 % 
 % figure('Name', 'Fit Time Bars', 'NumberTitle', 'off', 'Position', [20 50 900 900]);

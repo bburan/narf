@@ -10,25 +10,24 @@ function ret = nl_dlog(phi, z)
         adjoffset=offset;
     end
     
-    d = 10^adjoffset;
+    d = 10^adjoffset;    
     
     % Offset from zero
     if length(phi) > 1
         zeroer = phi(2);
     else
         zeroer = -log(d);
-    end   
+    end       
     
     % Zero below threshold
-    if length(phi) > 2        
+    if length(phi) > 2
         zbt = phi(3);
     else        
         zbt = 0;
-    end
+    end      
     
-    % If any values are below zero, make them 0
-    z = z - zbt;
-    z(z<0) = 0;        
+    % If any values are below zero, make them 0    
+    z(z<zbt) = 0;        
     
     ret = log(log(z+d)-log(d)+d) + zeroer;
 end

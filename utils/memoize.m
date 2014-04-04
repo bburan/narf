@@ -51,6 +51,7 @@ memoization_dir = [NARF_MEMOIZATION_PATH '/' function_name '/'];
         t_elapsed = toc(t_start);   
         
         if t_elapsed > 300 % Ensure that we only save if it was longer than 5 minutes
+            fprintf('Memoizing to %s\n', f);
             if ~exist(thedir, 'dir')
                 mkdir(thedir);
                 unix(['chmod 777 ' thedir]);
