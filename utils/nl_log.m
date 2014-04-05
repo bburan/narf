@@ -25,10 +25,13 @@ function ret = nl_log(phi, z)
     
     % Zero below threshold
     if length(phi) > 2
-        zbt = phi(3);
-        z(z<zbt) = zbt;
-        z = z-zbt;
+        zbt = phi(3);              
+    else
+        zbt = 0;
     end
+    
+    z(z<zbt) = zbt;
+    z = z-zbt;
     
     ret = log((z + 10^adjoffset)/10^adjoffset) + zeroer;
 end

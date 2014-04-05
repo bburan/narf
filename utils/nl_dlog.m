@@ -27,7 +27,8 @@ function ret = nl_dlog(phi, z)
     end      
     
     % If any values are below zero, make them 0    
-    z(z<zbt) = 0;        
+    z(z<zbt) = zbt;
+    z = z-zbt;   
     
     ret = log(log(z+d)-log(d)+d) + zeroer;
 end
