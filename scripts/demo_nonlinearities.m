@@ -1,4 +1,5 @@
-% A demo of nonlinearities
+function demo_nonlinearities(~, ~, ~)
+%A demo of nonlinearities
 
 x = [0:0.001:1]';
 

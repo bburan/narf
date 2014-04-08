@@ -1,5 +1,5 @@
-function ozgf04x200()
-% One-Zero gammatone-like filter, 4th order, 200Hz.
+function apgt04x200 ()
+% All-pole gamma-tone filter, 4th order, 200Hz.
 % Appends 4 modules to stack:
 %    1. load_stim_resps_from_baphy
 %    2. pz_wavelet 
@@ -47,18 +47,9 @@ for ii = 1:6
               'InitStepSize', 10.0, ...
               'StopAtStepsize', 10^-4);
 end
-
-% Add the zero and fit again.
-STACK{end-4}{1}.zeros = [0];
-STACK{end-4}{1}.fit_fields = {'center_freq_khz', 'Q_factor', 'zeros'}; 
-
-for ii = 1:6  
-    fit_scaat('StopAtAbsScoreDelta', 10^-ii, ...          
-              'InitStepSize', 10.0, ...
-              'StopAtStepsize', 10^-4);
-end
 pop_module(); % Remove NMSE
 pop_module(); % Remove wc01
 
 % Stop fitting the PZ wavelet.
+
 STACK{end-2}{1}.fit_fields = {};
