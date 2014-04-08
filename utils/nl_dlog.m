@@ -1,4 +1,9 @@
 function ret = nl_dlog(phi, z)
+% ret = nl_log(phi, z)
+% phi(1) Curvature of the logarithm
+% phi(2) Zero offset (base rate)
+% phi(3) Input is ignored below this amount. 
+
     offset = phi(1);
     
     % soften effects of more extreme offsets

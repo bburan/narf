@@ -16,6 +16,8 @@ function ret = nl_log(phi, z)
         adjoffset=offset;
     end
     
+    d = 10^adjoffset;    
+    
     % Offset from zero
     if length(phi) > 1
         zeroer = phi(2);
@@ -33,5 +35,5 @@ function ret = nl_log(phi, z)
     z(z<zbt) = zbt;
     z = z-zbt;
     
-    ret = log((z + 10^adjoffset)/10^adjoffset) + zeroer;
+    ret = log((z + d)/d) + zeroer;
 end
