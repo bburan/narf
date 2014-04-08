@@ -66,7 +66,7 @@ function x = do_normalize_channels(mdl, x, stack, xxx)
                 out(:,c) = scale(c) .* (-mm(c) + tmp(:,c));
             end
         end
-        out = reshape(tmp,T,S,C);
+        out = reshape(out,T,S,C);    
         
         if any(isnan(rms))
             % error('divide by zero errors in normalize_channels');
