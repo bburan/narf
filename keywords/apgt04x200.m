@@ -48,8 +48,9 @@ for ii = 1:6
               'StopAtStepsize', 10^-4);
 end
 pop_module(); % Remove NMSE
-% pop_module(); % Remove wc01
+pop_module(); % Remove wc01
 
-% Stop fitting the PZ wavelet.
+% Stop fitting the PZ wavelet. 
+% STACK{end} is normalize
+% STACK{end-1} is downsample)
 STACK{end-2}{1}.fit_fields = {};
-STACK{end}{1}.fit_fields = {};
