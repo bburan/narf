@@ -13,7 +13,7 @@ m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.poles       = [];
-m.zeros       = [];
+m.zeros       = []; % In kHz
 m.N_order     = 4;  % aka, number of pairs of poles
 m.center_freq_khz = 2;
 m.Q_factor    = 3; % Actually the offset from 1/sqrt(2)
@@ -71,7 +71,7 @@ function sys = makesys(mdl)
         sys = zpk([], poles, 1);
         sys = zpk([], poles, 1/dcgain(sys));
     else
-        z = mdl.zeros;
+        z = mdl.zeros * 1000;
         sys = zpk(z, poles, 1);
         sys = zpk(z, poles, (1/cos(theta))/real(evalfr(sys, w_c*1j))); 
     end

@@ -848,7 +848,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
 
 uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Scatter Plot', ...
-          'Position', [300+ButtonWidth*5 bh-ts ButtonWidth ts-pad], ...
+          'Position', [300+ButtonWidth*4 bh-ts ButtonWidth ts-pad], ...
           'Callback', @scatter_plot_callback);
       
     function data = compute_data_matrix(fieldstoget)
@@ -882,14 +882,20 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                     continue;
                 end
                 
-                for kk = 1:length(fieldstoget)
-                    data(jj, ii, kk) = ret(1).(fieldstoget{kk});
+                for kk = 1:length(fieldstoget)      
+                    v = ret(1).(fieldstoget{kk});
+                    if isempty(v)
+                        v = nan;
+                    end
+                    data(jj, ii, kk) = v;
                 end
             end
         end
+        
         if get(handles.onlyfair, 'value') 
             data = excise(data);
         end
+        
         enable_or_disable_children(parent_handle, 'on');
     end
       
@@ -911,7 +917,7 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Bar Plot', ...
-          'Position', [300+ButtonWidth*6 bh-ts ButtonWidth ts-pad], ...
+          'Position', [300+ButtonWidth*5 bh-ts ButtonWidth ts-pad], ...
           'Callback', @bar_plot_callback);
       
     function enable_or_disable_children(stuff, value)
@@ -941,6 +947,25 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
               sel_metric, sel_batch,datestr(now)), 'interpreter', 'none');
 
     end
+
+
+    uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
+          'HorizontalAlignment', 'left', 'String', 'Tradeoff', ...
+          'Position', [300+ButtonWidth*6 bh-ts ButtonWidth ts-pad], ...
+          'Callback', @complexity_plot_callback);
+      
+    function complexity_plot_callback(~,~,~)
+        data = compute_data_matrix({'n_parms', sel_metric});
+        if isempty(data)
+            return;
+        end
+        
+        ax = plot_complexity(data, sel_models, sel_metric);
+        title(ax, sprintf('Mean Performance (%s) vs Complexity (Batch %d, %s)',...
+              sel_metric, sel_batch, datestr(now)), 'interpreter', 'none');
+
+    end
+      
 
     uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
           'HorizontalAlignment', 'left', 'String', 'Diff Plot', ...
