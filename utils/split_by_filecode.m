@@ -5,8 +5,8 @@ function xxxs = split_by_filecode(xxx)
 % cell.
 
 % If there are no filecodes, put everything together
-if isfield(xxx{1}, 'filecodes')
-    filecodes = xxx{1}.filecodes;
+if isfield(xxx{end}, 'filecodes')
+    filecodes = xxx{end}.filecodes;
 else
     xxxs = {xxx};
     return

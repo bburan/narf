@@ -141,13 +141,13 @@ for nn = 1:length(rundata)
     file_code={};
     rawid=[];
     
-    if ismember(rundata(nn).batch,[241 244 251 252 253 254 255 258])
+    if ismember(rundata(nn).batch,[241 244 251 252 253 254 255 258 268])
         
         % find a file that matches specific behavioral selection
         % criteria for this batch
         cellfiledata=dbgettspfiles(cellid,rundata(nn).batch);
         activefile=strcmpi({cellfiledata.behavior},'active');
-           
+        
         acounter=1;
         pcounter=0;
         for ii=1:length(cellfiledata),
@@ -203,7 +203,7 @@ for nn = 1:length(rundata)
                         keyboard
                     end
                     
-                elseif ismember(rundata(nn).batch,[241 252 255 258])
+                elseif ismember(rundata(nn).batch,[241 252 255 258 268])
                     % lr/hl batches
                     % A1: attend band near BF, A2: attend away
                     if isfield(baphyparms,'Trial_TargetChannel'),
