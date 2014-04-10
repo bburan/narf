@@ -58,8 +58,8 @@ for ii = 1:6
               'StopAtStepsize', 10^-4);
 end
 pop_module(); % Remove NMSE
+pop_module(); % Remove wc01
 
 % Stop fitting the PZ wavelet and weight channels
 STACK{end-2}{1}.fit_fields = {};
-STACK{end}{1}.fit_fields = {};
 
