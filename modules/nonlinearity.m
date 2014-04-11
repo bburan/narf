@@ -12,11 +12,12 @@ function m = nonlinearity(args)
 %    
 % Good choices for NLFN are 
 %    polyval         (See matlab documentation)
-%    nl_log          (See utils/ directory)
-%    nl_root         (See utils/ directory)
-%    nl_sigmoid      (See utils/ directory)
-%    nl_exponential  (See utils/ directory)
-%    nl_zerothresh   (See utils/ directory)
+%    nl_log          
+%    nl_root         
+%    nl_sigmoid      
+%    nl_exponential  
+%    nl_zerothresh   
+%    nl_*            (Pretty much anything that matches utils/nl_*)
 %
 % You may of course define your own functions. 
 
@@ -72,10 +73,20 @@ function x = do_nonlinearity(mdl, x, stack, xxx)
 
     for sf = fieldnames(x.dat)', sf=sf{1};
         [T, S, C] = size(x.dat.(sf).(mdl.input_stim));
-        y = zeros(T, S, C);
-        
-        % Note: we assume nlfn is vector-valued
-        y = mdl.nlfn(mdl.phi, x.dat.(sf).(mdl.input_stim));      
+        input = reshape(x.dat.(sf).(mdl.input_stim), T*S, C);
+
+        if size(mdl.phi, 1) > 1
+            if C ~= size(mdl.phi, 1)
+                error('Nonlinearity implicit channel count does not match data.');
+            end
+            y = zeros(T*S, C);        
+            for c = 1:C
+                y(:,c) = mdl.nlfn(mdl.phi(c,:), input(:,c));
+            end            
+            y = reshape(y, T,S,C);
+        else                
+            y = mdl.nlfn(mdl.phi, x.dat.(sf).(mdl.input_stim));      
+        end
         
         % TODO: Find a better solution than this hacky way of zeroing nans
         % so that optimization continue in the presence of singularities
