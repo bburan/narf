@@ -1,0 +1,74 @@
+* Report for April 10, 2014
+  Looking at R_ceil across a population of 75 neurons. Not excluding ANY neurons in the batch, so that all values are comparable. 
+
+  Variables: Compressor, Freq, Delay/Dynamics, NL, Depression, Multichannel
+
+** Compressors
+   | No reference available  |     |               |
+   |-------------------------+-----+---------------|
+   | hilbert200_npfnl0_fit10 | 170 | Nonparametric |
+   | hilbert200_dlogb_fit10  | 160 | BEST          |
+   | hilbert200_rootnb_fit10 | 155 |               |
+   Not great, but tolerable considering it only knows about a broadband signal.
+
+** Freq
+   | gt36ch200_wc01_fit10  | 204 | Reference     |
+   |-----------------------+-----+---------------|
+   | fft64ch200_wc01_fit10 | 154 | Nonparametric |
+   | ell2x200_wc01_fit10   | 258 |               |
+   | but2x200_wc01_fit10   | 256 |               |
+   | apgt04x200_wc01_fit10 | 256 |               |
+   | ozgf04x200_wc01_fit10 |  ?? | BEST          |
+   Nonparametric method uses gaussians centered logarithmically along frq axis. 
+   Conclusion: We can already do better than gt36ch200_wc01, even with just 2-3 param filter.
+   High performance of filters probably due impulse responses having some time delay. 
+
+** Freq + Dynamics
+   | gt36ch200_wc01_fir20_fit10  | 365 | Reference |
+   |-----------------------------+-----+-----------|
+   | apgt04x200_fir20_fit10      | 327 |           |
+   | apgt04x200free_fir20_fit10  |     |           |
+   | apgt04x200a_fir20_fit10     |     |           |
+   | apgt04x200afree_fir20_fit10 |     |           |
+   | apgt04x200delay_wc01_fit10  | 302 |           |
+   | apgt04x200delay_fir20_fit10 | 336 |           |   
+   For some reason, incorporating time dynamics helps, but doesn't get us close to the GT36 model. 
+   Why is that occurring?
+   Given sufficient time, 
+   Seems like this would be a good test {apgt04, ozgf} {fir20, p2z2}
+
+** Comp + Dynamics
+   | hilbert200_fir20__fit10 | ?? |
+
+** Comp + Frq  
+   | apgt04x200_*_wc01_fit10 | ?? |
+
+** Comp + Freq + Dynamics
+   | gt36ch200_logfree_wc01_fir20_fit10 |     | Reference |
+   |------------------------------------+-----+-----------|
+   | apgt04x200a_dlogb_fir20_fit10      | 327 |           |
+
+** Comp + Freq + Dynamics + NL
+   | gt36ch200_logfree_wc01_fir20_fit10 |     | Reference |
+   |------------------------------------+-----+-----------|
+   | apgt04x200a_dlogb_fir20_fit10      |??   |           |
+
+** Comp + Freq + Dynamics + Depression
+   | apgt04x200a_dlogb_dep1pc_fir20_fit10 | ?? |
+
+** Multichannel version of the above
+   | agpt04x02ch200free_pclognbz_dep1pc_fir20_pcsiglog_fit10 |
+
+** Current Best Model
+   | Model                                                         | R_ceil |
+   |---------------------------------------------------------------+--------|
+   | gt36ch200_logfree_wc01a_voltq_wc01a_dep1pc_p2z2_sigrich_fit10 |    429 |
+
+{'hilbert200', 'dlogb', 'fit10'}, 
+{'hilbert200', 'fir20', 'fit10'}, 
+{'apgt04x200', 'wc01', 'fit10'}, 
+{'apgt04x200', 'dlogb', 'fit10'}, 
+{'apgt04x200', 'fir20', 'fit10'}, 
+{'apgt04x200', 'dlogb', 'fir20', 'fit10'}, 
+{'apgt04x200', 'dlogb', 'fir20', 'siglog100', 'fit10'}, 
+{'apgt04x200', 'dlogb', 'dep1pc', 'fir20', 'siglog100', 'fit10'},

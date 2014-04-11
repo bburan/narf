@@ -20,6 +20,7 @@ m.Q_factor    = 3; % Actually the offset from 1/sqrt(2)
 m.delayms     = 5; % Input delays in ms
 m.gain        = 1;
 m.y_offset    = 0;
+m.align_peak  = false; % Align the peak of the impulse response to t=0?
 
 m.input =  'stim';
 m.time =   'stim_time';
@@ -48,7 +49,7 @@ end
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
-function sys = makesys(mdl)
+function [sys, t_align] = makesys(mdl)
     CF = abs(mdl.center_freq_khz) * 1000;
     Q  = 1/sqrt(2) + 0.00001 + abs(mdl.Q_factor); %.00001 is for numerical stability
     N  = ceil(abs(mdl.N_order));
@@ -76,34 +77,26 @@ function sys = makesys(mdl)
         sys = zpk(z, poles, (1/cos(theta))/real(evalfr(sys, w_c*1j))); 
     end
 
-    sys.InputDelay = abs(mdl.delayms) / 1000; % (milliseconds)
+    % Correct for the time delay introduced by the wavelet
+    if isfield(mdl, 'time_align') && mdl.time_align
+        [imp, time] = impulse(sys);
+        [~, idx] = max(abs(hilbert(imp)));
+        t_align = time(idx);
+    else
+        t_align = 0;
+    end
+    
+    sys.InputDelay = (abs(mdl.delayms) / 1000); % (milliseconds)
 end
 
 function x = do_pz_wavelet(mdl, x, stack, xxx)    
-    sys = makesys(mdl);    
+    [sys, t_align] = makesys(mdl);    
     for sf = fieldnames(x.dat)', sf=sf{1};        
          [T, S, C] = size(x.dat.(sf).(mdl.input));         
          if C ~= 1
              error('There must be only one input channel');
          end
           
-%          tic;
-%          fprintf('New');
-%          % This method was slower than per-stimulus, actually. Why?
-%          u = reshape(x.dat.(sf).(mdl.input), T*S, C);
-%          dt = x.dat.(sf).(mdl.time)(2) - x.dat.(sf).(mdl.time)(1);         
-%          t = dt * [0:size(u,1)-1];         
-%          u_nan = isnan(u);
-%          u(u_nan) = 0;
-%          u(isinf(u)) = 10^6;
-%          tmp = lsim(sys, u, t);         
-%          tmp = abs(hilbert(tmp));      
-%          tmp(u_nan) = nan;
-%          toc;
-         
-%        OLD WAY
-%        tic;
-%        fprintf('Old');
          tmp = zeros(T,S,C);
         
          for s = 1:S
@@ -127,11 +120,16 @@ function x = do_pz_wavelet(mdl, x, stack, xxx)
             warning on Control:analysis:LsimStartTime;
             nanidxs = any(u_nan,2);
             tmp(nanidxs,s) = nan;                           
+                        
+            % Shift everything by t_align bins
+            if isfield(mdl, 'time_align') && mdl.time_align
+                idx = find(t < mdl.time_align, 1, 'last');
+                tmp(:) = [tmp(idx:end) tmp(end)*ones(1, idx-1)];
+            end                        
          end
-         %toc;
           
          % Apply the post-filter function
-         x.dat.(sf).(mdl.output) = mdl.gain * abs(tmp) + mdl.y_offset;
+         x.dat.(sf).(mdl.output) = mdl.gain * abs(tmp) + mdl.y_offset;         
     end
 end
 
@@ -142,7 +140,7 @@ function do_plot_pz_impulse_response(sel, stack, xxx)
     h = impulseplot(sys);   
     setoptions(h, 'Grid', 'on');      
     do_xlabel('Time [s]');
-    do_ylabel('Impulse Response');
+    do_ylabel('Impulse Response (Before Time Alignment)');
 end
 
 function do_plot_pz_step_response(sel, stack, xxx)
