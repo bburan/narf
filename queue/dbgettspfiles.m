@@ -16,6 +16,7 @@ filecount=length(cellfiledata);
 %stimspeedid=cat(2,cellfiledata.stimspeedid);
 activefile=zeros(1,length(cellfiledata));
 stimprint=zeros(filecount,5);
+
 for ii=1:length(cellfiledata),
     [parms, ~]=dbReadData(cellfiledata(ii).rawid);
     if cellfiledata(ii).rawid==batchactivefiles(1).rawid,

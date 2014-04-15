@@ -118,18 +118,20 @@ if isfield(params,'specialbatch'),
         cleanfiles=zeros(size(cellfiledata));
         keepcellids={};
         for ii=1:length(cellfiledata),
-            parms=dbReadData(cellfiledata(ii).rawid);
-            if isfield(parms,'Ref_Subsets') && parms.Ref_Subsets~=5,
+            parms{ii}=dbReadData(cellfiledata(ii).rawid);
+        end
+        
+        for ii=1:length(cellfiledata),
+            if isfield(parms{ii},'Ref_Subsets') && parms{ii}.Ref_Subsets~=5,
                 keepfiles(ii)=1;
                 keepcellids=union(keepcellids,cellfiledata(ii).cellid);
             end
         end
         
         for ii=1:length(cellfiledata),
-            parms=dbReadData(cellfiledata(ii).rawid);
             if ismember(cellfiledata(ii).cellid,keepcellids) &&...
-                    ((isfield(parms,'Ref_SNR') && parms.Ref_SNR>=100) ...
-                     || ~isfield(parms,'Ref_SNR')),
+                ((isfield(parms{ii},'Ref_SNR') && parms{ii}.Ref_SNR>=100) ...
+                     || ~isfield(parms{ii},'Ref_SNR')),
                 cleanfiles(ii)=1;
             end
         end
@@ -138,6 +140,38 @@ if isfield(params,'specialbatch'),
         cellfileids=cellfileids(keepidx);
         cellfiledata=cellfiledata(keepidx);
         cellids=keepcellids;
+        
+      case 'voc+val',
+        
+        % must have fit subset (not 5) and val subset (5)
+        [ucells,~,f2c]=unique({cellfiledata.cellid});
+        matches=zeros(length(ucells),2);
+        
+        parms={};
+        for ii=1:length(cellfiledata),
+            parms{ii}=dbReadData(cellfiledata(ii).rawid);
+        end
+        
+        for ii=1:length(cellfiledata),
+            ucid=find(strcmp(cellfiledata(ii).cellid,ucells));
+            if isfield(parms{ii},'Ref_Subsets') && ...
+                    cellfiledata(ii).stimsnr>=100 && ...
+                    parms{ii}.Ref_Subsets==5,
+                matches(ucid,2)=1;
+            elseif cellfiledata(ii).stimsnr>=100,
+                matches(ucid,1)=1;
+            else
+                f2c(ii)=0;
+            end
+        end
+        
+        matchcells=find(sum(matches,2)==2);
+        keepidx=find(ismember(f2c,matchcells));
+        
+        cellfileids=cellfileids(keepidx);
+        cellfiledata=cellfiledata(keepidx);
+        cellids=ucells(matchcells);
+        
         
       case 'vocnoise',
         
@@ -256,12 +290,16 @@ if isfield(params,'specialbatch'),
                     (diff(parms.Ref_LowFreq)~=0 ||...
                      diff(parms.Ref_HighFreq)~=0) && ...
                     strcmpi(cellfiledata(ii).behavior,'active') &&...
-                    cellfiledata(ii).isolation>params.miniso,
+                    cellfiledata(ii).isolation>params.miniso && ...
+                    (~isfield(parms,'Trial_TargetChannel') ||...
+                     length(unique(parms.Trial_TargetChannel(...
+                         parms.Trial_TargetIdxFreq+parms.Trial_CatchIdxFreq>0)))>1),
                 keepfiles(ii)=1;
                 keepcellids=union(keepcellids,cellfiledata(ii).cellid);
             end
         end
         keepidx=find(keepfiles);
+        
         cellfileids=cellfileids(keepidx);
         cellfiledata=cellfiledata(keepidx);
         cellids=keepcellids;
@@ -296,7 +334,10 @@ if isfield(params,'specialbatch'),
             parms=dbReadData(cellfiledata(ii).rawid);
             if strcmpi(parms.ReferenceClass,'SpNoise') &&...
                     strcmpi(parms.TrialObjectClass,'MultiRefTar') &&...
-                    length(parms.Ref_LowFreq)==1 &&...
+                    (length(parms.Ref_LowFreq)==1 ||...
+                     (isfield(parms,'Trial_CatchIdxFreq') &&...
+                      length(unique(parms.Trial_TargetChannel(...
+                         parms.Trial_TargetIdxFreq+parms.Trial_CatchIdxFreq>0)))==1)) &&...
                     length(parms.Trial_RelativeTarRefdB)>1 &&...
                     strcmpi(cellfiledata(ii).behavior,'active') &&...
                     cellfiledata(ii).isolation>params.miniso,
@@ -305,6 +346,7 @@ if isfield(params,'specialbatch'),
             end
         end
         keepidx=find(keepfiles);
+        
         cellfileids=cellfileids(keepidx);
         cellfiledata=cellfiledata(keepidx);
         cellids=keepcellids;

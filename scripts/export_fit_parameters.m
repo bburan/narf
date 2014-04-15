@@ -24,8 +24,21 @@ meta_extractor = @getfitval;
 cellcount=length(cellids);
 modelcount=length(modelnames);
 
-fitset=struct();
+keepcell=zeros(cellcount,1);
+for cc=1:cellcount,
+    if ~isempty(x0s{2,cc}),
+        keepcell(cc)=1;
+    end
+end
+kk=find(keepcell);
+cellids=cellids(kk);
+cellcount=length(cellids);
+x0s=x0s(:,kk)
+preds=preds(:,kk);
+stacks=stacks(:,kk);
+metas=metas(:,kk);
 
+fitset=struct();
 for cc=1:cellcount,
     for mm=1:modelcount,
         fitset(cc,mm).cellid=cellids{cc};

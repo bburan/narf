@@ -32,15 +32,22 @@ if ~exist('extended_status') || isempty(extended_status),
     extended_status=0;
 end
 
-dbopen;
+try,
+   if ~dbopen
+      dbopen(1);
+   end
 
-sql=['UPDATE tQueue ',...
+   sql=['UPDATE tQueue ',...
      'SET progress=progress+1,',...
      ' extended_status=',num2str(extended_status),',',...
      ' complete=-1',...
      ' WHERE id=',num2str(BATQUEUEID)];
 
-[res,r]=mysql(sql);
+   [res,r]=mysql(sql);
 
-% always update load to keep dbqueuemaster happy
-dbupdateload;
+   % always update load to keep dbqueuemaster happy
+   dbupdateload;
+catch
+   dbopen(1);
+end
+
