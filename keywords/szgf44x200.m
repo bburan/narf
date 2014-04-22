@@ -1,4 +1,10 @@
-function apgt02 ()
+function szgf44x200()
+% Stacked-Zero gammatone-like filter, 4th order, 3 zeros, 200Hz.
+% Appends 4 modules to stack:
+%    1. load_stim_resps_from_baphy
+%    2. pz_wavelet 
+%    3. downsample_signal
+%    4. normalize_channels
 
 global MODULES STACK XXX META;
 
@@ -13,7 +19,8 @@ append_module(MODULES.load_stim_resps_from_baphy.mdl(...
 
 append_module(MODULES.pz_wavelet.mdl(...
                 struct('fit_fields', {{'center_freq_khz', 'Q_factor'}}, ...
-                       'N_order', 2, ...
+                       'N_order', 4, ...
+                       'M_order', 4, ...
                        'center_freq_khz', 1.7, ...                       
                        'Q_factor', 0.7, ... 
                        'delayms', 0, ... 
@@ -36,7 +43,24 @@ append_module(MODULES.weight_channels.mdl(struct('weights', [1], ...
                                                  'fit_fields', {{'y_offset', 'weights'}})));
 
 nmse();
-fitell();
+for ii = 1:6  
+    fit_scaat('StopAtAbsScoreDelta', 10^-ii, ...          
+              'InitStepSize', 10.0, ...
+              'StopAtStepsize', 10^-4);
+end
 
-% Stop fitting the PZ wavelet.
-%STACK{end-2}{1}.fit_fields = {};
+% Add the zero and fit again.
+STACK{end-4}{1}.zeros = [0];
+STACK{end-4}{1}.fit_fields = {'center_freq_khz', 'Q_factor', 'zeros'}; 
+
+for ii = 1:6  
+    fit_scaat('StopAtAbsScoreDelta', 10^-ii, ...          
+              'InitStepSize', 10.0, ...
+              'StopAtStepsize', 10^-4);
+end
+pop_module(); % Remove NMSE
+pop_module(); % Remove wc01
+
+% Stop fitting the PZ wavelet and weight channels
+STACK{end-2}{1}.fit_fields = {};
+

@@ -90,14 +90,18 @@ else
     % Build and train the model    
     % Ivar says: Turning off memoization because disk activity too heavy
     % for the high-resolution data sets that I am doing. March 27, 2014. 
+    % Ivar now says: Turning memoization back on. Now it only memoizes
+    % functions that took longer than 300 seconds (5 minutes) to run. 
     memoized_run_keyword = @run_keyword;               % Uncomment for no memoization
-    %%memoized_run_keyword = memoize(@run_keyword);    % Uncomment for memoization
+    %memoized_run_keyword = memoize(@run_keyword);    % Uncomment for memoization
        
     % During development, we actually want to also check that no files have
-    % changed. It's too hard to figure out if a fitter has changed, or
-    % a module has changed, or a util has changed, or whatever.  
-    %%[~, filehash] = unix(['tar -cP ' NARF_PATH ' --exclude .git --to-stdout | md5sum']);
-    %%fprintf('Computing hash for all NARF files: %s\n', filehash)
+    % changed before using memoization. It's too hard to figure out if a
+    % fitter has changed, or a module has changed, or a util has changed, 
+    % or whatever to do this automatically, so we'll be conservative and
+    % make sure that absolutely nothing has changed.
+    [~, filehash] = unix(['tar -cP ' NARF_PATH ' --exclude .git --to-stdout | md5sum']);
+    fprintf('Computing hash for all NARF files: %s\n', filehash)
     
     for ii = 1:length(keywords_to_exec)
         % NON-MEMOIZED VERSION:

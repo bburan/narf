@@ -34,4 +34,14 @@ append_module(MODULES.weight_channels.mdl(struct('weights', [1], ...
                                                  'y_offset', 0, ...
                                                  'fit_fields', {{'y_offset', 'weights'}})));
 
-fitell();
+nmse();
+for ii = 1:6  
+    fit_scaat('StopAtAbsScoreDelta', 10^-ii, ...          
+              'InitStepSize', 10.0, ...
+              'StopAtStepsize', 10^-4);
+end
+pop_module(); % Remove NMSE
+pop_module(); % Remove wc01
+
+% Stop fitting the PZ wavelet. 
+STACK{end-2}{1}.fit_fields = {};

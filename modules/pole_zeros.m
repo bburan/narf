@@ -11,6 +11,7 @@ m.editable_fields = {'poles', 'zeros', 'delays', 'gains', ...
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
+m.sum_channels = true; % When true, 
 m.n_inputs    = 1;
 m.n_poles     = 2; 
 m.n_zeros     = 1;
@@ -84,23 +85,22 @@ end
 function x = do_pole_zeros(mdl, x, stack, xxx)    
     sys = makesys(mdl);    
     for sf = fieldnames(x.dat)', sf=sf{1};        
-         [T, S, C] = size(x.dat.(sf).(mdl.input));         
-         tmp = zeros(T, S, 1);         
-         for s = 1:S            
-             t = x.dat.(sf).(mdl.time)(:,1);
-             u = squeeze(x.dat.(sf).(mdl.input)(:, s, :));             
-             % If there are NANs in the input, treat them like 0's when
-             % simulating with lsim, then NAN out the output later.
-             % This is kind of an ugly hack. 
-             u_nan = isnan(u);
-             u(u_nan) = 0;
-             u(isinf(u)) = 10^6;
-             warning off Control:analysis:LsimStartTime;
-             tmp(:,s) = lsim(sys, u, t);
-             warning on Control:analysis:LsimStartTime;
-             nanidxs = any(u_nan,2);
-             tmp(nanidxs,s) = nan;
-         end
+         [T, S, C] = size(x.dat.(sf).(mdl.input));     
+         
+         % Optimized to be 5x faster than previously.
+         tmp = zeros(T*S, 1);         
+         u = reshape(x.dat.(sf).(mdl.input), T*S, C);
+         dt = x.dat.(sf).(mdl.time)(2) - x.dat.(sf).(mdl.time)(1);
+         t = dt * [0:size(u,1)-1];
+         u_nan = isnan(u);
+         u(u_nan) = 0;
+         u(isinf(u)) = 10^6;
+         % warning off Control:analysis:LsimStartTime;
+         tmp = lsim(sys, u, t);
+         % warning on Control:analysis:LsimStartTime;
+         tmp(u_nan) = nan;
+         
+         tmp = reshape(tmp, T, S, 1);
          x.dat.(sf).(mdl.output) = tmp + mdl.y_offset;
     end
 end

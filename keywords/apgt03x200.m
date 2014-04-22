@@ -1,4 +1,10 @@
-function apgt04 ()
+function apgt03x200 ()
+% All-pole gamma-tone filter, 3rd order, 200Hz.
+% Appends 4 modules to stack:
+%    1. load_stim_resps_from_baphy
+%    2. pz_wavelet 
+%    3. downsample_signal
+%    4. normalize_channels
 
 global MODULES STACK XXX META;
 
@@ -13,7 +19,7 @@ append_module(MODULES.load_stim_resps_from_baphy.mdl(...
 
 append_module(MODULES.pz_wavelet.mdl(...
                 struct('fit_fields', {{'center_freq_khz', 'Q_factor'}}, ...
-                       'N_order', 4, ...
+                       'N_order', 3, ...
                        'center_freq_khz', 1.7, ...                       
                        'Q_factor', 0.7, ... 
                        'delayms', 0, ... 
@@ -36,7 +42,13 @@ append_module(MODULES.weight_channels.mdl(struct('weights', [1], ...
                                                  'fit_fields', {{'y_offset', 'weights'}})));
 
 nmse();
-fitell();
+for ii = 1:6  
+    fit_scaat('StopAtAbsScoreDelta', 10^-ii, ...          
+              'InitStepSize', 10.0, ...
+              'StopAtStepsize', 10^-4);
+end
+pop_module(); % Remove NMSE
+pop_module(); % Remove wc01
 
-% Stop fitting the PZ wavelet.
-%STACK{end-2}{1}.fit_fields = {};
+% Stop fitting the PZ wavelet. 
+STACK{end-2}{1}.fit_fields = {};

@@ -1,7 +1,7 @@
 function fir20()
 
 global MODULES XXX;
-    
+
 fir_num_coefs=20;
 
 append_module(MODULES.normalize_channels.mdl(struct('force_positive', true)));

@@ -1,0 +1,79 @@
+* Report for April 10, 2014
+  Looking at R_ceil across a population of 75 neurons from Batch 265 (A1). Not excluding ANY neurons in the batch, so that all values are directly comparable. 
+
+** Compressors
+   | No reference available  |     |               |
+   |-------------------------+-----+---------------|
+   | hilbert200_npfnl0_fit10 | 170 | Nonparametric |
+   | hilbert200_dlogb_fit10  | 160 | BEST          |
+   | hilbert200_rootnb_fit10 | 155 |               |
+   Not great, but tolerable considering it only knows about a broadband signal.
+
+** Freq
+   | gt36ch200_wc01_fit10  | 204 | Reference     |
+   |-----------------------+-----+---------------|
+   | gt36x200_wc01_fit10   | 204 | Reference     |
+   | gam04x200_wc01_fit10  | 167 | Reference     |
+   | fft64ch200_wc01_fit10 | 154 | Nonparametric |
+   | ell2x200_wc01_fit10   | 258 |               |
+   | but2x200_wc01_fit10   | 256 |               |
+   | apgt05x200_wc01_fit10 | 259 |               |
+   | ozgf05x200_wc01_fit10 | 262 | BEST          |
+   - Nonparametric method uses gaussians centered logarithmically along frq axis. Probably the wrong thing. 
+   - OZGF is an APGT fit then with a zero added, so nearly guaranteed to do >= APGT
+   - High performance of filters probably due impulse responses having some time delay.    
+   - Suggests that a spanning ozgf filterbank would be best starting point.
+
+** Freq + Dynamics (Queued: Analysis 16)
+   | gt36ch200_wc01_fir20_fit10  | 365 | Reference |
+   |-----------------------------+-----+-----------|
+   | apgt04x200_fir20_fit10      | 327 |           |
+   | apgt04x200free_fir20_fit10  | 331 | BEST      |
+   | apgt04x200a_fir20_fit10     |     |           |
+   | apgt04x200afree_fir20_fit10 |     |           |
+   | apgt04x200delay_wc01_fit10  | 302 |           |
+   | apgt04x200delay_fir20_fit10 | 336 |           |   
+   Incorporating time dynamics helps, but we don't reach the level of the 36 channel gammatone bank.
+   Seems like this would be a good test {apgt04, ozgf} {fir20, p2z2}
+   Keeping the APGT fittable very slightly helps, but takes 8x as long.
+   No real difference between incorporating delay in the gammatone or the FIR.
+
+** Comp + Dynamics (Queued: Analysis 13)
+   | hilbert200_fir20_fit10  | 160 |  | 
+   Interesting that this exactly matches hilbert200_dlogb
+
+** Comp + Frq (Queued: Analysis 18)
+   | apgt04x200_wc01_fit10  | 256 |
+   | apgt04x200_dexp_fit10  | 272 |
+
+** Comp + Freq + Dynamics (Queued: 13)
+   | gt36ch200_logfree_wc01_fir20_fit10 |     397 | Reference |
+   |------------------------------------+---------+-----------|
+   | apgt04x200_dexp_fir20_fit10        | 332ish? |           |
+
+** Comp + Freq + Dynamics + NL (Queued: 13)
+   | gt36ch200_logfree_wc01_fir20_siglog100_fit10 | 430 | Reference |
+   |----------------------------------------------+-----+-----------|
+   | apgt04x200_dexp_fir20_siglog100_fit10        | ??? |           |
+
+** Comp + Freq + Dynamics + Depression (Queued: 13)
+   | gt36ch200_logfree_wc01_dep1pc_fir20_siglog100_fit10 |   450 | Reference |
+   |-----------------------------------------------------+-------+-----------|
+   | apgt04x200a_dexp_dep1pc_fir20_fit10                 | ??    |           |
+   Other stateful models like depression should be considered here. 
+
+** Multichannel experiments
+   To do after the above is stabilized:
+   1. Multichannel APGT improvement
+   2. Multichannel compressor improvement
+   3. Multichannel FIR improvement
+   4. Multichannel NL improvement
+   5. Quadratic terms/interaction at before compressor, FIR, depression, or NL
+   6. Number of channels needed for each brain area.
+
+   | agpt04x02ch200free_pclognbz_dep1pc_fir20_pcsiglog_fit10 |
+
+** Current Best Model
+   | Model                                                         | R_ceil |
+   |---------------------------------------------------------------+--------|
+   | gt36ch200_logfree_wc01a_voltq_wc01a_dep1pc_p2z2_sigrich_fit10 |    429 |
