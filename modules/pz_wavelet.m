@@ -15,6 +15,7 @@ m.isready_pred = @isready_always;
 m.poles       = [];
 m.zeros       = []; % In kHz
 m.N_order     = 4;  % aka, number of pairs of poles
+m.M_order     = 1;  % aka, number of stacked zeros
 m.center_freq_khz = 2;
 m.Q_factor    = 3; % Actually the offset from 1/sqrt(2)
 m.delayms     = 5; % Input delays in ms
@@ -60,8 +61,8 @@ function [sys, t_align] = makesys(mdl)
     w_n = w_c / sqrt(1-(1/(2*Q^2))); % Natural frequency in rad/sec
 
     % Create a set of 2nd order poles that will be repeated N times
-    b   = w_n * cos(theta/2 + pi/4);
-    w_r = w_n * sin(theta/2 + pi/4);
+    b   = w_c * cos(theta/2 + pi/4);
+    w_r = w_c * sin(theta/2 + pi/4); % Using w_c instead of w_n...why?        
     poles = [-b + 1i*w_r; -b - 1i*w_r];
     
     % Replicate the number of poles depending on the order of the filter
@@ -72,9 +73,12 @@ function [sys, t_align] = makesys(mdl)
         sys = zpk([], poles, 1);
         sys = zpk([], poles, 1/dcgain(sys));
     else
-        z = mdl.zeros * 1000;
+        z = repmat(mdl.zeros * 1000, mdl.M_order, 1);
         sys = zpk(z, poles, 1);
-        sys = zpk(z, poles, (1/cos(theta))/real(evalfr(sys, w_c*1j))); 
+        % Gain is 0 at DC for OZGF, so we just try to keep it "near" the
+        % same levels by normalizing by the ringing frequency w_r. Why does
+        % this get slightly erronious for very low Q factors?
+        sys = zpk(z, poles, (1/cos(theta)^N) / abs(evalfr(sys, w_r*1j)));         
     end
 
     % Correct for the time delay introduced by the wavelet
@@ -123,9 +127,9 @@ function x = do_pz_wavelet(mdl, x, stack, xxx)
                         
             % Shift everything by t_align bins
             if isfield(mdl, 'time_align') && mdl.time_align
-                idx = find(t < mdl.time_align, 1, 'last');
-                tmp(:) = [tmp(idx:end) tmp(end)*ones(1, idx-1)];
-            end                        
+                idx = find(t < t_align, 1, 'last');
+                tmp(:,s) = [tmp(idx:end,s)' tmp(end)*ones(1, idx-1)];
+            end
          end
           
          % Apply the post-filter function
