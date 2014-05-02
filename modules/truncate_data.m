@@ -46,9 +46,12 @@ function x = do_truncate_data(mdl, x, stack, xxx)
          for f=1:length(fields),
              tmp=x.dat.(sf).(fields{f});
              [T, S, C] = size(tmp);
-             savetimebins=round(T.*save_fraction);
+             %savetimebins=round(T.*save_fraction);
+             if S>1,
+                savestimcount=round(S.*save_fraction);
              
-             x.dat.(sf).(fields{f})=tmp(1:savetimebins,:,:);
+                x.dat.(sf).(fields{f})=tmp(:,1:savestimcount,:);
+             end
          end
     end
 end

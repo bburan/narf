@@ -19,12 +19,11 @@ dbopen;
 if ~exist('hostname','var'),
    hostname=getenv('MYHOST');
    if isempty(hostname),
-      [s,hostname]=unix('hostname');
-      if ~isempty(find(hostname==' ' | hostname==char(10))),
-         [s,hostname]=unix('hostname');
-      end
-      hostname=deblank(hostname);
+      hostname=fileread('/etc/hostname');
+      hostname=strsep(hostname,char(10));
+      hostname=hostname{1};
    end
+   hostname=deblank(hostname);
    hostislocal=1;
 else
    hostislocal=0;
