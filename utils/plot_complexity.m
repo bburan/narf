@@ -8,6 +8,7 @@ end
 % Compute the means and standard error of each model
 d_nparm  = nanmean(data(:,:,1));  % Means should result in no change
 d_metric = abs(data(:,:,2));
+%d_fittime = nanmean(data(:,:,3));
 
 d_means = nanmean(d_metric);
 d_count = sum(~isnan(d_metric));
@@ -17,6 +18,28 @@ len = length(modelnames);
         
 figure('Name', 'Complexity Plot', 'NumberTitle', 'off', 'Position', [10 10 1000 1000]);
 ax = axes();
+
+       % UGLY HACK TO ADD NUMBER OF PARMS FOR INITIAL FILTERS
+for ii = 1:len
+    if regexp(modelnames{ii}, '^but', 'once')
+        d_nparm(ii) = d_nparm(ii) + 3;
+    end
+    if regexp(modelnames{ii}, '^ell', 'once')
+        d_nparm(ii) = d_nparm(ii) + 3;
+    end
+    if regexp(modelnames{ii}, '^gam', 'once')
+        d_nparm(ii) = d_nparm(ii) + 2;
+    end
+    if regexp(modelnames{ii}, '^apgt', 'once')
+        d_nparm(ii) = d_nparm(ii) + 2;
+    end        
+    if regexp(modelnames{ii}, '^ozgf', 'once')
+        d_nparm(ii) = d_nparm(ii) + 3;
+    end
+    if regexp(modelnames{ii}, '^szgf', 'once')
+        d_nparm(ii) = d_nparm(ii) + 3;
+    end
+end
 names = shorten_modelnames(modelnames);
 
 % Scatter plot with text labels
@@ -30,18 +53,17 @@ for pass = 1:2
         yc = 1 - d_means(ii);
         yt = yc + d_stderr(ii); 
         yb = yc - d_stderr(ii);
-        x = d_nparm(ii) + 0.1*jitter(ii);
+        x = d_nparm(ii) + 0.1*jitter(ii);                
+        
         if pass == 1
             line([x+0.1 x-0.1 x x x-0.1 x+0.1], [yt, yt, yt, yb, yb, yb], 'Linewidth', 2, 'Linestyle', '-', 'Color', pickcolor(ii));
         else
+            %fittime = d_fittime(ii);
+            %text(x, yc, sprintf('%s [%0.1f]', name, fittime/60));
             text(x, yc, name);    
         end
     end
 end
-
-
-
-
 
 hold off
 xlabel('Number of Parameters');

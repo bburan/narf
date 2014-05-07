@@ -66,7 +66,7 @@ function [sys, t_align] = makesys(mdl)
     poles = [-b + 1i*w_r; -b - 1i*w_r];
     
     % Replicate the number of poles depending on the order of the filter
-    poles = repmat(poles, N, 1);    
+    poles = repmat(poles, N, 1);
     
     if isempty(mdl.zeros)
         % Create the APGF to have a gain of 1 at DC

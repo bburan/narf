@@ -58,6 +58,9 @@ function ax = plot_bar_pretty(data, modelnames, show_datapoints)
                 p = randttest(a-b, zeros(size(a)), 1000, 0); % Paired T test
                 %[~,p2] = ttest(a,b); % 
                 
+                if isempty(p)
+                    continue;
+                end
                 if p < 0.001 && z < 3
                     ls = '-';
                     z = 3;

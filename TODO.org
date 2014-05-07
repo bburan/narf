@@ -1,13 +1,25 @@
+* Help SVD
+- Experiments:
+  - [X] Make the better filterbanks: apgt04fb12
+  - [ ] GT12_*_WC(1/2)_(fir/P1Z1)_SIGLOG
+  - [ ] GT(12/18/24)_*_WC(1/2)_dep1pc_(fir/P1Z1)_SIGLOG
+  - [ ] GT(12/18/24)_*_DEPAC_WC(1/2)_(fir/P1Z1)_SIGLOG
+- Jean suggests: Plot a few cells' pareto fronts (connect with lines)
+
 * PUBLISH PAPERS
-    1. A methods paper on the NARF
-       - Show it works for ENV, WAV, and Hsin-Wei or Dan's Data
-    2. Dimensonality reduction
+    1. Dimensonality reduction
        - Write about an STRF with FFT, compressor and siglog
        - Description of specifics of gammatone filters, what their overlap is, what their Q is, etc
        - Equivocation to Rank-3 STRF
+    2. Better nonlinearities and Filters
+       - Discuss gammatone filterbank vs other filterbanks
+       - Use simplifying OZGF assumption, and show that you can use Q to parameterize
+       - Then just note that adding a log(log(s)) (DLOGBZ) after the OZGF works best
     3. Relative importance of nonlinearities
        - Read Rabinowitz, ??, Schnupp's depression model
        - Proof of conclusion being valid: Superboost comparison and per-model validation give same results 
+    4. A methods paper on the NARF
+       - Show it works for ENV, WAV, and Hsin-Wei or Dan's Data
 
 * Small TODO Tasks
   - Frac of Variance added to DB
