@@ -10,8 +10,10 @@ function computerid=dbgetcompid(machinename);
 
 if ~exist('machinename','var'),
    machinename=getenv('MYHOST');
-   if length(machinename)==0,
-      [s,machinename]=unix('hostname');
+   if isempty(machinename),
+      machinename=fileread('/etc/hostname');
+      machinename=strsep(machinename,char(10));
+      machinename=machinename{1};
    end
    
    machinename=strtrim(deblank(machinename));
@@ -29,7 +31,7 @@ dbopen;
 sql=['SELECT * FROM tComputer where name="',host,'"',...
      ' AND ext like "',ext,'"'];
 compdata=mysql(sql);
-if length(compdata)==0,
+if isempty(compdata),
    warning('computer not found in celldb!');
    computerid=-1;
    return

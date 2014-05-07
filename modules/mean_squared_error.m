@@ -15,6 +15,7 @@ m.name = 'mean_squared_error';
 m.fn = @do_mean_squared_error;
 m.pretty_name = 'Mean Squared Error';
 m.editable_fields = {'input1', 'input2', 'time', 'error', 'output', ...
+                    'norm_by_se',...
                      'train_score', 'test_score', ...
                      'train_score_norm', 'test_score_norm'};
 m.isready_pred = @isready_always;
@@ -24,6 +25,7 @@ m.input1 = 'stim';
 m.input2 = 'respavg';
 m.time   = 'stim_time';
 m.error  = 'error';
+m.norm_by_se=0;
 m.train_score  = 'score_train_mse';
 m.test_score  = 'score_test_mse';
 m.train_score_norm  = 'score_train_nmse';
@@ -49,13 +51,35 @@ function x = do_mean_squared_error(mdl, x, stack, xxx)
     p = flatten_field(x.dat, x.training_set, mdl.input1);
     q = flatten_field(x.dat, x.training_set, mdl.input2); 
     train_score = nanmean((p - q).^2);
-    train_nmse = train_score / (nanvar(q)+(train_score==0)); 
     
     % Compute the mean squared error of the test set
     ptest = flatten_field(x.dat, x.test_set, mdl.input1);
     qtest = flatten_field(x.dat, x.test_set, mdl.input2); 
     test_score = nanmean((ptest - qtest).^2);
-    test_nmse = train_score / (nanvar(qtest)+(test_score==0)); 
+    
+    if ~mdl.norm_by_se,
+        train_nmse = train_score / (nanvar(q)+(train_score==0)); 
+        test_nmse = test_score / (nanvar(qtest)+(test_score==0)); 
+    else
+        % apply shrinkage filter to nmse
+        bincount=10;
+        ll=round(linspace(1,length(p)+1,bincount+1));
+        llv=round(linspace(1,length(ptest)+1,bincount+1));
+        ee=zeros(bincount,1);ve=zeros(bincount,1);
+        for bb=1:bincount,
+            ee(bb)=nanmean((p(ll(bb):(ll(bb+1)-1))-q(ll(bb):(ll(bb+1)-1))).^2);
+            if ~isempty(ptest),
+                ve(bb)=nanmean((ptest(llv(bb):(llv(bb+1)-1))-...
+                                qtest(llv(bb):(llv(bb+1)-1))).^2);
+            end
+        end
+        ee=ee./(nanvar(q)+(train_score==0));
+        ve=ve./(nanvar(qtest)+(train_score==0));
+        me=mean(ee);se=std(ee)./sqrt(bincount);
+        train_nmse=shrinkage(me,se,0.5);
+        me=mean(ve);se=std(ve)./sqrt(bincount);
+        test_nmse=shrinkage(me,se,0.5);
+    end
     
     x.(mdl.train_score) = train_score;
     x.(mdl.test_score) = test_score;   
