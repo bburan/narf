@@ -26,14 +26,14 @@ end
 % Optional fields
 m.plot_fns = {};
 
-function x = do_passthru(stack, xxx)
-    mdl = stack{end};
-    x = xxx{end};
+function x = do_passthru(mdl, x, stack, xxx)
+%     mdl = stack{end};
+%     x = xxx{end};
 
-    sfs = fieldnames(x.dat);
-    for ii = 1:length(x.dat)
-        sf = sfs{ii};
-        x.dat.(sf).(mdl.output) = x.dat.(sf).(mdl.input);
-    end
+%     sfs = fieldnames(x.dat);
+%     for ii = 1:length(x.dat)
+%         sf = sfs{ii};
+%         x.dat.(sf).(mdl.output) = x.dat.(sf).(mdl.input);
+%     end
 end
 end
