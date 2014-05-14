@@ -7,7 +7,9 @@ end
     
 % Compute the means and standard error of each model
 d_nparm  = nanmean(data(:,:,1));  % Means should result in no change
-d_metric = abs(data(:,:,2));
+D = data(:,:,2);
+D(D==0) = NaN;
+d_metric = abs(D);
 %d_fittime = nanmean(data(:,:,3));
 
 d_means = nanmean(d_metric);
@@ -15,11 +17,11 @@ d_count = sum(~isnan(d_metric));
 d_stddev = sqrt(nanvar(d_metric));
 d_stderr = d_stddev ./ sqrt(d_count);
 len = length(modelnames);
-        
+
 figure('Name', 'Complexity Plot', 'NumberTitle', 'off', 'Position', [10 10 1000 1000]);
 ax = axes();
 
-       % UGLY HACK TO ADD NUMBER OF PARMS FOR INITIAL FILTERS
+% UGLY HACK TO ADD NUMBER OF PARMS FOR INITIAL FILTERS
 for ii = 1:len
     if regexp(modelnames{ii}, '^but', 'once')
         d_nparm(ii) = d_nparm(ii) + 3;
@@ -30,13 +32,13 @@ for ii = 1:len
     if regexp(modelnames{ii}, '^gam', 'once')
         d_nparm(ii) = d_nparm(ii) + 2;
     end
-    if regexp(modelnames{ii}, '^apgt', 'once')
+    if regexp(modelnames{ii}, '^apgt\d\dx\d', 'once')
         d_nparm(ii) = d_nparm(ii) + 2;
     end        
-    if regexp(modelnames{ii}, '^ozgf', 'once')
+    if regexp(modelnames{ii}, '^ozgf\d\dx\d', 'once')
         d_nparm(ii) = d_nparm(ii) + 3;
     end
-    if regexp(modelnames{ii}, '^szgf', 'once')
+    if regexp(modelnames{ii}, '^szgf\d\dx\d', 'once')
         d_nparm(ii) = d_nparm(ii) + 3;
     end
 end

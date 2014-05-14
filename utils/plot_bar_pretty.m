@@ -1,8 +1,8 @@
 function ax = plot_bar_pretty(data, modelnames, show_datapoints)
         
         if ~exist('show_datapoints', 'var')
-            %show_datapoints = true;
-            show_datapoints = false
+            show_datapoints = true;
+            %show_datapoints = false
         end
 
         barwidth = 0.8;
