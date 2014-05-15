@@ -119,17 +119,17 @@ for jj=1:dcount,
           subsample=1;
           ui(:)=0;taui(:)=10;
       end
-      
+      taui_ss=taui.*subsample;
+      ui_ss=ui./subsample;
       for ii=2:size(stim,2),
           if 1 % subsample as much as is necessary to avoid oscillations
               td=di(:,ii-1);
               for dd=1:subsample,
-                  delta=(1-td)./(taui.*subsample) - ...
-                        (ui./subsample).*td.*tstim(:,ii-1);
+                  delta=(1-td)./taui_ss - ui_ss.*td.*tstim(:,ii-1);
                   td=td+delta;
+                  td(td<0)=0;
               end
               di(:,ii)=td;
-              di(di(:,ii)<0,ii)=0;
           else
               delta=(1-di(:,ii-1))./taui - ui.*di(:,ii-1).*tstim(:,ii-1);
               di(:,ii)=di(:,ii-1)+delta;
