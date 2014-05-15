@@ -3,6 +3,7 @@ function plotpath = plot_model_comparison(stack,xxx,meta,sel_results)
     global META XXX STACK NARF_SAVED_IMAGES_PATH;
     
     SPECIAL_FORMAT=1;
+    PLOT_STIM=0;
     
     if length(sel_results)>5,
         disp('max comparison is 5 models, truncating list');
@@ -26,12 +27,16 @@ function plotpath = plot_model_comparison(stack,xxx,meta,sel_results)
         ap{midx} = [];
         for ii = 1:length(STACK)
             m = STACK{ii}{1};
-            if isfield(m, 'auto_plot') && ~isempty(m.auto_plot),
+            if isfield(m, 'auto_plot') && ~isempty(m.auto_plot) && ...
+                    ~strcmpi(m.name,'correlation') && ...
+                    ~strcmpi(m.name,'mean_squared_error'),
                 ap{midx}(end+1) = ii;
             end
         end
-        maxplots = max(maxplots,length(ap{midx})+3);
     end
+    %length(ap{midx})
+    maxplots = length(ap{midx})+2+PLOT_STIM;
+
     
     fh=figure;
     p=get(gcf,'Position');
@@ -97,7 +102,7 @@ function plotpath = plot_model_comparison(stack,xxx,meta,sel_results)
         ax_text  = text('FontSize', 6,'Position', [0.0, 0.45], ...
                         'String', ts);
         axis off
-        subplot(maxplots,modelcount,((maxplots-2).*modelcount+midx));
+        subplot(maxplots,modelcount,((maxplots-1-PLOT_STIM).*modelcount+midx));
         fs=STACK{1}{1}.raw_resp_fs;
         if strcmpi(STACK{1}{1}.name,'load_stim_resps_wehr'),
             for setidx=1:length(XXX{end}.test_set),
@@ -161,17 +166,18 @@ function plotpath = plot_model_comparison(stack,xxx,meta,sel_results)
             end
             
             % plot stim in bottom row
-            subplot(maxplots,modelcount,((maxplots-1).*modelcount+midx));
-            ts=XXX{2}.test_set{1};
-            dat=XXX{2}.dat.(ts);
-            sstim=squeeze(dat.stim(:,1,:));
-            sstim=sstim(1:plen,:);
-            plot(tt,sstim,'LineWidth',2);
-            if (midx==1),
-                xlabel('time (sec)');
-                ylabel('stim');
+            if PLOT_STIM,
+                subplot(maxplots,modelcount,((maxplots-1).*modelcount+midx));
+                ts=XXX{2}.test_set{1};
+                dat=XXX{2}.dat.(ts);
+                sstim=squeeze(dat.stim(:,1,:));
+                sstim=sstim(1:plen,:);
+                plot(tt,sstim,'LineWidth',2);
+                if (midx==1),
+                    xlabel('time (sec)');
+                    ylabel('stim');
+                end
             end
-            
 
         end
     end

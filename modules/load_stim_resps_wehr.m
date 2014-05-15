@@ -56,117 +56,11 @@ m.plot_fns{4}.pretty_name = 'Response Raster';
 
 m.plot_gui_create_fn = @create_gui;
 
+% 
+% LOAD INFORMATION ABOUT ALL THE WEHR LAB FILES
+%
 envpath='/auto/data/daq/wehr/soundfiles/sourcefiles/';
-basepath='/auto/users/svd/data/wehr/SpNoise_Data/';
-basepathcc='/auto/data/daq/wehr/data/Current Clamp Files (SPNoise)/';
-basepathvc='/auto/data/daq/wehr/data/Voltage Clamp Files (SPNoise)/';
-
-m.file_lookup=struct();
-m.file_lookup.out121012_002_002.file=[basepathcc 'out121012-002-002.mat'];
-m.file_lookup.out121012_002_002.respfmt=0;
-m.file_lookup.out121412_007_002.file=[basepathcc 'out121412-007-002.mat'];
-m.file_lookup.out121412_007_002.respfmt=0;
-m.file_lookup.out121812_002_003.file=[basepathcc 'out121812-002-003.mat'];
-m.file_lookup.out121812_002_003.respfmt=0;
-m.file_lookup.out121812_002_005.file=[basepathcc 'out121812-002-005.mat'];
-m.file_lookup.out121812_002_005.respfmt=0;
-m.file_lookup.out121812_004_003.file=[basepathcc 'out121812-004-003.mat'];
-m.file_lookup.out121812_004_003.respfmt=0;
-m.file_lookup.out121812_004_005.file=[basepathcc 'out121812-004-005.mat'];
-m.file_lookup.out121812_004_005.respfmt=0;
-m.file_lookup.out122012_003_001.file=[basepathcc 'out122012-003-001.mat'];
-m.file_lookup.out122012_003_001.respfmt=0;
-m.file_lookup.out012213_007_002.file=[basepathcc 'out012213-007-002.mat'];
-m.file_lookup.out012213_007_002.respfmt=0;
-m.file_lookup.out031113_002_002.file=[basepathcc 'out031113-002-002.mat'];
-m.file_lookup.out031113_002_002.respfmt=0;
-m.file_lookup.out040213_003_002.file=[basepathcc 'out040213-003-002.mat'];
-m.file_lookup.out040213_003_002.respfmt=0;
-m.file_lookup.out040213_004_001.file=[basepathcc 'out040213-004-001.mat'];
-m.file_lookup.out040213_004_001.respfmt=0;
-m.file_lookup.out051113_003_004.file=[basepathcc 'out051113-003-004.mat'];
-m.file_lookup.out051113_003_004.respfmt=0;
-m.file_lookup.out051113_003_009.file=[basepathcc 'out051113-003-009.mat'];
-m.file_lookup.out051113_003_009.respfmt=0;
-m.file_lookup.out051113_004_003.file=[basepathcc 'out051113-004-003.mat'];
-m.file_lookup.out051113_004_003.respfmt=0;
-m.file_lookup.out061913_002_002.file=[basepathcc 'out061913-002-002.mat'];
-m.file_lookup.out061913_002_002.respfmt=0;
-m.file_lookup.out062113_005_001.file=[basepathcc 'out062113-005-001.mat'];
-m.file_lookup.out062113_005_001.respfmt=0;
-
-m.file_lookup.out121112_004_003_E.file=[basepathvc 'out121112-004-003.mat'];
-m.file_lookup.out121112_004_003_E.respfmt=1;
-m.file_lookup.out121112_004_003_I.file=[basepathvc 'out121112-004-003.mat'];
-m.file_lookup.out121112_004_003_I.respfmt=2;
-m.file_lookup.out121112_004_005_E.file=[basepathvc 'out121112-004-005.mat'];
-m.file_lookup.out121112_004_005_E.respfmt=1;
-m.file_lookup.out121112_004_005_I.file=[basepathvc 'out121112-004-005.mat'];
-m.file_lookup.out121112_004_005_I.respfmt=2;
-m.file_lookup.out122012_002_001_E.file=[basepathvc 'out122012-002-001.mat'];
-m.file_lookup.out122012_002_001_E.respfmt=1;
-m.file_lookup.out122012_002_001_I.file=[basepathvc 'out122012-002-001.mat'];
-m.file_lookup.out122012_002_001_I.respfmt=2;
-m.file_lookup.out122012_007_001_E.file=[basepathvc 'out122012-007-001.mat'];
-m.file_lookup.out122012_007_001_E.respfmt=1;
-m.file_lookup.out122012_007_001_I.file=[basepathvc 'out122012-007-001.mat'];
-m.file_lookup.out122012_007_001_I.respfmt=2;
-
-m.file_lookup.out022313_005_002_E.file=[basepathvc 'out022313-005-002.mat'];
-m.file_lookup.out022313_005_002_E.respfmt=1;
-m.file_lookup.out022313_005_002_I.file=[basepathvc 'out022313-005-002.mat'];
-m.file_lookup.out022313_005_002_I.respfmt=2;
-
-m.file_lookup.out022313_008_001_E.file=[basepathvc 'out022313-008-001.mat'];
-m.file_lookup.out022313_008_001_E.respfmt=1;
-m.file_lookup.out022313_008_001_I.file=[basepathvc 'out022313-008-001.mat'];
-m.file_lookup.out022313_008_001_I.respfmt=2;
-
-m.file_lookup.out052213_003_001_E.file=[basepathvc 'out052213-003-001.mat'];
-m.file_lookup.out052213_003_001_E.respfmt=1;
-m.file_lookup.out052213_003_001_I.file=[basepathvc 'out052213-003-001.mat'];
-m.file_lookup.out052213_003_001_I.respfmt=2;
-
-m.file_lookup.out052213_004_001_E.file=[basepathvc 'out052213-004-001.mat'];
-m.file_lookup.out052213_004_001_E.respfmt=1;
-m.file_lookup.out052213_004_001_I.file=[basepathvc 'out052213-004-001.mat'];
-m.file_lookup.out052213_004_001_I.respfmt=2;
-
-m.file_lookup.out071113_003_002_E.file=[basepathvc 'out071113-003-002.mat'];
-m.file_lookup.out071113_003_002_E.respfmt=1;
-m.file_lookup.out071113_003_002_I.file=[basepathvc 'out071113-003-002.mat'];
-m.file_lookup.out071113_003_002_I.respfmt=2;
-
-m.file_lookup.out071113_004_001_E.file=[basepathvc 'out071113-004-001.mat'];
-m.file_lookup.out071113_004_001_E.respfmt=1;
-m.file_lookup.out071113_004_001_I.file=[basepathvc 'out071113-004-001.mat'];
-m.file_lookup.out071113_004_001_I.respfmt=2;
-
-m.file_lookup.out082613_002_002_E.file=[basepathvc 'out082613-002-002.mat'];
-m.file_lookup.out082613_002_002_E.respfmt=1;
-m.file_lookup.out082613_002_002_I.file=[basepathvc 'out082613-002-002.mat'];
-m.file_lookup.out082613_002_002_I.respfmt=2;
-
-m.file_lookup.out082613_003_001_E.file=[basepathvc 'out082613-003-001.mat'];
-m.file_lookup.out082613_003_001_E.respfmt=1;
-m.file_lookup.out082613_003_001_I.file=[basepathvc 'out082613-003-001.mat'];
-m.file_lookup.out082613_003_001_I.respfmt=2;
-
-m.file_lookup.out082713_005_002_E.file=[basepathvc 'out082713-005-002.mat'];
-m.file_lookup.out082713_005_002_E.respfmt=1;
-m.file_lookup.out082713_005_002_I.file=[basepathvc 'out082713-005-002.mat'];
-m.file_lookup.out082713_005_002_I.respfmt=2;
-
-m.file_lookup.out082813_002_003_E.file=[basepathvc 'out082813-002-003.mat'];
-m.file_lookup.out082813_002_003_E.respfmt=1;
-m.file_lookup.out082813_002_003_I.file=[basepathvc 'out082813-002-003.mat'];
-m.file_lookup.out082813_002_003_I.respfmt=2;
-
-m.file_lookup.out121812_003_002_E.file=[basepathvc 'out121812-003-002.mat'];
-m.file_lookup.out121812_003_002_E.respfmt=1;
-m.file_lookup.out121812_003_002_I.file=[basepathvc 'out121812-003-002.mat'];
-m.file_lookup.out121812_003_002_I.respfmt=2;
-
+[~,m.file_lookup]=wehr_db;
 
 % ------------------------------------------------------------------------
 % Define the 'methods' of this module, as if it were a class
@@ -377,7 +271,6 @@ function x = do_load_wehr(mdl, x, stack, xxx)
             esequence=e.sequence;
             save(cachefilename,'r','s','onsettimes','secPerSegment',...
                  'esequence');
-            
         end
         
         if ~mdl.include_prestim,
@@ -385,7 +278,7 @@ function x = do_load_wehr(mdl, x, stack, xxx)
             % (ie, get rid of onset transients!)
             r(1:(onsettimes(1)+1*SR),:)=nan;
         end
-
+        
         resp=r;
         stim=s;
         % TODO: Right now the envelope is not necessarily

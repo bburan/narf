@@ -26,7 +26,9 @@ modelcount=length(modelnames);
 
 keepcell=zeros(cellcount,1);
 for cc=1:cellcount,
-    if ~isempty(x0s{2,cc}),
+   if size(x0s,1)>1 && ~isempty(x0s{2,cc}),
+        keepcell(cc)=1;
+   elseif ~isempty(x0s{1,cc}),
         keepcell(cc)=1;
     end
 end

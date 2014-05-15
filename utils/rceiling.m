@@ -45,26 +45,43 @@ N=min(N,size(pairs,1));
 [~,sidx]=sort(rand(size(pairs,1),1));
 pairs=pairs(sidx(1:N),:);
 
-rac=zeros(N,1);
-for nn=1:N,
-    if std(resp(:,pairs(nn,1)))>0 && std(resp(:,pairs(nn,2)))>0,
-        rac(nn)=xcov(resp(:,pairs(nn,1)),resp(:,pairs(nn,2)),0,'coeff');
+if N==1,
+    % only two repeats, break up data in time to get a better
+    % estimate of single-trial correlations
+    N=10;
+    bstep=size(pred,1)./N;
+    rac=zeros(N,1);
+    for nn=1:N,
+        tt=round((nn-1).*bstep+1):round(nn*bstep);
+        if ~isempty(tt) && std(resp(tt,1))>0 && std(resp(tt,2))>0,
+            rac(nn)=xcov(resp(tt,1),resp(tt,2),0,'coeff');
+        end
+    end
+    
+else
+    rac=zeros(N,1);
+    for nn=1:N,
+        tt=find(~isnan(resp(:,pairs(nn,1))) & ~isnan(resp(:,pairs(nn,2))));
+        if ~isempty(tt) && std(resp(tt,pairs(nn,1)))>0 && std(resp(tt,pairs(nn,2)))>0,
+            rac(nn)=xcov(resp(tt,pairs(nn,1)),resp(tt,pairs(nn,2)),0,'coeff');
+        end
     end
 end
 
 rsingle=zeros(repcount,1);
 for nn=1:repcount,
-    if std(resp(:,nn))>0
-        rsingle(nn)=xcov(pred,resp(:,nn),0,'coeff');
+   tt=find(~isnan(resp(:,nn)));
+   if ~isempty(tt) && std(resp(tt,nn))>0
+       rsingle(nn)=xcov(pred,resp(tt,nn),0,'coeff');
     end
 end
 
 %figure;subplot(2,1,1);hist(rac);
 %subplot(2,1,2);hist(rsingle);
 
-rac=mean(abs(rac));
-if rac<0.01,
-    rac=0.01;
+rac=mean(rac);
+if rac<0.05,
+    rac=0.05;
 end
 rsingle=mean(rsingle);
 

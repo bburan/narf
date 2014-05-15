@@ -60,7 +60,7 @@ m.plot_fns{2}.pretty_name = 'Error Histogram';
 
     function x = do_mean_squared_error(mdl, x, stack, xxx)
         
-        mods = find_modules(STACK, 'passthru', true);
+        mods = find_modules(stack, 'passthru', true);
         if ~isempty(mods),
             if isfield(mods{1},'crossvalidation_fold'),
                 mdl.crossvalidation_fold = mods{1}.crossvalidation_fold;

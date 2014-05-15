@@ -70,24 +70,29 @@ function do_plot_wc_weights_as_heatmap(sel, stack, xxx)
     
     % Plot all parameter sets' coefficients. Separate them by white pixels.
     xpos = 1;
-    hold on;
+    wmat=[];
     for ii = 1:length(mdls)
-        weights = mdls{ii}.weights';
-        [w, h] = size(weights');
-        imagesc([xpos xpos+w-1], [1, h], weights, [-c_max-eps c_max+eps]);
-        text(xpos, 1, sprintf('Sparsity: %f\nSmoothness: %f', ...
-             sparsity_metric(weights), ...
-             smoothness_metric(weights)));
-        xpos = xpos + 1 + size(mdls{ii}.weights, 2);
+        wts=mdls{ii}.weights';
+        ws=sqrt(mean(wts.^2,2));
+        ws(ws<eps)=1;
+        wts=wts./repmat(ws,[1 size(wts,2)]);
+        [w, h] = size(wts');
+        wmat=cat(2,wmat,wts);
+    end
+    imagesc(wmat);
+    hold on;
+    for ii=1:(length(mdls)-1);
+        plot([1 1].*w.*ii+0.5,[0.5 h+0.5],'w-','LineWidth',2);
     end
     hold off;
     set(gca,'YDir','normal');
+    
     ca = caxis;
     lim = max(abs(ca));
     caxis([-lim, +lim]);
     axis tight;    
-    do_xlabel('Coef Time Index');
-    do_ylabel('Coef Channel Index');
+    do_xlabel('Coef Channel Index');
+    do_ylabel('Channel Index');
 end
 
 

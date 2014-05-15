@@ -155,20 +155,55 @@ function do_plot_fir_coefs_as_heatmap(sel, stack, xxx)
         c_max = max(c_max, max(abs(mdls{ii}.coefs(:))));
     end
     
-    % Plot all parameter sets' coefficients. Separate them by white pixels.
-    xpos = 1;
+    %  Plot all parameter sets' coefficients. Separate them by white pixels.
+    wmat=[];
+    
+    weight_mdl=find_modules(stack,'weight_channels');
+    if ~isempty(weight_mdl),
+        weight_mdl=weight_mdl{end};
+        
+        for ii = 1:length(mdls)
+            wts=weight_mdl{ii}.weights;
+            sw=std(wts,0,1);
+            sw(sw<eps)=1;
+            wts=wts./repmat(sw,[size(wts,1) 1]);
+            wcoefs = mdls{ii}.coefs;
+            if size(wts,2)==size(wcoefs),
+                coefs = wts*wcoefs;
+                wcoefs=wcoefs./max(abs(wcoefs(:))).*max(abs(coefs(:)));
+            else
+                coefs=[];
+            end
+            [wc, hc] = size(coefs');
+            [w, h] = size([coefs;wcoefs]');
+            wmat=cat(2,wmat,[coefs;wcoefs]);
+        end
+    else
+        for ii = 1:length(mdls)
+            coefs = mdls{ii}.coefs;
+            [wc, hc] = size(coefs');
+            [w, h] = size(coefs');
+            wmat=cat(2,wmat,coefs);
+        end
+    end
+    imagesc(wmat);
+    
     hold on;
-    for ii = 1:length(mdls)
+    for ii=1:length(mdls);
+        if ii<length(mdls),
+            plot([1 1].*w.*ii+0.5,[0.5 h+0.5],'w-','LineWidth',2);
+        end
+        if hc<h,
+            plot([0.5 size(wmat,2)+0.5],[hc+0.5 hc+0.5],'w-','LineWidth',2);
+        end
         coefs = mdls{ii}.coefs;
-        [w, h] = size(coefs');
-        imagesc([xpos xpos+w-1], [1, h], coefs, [-c_max-eps c_max+eps]);
-        text(xpos, 1, sprintf('Sparsity: %f\nSmoothness: %f', ...
-             sparsity_metric(coefs), ...
-             smoothness_metric(coefs)));
-        xpos = xpos + 1 + size(mdls{ii}.coefs, 2);
+        text(w.*ii, 1, sprintf('Sp: %f\nSm: %f', ...
+             sparsity_metric(coefs),smoothness_metric(coefs)),...
+             'VerticalAlign','bottom','HorizontalAlign','right');
     end
     hold off;
     set(gca,'YDir','normal');
+
     ca = caxis;
     lim = max(abs(ca));
     caxis([-lim, +lim]);
