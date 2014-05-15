@@ -7,7 +7,7 @@ m.mdl = @depression_filter_bank;
 m.name = 'depression_filter_bank';
 m.fn = @do_depression_filter;
 m.pretty_name = 'Depression Filter Bank';
-m.editable_fields = {'num_channels', 'strength', 'tau',...
+m.editable_fields = {'num_channels', 'strength', 'tau', 'strength2', 'tau2',...
                     'per_channel', 'crosstalk', 'input', 'time', 'output' };
 m.isready_pred = @isready_always;
 
@@ -15,9 +15,11 @@ m.isready_pred = @isready_always;
 m.num_channels = 2;
 m.per_channel = 0;
 m.strength = [0 0.2];  % as fraction of stimulus max magnitude
-m.crosstalk = 0;
+m.strength2 = [0 0];  % as fraction of stimulus max magnitude
 m.tau = [0 100];  % in ms
+m.tau2 = [0 0];  % in ms
 m.tau_norm = 1000;  % 1000 means ms, 10 means 10ths of sec, 1 means sec
+m.crosstalk = 0;
 m.raw_stim_freq = 100000;
 m.input = 'stim';
 m.time = 'stim_time';
@@ -119,8 +121,8 @@ function x = do_depression_filter(mdl, x, stack, xxx)
                     for jj=1:N,
                         tresp=depression_bank(...
                             stim_in(jj,:),...
-                            (1./stimmax(jj))*mdl.strength(jj)./100,...
-                            mdl.tau(jj).*load_mod.raw_stim_fs/mdl.tau_norm,1);
+                            (1./stimmax(jj))*mdl.strength((jj-1)*num_channels+(1:num_channels))./100,...
+                            mdl.tau((jj-1)*num_channels+(1:num_channels)).*load_mod.raw_stim_fs/mdl.tau_norm,1);
                         depresp=cat(1,depresp,tresp);
                     end
                 end
@@ -206,37 +208,6 @@ function do_depression_cartoon(sel, stack, xxx)
         end
     end
 end
- 
-% function do_plot_filtered_stim(stack, xxx)
-%     mdl = stack{end};
-%     x = xxx{end};
-% 
-%     % Find the GUI controls
-%     [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
-%     chan_idx = get(load_mod.plot_gui.selected_stim_chan_popup, 'Value');
-%     dat = x.dat.(sf);
-%     stepsize=load_mod.stimulus_channel_count;
-%     plot(dat.(mdl.time), ...
-%          squeeze(dat.(mdl.output)(:,stim_idx,chan_idx:stepsize:end)));
-%     
-%     axis tight;
-% end
-% 
-% % Plot heatmap of the filter responses
-% function do_plot_filtered_stim_heatmap(stack, xxx)
-%     mdl = stack{end};
-%     x = xxx{end};
-%     
-%    % Find the GUI controls   
-%     [sf, stim_idx, ~] = get_baphy_plot_controls(stack);
-%     dat = x.dat.(sf);
-%     chancount=size(dat.(mdl.output),4);
-%     imagesc(dat.(mdl.time),1:chancount, ...
-%          squeeze(dat.(mdl.output)(:,stim_idx,:))');
-%     
-%     axis tight;
-%     axis xy
-% end
 
 end
 
