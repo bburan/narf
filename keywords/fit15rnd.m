@@ -85,24 +85,37 @@ StepGrowth=1.1;
         end
     end
 
+    function [term_cond, term_score,  n_iters, options] = quick_search()
+        
+        % [term_cond, term_score,  n_iters, options] = ...
+        %     fit_boo('StopAtAbsScoreDelta', 10^-2.0, ...
+        %     'StepSize', 10, ...
+        %     'StepGrowth', 1.1, ...
+        %     'StepShrink', 0.5);
+        
+        %         [term_cond, term_score,  n_iters, options] = ...
+        %             fit_boo('StepSize', 10, ...
+        %             'StepGrowth', 1.1, ...
+        %             'StepShrink', 0.5, ...
+        %             'StopAtAbsScoreSize', 10^-1.0);
+        
+        [term_cond, term_score,  n_iters, options] = ...
+            fit_boo('StepSize', 1, ...
+            'StepGrowth', 1.1, ...
+            'StepShrink', 0.5, ...
+            'StopAtStepNumber', 50);
+    end
+
 
 % initialization: a first rough search
-% [term_cond, term_score,  n_iters, options] = ...
-%     fit_boo('StopAtAbsScoreDelta', 10^-2.0, ...
-%     'StepSize', 10, ...
-%     'StepGrowth', 1.1, ...
-%     'StepShrink', 0.5);
-[term_cond, term_score,  n_iters, options] = ...
-    fit_boo('StepSize', 10, ...
-    'StepGrowth', 1.1, ...
-    'StepShrink', 0.5, ...
-    'StopAtAbsScoreSize', 10^-1.0);
+initial_stack = STACK;
 
-
+[term_cond, term_score,  n_iters, options] = quick_search();
 
 for i=1:10,
-    % Store the previous state of the STACK
+    % Store the previous state of the STACK and revert to default
     cached_stack = STACK;
+    STACK = initial_stack;
     
     % Randomize variables in the fit fields
     for kk = 1:length(STACK)
@@ -111,19 +124,31 @@ for i=1:10,
         else
             for ll = 1:length(STACK{kk}{:})
                 if (strcmp(STACK{kk}{ll}.name, 'lindeberg_filter')),
-                    for cc=STACK{kk}{ll}.fit_fields
-                        STACK{kk}{ll}.(char(cc)) = ...
-                            rand(length(STACK{kk}{ll}.(char(cc))),1)*30.0-10.0;
-                    end
+                    mdl = STACK{kk}{ll};
+                    params = zeros(7,1);
+                    params(1) = (0 + (mdl.num_dims-0)).*rand(1); %xshift
+                    params(2) = (0 + (mdl.num_coefs/4-0)).*rand(1); %tshift
+                    params(3) = (0.1 + (mdl.num_dims/2-0.1)).*rand(1); %s
+                    params(4) = (0.5 + (mdl.num_coefs/3-0.5)).*rand(1); % tau
+                    params(5) = (-0.75 + 1.5).*rand(1); % v
+                    params(6) = 10.*rand(1); % norm_factor
+                    % add_factor is mdl.lincoefs(7) and is set to 0
+                    
+                    cc = 'lincoefs';
+                    STACK{kk}{ll}.(char(cc)) = params;
+                    cc = 'baseline';
+                    STACK{kk}{ll}.(char(cc)) = 0;
+                    
+                    %                     for cc=STACK{kk}{ll}.fit_fields
+                    %                         STACK{kk}{ll}.(char(cc)) = ...
+                    %                             rand(length(STACK{kk}{ll}.(char(cc))),1)*30.0-10.0;
+                    %                     end
                 end
             end
         end
     end
     
-    [a,b,c,d] = fit_boo('StepSize', 10, ...
-        'StepGrowth', 1.1, ...
-        'StepShrink', 0.5, ...
-        'StopAtAbsScoreSize', 10^-1.0);
+    [a,b,c,d] = quick_search();
     
     fprintf('======================================================================\n');
     fprintf('======================================================================\n');
