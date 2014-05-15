@@ -110,6 +110,7 @@ m.plot_fns{2}.pretty_name = 'Error Histogram';
             
             training_sets = {x.training_set{:}};
             p = flatten_field(x.dat, training_sets, mdl.input1);
+            q = flatten_field(x.dat, x.training_set, mdl.input2);
             
             train_partition = false(size(p));
             c1=1;
