@@ -103,22 +103,15 @@ m.plot_fns{2}.pretty_name = 'Error Histogram';
             end
             
         else
+            % the cross-validation setup consists in computing the (n)mse
+            % only on half of the training set.
+            % Which half? this is determined by the value of the 
+            % 'crossvalidation_fold' parameter
+            
             training_sets = {x.training_set{:}};
-            
             p = flatten_field(x.dat, training_sets, mdl.input1);
-            q = flatten_field(x.dat, training_sets, mdl.input2);
             
-            %             train_partition = ones(size(p)) & (mdl.crossvalidation_fold==1);
-            %             c1=1;
-            %             for i=1:length(training_sets),
-            %                 duration = size(x.dat.(training_sets{i}).(mdl.input1),1);
-            %                 repetition = size(x.dat.(training_sets{i}).(mdl.input1),2);
-            %                 train_partition( c1:(c1+duration*ceil(repetition/2)) ) =...
-            %                     (mdl.crossvalidation_fold==1);
-            %                 c1 = c1+duration*repetition;
-            %             end
-            
-            train_partition = logical(zeros(size(p)));
+            train_partition = false(size(p));
             c1=1;
             for i=1:length(training_sets),
                 duration = size(x.dat.(training_sets{i}).(mdl.input1),1);
