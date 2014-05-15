@@ -62,6 +62,50 @@ end
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
+%     function h = noncausal(x, t, s, tau, v, order_x, order_t)
+%         if (~exist('s','var'))
+%             s = 1;
+%         end
+%         if (~exist('tau','var'))
+%             tau = 2;
+%         end
+%         if (~exist('v','var'))
+%             v = 0;
+%         end
+%         if (~exist('order_x','var'))
+%             order_x = 0;
+%         end
+%         if (~exist('order_t','var'))
+%             order_t = 0;
+%         end
+%
+%         if (t<0)
+%             h = 0;
+%         else
+%             if (order_x==0)
+%                 term1 = exp(-((x-v*t)^2)/2/s)/(2*pi*s);
+%             elseif (order_x==1)
+%                 term1 = (t*v-x)*exp(-((x-v*t)^2)/2/s)/(2*pi * s^2);
+%             elseif (order_x==2)
+%                 term1 = ((t*v-x)^2-s)*exp(-((x-v*t)^2)/2/s)/(2*pi * s^3);
+%             elseif (order_x==3)
+%                 term1 = (t*v-x)*((x-t*v)^2-3*s)*exp(-((x-v*t)^2)/2/s)/(2*pi * s^4);
+%             end
+%
+%             if (order_t==0)
+%                 term2 = tau*exp(-(tau^2)/2/t) / (sqrt(2*pi) * t^(3/2));
+%             elseif (order_t==1)
+%                 term2 = (tau^3-3*t*tau)*exp(-(tau^2)/2/t) / (2*sqrt(2*pi) * t^(7/2));
+%             elseif (order_t==2)
+%                 term2 = tau*(15*t^2-10*t*tau^2+tau^4)*exp(-(tau^2)/2/t) / (4*sqrt(2*pi) * t^(11/2));
+%             elseif (order_t==3)
+%                 term2 = tau*(-105*t^3*tau+105*t^2*tau^3-21*t*tau^5+tau^7)*exp(-(tau^2)/2/t) / (8*sqrt(2*pi) * t^(15/2));
+%             end
+%
+%             h = term1*term2;
+%         end
+%     end
+
     function h = timecausal(x, t, s, tau, v, order_x, order_t)
         if (~exist('s','var'))
             s = 1;
@@ -92,21 +136,72 @@ end
                 term1 = (t*v-x)*((x-t*v)^2-3*s)*exp(-((x-v*t)^2)/2/s)/(2*pi * s^4);
             end
             
+            k=4;
             if (order_t==0)
-                term2 = tau*exp(-(tau^2)/2/t) / (sqrt(2*pi) * t^(3/2));
+                term2 = t^(k-1)*exp(-t/tau)/(tau^k*factorial(k));
             elseif (order_t==1)
-                term2 = (tau^3-3*t*tau)*exp(-(tau^2)/2/t) / (2*sqrt(2*pi) * t^(7/2));
+                term2 = tau^(-k-1)*t^(k-2)*( (k-1)*tau-t )/(factorial(k))*exp(-t/tau);
             elseif (order_t==2)
-                term2 = tau*(15*t^2-10*t*tau^2+tau^4)*exp(-(tau^2)/2/t) / (4*sqrt(2*pi) * t^(11/2));
-            elseif (order_t==3)
-                term2 = tau*(-105*t^3*tau+105*t^2*tau^3-21*t*tau^5+tau^7)*exp(-(tau^2)/2/t) / (8*sqrt(2*pi) * t^(15/2));
+                term2 = tau^(-k-2)*t^(k-3)*( (k^2-3*k+2)*tau^2-2*(k-1)*t*tau+t^2 )/(factorial(k))*exp(-t/tau);
             end
+            
             
             h = term1*term2;
         end
     end
 
+
     function h = timecausal_vectorized(x, t, s, tau, v, order_x, order_t)
+        if (~exist('s','var'))
+            s = 1;
+        end
+        if (~exist('tau','var'))
+            tau = 2;
+        end
+        if (~exist('v','var'))
+            v = 0;
+        end
+        if (~exist('order_x','var'))
+            order_x = 0;
+        end
+        if (~exist('order_t','var'))
+            order_t = 0;
+        end
+        
+        xlen = length(x);
+        x = repmat(x,length(t),1)';
+        t = repmat(t,xlen,1);
+        
+        if (order_x==0)
+            term1 = exp(-((x-v*t).^2)/2/s)/(2*pi*s);
+        elseif (order_x==1)
+            term1 = (t*v-x).*exp(-((x-v*t).^2)/2/s)/(2*pi * s^2);
+        elseif (order_x==2)
+            term1 = ((t*v-x).^2-s).*exp(-((x-v*t).^2)/2/s)/(2*pi * s^3);
+        elseif (order_x==3)
+            term1 = (t*v-x).*((x-t*v).^2-3*s).*exp(-((x-v*t).^2)/2/s)/(2*pi * s^4);
+        end
+        
+        
+        k=4;
+        if (order_t==0)
+            term2 = t.^(k-1)*exp(-t./tau)/(tau^k*factorial(k));
+            %             term2 = tau*exp(-(tau^2)./t/2) ./ (sqrt(2*pi) * t.^(3/2));
+        elseif (order_t==1)
+            term2 = tau^(-k-1)*t.^(k-2)*( (k-1)*tau-t )/(factorial(k))*exp(-t./tau);
+            %             term2 = (tau^3-3*t*tau).*exp(-(tau^2)./t/2) ./ (2*sqrt(2*pi) * t.^(7/2));
+        elseif (order_t==2)
+            term2 = tau^(-k-2)*t.^(k-3)*( (k^2-3*k+2)*tau^2-2*(k-1)*t*tau+t.^2 )/(factorial(k))*exp(-t./tau);
+            %             term2 = tau*(15*t.^2-10*t*tau^2+tau^4).*exp(-(tau^2)./t/2) ./ (4*sqrt(2*pi) * t.^(11/2));
+        end
+        
+        h = term1.*term2;
+        h(t<0) = 0;
+    end
+
+
+
+    function h = noncausal_vectorized(x, t, s, tau, v, order_x, order_t)
         if (~exist('s','var'))
             s = 1;
         end
@@ -152,6 +247,38 @@ end
     end
 
 
+
+    function mdl = constrain_lincoefs(mdl)
+        
+        %xshift
+        mdl.lincoefs(1) = min(mdl.lincoefs(1), mdl.num_dims);
+        mdl.lincoefs(1) = max(mdl.lincoefs(1), 0);
+        
+        %tshift
+        mdl.lincoefs(2) = min(mdl.lincoefs(2), mdl.num_coefs/4);
+        mdl.lincoefs(2) = max(mdl.lincoefs(2), 0);
+        
+        %s
+        mdl.lincoefs(3) = min(mdl.lincoefs(3), mdl.num_dims/2);
+        mdl.lincoefs(3) = max(mdl.lincoefs(3), 0.1);
+        
+        % tau
+        mdl.lincoefs(4) = min(mdl.lincoefs(4), mdl.num_coefs/3);
+        mdl.lincoefs(4) = max(mdl.lincoefs(4), 0.5);
+        
+        % v
+        mdl.lincoefs(5) = min(mdl.lincoefs(5), 0.75);
+        mdl.lincoefs(5) = max(mdl.lincoefs(5), -0.75);
+        
+        % norm_factor
+        mdl.lincoefs(6) = max(mdl.lincoefs(6), 0);
+        mdl.lincoefs(6) = min(mdl.lincoefs(6), 10);
+        
+        % add_factor is mdl.lincoefs(7) => should we constrain it too?
+        
+    end
+
+
     function coefs = initialize_coefs(num_dims, num_coefs, xshift, tshift, s, tau, v, order_x, order_t, norm_factor, add_factor)
         
         if (~exist('norm_factor','var'))
@@ -161,26 +288,16 @@ end
             add_factor = 0;
         end
         
-        xshift = min(xshift, num_dims); xshift = max(xshift, 0);
-        tshift = min(tshift, num_coefs/4); tshift = max(tshift, 0);
-        s = min(s,num_dims/2); s = max(s,0.1);
-        tau = min(tau,num_coefs/3); tau = max(tau,0.5);
-        v = min(v,0.75); v = max(v,-0.75);
-        norm_factor = max(norm_factor,0);
+%         xshift = min(xshift, num_dims); xshift = max(xshift, 0);
+%         tshift = min(tshift, num_coefs/4); tshift = max(tshift, 0);
+%         s = min(s,num_dims/2); s = max(s,0.1);
+%         tau = min(tau,num_coefs/3); tau = max(tau,0.5);
+%         v = min(v,0.75); v = max(v,-0.75);
+%         norm_factor = max(norm_factor,0);
         
-%         order_x = 0; order_t = 2;
-       
-% old version, not vectorized
-%         coefs = zeros(num_dims, num_coefs);
-%         for i=1:num_dims
-%             for j=1:num_coefs
-%                 coefs(i,j) = timecausal(i-xshift, j-tshift, s, tau, v, order_x, order_t);
-%             end
-%         end
+        coefs = noncausal_vectorized((1:num_dims)-xshift, (1:num_coefs)-tshift, s, tau, v, order_x, order_t);
         
-        coefs = timecausal_vectorized((1:num_dims)-xshift, (1:num_coefs)-tshift, s, tau, v, order_x, order_t);
-        
-%         coefs = coefs / max(max(coefs));
+        %         coefs = coefs / max(max(coefs));
         coefs = add_factor + coefs * norm_factor;
     end
 
@@ -199,6 +316,9 @@ end
         sf = fns{1};
         [~, ~, C] = size(x.dat.(sf).(mdl.input));
         mdl.num_dims = C;
+        
+        mdl = constrain_lincoefs(mdl);
+        
         xshift = mdl.lincoefs(1);
         tshift = mdl.lincoefs(2);
         s = mdl.lincoefs(3);
@@ -218,15 +338,7 @@ end
         for ii = 1:length(fns)
             sf=fns{ii};
             
-            % JL: (hackish) be sure that no coeff is null or negative or
-            % greater than 1
-            %             for i=1:4
-            %                 if (mdl.lincoefs(i)<=0.01)
-            %                     mdl.lincoefs(i) = 0.01;
-            %                 elseif (mdl.lincoefs(i)>1)
-            %                     mdl.lincoefs(i) = 1;
-            %                 end
-            %             end
+            mdl = constrain_lincoefs(mdl);
             
             xshift = mdl.lincoefs(1); %xshift = min(xshift,10);
             tshift = mdl.lincoefs(2); %tshift = min(tshift,10);
@@ -236,23 +348,6 @@ end
             norm_factor = mdl.lincoefs(6);
             add_factor = mdl.lincoefs(7);
             coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor, add_factor);
-            
-            %             % JL: hackish. should put that in the right place
-            %             for (i=1:mdl.num_dims)
-            %                 for (j=1:mdl.num_coefs)
-            %                     % gauss([1,1],[1,0;0,1],[1,1])
-            %                     mdl.coefs(i,j) = mdl.lincoefs(4)*gauss([mdl.lincoefs(1)*mdl.num_dims,mdl.lincoefs(2)*mdl.num_coefs],[mdl.lincoefs(3),0;0,mdl.lincoefs(3)],[i,j]);
-            %                 end
-            %             end
-            %             coefs = mdl.coefs;
-            
-            % JL: (hackish) be sure that no coeff is null or negative or
-            % greater than 1
-            %             for i=1:4
-            %                 if (mdl.lincoefs(i)<=0 || mdl.lincoefs(i)>1)
-            %                     coefs = zeros(mdl.num_dims, mdl.num_coefs);
-            %                 end
-            %             end
             
             % Have a space allocated for computing initial filter conditions
             init_data_space = ones(size(coefs, 2) * 2, 1);
@@ -300,6 +395,9 @@ end
         % Find the min and max values so colors are scaled appropriately
         c_max = 0;
         for ii = 1:length(mdls)
+            
+            mdls{ii} = constrain_lincoefs(mdls{ii});
+            
             xshift = mdls{ii}.lincoefs(1); %xshift = min(xshift,10);
             tshift = mdls{ii}.lincoefs(2); %tshift = min(tshift,10);
             s = mdls{ii}.lincoefs(3);
@@ -315,6 +413,10 @@ end
         xpos = 1;
         hold on;
         for ii = 1:length(mdls)
+            
+                    
+        mdls{ii} = constrain_lincoefs(mdls{ii});
+            
             xshift = mdls{ii}.lincoefs(1); %xshift = min(xshift,10);
             tshift = mdls{ii}.lincoefs(2); %tshift = min(tshift,10);
             s = mdls{ii}.lincoefs(3);
@@ -379,16 +481,19 @@ end
         names = {};
         n_mdls = length(mdls)
         for ii = 1:n_mdls
-            mdl = mdls{ii};
-            % JL hackish
-            xshift = mdl.lincoefs(1); %xshift = min(xshift,10);
-            tshift = mdl.lincoefs(2); %tshift = min(tshift,10);
-            s = mdl.lincoefs(3);
-            tau = mdl.lincoefs(4);
-            v = mdl.lincoefs(5);
-            norm_factor = mdl.lincoefs(6);
-            add_factor = mdl.lincoefs(7);
-            coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor, add_factor);
+%             mdl = mdls{ii};
+            
+            mdls{ii} = constrain_lincoefs(mdls{ii});
+
+            
+            xshift = mdls{ii}.lincoefs(1); %xshift = min(xshift,10);
+            tshift = mdls{ii}.lincoefs(2); %tshift = min(tshift,10);
+            s = mdls{ii}.lincoefs(3);
+            tau = mdls{ii}.lincoefs(4);
+            v = mdls{ii}.lincoefs(5);
+            norm_factor = mdls{ii}.lincoefs(6);
+            add_factor = mdls{ii}.lincoefs(7);
+            coefs = initialize_coefs(mdls{ii}.num_dims, mdls{ii}.num_coefs, xshift, tshift, s, tau, v, mdls{ii}.order_x, mdls{ii}.order_t, norm_factor, add_factor);
             
             %             for (i=1:mdl.num_dims)
             %                 for (j=1:mdl.num_coefs)
@@ -399,7 +504,7 @@ end
             %             coefs = mdl.coefs;
             [w, h] = size(coefs);
             for c = 1:w
-                handles(end+1) = stem((0.3*(ii/n_mdls))+(1:mdl.num_coefs), coefs(c, :), 'Color', pickcolor(c), 'LineStyle', pickline(ii));
+                handles(end+1) = stem((0.3*(ii/n_mdls))+(1:mdls{ii}.num_coefs), coefs(c, :), 'Color', pickcolor(c), 'LineStyle', pickline(ii));
                 names{end+1} = ['PS' num2str(ii) '/CH' num2str(c)];
             end
         end
