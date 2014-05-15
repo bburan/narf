@@ -57,7 +57,7 @@ function x = do_mean_squared_error(mdl, x, stack, xxx)
     qtest = flatten_field(x.dat, x.test_set, mdl.input2); 
     test_score = nanmean((ptest - qtest).^2);
     
-    if ~mdl.norm_by_se,
+    if ~isfield(mdl,'norm_by_se') || ~mdl.norm_by_se,
         train_nmse = train_score / (nanvar(q)+(train_score==0)); 
         test_nmse = test_score / (nanvar(qtest)+(test_score==0)); 
     else

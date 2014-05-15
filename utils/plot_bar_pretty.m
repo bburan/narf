@@ -10,6 +10,7 @@ function ax = plot_bar_pretty(data, modelnames, show_datapoints)
         % Sort data by mean to make significance algorithm work
         data = abs(data); 
         Dunsortedmean = nanmean(data);        
+        Dunsortedmedian = nanmedian(data);        
         Dunsortedcount = sum(~isnan(data));
         D = [nanmean(data)' data'];
         [sD, idxs] = sortrows(D, -1);
@@ -42,7 +43,10 @@ function ax = plot_bar_pretty(data, modelnames, show_datapoints)
         end
         thelabels = {};
         for ii = 1:len
-            thelabels{ii} = [ '(' num2str(Dunsortedcount(ii)) ')[' sprintf('%5.3f', Dunsortedmean(ii)) ']' modelnames{ii} ];  
+            mn=sprintf('%5.3f',Dunsortedmean(ii));
+            md=sprintf('%5.3f',Dunsortedmedian(ii));
+            thelabels{ii} = [ '(' num2str(Dunsortedcount(ii)) ')[' ...
+                              mn(2:end) '/' md(2:end) ']' modelnames{ii} ];  
         end
         set(gca,'XTickLabel', thelabels(idxs));
         set(gca,'CameraUpVector',[-1,0,0]);
@@ -54,10 +58,15 @@ function ax = plot_bar_pretty(data, modelnames, show_datapoints)
             z = 0;
             for jj = ii+1:len                
                 b = data(:, jj);
-                
-                p = randttest(a-b, zeros(size(a)), 1000, 0); % Paired T test
-                %[~,p2] = ttest(a,b); % 
-                
+                d=a-b;
+                d=d(~isnan(d));
+                if ~isempty(d),
+                    % Paired T test
+                    p = randttest(d, zeros(size(d)), 1000, 0);
+                    %[~,p2] = ttest(a,b);
+                else
+                    p=1;
+                end
                 if p < 0.001 && z < 3
                     ls = '-';
                     z = 3;
