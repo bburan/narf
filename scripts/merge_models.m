@@ -3,7 +3,7 @@ function fitset=merge_models(batch, cellids, modelnames)
 global XXX STACK META
 
 
-% this version the usual scaling of weights so the sum is equal to 1
+% this version makes the usual scaling of weights so the sum is equal to 1
     function x = format_coef(x)
         x = abs(x);
         x = x/sum(x);
@@ -75,7 +75,7 @@ for cc=1:cellcount,
             % we get the original stimulus only in the query for the first model
             exp_train = flatten_field(xxx.dat, xxx.(optimization_set), 'respavg');
             mdl_train = zeros(length(flatten_field(xxx.dat, xxx.(optimization_set), 'stim')), modelcount);
-            merge_train = zeros(length(flatten_field(xxx.dat, xxx.(optimization_set), 'stim')), 1);
+     %%%%%       merge_train = zeros(length(flatten_field(xxx.dat, xxx.(optimization_set), 'stim')), 1);
         end
         
         if (size(mdl_train(:,mm)) == size(flatten_field(xxx.dat, xxx.(optimization_set), 'stim'))),
@@ -87,42 +87,51 @@ for cc=1:cellcount,
         else
             fprintf('\n\n#######################\nBUG in model %s !!!\n#######################\n\n', META.modelname);
         end
-        
-        
     end
     
     
-    %     % STEP 2: PRELIMINARY VERSION
-    %     % we merge the model predictions based on nmse in training
-    %     test_nmse = zeros(modelcount,1);
-    %     for mm=1:modelcount,
-    %         XXX={x0s{mm,cc}};
-    %         STACK=stacks{mm,cc};
-    %         META=metas{mm,cc};
-    %         calc_xxx(1);
-    %         xxx = XXX{end};
-    %         if mm==1
-    %             % we get the original stimulus only in the query for the first model
-    %             exp_test = flatten_field(xxx.dat, xxx.test_set, 'respavg');
-    %             mdl_test = zeros(length(flatten_field(xxx.dat, xxx.test_set, 'stim')), modelcount);
-    %             merge_predic = zeros(length(flatten_field(xxx.dat, xxx.test_set, 'stim')), 1);
-    %         end
-    %         mdl_test(:,mm) = flatten_field(xxx.dat, xxx.test_set, 'stim');
-    %         test_score = nanmean((mdl_test(:,mm) - exp_test).^2);
-    %         test_nmse(mm) = test_score / (nanvar(exp_test)+(test_score==0));
-    %
-    %         merge_predic = merge_predic + train_nmse(mm) * mdl_test(:,mm) / sum(train_nmse);
-    %     end
-    %
-    %     test_score = nanmean((merge_predic - exp_test).^2);
-    %     test_nmse2 = test_score / (nanvar(exp_test)+(test_score==0));
-    
-    % STEP 2: WIP
+    % STEP 2
     % we optimize the weights so to maximize the merged nmse in training
     test_nmse = zeros(modelcount,1);
     test_cor = zeros(modelcount,1);
-    coefs = fminsearch(@(x) getfit(x, exp_train, mdl_train), repmat(1/modelcount,modelcount,1));
-    coefs = format_coef(coefs);
+    
+    % the following gets a good guess for the start and optimize from there
+%     starts = eye(modelcount);
+%     best_start = format_coef(repmat(1/modelcount,modelcount,1));
+%     best_perf = getfit(best_start, exp_train, mdl_train);
+%     for start=1:modelcount,
+%         s = format_coef(starts(start,:))
+%         perf = getfit(s, exp_train, mdl_train);
+%         if (perf < best_perf)
+%             best_start = s;
+%             best_perf = perf;
+%         end
+%     end
+%     coefs = fminsearch(@(x) getfit(x, exp_train, mdl_train), best_start);
+%     coefs = format_coef(coefs);
+    
+    % the following optimizes from different good starting guesses
+    % and keeps the overall best solution
+    starts = eye(modelcount);
+    best_coefs = fminsearch(@(x) getfit(x, exp_train, mdl_train), repmat(1/modelcount,modelcount,1));
+    best_coefs = format_coef(best_coefs);
+    best_perf = getfit(best_coefs, exp_train, mdl_train);
+    for start=1:modelcount,
+        coefs = fminsearch(@(x) getfit(x, exp_train, mdl_train), starts(start,:));
+        coefs = format_coef(coefs);
+        perf = getfit(coefs, exp_train, mdl_train);
+        if (perf < best_perf)
+            best_coefs = coefs;
+            best_perf = perf;
+        end
+    end
+    coefs = best_coefs;
+    
+    
+        % the following gets a good guess for the start and optimize from there
+%     coefs = fminsearch(@(x) getfit(x, exp_train, mdl_train), repmat(1/modelcount,modelcount,1));
+%     coefs = format_coef(coefs);
+
     for mm=1:modelcount,
         XXX={x0s{mm,cc}};
         STACK=stacks{mm,cc};
@@ -134,6 +143,7 @@ for cc=1:cellcount,
             exp_test = flatten_field(xxx.dat, xxx.(testing_set), 'respavg');
             mdl_test = zeros(length(flatten_field(xxx.dat, xxx.(testing_set), 'stim')), modelcount);
             merge_test = zeros(length(flatten_field(xxx.dat, xxx.(testing_set), 'stim')), 1);
+            merge_train = zeros(length(flatten_field(xxx.dat, xxx.(optimization_set), 'stim')), 1);
         end
         mdl_test(:,mm) = flatten_field(xxx.dat, xxx.(testing_set), 'stim');
         test_score = nanmean((mdl_test(:,mm) - exp_test).^2);
