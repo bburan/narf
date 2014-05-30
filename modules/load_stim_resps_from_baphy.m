@@ -125,9 +125,6 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
         if ~isempty(findstr('RDT',fname)) | ~isempty(findstr('SNS',fname)),
             loadbytrial=1;
             RDT=1;
-%         elseif ~isempty(findstr('FTC',fname))
-%             loadbytrial=1;
-%             FTC=1;
         else
             RDT=0;
         end
@@ -143,18 +140,13 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
             options.fsout=mdl.raw_stim_fs;
             options.chancount=mdl.stimulus_channel_count;
             % JL: added this in the debug, it may be removed later
-            options.forceregen = 1;
+            %options.forceregen = 1;
             [stim,stimparam] = loadstimbytrial(stimfile,options);
 
             if RDT,
                 disp('special stimulus processing for RDT');
                 stim=stim(:,:,:,3);
             end
-%             if FTC,
-% %                 % JL 2014-05-05 - handling FTC trials
-%                 disp('special stimulus processing for FTC');
-% %                 stim = stim(:,cell2mat(exptparams.TrialObject.ReferenceIndices),:);
-%             end
         else
             [stim,stimparam] = loadstimfrombaphy(stimfile, [], [], ...
                   mdl.stimulus_format, mdl.raw_stim_fs, ...
