@@ -16,7 +16,8 @@ m.fn = @do_crossvalidated_mean_squared_error;
 m.pretty_name = 'Cross-validated Mean Squared Error';
 m.editable_fields = {'input1', 'input2', 'time', 'error', 'output', ...
     'train_score', 'test_score', ...
-    'train_score_norm', 'test_score_norm'};
+    'train_score_norm', 'test_score_norm', ...
+    crossvalidation_fold};
 
 m.isready_pred = @isready_always;
 
@@ -33,6 +34,7 @@ m.output = 'score_train_mse';
 m.is_perf_metric = true;
 
 m.crossvalidation_fold = 1;
+% 1 or 2, depending on which partition should be used as the test data
 
 % Overwrite the default module fields with arguments
 if nargin > 0

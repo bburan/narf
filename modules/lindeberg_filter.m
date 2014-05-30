@@ -20,6 +20,7 @@ m.isready_pred = @isready_always;
 % Module fields that are specific to THIS MODULE
 m.order_x = 0;
 m.order_t = 0;
+m.type = 0; % switch between non-causal (type==0) and causal (type==1) kernels
 m.num_coefs = 20;
 m.num_dims = 2;
 m.baseline = 0;
@@ -106,49 +107,49 @@ end
 %         end
 %     end
 
-    function h = timecausal(x, t, s, tau, v, order_x, order_t)
-        if (~exist('s','var'))
-            s = 1;
-        end
-        if (~exist('tau','var'))
-            tau = 2;
-        end
-        if (~exist('v','var'))
-            v = 0;
-        end
-        if (~exist('order_x','var'))
-            order_x = 0;
-        end
-        if (~exist('order_t','var'))
-            order_t = 0;
-        end
-        
-        if (t<0)
-            h = 0;
-        else
-            if (order_x==0)
-                term1 = exp(-((x-v*t)^2)/2/s)/(2*pi*s);
-            elseif (order_x==1)
-                term1 = (t*v-x)*exp(-((x-v*t)^2)/2/s)/(2*pi * s^2);
-            elseif (order_x==2)
-                term1 = ((t*v-x)^2-s)*exp(-((x-v*t)^2)/2/s)/(2*pi * s^3);
-            elseif (order_x==3)
-                term1 = (t*v-x)*((x-t*v)^2-3*s)*exp(-((x-v*t)^2)/2/s)/(2*pi * s^4);
-            end
-            
-            k=4;
-            if (order_t==0)
-                term2 = t^(k-1)*exp(-t/tau)/(tau^k*factorial(k));
-            elseif (order_t==1)
-                term2 = tau^(-k-1)*t^(k-2)*( (k-1)*tau-t )/(factorial(k))*exp(-t/tau);
-            elseif (order_t==2)
-                term2 = tau^(-k-2)*t^(k-3)*( (k^2-3*k+2)*tau^2-2*(k-1)*t*tau+t^2 )/(factorial(k))*exp(-t/tau);
-            end
-            
-            
-            h = term1*term2;
-        end
-    end
+%     function h = timecausal(x, t, s, tau, v, order_x, order_t)
+%         if (~exist('s','var'))
+%             s = 1;
+%         end
+%         if (~exist('tau','var'))
+%             tau = 2;
+%         end
+%         if (~exist('v','var'))
+%             v = 0;
+%         end
+%         if (~exist('order_x','var'))
+%             order_x = 0;
+%         end
+%         if (~exist('order_t','var'))
+%             order_t = 0;
+%         end
+%
+%         if (t<0)
+%             h = 0;
+%         else
+%             if (order_x==0)
+%                 term1 = exp(-((x-v*t)^2)/2/s)/(2*pi*s);
+%             elseif (order_x==1)
+%                 term1 = (t*v-x)*exp(-((x-v*t)^2)/2/s)/(2*pi * s^2);
+%             elseif (order_x==2)
+%                 term1 = ((t*v-x)^2-s)*exp(-((x-v*t)^2)/2/s)/(2*pi * s^3);
+%             elseif (order_x==3)
+%                 term1 = (t*v-x)*((x-t*v)^2-3*s)*exp(-((x-v*t)^2)/2/s)/(2*pi * s^4);
+%             end
+%
+%             k=4;
+%             if (order_t==0)
+%                 term2 = t^(k-1)*exp(-t/tau)/(tau^k*factorial(k));
+%             elseif (order_t==1)
+%                 term2 = tau^(-k-1)*t^(k-2)*( (k-1)*tau-t )/(factorial(k))*exp(-t/tau);
+%             elseif (order_t==2)
+%                 term2 = tau^(-k-2)*t^(k-3)*( (k^2-3*k+2)*tau^2-2*(k-1)*t*tau+t^2 )/(factorial(k))*exp(-t/tau);
+%             end
+%
+%
+%             h = term1*term2;
+%         end
+%     end
 
 
     function h = timecausal_vectorized(x, t, s, tau, v, order_x, order_t)
@@ -185,13 +186,13 @@ end
         
         k=4;
         if (order_t==0)
-            term2 = t.^(k-1)*exp(-t./tau)/(tau^k*factorial(k));
+            term2 = t.^(k-1).*exp(-t/tau)/(tau^k*factorial(k));
             %             term2 = tau*exp(-(tau^2)./t/2) ./ (sqrt(2*pi) * t.^(3/2));
         elseif (order_t==1)
-            term2 = tau^(-k-1)*t.^(k-2)*( (k-1)*tau-t )/(factorial(k))*exp(-t./tau);
+            term2 = tau^(-k-1)*t.^(k-2).*( (k-1)*tau-t )/(factorial(k)).*exp(-t/tau);
             %             term2 = (tau^3-3*t*tau).*exp(-(tau^2)./t/2) ./ (2*sqrt(2*pi) * t.^(7/2));
         elseif (order_t==2)
-            term2 = tau^(-k-2)*t.^(k-3)*( (k^2-3*k+2)*tau^2-2*(k-1)*t*tau+t.^2 )/(factorial(k))*exp(-t./tau);
+            term2 = tau^(-k-2)*t.^(k-3).*( (k^2-3*k+2)*tau^2-2*(k-1)*t*tau+t.^2 )/(factorial(k)).*exp(-t/tau);
             %             term2 = tau*(15*t.^2-10*t*tau^2+tau^4).*exp(-(tau^2)./t/2) ./ (4*sqrt(2*pi) * t.^(11/2));
         end
         
@@ -258,28 +259,41 @@ end
         mdl.lincoefs(2) = min(mdl.lincoefs(2), mdl.num_coefs/4);
         mdl.lincoefs(2) = max(mdl.lincoefs(2), 0);
         
+        % Here are some MINIMAL constraints
         %s
-        mdl.lincoefs(3) = min(mdl.lincoefs(3), mdl.num_dims/2);
-        mdl.lincoefs(3) = max(mdl.lincoefs(3), 0.1);
+        mdl.lincoefs(3) = max(mdl.lincoefs(3), 0.01);
         
         % tau
-        mdl.lincoefs(4) = min(mdl.lincoefs(4), mdl.num_coefs/3);
-        mdl.lincoefs(4) = max(mdl.lincoefs(4), 0.5);
+        mdl.lincoefs(4) = max(mdl.lincoefs(4), 0.1);
         
         % v
-        mdl.lincoefs(5) = min(mdl.lincoefs(5), 0.75);
-        mdl.lincoefs(5) = max(mdl.lincoefs(5), -0.75);
+        mdl.lincoefs(5) = min(mdl.lincoefs(5), 10);
+        mdl.lincoefs(5) = max(mdl.lincoefs(5), -10);
         
-        % norm_factor
-        mdl.lincoefs(6) = max(mdl.lincoefs(6), 0);
-        mdl.lincoefs(6) = min(mdl.lincoefs(6), 10);
+        % Here are some reasonable constraints... they are maybe too
+        % restrictive
+%         %s
+%         mdl.lincoefs(3) = min(mdl.lincoefs(3), mdl.num_dims/2);
+%         mdl.lincoefs(3) = max(mdl.lincoefs(3), 0.01);
+%         
+%         % tau
+%         mdl.lincoefs(4) = min(mdl.lincoefs(4), mdl.num_coefs/3);
+%         mdl.lincoefs(4) = max(mdl.lincoefs(4), 0.1);
+%         
+%         % v
+%         mdl.lincoefs(5) = min(mdl.lincoefs(5), 5);
+%         mdl.lincoefs(5) = max(mdl.lincoefs(5), -5);
+%         
+%         % norm_factor
+%         mdl.lincoefs(6) = max(mdl.lincoefs(6), -100);
+%         mdl.lincoefs(6) = min(mdl.lincoefs(6), 100);
         
         % add_factor is mdl.lincoefs(7) => should we constrain it too?
         
     end
 
 
-    function coefs = initialize_coefs(num_dims, num_coefs, xshift, tshift, s, tau, v, order_x, order_t, norm_factor, add_factor)
+    function coefs = initialize_coefs(num_dims, num_coefs, xshift, tshift, s, tau, v, order_x, order_t, norm_factor, add_factor, type)
         
         if (~exist('norm_factor','var'))
             norm_factor = 1;
@@ -288,14 +302,18 @@ end
             add_factor = 0;
         end
         
-%         xshift = min(xshift, num_dims); xshift = max(xshift, 0);
-%         tshift = min(tshift, num_coefs/4); tshift = max(tshift, 0);
-%         s = min(s,num_dims/2); s = max(s,0.1);
-%         tau = min(tau,num_coefs/3); tau = max(tau,0.5);
-%         v = min(v,0.75); v = max(v,-0.75);
-%         norm_factor = max(norm_factor,0);
+        %         xshift = min(xshift, num_dims); xshift = max(xshift, 0);
+        %         tshift = min(tshift, num_coefs/4); tshift = max(tshift, 0);
+        %         s = min(s,num_dims/2); s = max(s,0.1);
+        %         tau = min(tau,num_coefs/3); tau = max(tau,0.5);
+        %         v = min(v,0.75); v = max(v,-0.75);
+        %         norm_factor = max(norm_factor,0);
         
-        coefs = noncausal_vectorized((1:num_dims)-xshift, (1:num_coefs)-tshift, s, tau, v, order_x, order_t);
+        if (type==0)
+            coefs = noncausal_vectorized((1:num_dims)-xshift, (1:num_coefs)-tshift, s, tau, v, order_x, order_t);
+        elseif (type==1)
+            coefs = timecausal_vectorized((1:num_dims)-xshift, (1:num_coefs)-tshift, s, tau, v, order_x, order_t);
+        end
         
         %         coefs = coefs / max(max(coefs));
         coefs = add_factor + coefs * norm_factor;
@@ -326,7 +344,12 @@ end
         v = mdl.lincoefs(5);
         norm_factor = mdl.lincoefs(6);
         add_factor = mdl.lincoefs(7);
-        mdl.coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor, add_factor);
+        if ~isfield(mdl,'type'),
+            type = 0;
+        else
+            type = mdl.type;
+        end
+        mdl.coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor, add_factor, type);
     end
 
     function x = do_lindeberg_filtering(mdl, x, stack, xxx)
@@ -347,7 +370,12 @@ end
             v = mdl.lincoefs(5);
             norm_factor = mdl.lincoefs(6);
             add_factor = mdl.lincoefs(7);
-            coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor, add_factor);
+            if ~isfield(mdl,'type'),
+                type = 0;
+            else
+                type = mdl.type;
+            end
+            coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor, add_factor, type);
             
             % Have a space allocated for computing initial filter conditions
             init_data_space = ones(size(coefs, 2) * 2, 1);
@@ -405,7 +433,12 @@ end
             v = mdls{ii}.lincoefs(5);
             norm_factor = mdls{ii}.lincoefs(6);
             add_factor = mdls{ii}.lincoefs(7);
-            coefs = initialize_coefs(mdls{ii}.num_dims, mdls{ii}.num_coefs, xshift, tshift, s, tau, v, mdls{ii}.order_x, mdls{ii}.order_t, norm_factor, add_factor);
+            if ~isfield(mdls{ii},'type'),
+                type = 0;
+            else
+                type = mdls{ii}.type;
+            end
+            coefs = initialize_coefs(mdls{ii}.num_dims, mdls{ii}.num_coefs, xshift, tshift, s, tau, v, mdls{ii}.order_x, mdls{ii}.order_t, norm_factor, add_factor, type);
             c_max = max(c_max, max(abs(coefs(:))));
         end
         
@@ -414,8 +447,8 @@ end
         hold on;
         for ii = 1:length(mdls)
             
-                    
-        mdls{ii} = constrain_lincoefs(mdls{ii});
+            
+            mdls{ii} = constrain_lincoefs(mdls{ii});
             
             xshift = mdls{ii}.lincoefs(1); %xshift = min(xshift,10);
             tshift = mdls{ii}.lincoefs(2); %tshift = min(tshift,10);
@@ -424,7 +457,12 @@ end
             v = mdls{ii}.lincoefs(5);
             norm_factor = mdls{ii}.lincoefs(6);
             add_factor = mdls{ii}.lincoefs(7);
-            coefs = initialize_coefs(mdls{ii}.num_dims, mdls{ii}.num_coefs, xshift, tshift, s, tau, v, mdls{ii}.order_x, mdls{ii}.order_t, norm_factor, add_factor);
+            if ~isfield(mdls{ii},'type'),
+                type = 0;
+            else
+                type = mdls{ii}.type;
+            end
+            coefs = initialize_coefs(mdls{ii}.num_dims, mdls{ii}.num_coefs, xshift, tshift, s, tau, v, mdls{ii}.order_x, mdls{ii}.order_t, norm_factor, add_factor, type);
             
             %             coefs = mdls{ii}.coefs;
             %             % JL hackish
@@ -481,10 +519,10 @@ end
         names = {};
         n_mdls = length(mdls)
         for ii = 1:n_mdls
-%             mdl = mdls{ii};
+            %             mdl = mdls{ii};
             
             mdls{ii} = constrain_lincoefs(mdls{ii});
-
+            
             
             xshift = mdls{ii}.lincoefs(1); %xshift = min(xshift,10);
             tshift = mdls{ii}.lincoefs(2); %tshift = min(tshift,10);
@@ -493,7 +531,8 @@ end
             v = mdls{ii}.lincoefs(5);
             norm_factor = mdls{ii}.lincoefs(6);
             add_factor = mdls{ii}.lincoefs(7);
-            coefs = initialize_coefs(mdls{ii}.num_dims, mdls{ii}.num_coefs, xshift, tshift, s, tau, v, mdls{ii}.order_x, mdls{ii}.order_t, norm_factor, add_factor);
+            type = mdls{ii}.type;
+            coefs = initialize_coefs(mdls{ii}.num_dims, mdls{ii}.num_coefs, xshift, tshift, s, tau, v, mdls{ii}.order_x, mdls{ii}.order_t, norm_factor, add_factor, type);
             
             %             for (i=1:mdl.num_dims)
             %                 for (j=1:mdl.num_coefs)

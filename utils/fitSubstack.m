@@ -22,7 +22,8 @@ function fitSubstack(startidx,stopdelta,output)
     
     % We must add the MSE module temporarily in a very specific way       
     mods = find_modules(STACK, 'mean_squared_error', true);
-    append_module(MODULES.mean_squared_error.mdl(struct('input1', output)));   
+    append_module(MODULES.mean_squared_error.mdl(struct('input1', output)));
+    
     % don't append correlation.  we don't need it, and it just
     % takes cycles.
     
