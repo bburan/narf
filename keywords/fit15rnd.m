@@ -123,7 +123,7 @@ for i=1:20,
             continue;
         else
             for ll = 1:length(STACK{kk}{:})
-                if (strcmp(STACK{kk}{ll}.name, 'lindeberg_filter')),
+                if (strcmp(STACK{kk}{ll}.name, 'lindeberg_filter'))
                     mdl = STACK{kk}{ll};
                     params = zeros(7,1);
                     % start with a reasonable guess
@@ -144,6 +144,12 @@ for i=1:20,
                     %                         STACK{kk}{ll}.(char(cc)) = ...
                     %                             rand(length(STACK{kk}{ll}.(char(cc))),1)*30.0-10.0;
                     %                     end
+                elseif (strcmp(STACK{kk}{ll}.name, 'lindeberg_spectral'))
+                    % start with a reasonable guess
+                    STACK{kk}{ll}.bf = STACK{kk}{ll}.num_channels.*rand(1); %xshift
+                    STACK{kk}{ll}.s = (0.1 + (STACK{kk}{ll}.num_channels/2-0.1).*rand(1)); %s
+                    STACK{kk}{ll}.norm_factor = 10.*(rand(1)-0.5); % norm_factor in [-5;5]
+                    STACK{kk}{ll}.add_factor = 0; % add_factor is set to 0
                 end
             end
         end

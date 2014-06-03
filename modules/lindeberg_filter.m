@@ -49,6 +49,8 @@ m.plot_fns{4}.fn = @do_plot_single_filtered_channel;
 m.plot_fns{4}.pretty_name = 'Filtered Channels (Single)';
 m.plot_fns{5}.fn = @do_plot_filter_output;
 m.plot_fns{5}.pretty_name = 'FIR Output';
+m.plot_fns{6}.fn = @do_plot_lindeberg_coefs_as_heatmap2;
+m.plot_fns{6}.pretty_name = 'FIR Coefs (Heat map x2)';
 
 % Overwrite the default module fields with arguments
 if nargin > 0
@@ -488,6 +490,15 @@ end
         axis tight;
         do_xlabel('Coef Time Index');
         do_ylabel('Coef Channel Index');
+    end
+
+    function do_plot_lindeberg_coefs_as_heatmap2(sel, stack, xxx)
+        mdls = stack{end};
+        for ii = 1:length(mdls)
+            mdls{ii}.lincoefs(1) = mdls{ii}.lincoefs(1) *2;
+            mdls{ii}.num_dims = mdls{ii}.num_dims*2;
+        end
+        do_plot_lindeberg_coefs_as_heatmap(sel, mdls, xxx);
     end
 
     function do_plot_all_filtered_channels(sel, stack, xxx)
