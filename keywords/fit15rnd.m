@@ -150,6 +150,10 @@ for i=1:20,
                     STACK{kk}{ll}.s = (0.1 + (STACK{kk}{ll}.num_channels/2-0.1).*rand(1)); %s
                     STACK{kk}{ll}.norm_factor = 10.*(rand(1)-0.5); % norm_factor in [-5;5]
                     STACK{kk}{ll}.add_factor = 0; % add_factor is set to 0
+                elseif (strcmp(STACK{kk}{ll}.name, 'weight_channels'))
+                    % start with a reasonable guess
+                    STACK{kk}{ll}.weights = rand(size(STACK{kk}{ll}.weights)); %(order of magnitude 1)
+                    STACK{kk}{ll}.y_offset = rand(size(STACK{kk}{ll}.y_offset))/100; %(order of magnitude 0.01)
                 end
             end
         end
