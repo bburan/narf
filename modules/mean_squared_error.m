@@ -88,18 +88,25 @@ m.plot_fns{2}.pretty_name = 'Error Histogram';
                 llv=round(linspace(1,length(ptest)+1,bincount+1));
                 ee=zeros(bincount,1);ve=zeros(bincount,1);
                 for bb=1:bincount,
-                    ee(bb)=nanmean((p(ll(bb):(ll(bb+1)-1))-q(ll(bb):(ll(bb+1)-1))).^2);
-                    if ~isempty(ptest),
-                        ve(bb)=nanmean((ptest(llv(bb):(llv(bb+1)-1))-...
-                            qtest(llv(bb):(llv(bb+1)-1))).^2);
-                    end
+                   d=nanvar(q(ll(bb):(ll(bb+1)-1)));
+                   ee(bb)=nanmean((p(ll(bb):(ll(bb+1)-1))-q(ll(bb):(ll(bb+1)-1))).^2)./...
+                      (d+(d==0));
                 end
-                ee=ee./(nanvar(q)+(train_score==0));
-                ve=ve./(nanvar(qtest)+(train_score==0));
                 me=mean(ee);se=std(ee)./sqrt(bincount);
-                train_nmse=shrinkage(me,se,0.5);
-                me=mean(ve);se=std(ve)./sqrt(bincount);
-                test_nmse=shrinkage(me,se,0.5);
+                train_nmse=1-shrinkage(1-me,se,0.5);
+                
+                if ~isempty(ptest),
+                   for bb=1:bincount,
+                      d=nanvar(qtest(ll(bb):(ll(bb+1)-1)));
+                      ve(bb)=nanmean((ptest(llv(bb):(llv(bb+1)-1))-...
+                         qtest(llv(bb):(llv(bb+1)-1))).^2)./...
+                         (d+(d==0));
+                   end
+                   me=mean(ve);se=std(ve)./sqrt(bincount);
+                   test_nmse=1-shrinkage(1-me,se,0.5);
+                else
+                   test_nmse=nan;
+                end
             end
             
         else
