@@ -1,4 +1,4 @@
-function fit10earlystopping()
+function fit10partialdataset()
 
 global STACK XXX;
 
@@ -157,7 +157,7 @@ while(scale > stop_at)
     if decrease_consecutive_done == decrease_consecutive_max
         % we went through "decrease_consecutive_max" bad steps
         % => put back the latest good stack, and then exit this madness
-        STACK = last_good_stack;
+%         STACK = last_good_stack;
 %         fprintf(1,'     99999999999999999999999999999999999999999999999999999\n');
 %         fprintf(1,'     99999999999999999999999999999999999999999999999999999\n');
 %         fprintf(1,'     99999999999999999999999999999999999999999999999999999\n');
