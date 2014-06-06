@@ -39,6 +39,10 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input1, m.input2, m.time};   % Signal dependencies
+m.modifies = {m.output, m.error, m.train_score, m.train_score_norm, m.test_score_norm};          % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.auto_plot = @do_plot_inputs_and_mse;
@@ -47,7 +51,7 @@ m.plot_fns{1}.pretty_name = 'Inputs, Error vs Time';
 m.plot_fns{2}.fn = @do_plot_error_histogram;
 m.plot_fns{2}.pretty_name = 'Error Histogram';
 
-    function x = do_crossvalidated_mean_squared_error(mdl, x, stack, xxx)
+    function x = do_crossvalidated_mean_squared_error(mdl, x)
         % Compute the mean squared error of two stratified partitions
 
         %training_sets = {x.training_set{:}, x.test_set{:}}; % test_set is
@@ -116,7 +120,7 @@ m.plot_fns{2}.pretty_name = 'Error Histogram';
     end
 
     function do_plot_inputs_and_mse(sel, stack, xxx)
-        [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));
+        [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));
         hold on;
         do_plot(xouts, mdls{1}.time, {mdls{1}.input1, mdls{1}.input2}, ...
             sel, 'Time [s]', 'Prediction & RespAvg [-]');

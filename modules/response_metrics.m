@@ -28,12 +28,20 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.resp, m.respavg, m.time};   % Signal dependencies
+m.modifies = {};          % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_similarity;
 m.plot_fns{1}.pretty_name = 'Similarity Raster';
 
-function x = do_response_metrics(mdl, x, stack, xxx)   
+function x = do_response_metrics(mdl, x)   
+    
+    fprintf('This module is bogus?');
+    
+    keyboard;
     
     fns = fieldnames(x.dat);
     for ii = 1:length(fns)

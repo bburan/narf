@@ -36,6 +36,11 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {};   % Signal dependencies
+m.modifies = {m.output_stim, m.output_stim_time, m.output_resp, m.output_resp_time ...
+                m.output_respavg};          % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_all_stim_channels;
@@ -65,7 +70,7 @@ envpath='/auto/data/daq/wehr/soundfiles/sourcefiles/';
 % ------------------------------------------------------------------------
 % Define the 'methods' of this module, as if it were a class
 
-function x = do_load_wehr(mdl, x, stack, xxx)
+function x = do_load_wehr(mdl, x)
     
     global NARF_DEBUG NARF_DEBUG_FIGURE
     if isempty(NARF_DEBUG),NARF_DEBUG=0;end
@@ -370,7 +375,7 @@ end
 % Plot functions
 
 function do_plot_all_stim_channels(sel, stack, xxx)       
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);        
@@ -380,7 +385,7 @@ function do_plot_all_stim_channels(sel, stack, xxx)
 end
 
 function do_plot_single_stim_channel(sel, stack, xxx)   
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);
@@ -389,7 +394,7 @@ function do_plot_single_stim_channel(sel, stack, xxx)
 end
 
 function do_plot_respavg(sel, stack, xxx)
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);
@@ -399,7 +404,7 @@ function do_plot_respavg(sel, stack, xxx)
 end
 
 function do_plot_response_raster(sel, stack, xxx)    
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);

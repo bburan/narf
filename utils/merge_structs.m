@@ -14,7 +14,13 @@ function s = merge_structs(s, s_new)
 if nargin == 2
     fns = fieldnames(s_new);
     for idx = 1:length(fns);
-        s.(fns{idx}) = s_new.(fns{idx});
+        if isfield(s, fns{idx}) && isfield(s_new, fns{idx}) && ...
+            length(s.(fns{idx})) == 1 && length(s_new.(fns{idx})) == 1 && ...
+            isstruct(s.(fns{idx})) && isstruct(s_new.(fns{idx}))
+                s.(fns{idx}) = merge_structs(s.(fns{idx}), s_new.(fns{idx}));
+        else
+            s.(fns{idx}) = s_new.(fns{idx});
+        end
     end
 else
     error('merge_structs() must have exactly 2 arguments.');

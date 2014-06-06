@@ -33,7 +33,11 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_inter_spike_intervals(mdl, x, stack, xxx)     
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output, m.output_time};   % These signals are modified
+
+function x = do_inter_spike_intervals(mdl, x)     
    fns = fieldnames(x.dat);
     for ii = 1:length(fns)
         sf = fns{ii};
@@ -79,7 +83,7 @@ function do_plot_raw_spikes(sel, stack, xxx)
 end
 
 function do_plot_isis(sel, stack, xxx)
-    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     xout = xxx{end};
     mdl = stack{end}{1};
      
@@ -92,7 +96,7 @@ function do_plot_isis(sel, stack, xxx)
 end
 
 function do_plot_autocorrelation(sel, stack, xxx)
-    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     xout = xxx{end};
     mdl = stack{end}{1};
     

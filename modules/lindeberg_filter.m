@@ -33,7 +33,6 @@ m.output = 'stim';
 m.init_fit_sig = 'respavg';
 
 % Optional fields
-m.is_splittable = true;
 m.plot_gui_create_fn = @create_chan_selector_gui;
 m.auto_plot = @do_plot_lindeberg_coefs_as_heatmap;
 m.auto_init = @auto_init_lindeberg_filter;
@@ -52,7 +51,11 @@ m.plot_fns{5}.pretty_name = 'FIR Output';
 % Overwrite the default module fields with arguments
 if nargin > 0
     m = merge_structs(m, args);
-end
+end 
+
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time, m.init_fit_sig};   % Signal dependencies
+m.modifies = {m.output, m.filtered_input};        % These signals are modified
 
 % Reset the FIR filter coefficients if its size doesn't match num_coefs
 if ~isequal([m.num_dims m.num_coefs], size(m.coefs))
@@ -329,7 +332,7 @@ end
         mdl.coefs = initialize_coefs(mdl.num_dims, mdl.num_coefs, xshift, tshift, s, tau, v, mdl.order_x, mdl.order_t, norm_factor, add_factor);
     end
 
-    function x = do_lindeberg_filtering(mdl, x, stack, xxx)
+    function x = do_lindeberg_filtering(mdl, x)
         % Apply the FIR filter across every stimfile
         if ~isfield(mdl, 'sum_channels')
             mdl.sum_channels=1;
@@ -453,20 +456,20 @@ end
     end
 
     function do_plot_all_filtered_channels(sel, stack, xxx)
-        [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));
+        [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));
         sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
         do_plot(xouts, mdls{1}.time, mdls{1}.filtered_input, ...
             sel, 'Time [s]', 'Filtered Channel [-]');
     end
 
     function do_plot_single_filtered_channel(sel, stack, xxx)
-        [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));
+        [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));
         do_plot(xouts, mdls{1}.time, mdls{1}.output, ...
             sel, 'Time [s]', 'Filtered Channel [-]');
     end
 
     function do_plot_filter_output(sel, stack, xxx)
-        [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));
+        [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));
         sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
         do_plot(xouts, mdls{1}.time, mdls{1}.output, ...
             sel, 'Time [s]', 'FIR Output [-]');

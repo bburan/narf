@@ -24,7 +24,6 @@ m.relvar = 0.2;  % Magnitude of the gaussian variance, relative to the
                  % total range (max - min) of the input space.
 
 % Optional fields 
-m.is_splittable = true;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_smooth_scatter_and_nonlinearity; 
 m.plot_fns{1}.pretty_name = 'Stim/Resp Smooth Scatter';
@@ -40,7 +39,11 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function nl = calc_sparse_nonlinearity(mdl, x, stack, xxx)
+% Optimize this module for tree traversal  
+m.required = {m.input_stim, m.input_resp, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
+function nl = calc_sparse_nonlinearity(mdl, x)
     % Returns:
     %   X : X-axis points, taken emperically. 
     %   Z : Predicted curve at each value in X
@@ -124,8 +127,8 @@ function nl = calc_sparse_nonlinearity(mdl, x, stack, xxx)
     nl.F = @interpolomatic;
  end
 
-function x = do_se_nonlinearity(mdl, x, stack, xxx)      
-    nl = calc_sparse_nonlinearity(mdl, x, stack, xxx);
+function x = do_se_nonlinearity(mdl, x)      
+    nl = calc_sparse_nonlinearity(mdl, x);
     
     for sf = fieldnames(x.dat)', sf=sf{1};
         [T, S, C] = size(x.dat.(sf).(mdl.input_stim));

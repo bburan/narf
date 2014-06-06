@@ -27,7 +27,6 @@ m.time = 'stim_time';
 m.output = 'stim';
 
 % Optional fields
-m.is_splittable = true;
 m.auto_plot = @do_depression_cartoon;
 m.auto_init = @auto_init_depression_filter_bank;
 
@@ -46,6 +45,10 @@ m.plot_fns{4}.pretty_name = 'Depression cartoon';
 if nargin > 0
     m = merge_structs(m, args);
 end
+
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
 
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
@@ -68,7 +71,7 @@ function mdl = auto_init_depression_filter_bank(stack, xxx)
     end
 
 % Finally, define the 'methods' of this module, as if it were a class
-function x = do_depression_filter(mdl, x, stack, xxx)
+function x = do_depression_filter(mdl, x)
     
     if ~isfield(mdl,'tau_norm'),
         mdl.tau_norm=1000;

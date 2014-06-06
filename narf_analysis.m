@@ -771,11 +771,11 @@ uicontrol('Parent', bottom_panel, 'Style', 'pushbutton', 'Units', 'pixels',...
                 [I,map] = imread(char(sel_results(ii).figurefile),'png');
                 subplot('position',[0 0 1 1]);
                 imshow(I, map);
-                g=get(preview_fig,'Position');
-                g(2)=g(2)+g(4)-size(I,1);
-                g(3)=size(I,2);
-                g(4)=size(I,1);
-                set(preview_fig,'Position',g);
+                %g=get(preview_fig,'Position');
+                %g(2)=g(2)+g(4)-size(I,1);
+                %g(3)=size(I,2);
+                %g(4)=size(I,1);
+                %set(preview_fig,'Position',g);
             end
         end
     end

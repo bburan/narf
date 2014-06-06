@@ -27,12 +27,16 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_filtered_stim; 
 m.plot_fns{1}.pretty_name = 'Output Channels vs Time';
 
-function x = do_gammatone_filter(mdl, x, stack, xxx)
+function x = do_gammatone_filter(mdl, x)
 
     if length(mdl.center_freq_khz) ~= length(mdl.bandwidth)
         error('Must be same number of bandwidth and CF params');
@@ -63,7 +67,7 @@ function x = do_gammatone_filter(mdl, x, stack, xxx)
 end
 
 function do_plot_filtered_stim(sel, stack, xxx)    
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));  
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));  
     if mdls{1}.use_env
         ylab = 'Basilar Envelope';
     else

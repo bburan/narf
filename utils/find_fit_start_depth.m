@@ -1,23 +1,29 @@
-function [start_depth, end_depth]= find_fit_start_depth(stack)
-% [start_depth, end_depth] = find_fit_start_depth(stack)
+function [start_depth, end_depth]= find_fit_start_depth(~)
+% [start_depth, end_depth] = find_fit_start_depth()
 %
-% Returns the indexes of STACK containing first & last fittable fields. 
-% This is important to reduce the amount of work that fitting algorithms do, since
+% Returns the module indexes (NOT the same as the STACK index) that
+% contain the first & last fittable fields. 
+% This is important to reduce the work that fitting algorithms do, since
 % they only need to recalculate the stack from the point where fields are
 % actually fit. Very rarely, you may also need to know where the fittable
 % fields end (such as during jackknifing), so results can be merged across
 % jackknifes and passed through a performance metric.
 
+global STACK;
+
 start_depth = NaN;
 end_depth = NaN;
 
-for d = 1:length(stack)
-    m = stack{d}{1};
-    
-    if isfield(m, 'fit_fields') && ~isempty(m.fit_fields)
-        if isnan(start_depth)
-            start_depth = d;
+depth = 1;
+for ii = 1:length(STACK)
+    mm = STACK{ii};
+    nsplits = length(mm);
+    for kk = 1:nsplits
+        m = mm{kk};                
+        if isnan(start_depth) && isfield(m, 'fit_fields') && ~isempty(m.fit_fields)
+            start_depth = depth;
         end
-        end_depth = d;
+        end_depth = depth;
     end
+    depth = depth + 1;
 end

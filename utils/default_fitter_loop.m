@@ -29,14 +29,16 @@ function [score, iters] = my_obj_fn(phi)
     
     % Find the point at which the stack needs to be recalculated.
     if isempty(prev_phi)
+        % First time only
         prev_phi = phi;
         unpack_fittables(phi);
-        calc_xxx(start_depth);
+        update_xxx(start_depth);
     else
+        % After that, use depths() to choose start point
         idx_of_first_different_param = find(phi ~= prev_phi, 1);
         prev_phi = phi;
         unpack_fittables(phi);
-        calc_xxx(depths(idx_of_first_different_param));
+        update_xxx(depths(idx_of_first_different_param));
     end
     [m, p] = META.perf_metric();
     score = m + p;
@@ -57,13 +59,13 @@ function [score, iters] = my_obj_fn(phi)
     n_iters = n_iters + 1;
 end
 
-fprintf('Fitting %d variables with %s', length(phi_init), fittername);
+fprintf('Fitting %d variables with %s\n', length(phi_init), fittername);
 
 [term_phi, term_score, term_cond, term_step] = highlevel_fn(@my_obj_fn, phi_init);
 
 unpack_fittables(term_phi);
 idx_of_first_different_param = find(term_phi ~= prev_phi, 1);
-calc_xxx(depths(idx_of_first_different_param));
+update_xxx(depths(idx_of_first_different_param));
 
 fprintf('Complete fit with %d objective function evaluations.\n', n_iters);
 fprintf('----------------------------------------------------------------------\n');

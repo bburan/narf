@@ -36,6 +36,10 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input_stim, m.input_resp, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
 function Data = calc_data(mdl, x)
     % Create the pred and resp vectors
     pred = []; 

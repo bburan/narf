@@ -34,12 +34,16 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input1, m.input2, m.time};   % Signal dependencies
+m.modifies = {m.error, m.train_score, m.test_score, m.output};  % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_inputs_and_pnorm;
 m.plot_fns{1}.pretty_name = 'Inputs, Error vs Time';
 
-function x = do_error_norm(mdl, x, stack, xxx)
+function x = do_error_norm(mdl, x)
     % Compute the mean squared error of the training set
     p = flatten_field(x.dat, x.training_set, mdl.input1);
     q = flatten_field(x.dat, x.training_set, mdl.input2); 
@@ -60,7 +64,7 @@ function x = do_error_norm(mdl, x, stack, xxx)
 end
 
 function do_plot_inputs_and_pnorm(sel, stack, xxx)    
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     hold on;
     do_plot(xouts, mdls{1}.time, {mdls{1}.input1, mdls{1}.input2}, ...
             sel, 'Time [s]', 'Prediction & RespAvg [-]');

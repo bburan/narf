@@ -1,6 +1,6 @@
 function do_plot_channels_as_heatmap(sel, stack, xxx)
 
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));  
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));  
              
     ii=1;
     while ~isfield(xouts{ii}.dat,sel.stimfile) && ii<length(xouts),

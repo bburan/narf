@@ -1,29 +1,20 @@
-function m = truncate_data(args)
+function m = split_signal(args)
 
 % Module fields that must ALWAYS be defined
 m = [];
-m.mdl = @truncate_data;
-m.name = 'truncate_data';
-m.fn = @do_truncate_data;
-m.pretty_name = 'Weight Channels';
-m.editable_fields = {'save_fraction', 'truncate_reps', ...
-                    'input', 'time', 'output'};
+m.mdl = @split_signal;
+m.name = 'split_signal';
+m.fn = @do_split_signal;
+m.pretty_name = 'Split Signal';
+m.editable_fields = {'splitter', 'input', 'time', 'output'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.weights = [1]; % Each column weights several channels to produce
-m.y_offset = [0]; % A column of y-offsets to be added to each output chan. 
 m.input =  'stim';
 m.time =   'stim_time';
 m.output = 'stim';
 
 % Optional fields
-m.auto_plot = @do_plot_channels_as_heatmap;
-m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_channels_as_heatmap;
-m.plot_fns{1}.pretty_name = 'All Channels (Heatmap)';
-m.plot_fns{1}.fn = @do_plot_all_default_outputs;
-m.plot_fns{1}.pretty_name = 'Output Channels (All)';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -36,7 +27,7 @@ m.modifies = {m.output};          % These signals are modified
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
-function x = do_truncate_data(mdl, x)   
+function x = do_split_signal(mdl, x)   
     fns = x.training_set;
     save_fraction=mdl.save_fraction;
     if save_fraction>1,save_fraction=1;end
@@ -62,6 +53,41 @@ end
 % Plot methods
 
 % use defaults
+unique_codes = unique(filecodes);
+xxxs = cell(1, length(unique_codes));
+estfiles = xxx{end}.training_set;
+valfiles = xxx{end}.test_set;
+
+% Otherwise, group by filecode
+for ii = 1:length(unique_codes);
+    fc = unique_codes{ii};
+    
+    matches = strcmp(fc, filecodes);   
+    
+    efs = estfiles(matches);
+    vfs = valfiles(matches(matches<=length(valfiles))); 
+    
+    xxxs{ii} = xxx;
+    xxxs{ii}{end}.dat = [];   
+    xxxs{ii}{end}.training_set={};
+    xxxs{ii}{end}.test_set={};
+    xxxs{ii}{end}.filecodes={};
+    
+    for jj = 1:length(efs)
+        f = efs{jj};
+        xxxs{ii}{end}.dat.(f) = xxx{end}.dat.(f);
+        xxxs{ii}{end}.training_set{jj} = f;
+        xxxs{ii}{end}.filecodes{jj} = fc;
+    end
+    for jj = 1:length(vfs)
+        f = vfs{jj};
+        xxxs{ii}{end}.dat.(f) = xxx{end}.dat.(f);
+        xxxs{ii}{end}.test_set{jj} = f;
+    end
+    
+end
+
+
 
 
 end

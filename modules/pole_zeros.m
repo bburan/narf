@@ -15,15 +15,14 @@ m.sum_channels = true; % When true,
 m.n_inputs    = 1;
 m.n_poles     = 2; 
 m.n_zeros     = 1;
-m.delays    = [5]; % Input delays in ms
-m.gains     = [1];
-m.y_offset = 0;
+m.delays      = [5]; % Input delays in ms
+m.gains       = [1];
+m.y_offset    = 0;
 m.input =  'stim';
 m.time =   'stim_time';
 m.output = 'stim';
 
 % Optional fields
-m.is_splittable = true;
 m.auto_plot = @do_plot_pz_impulse_response;
 m.auto_init = @auto_init_pz;
 m.plot_fns = {};
@@ -35,13 +34,19 @@ m.plot_fns{3}.fn = @do_plot_pz_step_response;
 m.plot_fns{3}.pretty_name = 'Step Response';
 m.plot_fns{4}.fn = @do_plot_pz_bodemag_plot;
 m.plot_fns{4}.pretty_name = 'Bode Mag. Plot';
-m.plot_fns{4}.fn = @do_plot_zplane;
-m.plot_fns{4}.pretty_name = 'ZPlane Plot';
+m.plot_fns{5}.fn = @do_plot_zplane;
+m.plot_fns{5}.pretty_name = 'ZPlane Plot';
+m.plot_fns{6}.fn = @do_plot_pz_heat_impulse_response;
+m.plot_fns{6}.pretty_name = 'Heat Impulse';
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
     m = merge_structs(m, args);
 end
+
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
 
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
@@ -62,12 +67,12 @@ function mdl = auto_init_pz(stack, xxx)
     [T, S, C] = size(x.dat.(sf).(mdl.input)); 
       
     mdl.n_inputs = C;
-    mdl.gains  = ones(1, mdl.n_inputs);
+    mdl.gains  = 16 * ones(1, mdl.n_inputs);
     mdl.delays = 5 + zeros(mdl.n_inputs, 1);
     
     % This ad-hoc initialization works tolerably for n_zeros < 5
-    mdl.poles = repmat(-50 + -10*[1:mdl.n_poles], mdl.n_inputs, 1); 
-    mdl.zeros = repmat(0   + -10*[1:mdl.n_zeros], mdl.n_inputs, 1);
+    mdl.poles = repmat(-30 + -20*[1:mdl.n_poles], mdl.n_inputs, 1); 
+    mdl.zeros = repmat(-10 + -10*[1:mdl.n_zeros], mdl.n_inputs, 1);
     
 end
 
@@ -82,7 +87,7 @@ function sys = makesys(mdl)
     sys.InputDelay = abs(mdl.delays) / 1000; % (milliseconds)
 end
 
-function x = do_pole_zeros(mdl, x, stack, xxx)    
+function x = do_pole_zeros(mdl, x)    
     sys = makesys(mdl);    
     for sf = fieldnames(x.dat)', sf=sf{1};        
          [T, S, C] = size(x.dat.(sf).(mdl.input));     
@@ -144,6 +149,18 @@ function do_plot_zplane(sel, stack, xxx)
     zplane(mdls{1}.zeros', mdls{1}.poles');
     do_xlabel('Real Axis');
     do_ylabel('Imaginary Axis');
+end
+
+function do_plot_pz_heat_impulse_response(sel, stack, xxx)
+    mdls = stack{end};
+    xins = {xxx(1:end-1)};        
+    sys = makesys(mdls{1});
+    Y = impulse(sys,0:0.001:0.1);    
+    h = imagesc(Y);
+    set(gca,'YDir','normal');
+    axis xy tight;   
+    do_xlabel('Time [s]');
+    do_ylabel('Impulse Response');
 end
 
 end

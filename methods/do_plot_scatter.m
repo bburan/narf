@@ -13,7 +13,7 @@ ymin = nan;
 ymax = nan;
 
 for ii = 1:length(xxxs)
-    x = xxxs{ii}{end};
+    x = xxxs{ii};
     
     if ~isfield(x.dat, sel.stimfile)
         % Do nothing if there is no matching selected stimfile
@@ -42,7 +42,7 @@ for ii = 1:length(xxxs)
     
         if exist('n_plotpts', 'var') && ~isnan(n_plotpts) && n_plotpts > 0        
             D = sortrows(D);
-            D = conv_fn(D, 1, @nanmean, ceil(size(D, 1)/n_plotpts), 0);
+            D = conv_fn(D, 1, @nanmean, max(1,ceil(size(D, 1)/n_plotpts)), 0);
         end
     
         c = pickcolor(cc);

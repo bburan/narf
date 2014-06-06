@@ -7,7 +7,8 @@ m.name = 'pz_wavelet';
 m.fn = @do_pz_wavelet;
 m.pretty_name = 'PZ Wavelet';
 m.editable_fields = {'center_freq_khz', 'Q_factor', 'N_order', ...
-                     'delayms', 'gain', 'y_offset', ...
+                     'M_order', 'zeros', 'poles', ...
+                     'delayms', 'gain', 'y_offset', 'align_peak', ...
                      'input', 'time', 'output'};  
 m.isready_pred = @isready_always;
 
@@ -28,8 +29,7 @@ m.time =   'stim_time';
 m.output = 'stim';
 
 % Optional fields
-m.is_splittable = true;
-m.auto_plot = @do_plot_pz_impulse_response;
+m.auto_plot = @do_plot_pz_bodemag_plot;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_single_default_output;
 m.plot_fns{1}.pretty_name = 'Output vs Time';
@@ -46,6 +46,10 @@ m.plot_fns{5}.pretty_name = 'ZPlane Plot';
 if nargin > 0
     m = merge_structs(m, args);
 end
+
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
 
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
@@ -93,7 +97,7 @@ function [sys, t_align] = makesys(mdl)
     sys.InputDelay = (abs(mdl.delayms) / 1000); % (milliseconds)
 end
 
-function x = do_pz_wavelet(mdl, x, stack, xxx)    
+function x = do_pz_wavelet(mdl, x)    
     [sys, t_align] = makesys(mdl);    
     for sf = fieldnames(x.dat)', sf=sf{1};        
          [T, S, C] = size(x.dat.(sf).(mdl.input));         

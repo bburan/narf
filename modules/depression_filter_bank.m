@@ -26,7 +26,6 @@ m.time = 'stim_time';
 m.output = 'stim';
 
 % Optional fields
-m.is_splittable = true;
 m.auto_plot = @do_depression_cartoon;
 
 m.plot_gui_create_fn = @create_chan_selector_gui;
@@ -45,8 +44,13 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
+
 % Finally, define the 'methods' of this module, as if it were a class
-function x = do_depression_filter(mdl, x, stack, xxx)
+function x = do_depression_filter(mdl, x)
     
     if ~isfield(mdl,'tau_norm'),
         mdl.tau_norm=1000;
@@ -54,12 +58,18 @@ function x = do_depression_filter(mdl, x, stack, xxx)
     if ~isfield(mdl,'crosstalk'),
         mdl.crosstalk=0;
     end
-    [load_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy',true);
-    if isempty(load_mod),
-        [load_mod, ~] = find_modules(stack, 'load_stim_resps_wehr',true);
-    end
-    load_mod = load_mod{1}; % We assume only 1 paramset
     
+    % Ivar says: This type of searching can possibly interact with proper
+    % operation of the new stack "tree evaluation" rule. For this reason, I
+    % broke compatibility with old modules and am removing this. In the
+    % future, if the only thing you need to compute is the sampling rate,
+    % do that using the appropriate time variable for a signal. 
+    %[load_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy',true);
+    %if isempty(load_mod),
+    %        [load_mod, ~] = find_modules(stack, 'load_stim_resps_wehr',true);
+    %    end
+    %    load_mod = load_mod{1}; % We assume only 1 paramset
+            
     % calculate global mean level of each channel for scaling dep
     T=0;
     for sf = fieldnames(x.dat)', 
@@ -73,6 +83,7 @@ function x = do_depression_filter(mdl, x, stack, xxx)
         end
         T=T+sum(sum(~isnan(ts(:,:,1)),1),2);
     end
+    
     stimmax=stimmax./T;
     stimmax(stimmax==0)=1;
     
@@ -85,6 +96,9 @@ function x = do_depression_filter(mdl, x, stack, xxx)
     
     % Now actually compute depression
     for sf = fieldnames(x.dat)', sf = sf{1};
+        stim_time = x.dat.(sf).(mdl.time);
+        raw_stim_fs = 1/(stim_time(2) - stim_time(1)); % A simpler way to get sampling rate
+        
         [T, S, N] = size(x.dat.(sf).(mdl.input));
         if isfield(mdl,'per_channel') && mdl.per_channel && num_channels<1,
             error('channel count does not work with per_channel==1');
@@ -113,7 +127,7 @@ function x = do_depression_filter(mdl, x, stack, xxx)
                         tresp=depression_bank(...
                             stim_in(jj,:),...
                             (1./stimmax(jj))*mdl.strength(jj)./100,...
-                            mdl.tau(jj) .* load_mod.raw_stim_fs/mdl.tau_norm, ...
+                            mdl.tau(jj) .* raw_stim_fs/mdl.tau_norm, ...
                             1, ctstim(jj,:));
                         depresp=cat(1,depresp,tresp);
                     end
@@ -122,14 +136,14 @@ function x = do_depression_filter(mdl, x, stack, xxx)
                         tresp=depression_bank(...
                             stim_in(jj,:),...
                             (1./stimmax(jj))*mdl.strength((jj-1)*num_channels+(1:num_channels))./100,...
-                            mdl.tau((jj-1)*num_channels+(1:num_channels)).*load_mod.raw_stim_fs/mdl.tau_norm,1);
+                            mdl.tau((jj-1)*num_channels+(1:num_channels)).*raw_stim_fs/mdl.tau_norm,1);
                         depresp=cat(1,depresp,tresp);
                     end
                 end
             else
                depresp=depression_bank(...
                    stim_in, (1./stimmax(:))*mdl.strength./100,...
-                   mdl.tau .* load_mod.raw_stim_fs/mdl.tau_norm, 1, ...
+                   mdl.tau .* raw_stim_fs/mdl.tau_norm, 1, ...
                    mdl.crosstalk);
             end
             depresp=permute(depresp',[1 3 2]);
@@ -142,38 +156,34 @@ function x = do_depression_filter(mdl, x, stack, xxx)
 end
 
 % % Plot the filter responses
-function do_depression_cartoon(sel, stack, xxx)
-    
-    global XXX
-    
+function do_depression_cartoon(sel, stack, xxx)    
     mdl = stack{end}{1};
     mdls = stack{end};
-    fs=stack{1}{1}.raw_stim_fs;
+    
+    %fs=stack{1}{1}.raw_stim_fs; % Ivar modified this too   
+    for sf = fieldnames(xxx{end}.dat)', sf = sf{1};
+        stim_time = xxx{end}.dat.(sf).(mdl.time);
+    end
+    fs = 1/(stim_time(2) - stim_time(1));
     tau=[];
     strength=[];
     
     x = struct();
-    x.dat.demo.stim=[zeros(fs./2,1);ones(fs,1)./2;zeros(fs,1);
+    x.dat.demo.(mdl.input)=[zeros(fs./2,1);ones(fs,1)./2;zeros(fs,1);
                      ones(round(fs./10),1);zeros(round(fs./10),1);
                      ones(round(fs./10),1);zeros(7.*fs./10,1)];
     if mdl.per_channel,
-        x.dat.demo.stim=repmat(x.dat.demo.stim,[1 1 length(mdl.tau)]);
-    end
-    x.dat.demo.(mdl.input)=x.dat.demo.stim;
-    
-    if isfield(XXX{1},'filecodes') && ~isempty(XXX{1}.filecodes),
-        unique_codes = unique(XXX{1}.filecodes);
-    else
-        unique_codes={''};
-    end
+        x.dat.demo.(mdl.input)=repmat(x.dat.demo.(mdl.input),[1 1 length(mdl.tau)]);
+    end    
+    x.dat.demo.(mdl.time)= (1/fs) * (0:size(x.dat.demo.(mdl.input), 1))';
     
     data=[];
     for jj=1:length(mdls),
-        xfiltered=do_depression_filter(mdls{jj}, x, stack, xxx);
-        xfiltered.dat.demo.stim=xfiltered.dat.demo.(mdl.input);
+        xfiltered=do_depression_filter(mdls{jj}, x);
+        xfiltered.dat.demo.(mdl.input)=xfiltered.dat.demo.(mdl.input);        
         
         data=cat(1,data,...
-                 [x.dat.demo.stim(:,1)+1 squeeze(xfiltered.dat.demo.stim)]);
+                 [x.dat.demo.(mdl.input)(:,1)+1 squeeze(xfiltered.dat.demo.(mdl.input))]);
         data((end-9):end,:,:)=nan;
     end
     timeaxis=(1:size(data,1))'./fs;
@@ -196,7 +206,7 @@ function do_depression_cartoon(sel, stack, xxx)
         plot(timeaxis,data);
         axis([timeaxis([1 end])' -0.1 2.1]);
         for jj=1:length(mdls),
-            text(0.5+(jj-1)*3.5,2,[unique_codes{jj} ' stim'],...
+            text(0.5+(jj-1)*3.5,2, mdl.input,...
                                 'VerticalAlign','top');
             legstr={};
             for ii=1:length(mdls{jj}.tau);
@@ -207,6 +217,9 @@ function do_depression_cartoon(sel, stack, xxx)
             text(0.5+(jj-1)*3.5,1,legstr,'VerticalAlign','top');
         end
     end
+    
+    do_xlabel('Time [s]');
+    do_ylabel('Channel [-]');
 end
 
 end

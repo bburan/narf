@@ -18,8 +18,6 @@ m.output = 'stim';
 m.force_positive = false;
 
 % Optional fields
-m.is_splittable = true;  % Has different effects depending on whether you 
-                         % use fit_split_simply or fit_split_generally
 %m.plot_gui_create_fn = @create_chan_selector_gui;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_all_subsampled_channels;
@@ -34,7 +32,11 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_subsample_channels(mdl, x, stack, xxx)    
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
+function x = do_subsample_channels(mdl, x)    
     % Find mean and RMS for all channels across all stimfiles
     keep_channels=mdl.keep_channels;
     
@@ -48,14 +50,14 @@ function x = do_subsample_channels(mdl, x, stack, xxx)
 end
 
 function do_plot_all_subsampled_channels(sel, stack, xxx)       
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
     do_plot(xouts, mdls{1}.time, mdls{1}.output, ...
             sel, 'Time [s]', 'Subsampled Signal [-]');
 end
 
 function do_plot_single_subsampled_channel(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     do_plot(xouts, mdls{1}.time, mdls{1}.output, ...
             sel, 'Time [s]', 'Subsampled Signal [-]');
 end

@@ -23,7 +23,12 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_reparameterize(mdl, x, stack, xxx)    
+
+% Optimize this module for tree traversal  
+m.required = {};   % Signal dependencies
+m.modifies = {m.output_field};          % These signals are modified
+
+function x = do_reparameterize(mdl, x)    
     % Super duper simple: 
     x.(mdl.output_field) = mdl.param_fn(mdl.params);
 end

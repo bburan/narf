@@ -30,12 +30,17 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+
+% Optimize this module for tree traversal  
+m.required = {m.resp, m.respavg, m.time};   % Signal dependencies
+m.modifies = {m.spike_count m.similarity};          % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_similarity;
 m.plot_fns{1}.pretty_name = 'Inputs, Error vs Time';
 
-function x = do_neural_statistics(mdl, x, stack, xxx)   
+function x = do_neural_statistics(mdl, x)   
     
     fns = fieldnames(x.dat);
     for ii = 1:length(fns)

@@ -25,7 +25,6 @@ m.output = 'stim';
 % work pretty well, but its' really ad-hoc!
     
 % Optional fields
-m.is_splittable = true;
 m.auto_plot = @do_plot_smooth_scatter_npfnl;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_smooth_scatter_npfnl; 
@@ -41,6 +40,10 @@ m.plot_fns{3}.pretty_name = 'Output vs Time';
 if nargin > 0
     m = merge_structs(m, args);
 end
+
+% Optimize this module for tree traversal  
+m.required = {m.input_stim, m.input_resp, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
 
 function npfnl = calc_npfnl(mdl, x)   
     % Create the pred and resp vectors
@@ -123,7 +126,7 @@ function npfnl = calc_npfnl(mdl, x)
     npfnl = @hacky_interpolator;
  end
 
-function x = do_npfnl(mdl, x, stack, xxx)
+function x = do_npfnl(mdl, x)
     
     npfnl = calc_npfnl(mdl, x);
     
@@ -165,13 +168,13 @@ function help_plot_npfnl(sel, mdls, xins, xouts)
 end
 
 function do_plot_smooth_scatter_npfnl(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));    
     %do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100);  
     help_plot_npfnl(sel, mdls, xins, xouts); 
 end
 
 function do_plot_scatter_npfnl(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));    
     do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp);  
     help_plot_npfnl(sel, mdls, xins, xouts);
 end

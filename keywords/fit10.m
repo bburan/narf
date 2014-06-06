@@ -52,7 +52,7 @@ for ii = 1:length(mod_idxs)
     end
 end
 
-fit_boo('StopAtAbsScoreDelta', 10^-2, 'StepGrowth', 1.3);
+%fit_boo('StopAtAbsScoreDelta', 10^-2, 'StepGrowth', 1.3);
 
 % Now gradually shrink the stopping criterion
 scale=10^1;

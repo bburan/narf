@@ -24,7 +24,6 @@ m.time =   'stim_time';
 m.output = 'stim';
 
 % Optional fields
-m.is_splittable = true;
 m.auto_plot = @do_plot_abcd_impulse_response;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_single_default_output;
@@ -41,6 +40,10 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
@@ -51,7 +54,7 @@ function sys = makesys(mdl)
     sys = delayss(mdl.A, mdl.B, mdl.C,mdl.D, delayterms);
 end
 
-function x = do_state_space_diffeq(mdl, x, stack, xxx)
+function x = do_state_space_diffeq(mdl, x)
     
     sys = makesys(mdl);
     

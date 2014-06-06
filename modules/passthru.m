@@ -23,17 +23,21 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 
-function x = do_passthru(mdl, x, stack, xxx)
-%     mdl = stack{end};
-%     x = xxx{end};
-
-%     sfs = fieldnames(x.dat);
-%     for ii = 1:length(x.dat)
-%         sf = sfs{ii};
-%         x.dat.(sf).(mdl.output) = x.dat.(sf).(mdl.input);
-%     end
+function x = do_passthru(mdl, x)
+    if ~strcmp(mdl.input, mdl.output)
+        fields = fieldnames(x.dat);
+        for ii = 1:length(fields)
+            sf = fields{ii};
+            x.dat.(sf).(mdl.output) = x.dat.(sf).(mdl.input);
+        end
+    end
 end
+
 end

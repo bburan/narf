@@ -24,8 +24,7 @@ m.time =   'stim_time';
 m.output = 'stim';
 
 % Optional fields
-m.is_splittable = true;
-m.auto_plot = @do_plot_pz_impulse_response;
+%m.auto_plot = @do_plot_pz_impulse_response;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_single_default_output;
 m.plot_fns{1}.pretty_name = 'Output vs Time';
@@ -43,6 +42,9 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
@@ -96,7 +98,7 @@ function [syses, t_aligns] = makesys(mdl)
     
 end
 
-function x = do_pz_wavelet_filterbank(mdl, x, stack, xxx)    
+function x = do_pz_wavelet_filterbank(mdl, x)    
     [syses, t_aligns] = makesys(mdl);    
     for sf = fieldnames(x.dat)', sf=sf{1};        
          [T, S, C] = size(x.dat.(sf).(mdl.input));         

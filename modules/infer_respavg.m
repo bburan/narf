@@ -28,7 +28,11 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_infer_respavg(mdl, x, stack, xxx)    
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
+function x = do_infer_respavg(mdl, x)    
     glmopts.family = mdl.distribution;
     glmopts.algo = 'medium'; % 'medium', 'large', or 'newton'
 
@@ -57,7 +61,7 @@ function x = do_infer_respavg(mdl, x, stack, xxx)
 end
 
 function do_plot_inferred_respavg(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     
     hold on;
     do_plot(xouts, mdls{1}.time, mdls{1}.input, ...

@@ -36,6 +36,11 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {};   % Signal dependencies
+m.modifies = {m.output_stim, m.output_stim_time, m.output_resp, m.output_resp_time ...
+                m.output_respavg};          % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_all_stim_channels;
@@ -59,7 +64,7 @@ m.plot_gui_create_fn = @create_gui;
 % ------------------------------------------------------------------------
 % Define the 'methods' of this module, as if it were a class
 
-function x = do_load_SNS_from_baphy(mdl, x, stack, xxx)
+function x = do_load_SNS_from_baphy(mdl, x)
     
     % Merge the training and test set names, which may overlap
     files_to_load = unique({x.training_set{:}, x.test_set{:}});
@@ -344,7 +349,7 @@ end
 % Plot functions
 
 function do_plot_all_stim_channels(sel, stack, xxx)       
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);        
@@ -354,7 +359,7 @@ function do_plot_all_stim_channels(sel, stack, xxx)
 end
 
 function do_plot_single_stim_channel(sel, stack, xxx)   
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);
@@ -363,7 +368,7 @@ function do_plot_single_stim_channel(sel, stack, xxx)
 end
 
 function do_plot_respavg(sel, stack, xxx)
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);
@@ -373,7 +378,7 @@ function do_plot_respavg(sel, stack, xxx)
 end
 
 function do_plot_response_raster(sel, stack, xxx)    
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);
@@ -393,7 +398,7 @@ end
 
 function do_plot_channels_as_heatmap(sel, stack, xxx)
 
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));  
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));  
         mdls = stack{end};
         xins = {xxx(1:end-1)};
         xouts = xxx(end);  

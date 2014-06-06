@@ -33,13 +33,17 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input1, m.input2, m.input_resp, m.time};   % Signal dependencies
+m.modifies = {m.output, m.train_score, m.test_score, m.test_r_ceiling, m.test_r_floor};  % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.auto_plot = @do_plot_correlation_inputs;
 m.plot_fns{1}.fn = @do_plot_correlation_inputs;
 m.plot_fns{1}.pretty_name = 'Correlation';
 
-function x = do_correlation(mdl, x, stack, xxx)            
+function x = do_correlation(mdl, x)            
     % Compute the training set correlation, ignoring nans
         
     p = flatten_field(x.dat, x.training_set, mdl.input1);
@@ -118,11 +122,11 @@ function x = do_correlation(mdl, x, stack, xxx)
 end
 
 function do_plot_correlation_inputs(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     xout = xxx{end};
     mdl = mdls{1};
     
-    do_plot_scatter(sel, {xxx}, mdls{1}.input1, mdls{1}.input2, 500);
+    do_plot_scatter(sel, xins, mdls{1}.input1, mdls{1}.input2, 500);
     
     if ~isfield(mdl, 'test_r_ceiling')
         mdl.test_r_ceiling = 'score_test_ceilingcorr';

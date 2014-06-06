@@ -38,6 +38,11 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.stim, m.raw_ISIs, m.raw_spiketimes, m.scaled_ISIs, m.time, m.cstim};   % Signal dependencies
+m.modifies = {m.train_nlogl, m.train_bic, m.train_aic, m.train_autocorr, m.test_nlogl, m.test_bic m.test_aic m.test_autocorr};          % These signals are modified
+
+
 % Optional fields
 m.plot_fns = {};
 m.auto_plot = @do_plot_scaled_isis;
@@ -139,7 +144,7 @@ function [x, nlogl, bic, aic, autocorr] = helper_fn(mdl, x, stimfiles)
 end
 
 
-function x = do_bayesian_likelihood(mdl, x, stack, xxx)
+function x = do_bayesian_likelihood(mdl, x)
     
     [x, train_nlogl, train_bic, train_aic, train_autocorr] = helper_fn(mdl, x, x.training_set);
     [x, test_nlogl, test_bic, test_aic, test_autocorr] = helper_fn(mdl, x, x.test_set);    
@@ -157,7 +162,7 @@ function x = do_bayesian_likelihood(mdl, x, stack, xxx)
 end
 
 function do_plot_scaled_isis(sel, stack, xxx)
-    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     xout = xxx{end};
     mdl = stack{end}{1};
      
@@ -183,7 +188,7 @@ function do_plot_scaled_isis(sel, stack, xxx)
 end
 
 function do_plot_scaled_autocorr(sel, stack, xxx)
-    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     xout = xxx{end};
     mdl = stack{end}{1};
     
