@@ -1,6 +1,6 @@
 % function fit05s()
 %
-% just like fit05 but use smse and run to 1e-5.5 min error step
+% just like fit05 but use smse and run to 1e-6.5 min error step
 %
 function fit05s()
 

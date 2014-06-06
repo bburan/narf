@@ -92,8 +92,8 @@ else
     % for the high-resolution data sets that I am doing. March 27, 2014. 
     % Ivar now says: Turning memoization back on. Now it only memoizes
     % functions that took longer than 300 seconds (5 minutes) to run. 
-    memoized_run_keyword = @run_keyword;               % Uncomment for no memoization
-    %memoized_run_keyword = memoize(@run_keyword);    % Uncomment for memoization
+    %memoized_run_keyword = @run_keyword;               % Uncomment for no memoization
+    memoized_run_keyword = memoize(@run_keyword);    % Uncomment for memoization
        
     % During development, we actually want to also check that no files have
     % changed before using memoization. It's too hard to figure out if a
@@ -104,16 +104,19 @@ else
     fprintf('Computing hash for all NARF files: %s\n', filehash)
     
     for ii = 1:length(keywords_to_exec)
-        % NON-MEMOIZED VERSION:
-        run_keyword(keywords_to_exec{ii}, STACK, XXX, META);
-        % MEMOIZED VERSION
-        %fprintf('Calling Keyword: %s\n', keywords_to_exec{ii});
-        %
-        %[so, xo, mo] = memoized_run_keyword(keywords_to_exec{ii}, ...
-        %                    filehash, STACK, XXX, META);
-        %STACK = so;
-        %XXX = xo;
-        %META = mo;
+        if ~strcmpi(keywords_to_exec{ii},'fit05a'),
+            % NON-MEMOIZED VERSION:
+            run_keyword(keywords_to_exec{ii}, STACK, XXX, META);
+        else
+            % MEMOIZED VERSION
+            fprintf('Calling Keyword: %s\n', keywords_to_exec{ii});
+            
+            [so, xo, mo] = memoized_run_keyword(keywords_to_exec{ii}, ...
+                                                filehash, STACK, XXX, META);
+            STACK = so;
+            XXX = xo;
+            META = mo;
+        end
     end
     
     % SVD hacked in from nmse

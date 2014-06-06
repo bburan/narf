@@ -1,6 +1,6 @@
 % function fit05c()
 %
-% just like fit05 but normalize MSE by SE
+% just like fit05 but normalize MSE by SE and stop at 1e-6
 %
 function fit05c()
 

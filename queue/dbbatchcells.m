@@ -8,7 +8,7 @@ dbopen;
 if isnumeric(batchid),
    sql=['SELECT * FROM sBatch WHERE id=',num2str(batchid)];
    params=mysql(sql);
-   if length(params.parmstring)>0,
+   if ~isempty(params.parmstring),
       eval(char(params.parmstring));
    end
 else
