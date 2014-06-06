@@ -115,15 +115,14 @@ m.plot_fns{2}.pretty_name = 'Error Histogram';
             % Which half? this is determined by the value of the 
             % 'crossvalidation_fold' parameter
             
-            training_sets = {x.training_set{:}};
-            p = flatten_field(x.dat, training_sets, mdl.input1);
+            p = flatten_field(x.dat, x.training_set, mdl.input1);
             q = flatten_field(x.dat, x.training_set, mdl.input2);
             
             train_partition = false(size(p));
             c1=1;
-            for i=1:length(training_sets),
-                duration = size(x.dat.(training_sets{i}).(mdl.input1),1);
-                repetition = size(x.dat.(training_sets{i}).(mdl.input1),2);
+            for i=1:length(x.training_set),
+                duration = size(x.dat.(x.training_set{i}).(mdl.input1),1);
+                repetition = size(x.dat.(x.training_set{i}).(mdl.input1),2);
                 if mdl.crossvalidation_fold == 1,
                     train_partition( c1:(c1+duration*ceil(repetition/2)) ) = true;
                 else
