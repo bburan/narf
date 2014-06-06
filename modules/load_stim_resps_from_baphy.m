@@ -136,6 +136,8 @@ function x = do_load_from_baphy(mdl, x)
             RDT=0;
         end
         
+        
+        
         % Load the raw_stim part of the data structure
         stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
         fprintf('Loading stimulus: %s\n', stimfile);
@@ -144,6 +146,8 @@ function x = do_load_from_baphy(mdl, x)
             options.filtfmt=mdl.stimulus_format;
             options.fsout=mdl.raw_stim_fs;
             options.chancount=mdl.stimulus_channel_count;
+            % JL: added this in the debug, it may be removed later
+            %options.forceregen = 1;
             [stim,stimparam] = loadstimbytrial(stimfile,options);
 
             if RDT,

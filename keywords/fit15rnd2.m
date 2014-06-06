@@ -107,12 +107,50 @@ StepGrowth=1.1;
     end
 
 
+    function fn = make_subfitter(del)
+        function [a,b,c,d] = subfitter(prev_opts)
+            
+            % Detect whether the fittables are in a FIR block or not
+            module_being_fit = '';
+            for kk = 1:length(STACK)
+                if isfield(STACK{kk}{1}, 'fit_fields') && ~isempty(STACK{kk}{1}.fit_fields)
+                    module_being_fit = STACK{kk}{1}.name;
+                    break;
+                end
+            end
+            
+            if strcmp(module_being_fit, 'fir_filter') || ...
+                    strcmp(module_being_fit, 'weight_channels')
+                if exist('prev_opts', 'var')
+                    [a,b,c,d] = fit_boo(prev_opts);
+                else
+                    [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', del, ...
+                        'StopAtStepNumber', 1, ...
+                        'StepGrowth', 1.3);
+                end
+            else
+                if exist('prev_opts', 'var')
+                    [a,b,c,d] = fit_scaat(prev_opts);
+                else
+                    [a,b,c,d] = fit_scaat('StopAtAbsScoreDelta', del, ...
+                        'StopAtStepNumber', 1);
+                end
+            end
+        end
+        
+        fn = @subfitter;
+        
+    end
+
+
+
+
 % initialization: a first rough search
 initial_stack = STACK;
 
 [term_cond, term_score,  n_iters, options] = quick_search();
 
-for i=1:20,
+for i=1:10,
     % Store the previous state of the STACK and revert to default
     cached_stack = STACK;
     STACK = initial_stack;
@@ -123,16 +161,15 @@ for i=1:20,
             continue;
         else
             for ll = 1:length(STACK{kk}{:})
-                if (strcmp(STACK{kk}{ll}.name, 'lindeberg_filter'))
+                if (strcmp(STACK{kk}{ll}.name, 'lindeberg_filter')),
                     mdl = STACK{kk}{ll};
                     params = zeros(7,1);
-                    % start with a reasonable guess
-                    params(1) = mdl.num_dims.*rand(1); %xshift
-                    params(2) = (mdl.num_coefs/4).*rand(1); %tshift
-                    params(3) = (0.1 + (mdl.num_dims/2-0.1).*rand(1)); %s
-                    params(4) = (0.5 + (mdl.num_coefs/3-0.5).*rand(1)); % tau
-                    params(5) = 2.*(rand(1)-0.5); % v in [-1;1]
-                    params(6) = 10.*(rand(1)-0.5); % norm_factor in [-5;5]
+                    params(1) = (0 + (mdl.num_dims-0)).*rand(1); %xshift
+                    params(2) = (0 + (mdl.num_coefs/4-0)).*rand(1); %tshift
+                    params(3) = (0.1 + (mdl.num_dims/2-0.1)).*rand(1); %s
+                    params(4) = (0.5 + (mdl.num_coefs/3-0.5)).*rand(1); % tau
+                    params(5) = (-0.75 + 1.5).*rand(1); % v
+                    params(6) = 10.*rand(1); % norm_factor
                     % add_factor is mdl.lincoefs(7) and is set to 0
                     
                     cc = 'lincoefs';
@@ -144,16 +181,6 @@ for i=1:20,
                     %                         STACK{kk}{ll}.(char(cc)) = ...
                     %                             rand(length(STACK{kk}{ll}.(char(cc))),1)*30.0-10.0;
                     %                     end
-                elseif (strcmp(STACK{kk}{ll}.name, 'lindeberg_spectral'))
-                    % start with a reasonable guess
-                    STACK{kk}{ll}.bf = STACK{kk}{ll}.num_channels.*rand(1); %xshift
-                    STACK{kk}{ll}.s = (0.1 + (STACK{kk}{ll}.num_channels/2-0.1).*rand(1)); %s
-                    STACK{kk}{ll}.norm_factor = 10.*(rand(1)-0.5); % norm_factor in [-5;5]
-                    STACK{kk}{ll}.add_factor = 0; % add_factor is set to 0
-                elseif (strcmp(STACK{kk}{ll}.name, 'weight_channels'))
-                    % start with a reasonable guess
-                    STACK{kk}{ll}.weights = rand(size(STACK{kk}{ll}.weights)); %(order of magnitude 1)
-                    STACK{kk}{ll}.y_offset = rand(size(STACK{kk}{ll}.y_offset))/100; %(order of magnitude 0.01)
                 end
             end
         end
@@ -186,21 +213,14 @@ for i=1:20,
     end
 end
 
-fit_iteratively(@step_until_10neg3, ...
-    create_term_fn());
+% Now gradually shrink the stopping criterion - as in fit10
+scale=10^1;
+stop_at=10^-6;
 
-fit_iteratively(@step_until_10neg35, ...
-    create_term_fn());
+while(scale > stop_at)
+    fit_iteratively(make_subfitter(scale), create_term_fn('StopAtAbsScoreDelta', scale));
+    scale = scale * 0.7; % Very conservative: 0.8. Probably 0.5 or even 0.25 is fine.
+end
 
-fit_iteratively(@step_until_10neg4, ...
-    create_term_fn());
 
-fit_iteratively(@step_until_10neg45, ...
-    create_term_fn());
-
-fit_iteratively(@step_until_10neg5, ...
-    create_term_fn());
-
-% fit_iteratively(@step_until_10neg6, ...
-%                create_term_fn());
 end

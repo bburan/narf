@@ -171,7 +171,7 @@ function do_plot_fir_coefs_as_heatmap(sel, stack, xxx)
             sw(sw<eps)=1;
             wts=wts./repmat(sw,[size(wts,1) 1]);
             wcoefs = mdls{ii}.coefs;
-            if size(wts,2)==size(wcoefs),
+            if size(wts,2)==size(wcoefs,1),
                 coefs = wts*wcoefs;
                 wcoefs=wcoefs./max(abs(wcoefs(:))).*max(abs(coefs(:)));
             else

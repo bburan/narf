@@ -172,7 +172,6 @@ if isfield(params,'specialbatch'),
         cellfiledata=cellfiledata(keepidx);
         cellids=ucells(matchcells);
         
-        
       case 'vocnoise',
         
         keepfiles=zeros(size(cellfiledata));
@@ -356,6 +355,21 @@ if isfield(params,'specialbatch'),
         keepcellids={};
         for ii=1:length(cellfiledata),
             if strcmpi(cellfiledata(ii).behavior,'active'),
+                keepfiles(ii)=1;
+                keepcellids=union(keepcellids,cellfiledata(ii).cellid);
+            end
+        end
+        keepidx=find(keepfiles);
+        cellfileids=cellfileids(keepidx);
+        cellfiledata=cellfiledata(keepidx);
+        cellids=keepcellids;
+        
+      case 'passive-only',
+        % must be at least one passive file
+        keepfiles=zeros(size(cellfiledata));
+        keepcellids={};
+        for ii=1:length(cellfiledata),
+            if ~strcmpi(cellfiledata(ii).behavior,'active'),
                 keepfiles(ii)=1;
                 keepcellids=union(keepcellids,cellfiledata(ii).cellid);
             end
