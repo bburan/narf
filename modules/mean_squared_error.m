@@ -93,17 +93,17 @@ m.plot_fns{2}.pretty_name = 'Error Histogram';
                       (d+(d==0));
                 end
                 me=mean(ee);se=std(ee)./sqrt(bincount);
-                train_nmse=1-shrinkage(1-me,se,0.5);
+                train_nmse=1.2-shrinkage(1.2-me,se,0.5);
                 
                 if ~isempty(ptest),
                    for bb=1:bincount,
-                      d=nanvar(qtest(ll(bb):(ll(bb+1)-1)));
+                      d=nanvar(qtest(llv(bb):(llv(bb+1)-1)));
                       ve(bb)=nanmean((ptest(llv(bb):(llv(bb+1)-1))-...
                          qtest(llv(bb):(llv(bb+1)-1))).^2)./...
                          (d+(d==0));
                    end
                    me=mean(ve);se=std(ve)./sqrt(bincount);
-                   test_nmse=1-shrinkage(1-me,se,0.5);
+                   test_nmse=1.2-shrinkage(1.2-me,se,0.5);
                 else
                    test_nmse=nan;
                 end
