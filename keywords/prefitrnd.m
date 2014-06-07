@@ -64,7 +64,13 @@ for i=1:10
                     STACK{kk}{ll}.y_offset = rand(size(STACK{kk}{ll}.y_offset))/100; %(order of magnitude 0.01)
                 elseif (strcmp(STACK{kk}{ll}.name, 'fir_filter'))
                     % FIR
-                    STACK{kk}{ll}.coefs = normrnd(0, 5, size(STACK{kk}{ll}.coefs)); %(0,5) gaussian random initialization
+                    STACK{kk}{ll}.coefs = normrnd(0, 1, size(STACK{kk}{ll}.coefs)); %(0,1) gaussian random initialization
+                    STACK{kk}{ll}.('baseline') = 0;
+                elseif (strcmp(STACK{kk}{ll}.name, 'fir_separable_filter'))
+                    % SEPARABLE FIR
+                    STACK{kk}{ll}.spec_weights = normrnd(0, 1, size(STACK{kk}{ll}.spec_weights)); %(0,1) gaussian random initialization
+                    STACK{kk}{ll}.time_weights = normrnd(0, 1, size(STACK{kk}{ll}.time_weights)); %(0,1) gaussian random initialization
+                    STACK{kk}{ll}.('v') = 0;
                     STACK{kk}{ll}.('baseline') = 0;
                 end
             end
