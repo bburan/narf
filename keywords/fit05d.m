@@ -5,7 +5,7 @@
 %
 function fit05d()
 
-    global STACK
+global STACK
     
 semse();
 

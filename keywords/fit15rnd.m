@@ -110,6 +110,8 @@ StepGrowth=1.1;
 % initialization: a first rough search
 initial_stack = STACK;
 
+[m, mi] = find_modules(STACK, 'lindeberg_spectral');
+
 [term_cond, term_score,  n_iters, options] = quick_search();
 
 for i=1:20,

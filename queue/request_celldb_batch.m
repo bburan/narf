@@ -235,7 +235,7 @@ for nn = 1:length(rundata)
            file_code=repmat({'C1'},[1 length(ff)-1]);
         end
         test_file_code={'C1'};
-
+        
         ff=find(snr<100);
         if length(ff)==1,
            train_set={train_set{:} [cellfiledata(ff).stimfile,'_est']};
@@ -271,10 +271,12 @@ for nn = 1:length(rundata)
             cellfiledata=cellfiledata(1);
         end
         
-        if length(cellfiledata)==1,
-            train_set{1}=[cellfiledata.stimfile,'_est'];
-            test_set{1}=[cellfiledata.stimfile,'_val'];
-            rawid(1)=cellfiledata.rawid;
+        if length(cellfiledata)==1 || ~isempty(findstr(cellid,'por124')),
+            for ii=1:length(cellfiledata),
+                train_set{end+1}=[cellfiledata(ii).stimfile,'_est'];
+                test_set{end+1}=[cellfiledata(ii).stimfile,'_val'];
+                rawid(end+1)=cellfiledata(ii).rawid;
+            end
        else
             for ii=1:length(cellfiledata)-1,
                 train_set{end+1}=cellfiledata(ii).stimfile;

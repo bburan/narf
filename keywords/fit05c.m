@@ -1,6 +1,6 @@
 % function fit05c()
 %
-% just like fit05 but normalize MSE by SE
+% just like fit05 but normalize MSE by SE and stop at 1e-6
 %
 function fit05c()
 
@@ -101,10 +101,10 @@ fit_iteratively(@step_until_10neg45, ...
 fit_iteratively(@step_until_10neg5, ...
                 create_term_fn());
 
-%fit_iteratively(@step_until_10neg55, ...
-%                create_term_fn());
+fit_iteratively(@step_until_10neg55, ...
+                create_term_fn());
 
-%fit_iteratively(@step_until_10neg6, ...
-%                create_term_fn());
+fit_iteratively(@step_until_10neg6, ...
+                create_term_fn());
 end
 
