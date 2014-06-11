@@ -29,15 +29,6 @@ m.input2 = 'respavg';
 m.time   = 'stim_time';
 m.error  = 'error';
 m.norm_by_se=0;
-
-m.crossvalidation_fold = 0; % 0 => deactivated (default), 1 or 2 defines the fold
-mods = find_modules(STACK, 'passthru', true);
-if ~isempty(mods),
-    if isfield(mods{1},'crossvalidation_fold'),
-        m.crossvalidation_fold = mods{1}.crossvalidation_fold;
-    end
-end
-
 m.train_score  = 'score_train_mse';
 m.test_score  = 'score_test_mse';
 m.train_score_norm  = 'score_train_nmse';
@@ -61,29 +52,8 @@ m.plot_fns{1}.fn = @do_plot_inputs_and_mse;
 m.plot_fns{1}.pretty_name = 'Inputs, Error vs Time';
 m.plot_fns{2}.fn = @do_plot_error_histogram;
 m.plot_fns{2}.pretty_name = 'Error Histogram';
-
-    function x = do_mean_squared_error(mdl, x)       
+    function x = do_mean_squared_error(mdl, x, stack, xxx)
         
-        % Compute the mean squared error of the training set
-        p = flatten_field(x.dat, x.training_set, mdl.input1);
-        q = flatten_field(x.dat, x.training_set, mdl.input2);
-        train_score = nanmean((p - q).^2);
-        
-        % Compute the mean squared error of the test set
-        ptest = flatten_field(x.dat, x.test_set, mdl.input1);
-        qtest = flatten_field(x.dat, x.test_set, mdl.input2);
-        test_score = nanmean((ptest - qtest).^2);
-        
-        if ~isfield(mdl,'norm_by_se') || ~mdl.norm_by_se,
-            train_nmse = train_score / (nanvar(q)+(train_score==0));
-            test_nmse = test_score / (nanvar(qtest)+(test_score==0));
-        else
-            % apply shrinkage filter to nmse
-            bincount=10;
-            ll=round(linspace(1,length(p)+1,bincount+1));
-            llv=round(linspace(1,length(ptest)+1,bincount+1));
-            ee=zeros(bincount,1);ve=zeros(bincount,1);
-            for bb=1:bincount,
         mods = find_modules(stack, 'passthru', true);
         if ~isempty(mods),
             if isfield(mods{1},'crossvalidation_fold'),
@@ -112,33 +82,30 @@ m.plot_fns{2}.pretty_name = 'Error Histogram';
                 llv=round(linspace(1,length(ptest)+1,bincount+1));
                 ee=zeros(bincount,1);ve=zeros(bincount,1);
                 for bb=1:bincount,
-                   d=nanvar(q(ll(bb):(ll(bb+1)-1)));
-                   ee(bb)=nanmean((p(ll(bb):(ll(bb+1)-1))-q(ll(bb):(ll(bb+1)-1))).^2)./...
-                      (d+(d==0));
+                    d=nanvar(q(ll(bb):(ll(bb+1)-1)));
+                    ee(bb)=nanmean((p(ll(bb):(ll(bb+1)-1))-q(ll(bb):(ll(bb+1)-1))).^2)./...
+                        (d+(d==0));
                 end
                 me=mean(ee);se=std(ee)./sqrt(bincount);
-                train_nmse=1-shrinkage(1-me,se,0.5);
+                train_nmse=1.2-shrinkage(1.2-me,se,0.5);
                 
                 if ~isempty(ptest),
-                   for bb=1:bincount,
-                      d=nanvar(qtest(ll(bb):(ll(bb+1)-1)));
-                      ve(bb)=nanmean((ptest(llv(bb):(llv(bb+1)-1))-...
-                         qtest(llv(bb):(llv(bb+1)-1))).^2)./...
-                         (d+(d==0));
-                   end
-                   me=mean(ve);se=std(ve)./sqrt(bincount);
-                   test_nmse=1-shrinkage(1-me,se,0.5);
+                    for bb=1:bincount,
+                        d=nanvar(qtest(llv(bb):(llv(bb+1)-1)));
+                        ve(bb)=nanmean((ptest(llv(bb):(llv(bb+1)-1))-...
+                            qtest(llv(bb):(llv(bb+1)-1))).^2)./...
+                            (d+(d==0));
+                    end
+                    me=mean(ve);se=std(ve)./sqrt(bincount);
+                    test_nmse=1.2-shrinkage(1.2-me,se,0.5);
                 else
-                   test_nmse=nan;
+                    test_nmse=nan;
                 end
-        end
-        
             end
-            
         else
             % the cross-validation setup consists in computing the (n)mse
             % only on half of the training set.
-            % Which half? this is determined by the value of the 
+            % Which half? this is determined by the value of the
             % 'crossvalidation_fold' parameter
             
             p = flatten_field(x.dat, x.training_set, mdl.input1);

@@ -1,5 +1,5 @@
-function ozgf04fb24x200 ()
-% One-zero gamma-tone filterbank, 4th order, 24 channels at 200Hz.
+function ozgf04fb18x200d ()
+% One-zero gamma-tone filterbank, 4th order, 18 channels at 200Hz.
 % Appends 4 modules to stack:
 %    1. load_stim_resps_from_baphy
 %    2. pz_wavelet 
@@ -11,9 +11,9 @@ global MODULES STACK XXX META;
 load_fs = 50000;
 samp_fs = 200;
 
-n_chans = 24;
+n_chans = 18;
 CFs = logspace(log10(0.2), log10(20), n_chans);
-Qs = ones(1, n_chans) * (2*CFs(1) ./ (CFs(2) - CFs(1)));
+Qs = ones(1, n_chans) * (1.0*CFs(1) ./ (CFs(2) - CFs(1)));
 
 append_module(MODULES.load_stim_resps_from_baphy.mdl(...
                            struct('raw_resp_fs', samp_fs, ...
