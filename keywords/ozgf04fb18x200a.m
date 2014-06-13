@@ -13,7 +13,7 @@ samp_fs = 200;
 
 n_chans = 18;
 CFs = logspace(log10(0.2), log10(20), n_chans);
-Qs = ones(1, n_chans) * (3*CFs(1) ./ (CFs(2) - CFs(1)));
+Qs = ones(1, n_chans) * (0.9*CFs(1) ./ (CFs(2) - CFs(1)));
 
 append_module(MODULES.load_stim_resps_from_baphy.mdl(...
                            struct('raw_resp_fs', samp_fs, ...

@@ -9,7 +9,7 @@ function [nlogl, penalty, val_nlogl] = pm_nlogl()
 
 global XXX META STACK;
 
-nlogl = XXX{end}.score_train_nlogl; 
+nlogl = XXX{end}.score_train_nlogl;
 val_nlogl = XXX{end}.score_test_nlogl; 
 
 if ~isfield(META, 'sparsity_weight')

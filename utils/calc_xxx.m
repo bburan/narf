@@ -33,6 +33,12 @@ if start_depth > length(XXX)
     start_depth = length(XXX);
 end
 
+% If the end depth is beyond the length of the stack, stop
+if end_depth > length(XXX)
+    end_depth = length(XXX);
+end
+
+
 flat_start_depth = 1;
 flat_end_depth = 1;
 for ii = 1:length(STACK)
@@ -41,9 +47,9 @@ for ii = 1:length(STACK)
             flat_start_depth = flat_start_depth + 1;
         end
         if ii <= end_depth
-            flat_end_depth = flat_start_depth;
+            flat_end_depth = flat_end_depth + 1;
         end
     end
 end
 
-update_xxx(flat_start_depth, flat_end_depth);
+update_xxx(flat_start_depth, flat_end_depth - 1);

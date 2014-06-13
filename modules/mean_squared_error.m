@@ -54,12 +54,12 @@ m.plot_fns{2}.fn = @do_plot_error_histogram;
 m.plot_fns{2}.pretty_name = 'Error Histogram';
     function x = do_mean_squared_error(mdl, x, stack, xxx)
         
-        mods = find_modules(stack, 'passthru', true);
-        if ~isempty(mods),
-            if isfield(mods{1},'crossvalidation_fold'),
-                mdl.crossvalidation_fold = mods{1}.crossvalidation_fold;
-            end
-        end
+        %mods = find_modules(stack, 'passthru', true);
+        %if ~isempty(mods),
+        %    if isfield(mods{1},'crossvalidation_fold'),
+        %        mdl.crossvalidation_fold = mods{1}.crossvalidation_fold;
+        %    end
+        %end
         
         if ~isfield(mdl,'crossvalidation_fold') || ~mdl.crossvalidation_fold,
             % Compute the mean squared error of the training set

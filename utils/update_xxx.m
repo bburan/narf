@@ -66,23 +66,21 @@ for ii = start_depth:end_depth,
     if ~isfield(flatstack{ii}, 'required') || ~isfield(flatstack{ii}, 'modifies') 
         fprintf('WARNING: NARF now requires that modules declare their dependencies (m.required) and which signals they alter (m.modifies).\n'); 
         fprintf('If you are seeing this in any other circumstance than when loading an old model, you probably have subtle errors regarding conditional evaluation!\n');
-        xout = flatstack{ii}.fn(flatstack{ii}, flatxxx{ii});        
+        flatxxx{ii+1} = flatstack{ii}.fn(flatstack{ii}, flatxxx{ii});        
     else    
         if ~isempty(modified) && isempty(intersect(flatstack{ii}.required, modified))
-            % No computation required. Pass existing signal through unaltered
-            xout = XXX{xxxindexes(ii)+1};
+            % No computation required. Pass through existing signals.  
+            flatxxx{ii+1} = merge_structs(XXX{xxxindexes(ii)+1}, flatxxx{ii});
         else
             % Uncomment this to help debug your tree traversals
-    %        if isfield(flatstack{ii}, 'output')
-    %            fprintf('updating: %s\n', flatstack{ii}.output);
-    %            disp(modified);
-    %        end
-            xout = flatstack{ii}.fn(flatstack{ii}, flatxxx{ii});
-            modified = union(flatstack{ii}.modifies , modified);
+            %if isfield(flatstack{ii}, 'output')
+            %    fprintf('updating[%d]: %s\n', ii, flatstack{ii}.output);
+            %    disp(modified);
+            %end
+            flatxxx{ii+1} = flatstack{ii}.fn(flatstack{ii}, flatxxx{ii});
+            modified = union(flatstack{ii}.modifies , modified);            
         end
-    end
-    
-    flatxxx{ii+1} = merge_structs(flatxxx{ii}, xout);    
+    end    
 end
 
 % Now update the main structure

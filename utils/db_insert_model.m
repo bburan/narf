@@ -38,6 +38,14 @@ if ~isfield(XXX{end},'sparsity')
     XXX{end}.sparsity= 0.0;
 end
     
+%if isfield(XXX{end},'score_train_nlogl')    
+%    m.train_nlogl = 'score_train_nlogl';
+%    m.test_nlogl = 'score_test_nlogl';
+%else    
+%    m.train_nlogl = 0;
+%    m.test_nlogl = 0;
+%end
+
 % -----------------------------------------------------------------------
 dbopen(1); % make sure server connection not broken during a long fit
 sql = ['SELECT * FROM NarfResults WHERE modelname="' META.modelname '"' ...
