@@ -59,11 +59,11 @@ end
 
 % Now gradually shrink the stopping criterion
 scale = META.perf_metric(); % Start at the current performance value
-stop_at=10^-3;
+stop_at=10^-6;
 
 while(scale > stop_at)
     fit_iteratively(make_subfitter(scale), create_term_fn('StopAtAbsScoreDelta', scale));
-    scale = scale * 0.5; % Very conservative: 0.8. Probably 0.5 or even 0.25 is fine.
+    scale = scale * 0.7; % Very conservative: 0.8. Probably 0.5 or even 0.25 is fine.
 end
 
 nmse();

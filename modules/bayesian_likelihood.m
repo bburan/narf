@@ -95,7 +95,7 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
            
             % Build up the scaled inter-spike intervals distribution
            for r = 1:ri
-                spiketimes = x.dat.(sf).(mdl.raw_spiketimes){s,r};  
+                spiketimes = x.dat.(sf).(mdl.raw_spiketimes){s,r};                                                
                 sISIs = diff(interp1([0; time], [0; CDF], [0; spiketimes]));
 
                 % FIXME: Sometimes scaled ISIs of 0 occur
@@ -114,33 +114,35 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
     end
     
     % Anything less than the temporal cutoff should be NaN'd
-    %scaled_ISIs(scaled_ISIs <= mdl.probcutoff) = NaN;   
+    %scaled_ISIs(scaled_ISIs <= mdl.probcutoff) = NaN;
+    %scaled_ISIs = excise(scaled_ISIs);
     
     % Everything should also be shifted left to the cutoff
     %scaled_ISIs(:) = scaled_ISIs(:) - mdl.probcutoff;
     
     n_spikes = length(scaled_ISIs);
     
-    % Average lambda for the scaled ISIs
+    % Average lambda for the stimulus-scaled ISIs
 	l_avg = 1 / nanmean(scaled_ISIs); 
     
-    % Average lambda we should expect from RESP if it were stationary
-    l_tot = (si * time(end)) / n_spikes;
+    % Average lambda we should expect, from looking at RESP
+    total_time = (si * time(end));
+    l_tot = total_time / n_spikes;
     
-	% Where scaled ISIs fall on the poisson cumulative density function
-    z = 1 - exp(- l_avg * scaled_ISIs); % Old way was normalized to itself
-    %z = 1 - exp(- l_tot * scaled_ISIs); % New way normalizes to # of spikes
+	% Map scaled ISIs (x-axis) to the uniform distribution (Y-axis)
+    %z = 1 - exp(- l_avg * scaled_ISIs); % Old way normalizes to stim
+    z = 1 - exp(- l_tot * scaled_ISIs); % New way of normalizing to resp
+    z = cumsum(sort(z));
+    z = z / z(end);    
     
-    % Distribution-based error function: 
-    % The distance from expected cumulative spike rate and actual one
-    uni = linspace(0, n_spikes, n_spikes)'; 
-    SDF = cumsum(sort(z)); % Cumulative Spikes 
-    
-    % Pick L0, L1, L2 norm here
-    err = sum((uni - SDF).^2); % Sum of squares error works
-    %err = sum(abs(uni - SDF)); % L1 error worked, but less well
+    % Expected: uniform distribution from 0 to 1
+    uni = linspace(0, 1, n_spikes)'; 
+     
+    % Pick L0, L1, L2 norm here   
+    err = sum((z - uni).^2); % Sum of squares error works
+    % err = sum(abs(uni - SDF)) / n_spikes; % L1 error worked pretty well
     % err = max(abs(uni - SDF)); % L0 error may also work (KS plot-style)
-    nlogl = err; % TODO: Normalize in some way.
+    nlogl = err;
     
     % Negative log likelihood would be the sum of all the ISIs
     %nlogl = - sum(log(l_tot .* exp(-l_tot .* scaled_ISIs)));
