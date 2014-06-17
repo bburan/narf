@@ -6,12 +6,15 @@ m.mdl = @weight_channels;
 m.name = 'weight_channels';
 m.fn = @do_weight_channels;
 m.pretty_name = 'Weight Channels';
-m.editable_fields = {'weights', 'y_offset', 'input', 'time', 'output'};
+m.editable_fields = {'weights', 'y_offset', 'force_positive', ...
+                    'input', 'time', 'output'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
 m.weights = [1]; % Each column weights several channels to produce
 m.y_offset = [0]; % A column of y-offsets to be added to each output chan. 
+m.force_positive = 0;  % if 1, all values of weight matrix
+                       % rectified before projection
 m.input =  'stim';
 m.time =   'stim_time';
 m.output = 'stim';
@@ -43,13 +46,18 @@ function x = do_weight_channels(mdl, x, stack, xxx)
          if ~isequal(C, size(mdl.weights, 1))
             error('Dimensions of (mdl.input) don''t match weights.');
          end
-
-         D = size(mdl.weights, 2);
-                  
+         
+         if isfield(mdl,'force_positive') && mdl.force_positive,
+             W=abs(mdl.weights);
+         else
+             W=mdl.weights;
+         end
+         D = size(W, 2);
+         
          % Rewritten to avoid squeeze and to have improved performance
          % Simple matrix multiplies, reshapes, and bsxfuns are fastest
          d = reshape(x.dat.(sf).(mdl.input), T*S, C);
-         tmp = d*mdl.weights;
+         tmp = d*W;
          tmp2 = reshape(tmp, T,S,D);
          x.dat.(sf).(mdl.output) = bsxfun(@plus, tmp2, reshape(mdl.y_offset, 1,1,D));
 
@@ -73,6 +81,9 @@ function do_plot_wc_weights_as_heatmap(sel, stack, xxx)
     wmat=[];
     for ii = 1:length(mdls)
         wts=mdls{ii}.weights';
+        if isfield(mdls{ii},'force_positive') && mdls{ii}.force_positive,
+            wts=abs(wts);
+        end
         ws=sqrt(mean(wts.^2,2));
         ws(ws<eps)=1;
         wts=wts./repmat(ws,[1 size(wts,2)]);

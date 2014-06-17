@@ -8,7 +8,8 @@ m.name = 'depression_filter_bank';
 m.fn = @do_depression_filter;
 m.pretty_name = 'Depression Filter Bank';
 m.editable_fields = {'num_channels', 'strength', 'tau', 'strength2', 'tau2',...
-                    'per_channel', 'crosstalk', 'input', 'time', 'output' };
+                    'per_channel', 'offset_in', 'crosstalk',...
+                    'input', 'time', 'output' };
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
@@ -19,6 +20,7 @@ m.strength2 = [0 0];  % as fraction of stimulus max magnitude
 m.tau = [0 100];  % in ms
 m.tau2 = [0 0];  % in ms
 m.tau_norm = 1000;  % 1000 means ms, 10 means 10ths of sec, 1 means sec
+m.offset_in=[0];
 m.crosstalk = 0;
 m.raw_stim_freq = 100000;
 m.input = 'stim';
@@ -53,6 +55,9 @@ function x = do_depression_filter(mdl, x, stack, xxx)
     end
     if ~isfield(mdl,'crosstalk'),
         mdl.crosstalk=0;
+    end
+    if ~isfield(mdl,'offset_in'),
+        mdl.offset_in=zeros(size(mdl.tau));
     end
     [load_mod, ~] = find_modules(stack, 'load_stim_resps_from_baphy',true);
     if isempty(load_mod),
@@ -92,11 +97,19 @@ function x = do_depression_filter(mdl, x, stack, xxx)
         ret = zeros(T, S, N*num_channels);
         for s = 1:S
             stim_in=squeeze(x.dat.(sf).(mdl.input)(:,s,:))';
-            stim_in=stim_in.*(stim_in>0);
             
             if isfield(mdl,'per_channel') && mdl.per_channel
+                % threshold at offset_in level
+                if length(mdl.offset_in)==1,
+                    stim_in=stim_in-mdl.offset_in;
+                    stim_in(stim_in<0)=0;
+                else
+                    stim_in=stim_in-repmat(mdl.offset_in',[1 T]);
+                    stim_in(stim_in<0)=0;
+                end
+
                 depresp=[];
-                if mdl.crosstalk
+                if mdl.crosstalk && size(stim_in,1)>1,
                     % calc a smoothed "tstim" reflecting crosstalk
                     % that feeds the depression calculator
                     if size(stim_in,1)==2,
@@ -127,7 +140,16 @@ function x = do_depression_filter(mdl, x, stack, xxx)
                     end
                 end
             else
-               depresp=depression_bank(...
+                % threshold at offset_in level
+                if length(mdl.offset_in)==1,
+                    stim_in=stim_in-mdl.offset_in;
+                    stim_in(stim_in<0)=0;
+                else
+                    stim_in=stim_in-repmat(mdl.offset_in',[1 T]);
+                    stim_in(stim_in<0)=0;
+                end
+
+                depresp=depression_bank(...
                    stim_in, (1./stimmax(:))*mdl.strength./100,...
                    mdl.tau .* load_mod.raw_stim_fs/mdl.tau_norm, 1, ...
                    mdl.crosstalk);
@@ -166,9 +188,9 @@ function do_depression_cartoon(sel, stack, xxx)
     else
         unique_codes={''};
     end
-    
     data=[];
     for jj=1:length(mdls),
+       mdls{jj}.offset_in=0;
         xfiltered=do_depression_filter(mdls{jj}, x, stack, xxx);
         xfiltered.dat.demo.stim=xfiltered.dat.demo.(mdl.input);
         

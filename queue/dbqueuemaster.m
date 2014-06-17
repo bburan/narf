@@ -396,6 +396,7 @@ while 1,
          while nextid<0 & uid<length(userdata),
             uid=uid+1;
             gooduser=1;
+            % ivar throttle - disabled 
             if strcmpi(userdata(uid).user,'ivar'),
                 sql=['SELECT count(tQueue.id) as jobcount',...
                      ' FROM tQueue',...
@@ -403,7 +404,7 @@ while 1,
                      ' AND computerid=',num2str(c.id),...
                      ' AND tQueue.user="',userdata(uid).user,'"'];
                 udata=mysql(sql);
-                if ~isempty(udata) && udata.jobcount>=1,
+                if ~isempty(udata) && udata.jobcount>=2,
                     disp('skipping Ivar job temporarily');
                     gooduser=0;
                 end

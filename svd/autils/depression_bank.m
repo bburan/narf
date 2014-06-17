@@ -100,7 +100,7 @@ for jj=1:dcount,
           end
           %keyboard
       end
-      tstim(:,1:10)=min(tstim(:));
+      %tstim(:,1:10)=min(tstim(:));
       
       if taui(1)./ui(1)./10>1,
           subsample=1;
