@@ -71,7 +71,7 @@ for order_x=0:2
             end
         end
         
-        prefitrnd(1);
+        prefitrnd();
         fit05c();
         [~,new_term_score,~,~] = quick_search();
         
