@@ -1,4 +1,4 @@
-function prefitrnd()
+function prefitrnd(use_semse)
 % JL - June 2015
 
 % RATIONALE:
@@ -13,7 +13,11 @@ function prefitrnd()
 
 global STACK
 
-nmse();
+if (nargin>=1) && (use_semse==1)
+    semse()
+else
+    nmse();
+end
 
     function [term_cond, term_score,  n_iters, options] = quick_search()
         [term_cond, term_score,  n_iters, options] = ...

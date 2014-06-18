@@ -2,8 +2,7 @@ function lindeberg()
 % March 2014 - lienard
 % modified from 'fir.m'
 
-% NOT TO BE USED %
-% kept as a way to test different hypotheses locally
+% Linderberg's time-causal kernels of different orders
 
 global MODULES XXX;
 
@@ -18,7 +17,7 @@ append_module(MODULES.lindeberg_filter.mdl(struct('num_coefs', fir_num_coefs, ..
                                 'order_x',0,...
                                 'order_t',0,...
                                 'baseline',meanresp,...    
-                                'fit_fields', {{'lincoefs'}})));
-%                                 'fit_fields', {{'lincoefs','baseline'}})));
+                                'fit_fields', {{'lincoefs','baseline'}})));
+%                                 'fit_fields', {{'lincoefs'}})));
 
 fitSubstack([],10^-(stop_exp));
