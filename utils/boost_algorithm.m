@@ -15,7 +15,7 @@ end
 n = 1;             % Step number
 x = x_0(:);        % Current search location
 s = objfn(x);      % Current score
-s_delta = s;       % Improvement of score over the previous step
+s_delta = inf;     % Improvement of score over the previous step
 stepsize = options.InitStepSize;  % Starting step size.
 
 effect    = zeros(n_params, 1);  % The variance it creates on the STIM 

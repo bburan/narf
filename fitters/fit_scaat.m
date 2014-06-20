@@ -40,7 +40,7 @@ function [x, s, term_cond, stepsizes] = one_at_a_time(objfn, x_0, opts)
     [s, o] = objfn(x); 
     n_params = length(x_0);        
     n = 1;
-    d = s;    
+    d = inf;    
     s_outer = s;
     fprintf('\n');
     while ~(opts.TermFn(n, s_outer, d, o))

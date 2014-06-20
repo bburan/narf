@@ -55,6 +55,7 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
     global STACK;
     
     scaled_ISIs = [];
+    total_time = 0;
     
     if isempty(stimfiles)
         nlogl = 10^10;
@@ -65,6 +66,7 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
         sf = stimfiles{ii};
         stim = x.dat.(sf).(mdl.stim);
         time = x.dat.(sf).(mdl.time);
+        
         
         [ti, si, ci] = size(stim);
         if ci > 1
@@ -86,7 +88,11 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
             return
         end
         
-        [~, ~, ri] = size(x.dat.(sf).(mdl.raw_ISIs));
+        [ssi, ri] = size(x.dat.(sf).(mdl.raw_spiketimes));
+        if ssi ~= si
+            keyboard;
+            error('Incorrectly sized raw_spiketimes cell array.');
+        end
         
         % Find the total absolute stim integral (on a per-stimulus basis)
         for s = 1:si
@@ -96,7 +102,7 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
             % Build up the scaled inter-spike intervals distribution
            for r = 1:ri
                 spiketimes = x.dat.(sf).(mdl.raw_spiketimes){s,r};                                                
-                sISIs = diff(interp1([0; time], [0; CDF], [0; spiketimes]));
+                sISIs = diff(interp1q([0; time], [0; CDF], [0; spiketimes]));
 
                 % FIXME: Sometimes scaled ISIs of 0 occur
                 % I'm not sure what to do about this.
@@ -111,14 +117,18 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
                 scaled_ISIs = cat(1, scaled_ISIs, sISIs);
            end
         end    
+        
+         % We compare to RESPAVG, so we don't need to multiply by ri
+        total_time = total_time + si * (time(end));
+        
     end
     
     % Anything less than the temporal cutoff should be NaN'd
-    %scaled_ISIs(scaled_ISIs <= mdl.probcutoff) = NaN;
-    %scaled_ISIs = excise(scaled_ISIs);
+    scaled_ISIs(scaled_ISIs <= mdl.probcutoff) = NaN;
+    scaled_ISIs = excise(scaled_ISIs);
     
     % Everything should also be shifted left to the cutoff
-    %scaled_ISIs(:) = scaled_ISIs(:) - mdl.probcutoff;
+    scaled_ISIs(:) = scaled_ISIs(:) - mdl.probcutoff;
     
     n_spikes = length(scaled_ISIs);
     
@@ -126,22 +136,28 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
 	l_avg = 1 / nanmean(scaled_ISIs); 
     
     % Average lambda we should expect, from looking at RESP
-    total_time = (si * time(end));
-    l_tot = total_time / n_spikes;
+    lambda = total_time / n_spikes;
     
 	% Map scaled ISIs (x-axis) to the uniform distribution (Y-axis)
-    %z = 1 - exp(- l_avg * scaled_ISIs); % Old way normalizes to stim
-    z = 1 - exp(- l_tot * scaled_ISIs); % New way of normalizing to resp
-    z = cumsum(sort(z));
-    z = z / z(end);    
+    %z1 = 1 - exp(- l_avg * scaled_ISIs); % Old way normalizes to stim
+    z2 = 1 - exp(- lambda * scaled_ISIs); % Normalizing to respavg
+    z2 = sort(z2);
     
-    % Expected: uniform distribution from 0 to 1
-    uni = linspace(0, 1, n_spikes)'; 
-     
-    % Pick L0, L1, L2 norm here   
-    err = sum((z - uni).^2); % Sum of squares error works
-    % err = sum(abs(uni - SDF)) / n_spikes; % L1 error worked pretty well
-    % err = max(abs(uni - SDF)); % L0 error may also work (KS plot-style)
+    % Expected: uniform distribution 
+    uni = linspace(0, 1, n_spikes)';     
+        
+    % Pick L0, L1, L2 norm here       
+    %     global HID;
+    %     if isempty(HID)
+    %         HID = figure();    
+    %     else
+    %         figure(HID);        
+    %         plot([0,1], [0,1], 'k--', z2, uni, 'b-');
+    %     end
+    
+    err = sum((z2 - uni).^2); % Sum of squares error works
+    % err = sum(abs(z2 - uni)) / n_spikes; % L1 error worked pretty well
+    %err = max(abs(z2 - uni)); % L0 error may also work (KS plot-style)
     nlogl = err;
     
     % Negative log likelihood would be the sum of all the ISIs
@@ -151,9 +167,10 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
     % occasionally numerical noise is bringing us there... I think.     
     %z(z < 0) = 10^-9; 
         
-    %PD = fitdist(scaled_ISIs, mdl.probdist);    
-    %k = length(pack_fittables(STACK));
-    %n = numel(scaled_ISIs);
+    % PD = fitdist(scaled_ISIs, mdl.probdist);    
+    % PD = fitdist(z2, mdl.probdist);    
+    % k = length(pack_fittables(STACK));
+    % n = numel(scaled_ISIs);
     
     %nlogl = PD.NLogL;
     %bic = -2*(-PD.NLogL) + k*log(n);

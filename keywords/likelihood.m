@@ -2,8 +2,8 @@ function likelihood()
 
 global MODULES META STACK;
 
-% Append an extra inter-spike intervals thingy
-if ~isfield(META, 'metric_est_nlogl_exp')
+mods = find_modules(STACK, 'bayesian_likelihood', true);
+if isempty(mods)
     % Compute inter-spike intervals by loading a higher resolution resp
     
     [lsfb, lsfb_idx] = find_modules(STACK, 'load_stim_resps_from_baphy', true);

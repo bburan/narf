@@ -57,16 +57,16 @@ function stopcode = default_termfn(n,s,d,o)
             opts.StopAtStepNumber);
         return;
     end
-    if (s < opts.StopAtStepSize),      
+    if (abs(s) < opts.StopAtStepSize),      
         stopcode = 2;  
-        fprintf('Stepsize less than absolute limit %e, stopping.\n', ...
-            opts.StopAtStepSize);
+        fprintf('Stepsize (%e) less than absolute limit %e, stopping.\n', ...
+            s, opts.StopAtStepSize);
         return; 
     end
     if (d < opts.StopAtAbsScoreDelta), 
         stopcode = 3;
-        fprintf('Absolute score improvement less than %e, stopping.\n', ...
-            opts.StopAtAbsScoreDelta);
+        fprintf('Absolute score improvement (%e) less than %e, stopping.\n', ...
+            d, opts.StopAtAbsScoreDelta);
         return; 
     end
     

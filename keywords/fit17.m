@@ -1,8 +1,8 @@
-function fit16()
+function fit17()
 
 global STACK META;
 
-likelihood();
+llpoisson();
 
 function fn = make_subfitter(del)
     function [a,b,c,d] = subfitter(prev_opts)    
@@ -22,7 +22,7 @@ function fn = make_subfitter(del)
                 [a,b,c,d] = fit_boo(prev_opts);
             else
                 [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', del, ...
-                                    'StopAtStepNumber', 10, ...
+                                    'StopAtStepNumber', 1, ...
                                     'StepGrowth', 1.3);
             end
         else
@@ -33,13 +33,10 @@ function fn = make_subfitter(del)
                                       'StopAtStepNumber', 10);
             end
         end
-        phi = pack_fittables(STACK)';
-        fprintf('phi=[');
-        fprintf('%0.3f ', phi(:));
-        fprintf(']\n');
     end
     
     fn = @subfitter;
+    
 end
 
 % Initialization: If FIR filters are all zero, initialize them randomly
@@ -55,17 +52,13 @@ for ii = 1:length(mod_idxs)
     end
 end
 
-%fit_boo('StopAtAbsScoreDelta', 10^-2, 'StepGrowth', 1.3);
-
 % Now gradually shrink the stopping criterion
-scale = META.perf_metric()/100; % Start at the current performance value
-stop_at=10^-6;
+scale = abs(META.perf_metric()/10); % Start at the current performance value
+stop_at=10^0;
 
 while(scale > stop_at)
     fit_iteratively(make_subfitter(scale), create_term_fn('StopAtAbsScoreDelta', scale));
-    scale = scale * 0.6; % Very conservative: 0.8. Probably 0.5 or even 0.25 is fine.
+    scale = scale * 0.666; % Very conservative: 0.8. Probably 0.5 or even 0.25 is fine.
 end
-
-nmse();
 
 end
