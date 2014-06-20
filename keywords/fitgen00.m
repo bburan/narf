@@ -2,7 +2,7 @@ function term_score = fitgen00()
 semse();
 
 PopSize = 100;
-TolFun = 1e-15; % 1e-12 is not enough
+TolFun = 1e-15; % 1e-15 is not enough?
 Gen = 250;
 StallGen = 50;
 
@@ -205,22 +205,22 @@ StallGen = 50;
 % TODO: Write a custom termination function to stop when
 
 
-%     function [a,b,c,d] = step_until_10neg6(prev_opts)
-%         if exist('prev_opts', 'var')
-%             [a,b,c,d] = fit_boo(prev_opts);
-%         else
-%             [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-6, ...
-%                 'StopAtStepNumber', MaxStepsPerIteration, ...
-%                 'StepGrowth', StepGrowth);
-%         end
-%     end
-%
-% % NOW DO THE LAST FIT05C STEP:
-%
-% MaxStepsPerIteration=10;
-% StepGrowth=1.1;
-%
-% [~, s, ~] = fit_iteratively(@step_until_10neg6, ...
-%     create_term_fn());
+    function [a,b,c,d] = step_until_10neg6(prev_opts)
+        if exist('prev_opts', 'var')
+            [a,b,c,d] = fit_boo(prev_opts);
+        else
+            [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-6, ...
+                'StopAtStepNumber', MaxStepsPerIteration, ...
+                'StepGrowth', StepGrowth);
+        end
+    end
+
+% NOW DO THE LAST FIT05C STEP:
+
+MaxStepsPerIteration=10;
+StepGrowth=1.1;
+
+[~, s, ~] = fit_iteratively(@step_until_10neg6, ...
+    create_term_fn());
 
 end
