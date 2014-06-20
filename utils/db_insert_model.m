@@ -18,6 +18,24 @@ if ~all(isfield(META, {'batch', 'modelname', 'modelpath', 'modelfile'})) || ...
     error('Required for DB insertion: batch, modelname, modelpath, modelfile, and cellid');
 end
 
+% -----------------------------------------------------------------------
+dbopen(1); % make sure server connection not broken during a long fit
+sql = ['SELECT * FROM NarfResults WHERE modelname="' META.modelname '"' ...
+       ' AND batch=' num2str(META.batch) ...
+       ' AND cellid="' XXX{1}.cellid '"'];
+r=mysql(sql);
+
+if length(r) == 1
+    fprintf('NOTE: Deleting old NarfResults entry for %s/%d/%s\n',...
+            XXX{1}.cellid,META.batch,META.modelname);
+    sql = ['DELETE FROM NarfResults WHERE id=', num2str(r(1).id)];
+    mysql(sql);
+elseif length(r) > 1
+    error('Duplicate values in DB found!');
+end
+
+plotpath = plot_model_summary();
+
 if ~isfield(META,'git_commit')
     META.git_commit = 'unknown';
 end
@@ -37,7 +55,7 @@ end
 if ~isfield(XXX{end},'sparsity')
     XXX{end}.sparsity= 0.0;
 end
-    
+
 %if isfield(XXX{end},'score_train_nlogl')    
 %    m.train_nlogl = 'score_train_nlogl';
 %    m.test_nlogl = 'score_test_nlogl';
@@ -45,24 +63,6 @@ end
 %    m.train_nlogl = 0;
 %    m.test_nlogl = 0;
 %end
-
-% -----------------------------------------------------------------------
-dbopen(1); % make sure server connection not broken during a long fit
-sql = ['SELECT * FROM NarfResults WHERE modelname="' META.modelname '"' ...
-       ' AND batch=' num2str(META.batch) ...
-       ' AND cellid="' XXX{1}.cellid '"'];
-r=mysql(sql);
-
-if length(r) == 1
-    fprintf('NOTE: Deleting old NarfResults entry for %s/%d/%s\n',...
-            XXX{1}.cellid,META.batch,META.modelname);
-    sql = ['DELETE FROM NarfResults WHERE id=', num2str(r(1).id)];
-    mysql(sql);
-elseif length(r) > 1
-    error('Duplicate values in DB found!');
-end
-
-plotpath = plot_model_summary();
 
 [affected, ~] = sqlinsert('NarfResults', ...
           'cellid',    XXX{1}.cellid,...
