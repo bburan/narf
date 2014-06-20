@@ -264,6 +264,12 @@ function module_plot_callback(mod_idx)
         m.plot_fns{idx}.fn(sel, STACK(1:mod_idx), XXX(1:mod_idx+1));
         replot_from_depth(mod_idx+1);
     end 
+    
+    % Special case: If a module has no plotting, pass it along.
+    if isempty(m.plot_fns)
+        replot_from_depth(mod_idx+1);
+    end
+    
 end
 
 function recalc_from_depth(mod_idx)
@@ -568,9 +574,11 @@ handles.modelinfo_text = uicontrol('Parent', handles.container_panel, ...
     'Units', 'pixels', 'Position', [320 5 500 bh-15]);
 
 function update_modelinfo_text()
-    set(handles.modelinfo_text, 'String', ...
-        sprintf('Batch:     %d\nCellid:    %s\nModel:    %s', ...
-                 META.batch, XXX{1}.cellid,  META.modelname));
+    if isfield(META, 'modelname') 
+        set(handles.modelinfo_text, 'String', ...
+            sprintf('Batch:     %d\nCellid:    %s\nModel:    %s', ...
+                     META.batch, XXX{1}.cellid,  META.modelname));
+    end
 end
 
 function rebuild_gui_from_stack()

@@ -24,7 +24,7 @@ m.input2 = 'respavg';
 m.time   = 'stim_time';
 m.train_score  = 'score_train_nlogl';
 m.test_score  = 'score_test_nlogl';
-m.output = 'score_train_nlogl';
+m.output = 'score';
 m.is_perf_metric = true;
 
 % Overwrite the default module fields with arguments 
@@ -37,9 +37,10 @@ m.required = {m.input1, m.input2, m.time};   % Signal dependencies
 m.modifies = {m.train_score, m.test_score, m.output};  % These signals are modified
 
 % Optional fields
+m.auto_plot = @do_plot_inputs;
 m.plot_fns = {};
-%m.plot_fns{1}.fn = @do_plot_inputs_and_pnorm;
-%m.plot_fns{1}.pretty_name = 'Inputs, Error vs Time';
+m.plot_fns{1}.fn = @do_plot_inputs;
+m.plot_fns{1}.pretty_name = 'Inputs';
 
 function x = do_likelihood_poisson(mdl, x)
     % Compute the mean squared error of the training set
@@ -58,12 +59,12 @@ function x = do_likelihood_poisson(mdl, x)
     x.(mdl.output) = train_score;
 end
 
-% function do_plot_inputs_and_pnorm(sel, stack, xxx)    
-%     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
-%     hold on;
-%     do_plot(xouts, mdls{1}.time, {mdls{1}.input1, mdls{1}.input2}, ...
-%             sel, 'Time [s]', 'Prediction & RespAvg [-]');
-%     hold off;
-% end
+function do_plot_inputs(sel, stack, xxx)
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));
+    hold on;
+    do_plot(xouts, mdls{1}.time, {mdls{1}.input1, mdls{1}.input2}, ...
+        sel, 'Time [s]', 'Prediction & RespAvg [-]');
+    hold off;
+end
 
 end

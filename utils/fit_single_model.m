@@ -140,6 +140,7 @@ else
     META.fit_time = toc;
 
     XXX{1}.test_set = test_set;
+    XXX = XXX(1);
     calc_xxx(1);
         
     % invert the polarity of the model, possibly screwing it completely up,

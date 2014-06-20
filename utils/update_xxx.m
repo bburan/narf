@@ -38,9 +38,9 @@ for ii = 1:length(STACK)
 end
 
 % If XXX is not fully initialized, we need to compute earlier
-%if xxxindexes(start_depth) > length(XXX)
-%    start_depth = find(xxxindexes, length(XXX), 'first');
-%end
+if xxxindexes(start_depth) > length(XXX)
+    start_depth = find(xxxindexes, length(XXX), 'first');
+end
 
 % Remove references to data 
 %if xxxindexes(start_depth) < length(XXX)
@@ -68,7 +68,9 @@ for ii = start_depth:end_depth,
         fprintf('If you are seeing this in any other circumstance than when loading an old model, you probably have subtle errors regarding conditional evaluation!\n');
         flatxxx{ii+1} = flatstack{ii}.fn(flatstack{ii}, flatxxx{ii});        
     else    
-        if ~isempty(modified) && isempty(intersect(flatstack{ii}.required, modified))
+        if ~isempty(modified) && ...
+                isempty(intersect(flatstack{ii}.required, modified)) && ...
+                length(XXX) > (xxxindexes(ii) + 1)
             % No computation required. Pass through existing signals.  
             flatxxx{ii+1} = merge_structs(XXX{xxxindexes(ii)+1}, flatxxx{ii});
         else

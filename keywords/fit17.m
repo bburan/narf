@@ -53,7 +53,7 @@ for ii = 1:length(mod_idxs)
 end
 
 % Now gradually shrink the stopping criterion
-scale = abs(META.perf_metric()/10); % Start at the current performance value
+scale = 10^6; 
 stop_at=10^0;
 
 while(scale > stop_at)

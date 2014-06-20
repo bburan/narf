@@ -34,10 +34,9 @@ if start_depth > length(XXX)
 end
 
 % If the end depth is beyond the length of the stack, stop
-if end_depth > length(XXX)
-    end_depth = length(XXX);
+if end_depth > length(STACK)
+    end_depth = length(STACK);
 end
-
 
 flat_start_depth = 1;
 flat_end_depth = 1;

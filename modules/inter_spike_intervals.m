@@ -45,7 +45,7 @@ function x = do_inter_spike_intervals(mdl, x)
         time =  x.dat.(sf).(mdl.time);                
         [ti, si, ri] = size(in);
         x.dat.(sf).(mdl.output) = cell(si, ri);
-        x.dat.(sf).(mdl.output_time) = cell(si, ri);
+        x.dat.(sf).(mdl.output_time) = cell(ri);
         for s = 1:si
             for r = 1:ri
                 % If there are no NaNs, we can do this the fast way        

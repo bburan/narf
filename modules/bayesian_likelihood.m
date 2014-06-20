@@ -1,5 +1,6 @@
 function m = bayesian_likelihood(args)
-% For displaying the bayesian likelihood of a noise distribution
+% For displaying the bayesian likelihood of a renewal process model
+% Defaults to exponential (i.e. poisson process) 
 %
 % Returns a function module 'm' which implements the MODULE interface.
 % See documentation for more information on how modules are typically used.
@@ -65,8 +66,8 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
     for ii = 1:length(stimfiles)
         sf = stimfiles{ii};
         stim = x.dat.(sf).(mdl.stim);
-        time = x.dat.(sf).(mdl.time);
-        
+        time = x.dat.(sf).(mdl.time);   
+        spiketimes = x.dat.(sf).(mdl.raw_spiketimes);
         
         [ti, si, ci] = size(stim);
         if ci > 1
@@ -86,40 +87,68 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
             fprintf('WARNING: Skipping NLOGL calculation because stim is all zero...\n');  
             nlogl = 10^10;
             return
-        end
+        end        
         
-        [ssi, ri] = size(x.dat.(sf).(mdl.raw_spiketimes));
-        if ssi ~= si
-            keyboard;
-            error('Incorrectly sized raw_spiketimes cell array.');
-        end
+        % This old way of doing this is about 2x slower than before
+%         fprintf('Old way: ');
+%         tic;        
+%         % Find the total absolute stim integral (on a per-stimulus basis)
+%         for s = 1:si
+%             % Total predicted spiking activity of model, unnormalized
+%         	CDF = cumsum(stim(:,s));
+%            
+%             % Build up the scaled inter-spike intervals distribution
+%            for r = 1:ri
+%                 spiketimes = resp{s,r}; 
+%                 scaled_spiketimes = interp1q([0; time], [0; CDF], [0; spiketimes]);                
+%                 sISIs = diff(scaled_spiketimes);
+% 
+%                 % FIXME: Sometimes scaled ISIs of 0 occur
+%                 % I'm not sure what to do about this.
+%                 % Right now I'll just 'modify' them to be slightly nonzero
+%                 sISIs(sISIs < 0) = 10^-9; % FIXME
+%     
+%                 if any(isnan(sISIs))
+%                     keyboard;
+%                     error('How did a scaled ISI become NaN?!');
+%                 end
+%                
+%                 scaled_ISIs = cat(1, scaled_ISIs, sISIs);
+%            end
+%         end    
+%         toc;        
         
-        % Find the total absolute stim integral (on a per-stimulus basis)
-        for s = 1:si
-            % Total predicted spiking activity of model, unnormalized
-        	CDF = cumsum(stim(:,s));
-           
-            % Build up the scaled inter-spike intervals distribution
-           for r = 1:ri
-                spiketimes = x.dat.(sf).(mdl.raw_spiketimes){s,r};                                                
-                sISIs = diff(interp1q([0; time], [0; CDF], [0; spiketimes]));
-
-                % FIXME: Sometimes scaled ISIs of 0 occur
-                % I'm not sure what to do about this.
-                % Right now I'll just 'modify' them to be slightly nonzero
-                sISIs(sISIs < 0) = 10^-9; % FIXME
-    
-                if any(isnan(sISIs))
-                    keyboard;
-                    error('How did a scaled ISI become NaN?!');
+        CDF = cumsum(stim(:));        
+        scaled_ISIs = [];        
+        dt = time(2) - time(1);
+        
+        for kk = 1:length(spiketimes)            
+            scaled_spiketimes = zeros(size(spiketimes{kk}));        
+            t = 0;        
+            ind = 1;    
+            for jj = 1:length(spiketimes{kk}),
+                % Consume CDF until we reach the appropriate time t
+                t_spike = spiketimes{kk}(jj);
+                while t < t_spike
+                   t = t + dt;
+                   ind = ind + 1;
                 end
-               
-                scaled_ISIs = cat(1, scaled_ISIs, sISIs);
-           end
-        end    
+    
+                % Linearly interpolate            
+                if ind == 1
+                    lbound = 0;
+                else
+                    lbound = CDF(ind-1);
+                end
+                rbound = CDF(ind);
+                weight = (t - t_spike) / dt; 
+                scaled_spiketimes(jj) = lbound*(weight) + rbound*(1-weight);
+            end            
+            scaled_ISIs = cat(1, scaled_ISIs, diff(scaled_spiketimes));            
+        end
         
-         % We compare to RESPAVG, so we don't need to multiply by ri
-        total_time = total_time + si * (time(end));
+         % We compare to RESPAVG
+        total_time = total_time + dt*length(CDF);
         
     end
     
@@ -144,7 +173,7 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
     z2 = sort(z2);
     
     % Expected: uniform distribution 
-    uni = linspace(0, 1, n_spikes)';     
+    uni = linspace(0, 1, n_spikes)'; 
         
     % Pick L0, L1, L2 norm here       
     %     global HID;
@@ -155,7 +184,7 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
     %         plot([0,1], [0,1], 'k--', z2, uni, 'b-');
     %     end
     
-    err = sum((z2 - uni).^2); % Sum of squares error works
+    err = sum((z2 - uni).^2) / n_spikes; % Sum of squares error works
     % err = sum(abs(z2 - uni)) / n_spikes; % L1 error worked pretty well
     %err = max(abs(z2 - uni)); % L0 error may also work (KS plot-style)
     nlogl = err;
