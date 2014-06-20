@@ -32,7 +32,7 @@ fprintf('Copying %d runs for batch %d (%s)...\n',length(rundata), ...
 
 batchname=input('Enter new name ['''']: ','s');
 
-rcsetstrings;
+%rcsetstrings;
 sql=['SELECT * FROM gRunClass WHERE id=',...
      num2str(batchdata.runclassid)];
 rcdata=mysql(sql);

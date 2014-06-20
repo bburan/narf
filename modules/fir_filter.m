@@ -167,6 +167,10 @@ function do_plot_fir_coefs_as_heatmap(sel, stack, xxx)
         
         for ii = 1:length(mdls)
             wts=weight_mdl{ii}.weights;
+            if isfield(weight_mdl{ii},'force_positive') && ...
+                    weight_mdl{ii}.force_positive,
+                wts=abs(wts);
+            end
             sw=std(wts,0,1);
             sw(sw<eps)=1;
             wts=wts./repmat(sw,[size(wts,1) 1]);

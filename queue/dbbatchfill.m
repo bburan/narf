@@ -30,7 +30,7 @@ if exist('matchbatchid','var') && ~isempty(matchbatchid),
    cellids=intersect(cellids,matchcellid);
 end
 
-rcsetstrings;
+%rcsetstrings;
 
 % switch from jlg to nsl labs
 if batchid<108,

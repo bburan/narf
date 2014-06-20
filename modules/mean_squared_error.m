@@ -87,7 +87,7 @@ m.plot_fns{2}.pretty_name = 'Error Histogram';
                         (d+(d==0));
                 end
                 me=mean(ee);se=std(ee)./sqrt(bincount);
-                train_nmse=1.2-shrinkage(1.2-me,se,0.5);
+                train_nmse=1.2-shrinkage(1.2-me,se,mdl.norm_by_se);
                 
                 if ~isempty(ptest),
                     for bb=1:bincount,
@@ -97,7 +97,7 @@ m.plot_fns{2}.pretty_name = 'Error Histogram';
                             (d+(d==0));
                     end
                     me=mean(ve);se=std(ve)./sqrt(bincount);
-                   test_nmse=1.2-shrinkage(1.2-me,se,0.5);
+                   test_nmse=1.2-shrinkage(1.2-me,se,mdl.norm_by_se);
                 else
                     test_nmse=nan;
                 end
