@@ -30,6 +30,10 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_filtered_stim; 
@@ -45,7 +49,7 @@ m.plot_fns{2}.pretty_name = 'Output Channels (Heatmap)';
 
 m.plot_gui_create_fn = @(h, stk, xx) create_filter_selector_gui(h, stk, xx, m.num_channels);
 
-function x = do_gammatone_filter(mdl, x, stack, xxx)
+function x = do_gammatone_filter(mdl, x)
 
     for sf = fieldnames(x.dat)', sf = sf{1};
         [T, S, C] = size(x.dat.(sf).(mdl.input));
@@ -70,7 +74,7 @@ function x = do_gammatone_filter(mdl, x, stack, xxx)
 end
 
 function do_plot_filtered_stim(sel, stack, xxx)    
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));  
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));  
     if mdls{1}.use_env
         ylab = 'Basilar Envelope';
     else
@@ -131,7 +135,7 @@ end
 % 
 % function do_plot_gammatone_filter_as_colormap(stack, xxx)
 %     
-%     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));  
+%     [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));  
 %              
 %     ii=1;  % assuming just a single data set for now...
 %     h = imagesc(xouts{ii}.dat.(sel.stimfile).(mdls{1}.time)(:),...

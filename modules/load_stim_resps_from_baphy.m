@@ -37,6 +37,12 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {'cellid', 'training_set', 'test_set', 'filecodes'};   % Signal dependencies
+m.modifies = {m.output_stim, m.output_stim_time, m.output_resp, m.output_resp_time ...
+                m.output_respavg};          % These signals are modified
+
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_all_stim_channels;
@@ -53,13 +59,14 @@ m.plot_fns{5}.fn = @do_plot_stim_log_spectrogram;
 m.plot_fns{5}.pretty_name = 'Stimulus Log Spectrogram';
 % m.plot_fns{7}.fn = @do_plot_spectro_and_raster;
 % m.plot_fns{7}.pretty_name = 'Spectrogram + Raster';
-
+m.plot_fns{6}.fn = @do_plot_channels_as_heatmap; 
+m.plot_fns{6}.pretty_name = 'Output Channels (Heatmap)';
 m.plot_gui_create_fn = @create_gui;
 
 % ------------------------------------------------------------------------
 % Define the 'methods' of this module, as if it were a class
 
-function x = do_load_from_baphy(mdl, x, stack, xxx)
+function x = do_load_from_baphy(mdl, x)
     
     if ~isfield(mdl,'response_format'),
         mdl.response_format='spike';
@@ -480,7 +487,7 @@ end
 % Plot functions
 
 function do_plot_all_stim_channels(sel, stack, xxx)       
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);        
@@ -490,7 +497,7 @@ function do_plot_all_stim_channels(sel, stack, xxx)
 end
 
 function do_plot_single_stim_channel(sel, stack, xxx)   
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);
@@ -499,7 +506,7 @@ function do_plot_single_stim_channel(sel, stack, xxx)
 end
 
 function do_plot_respavg(sel, stack, xxx)
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);
@@ -509,7 +516,7 @@ function do_plot_respavg(sel, stack, xxx)
 end
 
 function do_plot_response_raster(sel, stack, xxx)    
-    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    %[mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     mdls = stack{end};
     xins = {xxx(1:end-1)};
     xouts = xxx(end);

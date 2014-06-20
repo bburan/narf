@@ -1,3 +1,4 @@
+
 function m = hilbert_transform(args)
 % Hilbert Transform. Takes the signal envelope.
 %
@@ -23,12 +24,16 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_all_default_outputs;
 m.plot_fns{1}.pretty_name = 'Output Channel';
 
-function x = do_hilbert_transform(mdl, x, stack, xxx)
+function x = do_hilbert_transform(mdl, x)
     sfs = fieldnames(x.dat);    
     for ii = 1:length(x.dat)
         sf = sfs{ii};        

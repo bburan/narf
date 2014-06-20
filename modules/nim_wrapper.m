@@ -1,3 +1,4 @@
+
 function m = nim_wrapper(args)
 
 % Module fields that must ALWAYS be defined
@@ -26,7 +27,12 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_nim_wrapper(mdl, x, stack, xxx)   
+
+% Optimize this module for tree traversal  
+m.required = {m.input_stim, m.input_resp, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
+function x = do_nim_wrapper(mdl, x)   
     
     NMMPATH = '/auto/user/ivar/matlab/nmm/';
     addpath(genpath(NMMPATH));

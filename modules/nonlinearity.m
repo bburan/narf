@@ -39,7 +39,6 @@ m.nlfn = @polyval;
 m.phi = [1 0];   % Default is to pass the signal through untouched
 
 % Optional fields
-m.is_splittable = true;
 m.auto_plot = @do_plot_smooth_scatter_and_nonlinearity;
 m.plot_fns = {};
 
@@ -69,7 +68,11 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_nonlinearity(mdl, x, stack, xxx)
+% Optimize this module for tree traversal  
+m.required = {m.input_stim, m.input_resp, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
+function x = do_nonlinearity(mdl, x)
 
     for sf = fieldnames(x.dat)', sf=sf{1};
         [T, S, C] = size(x.dat.(sf).(mdl.input_stim));
@@ -117,19 +120,19 @@ function help_plot_nonlinearity(sel, mdls, xins, xouts)
 end
 
 function do_plot_scatter_and_nonlinearity(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));    
     do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100);  
     help_plot_nonlinearity(sel, mdls, xins, xouts);     
 end
 
 function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)            
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));    
     do_plot_scatter(sel, xins, mdls{1}.input_stim, mdls{1}.input_resp, 100);  
     help_plot_nonlinearity(sel, mdls, xins, xouts); 
 end
 
 function do_plot_channels_as_heatmap(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));  
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));  
     ii=1;  % assuming just a single data set for now...
     h = imagesc(xouts{ii}.dat.(sel.stimfile).(mdls{1}.time)(:),...
                 1:size(xouts{ii}.dat.(sel.stimfile).(mdls{1}.output),3),...

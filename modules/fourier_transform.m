@@ -31,12 +31,16 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.input_time};    % Signal dependencies
+m.modifies = {m.output, m.output_time}; % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_fft_spectrogram;
 m.plot_fns{1}.pretty_name = 'Output Spectrogram';
 
-function x = do_fourier_transform(mdl, x, stack, xxx)
+function x = do_fourier_transform(mdl, x)
     sfs = fieldnames(x.dat);    
     for ii = 1:length(sfs)
         sf = sfs{ii};        

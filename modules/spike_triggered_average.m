@@ -29,13 +29,17 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.stim, m.resp, m.stim_time, m.resp_time};   % Signal dependencies
+m.modifies = {m.st_matrix};         % These signals are modified
+
 % Initialize a HISTORY
 % For each repetition
 %   for every instant in time
 %       If time bin contains a spike 
 %           Add the previous 500 bin values to each of the histories
 %           Do this N times if the bin contains N spikes
-function x = do_spike_triggered_average(mdl, x, stack, xxx)
+function x = do_spike_triggered_average(mdl, x)
     
     fns = fieldnames(x.dat);
     for ii = 1:length(fns)

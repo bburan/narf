@@ -121,7 +121,11 @@ function update_available_plots(mod_idx)
     for idx = 1:length(pfns);
         plot_fns{idx} = pfns{idx}.pretty_name;
     end
-    set(NARFGUI{mod_idx}.plot_popup, 'String', char(plot_fns{:}));
+    if isempty(plot_fns)
+        set(NARFGUI{mod_idx}.plot_popup, 'String', 'Unavailable'); 
+    else
+        set(NARFGUI{mod_idx}.plot_popup, 'String', char(plot_fns{:}));
+    end
 end
 
 % A method for updating a simple fieldname/value uitable
@@ -252,7 +256,7 @@ function module_plot_callback(mod_idx)
     
     % If the the index is a valid one and the function has been run (which
     % would make XXX(mod_idx+1) useful to us), we can plot.
-    if (idx > 0 && idx <= length(m.plot_fns) && length(XXX) >= mod_idx + 1)
+    if (idx > 0 && idx <= length(m.plot_fns) && length(XXX) >= mod_idx+1)
         % Set the axes, clear it, and run the plot function
         axes(NARFGUI{mod_idx}.plot_axes);
         cla; legend off;
@@ -595,13 +599,11 @@ function rebuild_gui_from_stack()
         % Recompute the data 
         if length(XXX) <= ii
             calc_xxx(ii, ii+1);
-            %was: XXX{ii+1} = m.fn(STACK(1:ii), XXX); 
         else
             calc_xxx(ii);
         end
-       
-    
-        % Delete any existing plot guis 
+           
+        % Delete any existing plot guis        
         if isfield(NARFGUI{ii}, 'plot_gui')
              rmfield(NARFGUI{ii}, 'plot_gui');
         end

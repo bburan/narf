@@ -33,24 +33,29 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_inter_spike_intervals(mdl, x, stack, xxx)     
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output, m.output_time};   % These signals are modified
+
+function x = do_inter_spike_intervals(mdl, x)     
    fns = fieldnames(x.dat);
     for ii = 1:length(fns)
         sf = fns{ii};
         in = x.dat.(sf).(mdl.input);
         time =  x.dat.(sf).(mdl.time);                
         [ti, si, ri] = size(in);
-        x.dat.(sf).(mdl.output) = zeros(ti, si, ri);
-        x.dat.(sf).(mdl.output_time) = zeros(ti, si, ri);
+        x.dat.(sf).(mdl.output) = cell(si, ri);
+        x.dat.(sf).(mdl.output_time) = cell(si, ri);
         for s = 1:si
             for r = 1:ri
                 % If there are no NaNs, we can do this the fast way        
                 if ~any(isnan(in(:,s,r)))
                     sidxs = in(:,s,r) > 0;
                     spiketimes = time(sidxs);
-                    x.dat.(sf).(mdl.output_time)(sidxs,s,r) = spiketimes;
+                    x.dat.(sf).(mdl.output_time){s,r} = spiketimes;
                     prevs = [spiketimes(:); 0] - [0; spiketimes(:)];
-                    x.dat.(sf).(mdl.output)(sidxs,s,r) = prevs(1:end-1);
+                    %x.dat.(sf).(mdl.output)(sidxs,s,r) = prevs(1:end-1);
+                    x.dat.(sf).(mdl.output){s,r} = prevs(1:end-1);
                 else
                     % Otherwise, I think we must use for loops and reset
                     % every time we have NaNs
@@ -60,8 +65,8 @@ function x = do_inter_spike_intervals(mdl, x, stack, xxx)
                             tprev = time(t);
                         end
                         if in(t,s,r) > 0
-                            x.dat.(sf).(mdl.output_time)(t,s,r) = time(t);
-                            x.dat.(sf).(mdl.output)(t,s,r) = time(t) - tprev;
+                            x.dat.(sf).(mdl.output_time){s,r}(end+1) = time(t);
+                            x.dat.(sf).(mdl.output){s,r}(end+1) = time(t) - tprev;
                             tprev = time(t);
                         end
                     end 
@@ -79,12 +84,12 @@ function do_plot_raw_spikes(sel, stack, xxx)
 end
 
 function do_plot_isis(sel, stack, xxx)
-    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     xout = xxx{end};
     mdl = stack{end}{1};
-     
-    sidxs = (xout.dat.(sel.stimfile).(mdl.input) > 0);
-    hist(xout.dat.(sel.stimfile).(mdl.output)(sidxs), mdl.n_bins);
+    
+    %isis = xout.dat.(sel.stimfile).(mdl.output){:};
+    hist(cat(1, xout.dat.(sel.stimfile).(mdl.output){:}), mdl.n_bins);
  
     do_xlabel('Raw Inter-Spike Intervals [s]');
     do_ylabel('# of neurons');
@@ -92,18 +97,17 @@ function do_plot_isis(sel, stack, xxx)
 end
 
 function do_plot_autocorrelation(sel, stack, xxx)
-    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    % [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     xout = xxx{end};
     mdl = stack{end}{1};
-    
-    sidxs = (xout.dat.(sel.stimfile).(mdl.input) > 0);
-    isis = xout.dat.(sel.stimfile).(mdl.output)(sidxs);
+        
+    isis = cat(1, xout.dat.(sel.stimfile).(mdl.output){:});
 
     plot(isis(2:end), isis(1:end-1), 'k.');
  
     R = corrcoef(isis(2:end), isis(1:end-1));
     textLoc(sprintf('Spike Count:%d\nSelected Stimfile Corr=%f', ...
-                    nnz(sidxs), R(2,1)), 'NorthEast');
+                    length(isis), R(2,1)), 'NorthEast');
     do_xlabel('ISI at t(n) [s]');
     do_ylabel('ISI at t(n-1) [s]');
 end

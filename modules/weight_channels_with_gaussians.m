@@ -27,10 +27,14 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
-function x = do_weight_channels_with_gaussians(mdl, x, stack, xxx)   
+function x = do_weight_channels_with_gaussians(mdl, x)   
     fns = fieldnames(x.dat);
        
     weights = [];

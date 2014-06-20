@@ -28,7 +28,11 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_smooth_respavg(mdl, x, stack, xxx)
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
+function x = do_smooth_respavg(mdl, x)
 
     % Build the gaussian smoothing filter   
     % gf = gausswin(mdl.window_size);

@@ -30,6 +30,10 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
 % Optional fields
 m.auto_plot = @do_plot_bandpass_filter_bank_frq_resp;
 m.plot_fns = {};
@@ -74,7 +78,7 @@ function [mdl, coefs] = build_coefs(mdl)
 end
 
 % Finally, define the 'methods' of this module, as if it were a class
-function x = do_bandpass_filter(mdl, x, stack, xxx)
+function x = do_bandpass_filter(mdl, x)
     
     [mdl, coefs] = build_coefs(mdl);
     
@@ -94,7 +98,7 @@ end
 
 % Plot the filter responses
 function do_plot_bandpass_filtered_channels(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
     do_plot(xouts, mdls{1}.time, mdls{1}.output, ...
             sel, 'Time [s]', 'Channel [-]');

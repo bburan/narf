@@ -25,7 +25,6 @@ m.rectify_inputs=0;
 m.subsample=10;
 
 % Optional fields
-m.is_splittable = true;
 m.plot_fns = {};
 m.auto_plot = @do_plot_irn_output;
 m.plot_fns{1}.fn = @do_plot_irn_output; 
@@ -38,18 +37,23 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input1, m.input2, m.input_resp m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
 % ------------------------------------------------------------------------
 % Methods
 
 
-function x = do_int_fire_neuron(mdl, x, stack, xxx)    
+function x = do_int_fire_neuron(mdl, x)    
+    global STACK;
     
     fns = fieldnames(x.dat);
     
     Vrest=mdl.Vrest;
     V0=mdl.V0;
     gL=mdl.gL;
-    fs=stack{1}{1}.raw_stim_fs;
+    fs=STACK{1}{1}.raw_stim_fs;
     
     for ii = 1:length(fns)
          sf=fns{ii};
@@ -97,7 +101,7 @@ function x = do_int_fire_neuron(mdl, x, stack, xxx)
 end
 
 function do_plot_irn_output(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
     do_plot(xouts, mdls{1}.time, ...
             {mdls{1}.input_stim1 mdls{1}.input_stim2 mdls{1}.output}, ...
@@ -105,7 +109,7 @@ function do_plot_irn_output(sel, stack, xxx)
 end
 
 function do_plot_irn_input(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     sel.chan_idx = []; % when chan_idx is empty, do_plot plots all channels
     
     do_plot(xouts, mdls{1}.time, {mdls{1}.input_stim1 mdls{1}.input_stim2} , ...

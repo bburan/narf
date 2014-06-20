@@ -1,3 +1,4 @@
+
 function m = mutual_information(args)
 % A function to estimate the mutual information between two signals.
 %
@@ -26,12 +27,16 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input1, m.input2};   % Signal dependencies
+m.modifies = {m.output, m.train_score, m.test_score};  % These signals are modified
+                      
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_mutual_information_inputs;
 m.plot_fns{1}.pretty_name = 'Mutual Information';
 
-function x = do_mutual_information(mdl, x, stack, xxx)            
+function x = do_mutual_information(mdl, x)            
 
     % Compute the training set mutual_information, ignoring nans
     p = flatten_field(x.dat, x.training_set, mdl.input1);
@@ -53,7 +58,7 @@ function x = do_mutual_information(mdl, x, stack, xxx)
 end
 
 function do_plot_mutual_information_inputs(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     xout = xxx{end};
     mdl = mdls{1};    
     

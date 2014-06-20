@@ -20,7 +20,7 @@ m.time =   'stim_time';
 m.output = 'stim';
 
 % Optional fields
-m.is_splittable = true;
+
 m.auto_plot = @do_plot_wc_weights_as_heatmap;
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_wc_weights_as_heatmap;
@@ -33,10 +33,14 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
-function x = do_weight_channels(mdl, x, stack, xxx)   
+function x = do_weight_channels(mdl, x)   
     fns = fieldnames(x.dat);
     for ii = 1:length(fns)
          sf=fns{ii};

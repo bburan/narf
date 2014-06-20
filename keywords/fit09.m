@@ -52,15 +52,13 @@ for ii = 1:length(mod_idxs)
     end
 end
 
-fit_boo('StopAtAbsScoreDelta', 10^-2, 'StepGrowth', 1.3);
-
 % Now gradually shrink the stopping criterion
-scale=10^1;
+scale=10^-1;
 stop_at=10^-6;
 
 while(scale > stop_at)
     fit_iteratively(make_subfitter(scale), create_term_fn('StopAtAbsScoreDelta', scale));
-    scale = scale * 0.7; % Very conservative: 0.8. Probably 0.5 or even 0.25 is fine.
+    scale = scale * 0.666; % Very conservative: 0.8. Probably 0.5 or even 0.25 is fine.
 end
 
 end

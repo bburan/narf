@@ -23,7 +23,6 @@ m.gain=1;
 m.offset=0;
 
 % Optional fields
-m.is_splittable = true;
 m.plot_fns = {};
 m.auto_plot = @do_plot_gain_dc;
 m.plot_fns{1}.fn = @do_plot_gain_dc;
@@ -39,6 +38,10 @@ m.plot_fns{4}.pretty_name = 'Output Channel (Single)';
 if nargin > 0
     m = merge_structs(m, args);
 end
+
+% Optimize this module for tree traversal  
+m.required = {m.input_stim1, m.input_stim2, m.input_resp, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
 
 % ------------------------------------------------------------------------
 % Methods
@@ -178,7 +181,7 @@ function [edges] = nonparm_gain_edges(mdl, x)
     %outbinserr=rre;
 end
 
-function x = do_nonparm_gain(mdl, x, stack, xxx)    
+function x = do_nonparm_gain(mdl, x)    
     
     %[phi, ~] = init_nonparm_gain(mdl, x);
     [edges] = nonparm_gain_edges(mdl, x);
@@ -197,9 +200,7 @@ function x = do_nonparm_gain(mdl, x, stack, xxx)
         d(isnan(d)) = 0;
         x.dat.(sf).(mdl.output) = reshape(g.*s1+d,[T,S,C]);
     end
-    
-    % I realized it's easier to cache the nonlinearity for later plotting
-    % FIXME: storing the coefs here won't work with existing splitters/unifiers
+        
     x.mycoefmatrix = [edges(:) gain(:) offset(:)]; 
 end
 
@@ -220,19 +221,19 @@ function help_plot_npnl(sel, mdls, xins, xouts)
 end
 
 function do_plot_gain_dc(sel, stack, xxx)    
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));    
     plot([mdls{1}.gain(:) mdls{1}.offset(:)]);
     
 end
 
 function do_plot_scatter_and_nonlinearity(sel, stack, xxx)    
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1));    
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end));    
     do_plot_scatter(sel, xins, mdls{1}.input_stim2, mdls{1}.input_resp);  
     help_plot_npnl(sel, mdls, xins, xouts);
 end
 
 function do_plot_smooth_scatter_and_nonlinearity(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     %do_plot_scatter(sel, xins, mdls{1}.input_stim2, mdls{1}.input_resp, 100); 
     help_plot_npnl(sel, mdls, xins, xouts);
 end

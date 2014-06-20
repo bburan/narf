@@ -1,7 +1,7 @@
 function ax = plot_complexity(data, modelnames, metric_name)
 % A plot of model complexity (number of parameters) vs FOV remaining
         
-if ~any(strcmp(metric_name, {'r_ceiling', 'r_test', 'r_fit'}))
+if ~any(strcmp(metric_name, {'r_ceiling', 'r_test', 'r_fit', 'r_test - r_fit'}))
     error('I only understand correlation metrics right now!');
 end
     
@@ -52,7 +52,7 @@ jitter = randn(size(d_means));
 for pass = 1:2
     for ii = 1:len
         name = names{ii};
-        yc = 1 - d_means(ii);
+        yc = d_means(ii);
         yt = yc + d_stderr(ii); 
         yb = yc - d_stderr(ii);
         x = d_nparm(ii) + 0.1*jitter(ii);                
@@ -69,7 +69,7 @@ end
 
 hold off
 xlabel('Number of Parameters');
-ylabel(sprintf('1 - %s', metric_name));
+ylabel(sprintf('%s', metric_name), 'interpreter', 'none');
 xticks(1:ceil(max(d_nparm(:))));
 
 end

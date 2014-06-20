@@ -9,7 +9,7 @@ function ozgf04fb24x200 ()
 global MODULES STACK XXX META;
 
 load_fs = 50000;
-samp_fs = 100;
+samp_fs = 200;
 
 n_chans = 24;
 CFs = logspace(log10(0.2), log10(20), n_chans);

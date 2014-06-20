@@ -37,6 +37,10 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.stim, m.respavg};   % Signal dependencies
+m.modifies = {m.bernoulli_grid};    % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.auto_plot = @do_plot_bernoulli_grid;
@@ -58,7 +62,7 @@ function [posterior, z, N] = bernoulli_bayes(theta, prior, data)
     % prob = z/N;
 end
 
-function x = do_bernoulli_trials(mdl, x, stack, xxx)    
+function x = do_bernoulli_trials(mdl, x)    
     % TODO: Use test data as well
     stim = flatten_field(x.dat, x.training_set, mdl.stim);
     resp = flatten_field(x.dat, x.training_set, mdl.respavg);      

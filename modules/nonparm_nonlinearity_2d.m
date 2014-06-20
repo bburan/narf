@@ -21,7 +21,6 @@ m.bincount = 20;
 m.smoothwindow=1;
 
 % Optional fields
-m.is_splittable = true;
 m.plot_fns = {};
 m.auto_plot = @do_plot_2d_nonlinearity;
 m.plot_fns{1}.fn = @do_plot_2d_nonlinearity; 
@@ -34,10 +33,14 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input_stim1, m.input_stim2, m.input_resp, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
 % ------------------------------------------------------------------------
 % Methods
 
-function [phi,outbinserr] = init_nonparm_nonlinearity_2d(mdl, x, stack, xxx)
+function [phi,outbinserr] = init_nonparm_nonlinearity_2d(mdl, x)
     
     % find out parameters:
     pred1=[]; pred2=[]; resp=[];
@@ -144,9 +147,9 @@ function [phi,outbinserr] = init_nonparm_nonlinearity_2d(mdl, x, stack, xxx)
     %keyboard
  end
 
-function x = do_np_nonlinearity_2d(mdl, x, stack, xxx)    
+function x = do_np_nonlinearity_2d(mdl, x)    
     
-    [phi2d, ~] = init_nonparm_nonlinearity_2d(mdl, x, stack, xxx);
+    [phi2d, ~] = init_nonparm_nonlinearity_2d(mdl, x);
     
     fns = fieldnames(x.dat);
     for ii = 1:length(fns)
@@ -157,15 +160,12 @@ function x = do_np_nonlinearity_2d(mdl, x, stack, xxx)
         y(isnan(y)) = 0;
         x.dat.(sf).(mdl.output) = reshape(y,[T,S,C]);
     end
-    
-    % I realized it's easier to cache the nonlinearity for later plotting
-    % FIXME: storing the coefs here won't work with existing splitters/unifiers
-    x.mycoefmatrix = phi2d; 
-    
+        
+    x.mycoefmatrix = phi2d;     
 end
 
 function do_plot_2d_nonlinearity(sel, stack, xxx)    
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     
     % For now, let's NOT make the plot function work for multiple paramsets
     % We'll just assume that we have only a single paramset for the NPNL2

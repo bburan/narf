@@ -36,7 +36,11 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
-function x = do_add_nth_order_terms(mdl, x, stack, xxx)    
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};   % Signal dependencies
+m.modifies = {m.output};          % These signals are modified
+
+function x = do_add_nth_order_terms(mdl, x)    
 
     for sf = fieldnames(x.dat)', sf=sf{1};           
         [T, S, C] = size(x.dat.(sf).(mdl.input));

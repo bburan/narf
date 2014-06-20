@@ -28,12 +28,16 @@ if nargin > 0
     m = merge_structs(m, args);
 end
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.input_time};     % Signal dependencies
+m.modifies = {m.output, m.output_time};  % These signals are modified
+
 % Optional fields
 m.plot_fns = {};
 m.plot_fns{1}.fn = @do_plot_downsampled;
 m.plot_fns{1}.pretty_name = 'Output vs Time';
 
-function x = do_downsampling(mdl, x, stack, xxx)
+function x = do_downsampling(mdl, x)
     
     scale = mdl.input_freq / mdl.output_freq;
     
@@ -59,7 +63,7 @@ function x = do_downsampling(mdl, x, stack, xxx)
 end
 
 function do_plot_downsampled(sel, stack, xxx)
-    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end-1)); 
+    [mdls, xins, xouts] = calc_paramsets(stack, xxx(1:end)); 
     
     hold on;
     sel.chan_idx = [];
