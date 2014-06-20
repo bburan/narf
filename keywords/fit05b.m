@@ -4,7 +4,7 @@
 %
 function fit05b()
 
-semse();
+semse_weak();
 
 MaxStepsPerIteration=10;
 StepGrowth=1.1;
@@ -98,8 +98,8 @@ fit_iteratively(@step_until_10neg4, ...
 fit_iteratively(@step_until_10neg45, ...
                 create_term_fn());
 
-%fit_iteratively(@step_until_10neg5, ...
-%                create_term_fn());
+fit_iteratively(@step_until_10neg5, ...
+                create_term_fn());
 
 %fit_iteratively(@step_until_10neg55, ...
 %                create_term_fn());

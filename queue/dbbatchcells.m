@@ -368,6 +368,7 @@ if isfield(params,'specialbatch'),
         % must be at least one passive file
         keepfiles=zeros(size(cellfiledata));
         keepcellids={};
+        
         for ii=1:length(cellfiledata),
             if ~strcmpi(cellfiledata(ii).behavior,'active'),
                 keepfiles(ii)=1;

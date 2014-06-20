@@ -215,9 +215,10 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
                    rparms.PostStimSilence;
             TarBins=round(rparms.rasterfs.*TarDur);
             mr=1;
+            ucat=zeros(size(TargetStartBin));
             for tt=1:length(TargetStartBin),
                 if TargetStartBin(tt)>0,
-                    refend=(TargetStartBin(tt)-1).*rparms.SampleDur+...
+                    refend=TargetStartBin(tt).*rparms.SampleDur+...
                            rparms.PreStimSilence;
                     refend=round(refend.*rparms.rasterfs)-1;
                     resp((refend+1):end,tt)=nan;
@@ -225,10 +226,33 @@ function x = do_load_from_baphy(mdl, x, stack, xxx)
                 else
                     mr=max(mr,max(find(~isnan(resp(:,tt)))));
                 end
+                match=0;
+                ttr=1;
+                while match==0 && ttr<tt,
+                    if ~sum(sum(abs(BigSequenceMatrix(:,:,tt)- ...
+                                    BigSequenceMatrix(:,:,ttr)))),
+                        match=ttr;
+                    end
+                    ttr=ttr+1;
+                end
+                if match,
+                    ucat(tt)=ucat(match);
+                else
+                    ucat(tt)=max(ucat)+1;
+                end
             end
-            resp=resp(1:mr,:,:);
-            stim=stim(1:mr,:,:);
             
+            oldresp=resp(1:mr,:,:);
+            stim=stim(1:mr,:,:);
+            umap=zeros(size(unique(ucat)));
+            resp=zeros(size(oldresp,1),ceil(size(oldresp,3)/length(umap)),...
+                      length(umap));
+            for tt=unique(ucat)',
+                ttr=find(ucat==tt);
+                resp(:,1:length(ttr),tt)=oldresp(:,:,ttr);
+                umap(tt)=ttr(1);
+            end
+            stim=stim(:,umap,:);
         elseif loadbytrial,
             options.tag_masks={'SPECIAL-TRIAL'};
             [resp, tags,trialset] = loadspikeraster(respfile, options);
