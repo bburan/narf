@@ -1,61 +1,122 @@
-function fitgen00()
-
+function term_score = fitgen00()
 semse();
 
 PopSize = 100;
-TolFun = 1e-6;
-Gen = 150; % should replace by 1000
+TolFun = 1e-15; % 1e-15 is not enough?
+Gen = 250;
+StallGen = 50;
 
 
-
-    function crowdingDistance = distancecrowdingModified(pop,score,options)
-        % THIS VERSION IS ADAPTED TO THE DIVERSIFICATION OBJECTIVE BY
-        % RETAINING ALWAYS ALL THE BEST FRONT MEMBERS TO BE THE BEST FITTING
-        % SOLUTION FOR OBJECTIVE 1.
+    function xoverKids  = crossoverscatteredModified(parents,options,GenomeLength,FitnessFcn,unused,thisPopulation)
         
-        %DISTANCECROWDING Assign local crowding distance to each individual
-        %   CROWDINGDISTANCE = DISTANCECROWDING(POP,SCORE,OPTIONS,SPACE) Calculates
-        %   crowding distance for each individuals on a non-dominated front. The
-        %   fourth argument SPACE can be 'phenotype' or 'genotype' for distance to
-        %   be in function space or decision variable space respectively.
+        global STACK;
+        
+        mask_rows = 0;
+        for ii = 1:length(STACK)
+            if isfield(STACK{ii}{1}, 'fit_fields')
+                mask_rows = mask_rows + 1;
+            end
+        end
+        
+        mask = false(mask_rows, size(thisPopulation,2));
+        mask_rowi = 1;
+        variable_index = 1;
+        for ii = 1:length(STACK)
+            if isfield(STACK{ii}{1}, 'fit_fields')
+                l = 0;
+                for i =1:length(STACK{ii}{1}.fit_fields)
+                    l = l + size(STACK{ii}{1}.(cell2mat(STACK{ii}{1}.fit_fields(i))),1) * ...
+                        size(STACK{ii}{1}.(cell2mat(STACK{ii}{1}.fit_fields(i))),2);
+                end
+                mask(mask_rowi,variable_index:(variable_index+l-1)) = true;
+                variable_index = variable_index+l;
+                mask_rowi = mask_rowi + 1;
+            end
+        end
+        
+        %CROSSOVERSCATTERED Position independent crossover function.
+        %   XOVERKIDS = CROSSOVERSCATTERED(PARENTS,OPTIONS,GENOMELENGTH, ...
+        %   FITNESSFCN,SCORES,THISPOPULATION) creates the crossover children XOVERKIDS
+        %   of the given population THISPOPULATION using the available PARENTS.
+        %   In single or double point crossover, genomes that are near each other tend
+        %   to survive together, whereas genomes that are far apart tend to be
+        %   separated. The technique used here eliminates that effect. Each gene has an
+        %   equal chance of coming from either parent. This is sometimes called uniform
+        %   or random crossover.
         %
         %   Example:
-        %   Create an options structure using DISTANCECROWDING as the distance
-        %   function in decision variable space
-        %     options = gaoptimset('DistanceMeasureFcn',{@distancecrowding,'genotype'});
+        %    Create an options structure using CROSSOVERSCATTERED as the crossover
+        %    function
+        %     options = gaoptimset('CrossoverFcn' ,@crossoverscattered);
         
-        %   Reference: Kalyanmoy Deb, "Multi-Objective Optimization using
-        %   Evolutionary Algorithms", John Wiley & Sons ISBN 047187339, pg: 245 -
-        %   253
-        
-        %   Copyright 2007 The MathWorks, Inc.
-        %   $Revision: 1.1.6.1 $  $Date: 2007/05/23 18:49:35 $
+        %   Copyright 2003-2007 The MathWorks, Inc.
+        %   $Revision: 1.9.4.4 $  $Date: 2007/08/03 21:23:15 $
         
         
-        [~, sorted_distance] = sort(score(:,1));
-        crowdingDistance = 1/sorted_distance;
-        crowdingDistance(sorted_distance(1)) = Inf;
+        % How many children to produce?
+        nKids = length(parents)/2;
+        % Extract information about linear constraints, if any
+        linCon = options.LinearConstr;
+        constr = ~isequal(linCon.type,'unconstrained');
+        % Allocate space for the kids
+        xoverKids = zeros(nKids,GenomeLength);
         
-%         popSize = size(y,1);
-%         numData = size(y,2);
-%         crowdingDistance = zeros(popSize,1);
-%         
-%         for m = 1:numData
-%             data = y(:,m);
-%             % Normalize obective before computing distance
-%             data = data./(1 + max(abs(data(isfinite(data)))));
-%             [sorteddata,index] = sort(data);
-%             % The best and worst individuals are at the end of Pareto front and
-%             % they are assigned Inf distance measure
-%             crowdingDistance([index(1),index(end)]) = Inf;
-%             % Distance measure of remaining individuals
-%             i = 2;
-%             while i < popSize
-%                 crowdingDistance(index(i)) = crowdingDistance(index(i)) + ...
-%                     min(Inf, (data(index(i+1)) - data(index(i-1))));
-%                 i = i+1;
-%             end
-%         end
+        % To move through the parents twice as fast as thekids are
+        % being produced, a separate index for the parents is needed
+        index = 1;
+        % for each kid...
+        for i=1:nKids
+            % get parents
+            r1 = parents(index);
+            index = index + 1;
+            r2 = parents(index);
+            index = index + 1;
+            % Randomly select half of the genes from each parent
+            % This loop may seem like brute force, but it is twice as fast as the
+            % vectorized version, because it does no allocation.
+            for j = 1:mask_rows
+                if(rand > 0.5)
+                    xoverKids(i,mask(j,:)) = thisPopulation(r1,mask(j,:));
+                else
+                    xoverKids(i,mask(j,:)) = thisPopulation(r2,mask(j,:));
+                end
+            end
+            % Make sure that offspring are feasible w.r.t. linear constraints
+            if constr
+                feasible  = isTrialFeasible(xoverKids(i,:)',linCon.Aineq,linCon.bineq,linCon.Aeq, ...
+                    linCon.beq,linCon.lb,linCon.ub,sqrt(options.TolCon));
+                if ~feasible % Kid is not feasible
+                    % Children are arithmetic mean of two parents (feasible w.r.t
+                    % linear constraints)
+                    alpha = rand;
+                    xoverKids(i,:) = alpha*thisPopulation(r1,:) + ...
+                        (1-alpha)*thisPopulation(r2,:);
+                end
+            end
+        end
+    end
+
+    function mutationChildren = mutationgaussianModified(parents,options,GenomeLength,FitnessFcn,state,thisScore,thisPopulation)
+        %MUTATIONGAUSSIAN Gaussian mutation.
+        
+        r = range(thisPopulation);
+        
+        mutationChildren = zeros(length(parents),GenomeLength);
+        for i=1:length(parents)
+            parent = thisPopulation(parents(i),:);
+            mask = 0;
+            while (sum(mask) == 0)
+                mask = floor(randi(length(parent),1,length(parent))/length(parent));
+            end
+            % half of the gaussian mutations are created with a scale
+            % depending of the current population range, the other have 1
+            if randi(2)==2
+                scale = r;
+            else
+                scale = 1;
+            end
+            mutationChildren(i,:) = parent  + scale .* randn(1,length(parent)) .* mask ;
+        end
     end
 
 
@@ -77,6 +138,7 @@ Gen = 150; % should replace by 1000
         
         n_iters = 0;
         start_depth = find_fit_start_depth(STACK);
+        fprintf('The STACK computation start depth is %d\n', start_depth);
         
         function score_diversity = my_obj_fn(phi2)
             n_sol = size(phi2,1);
@@ -99,7 +161,7 @@ Gen = 150; % should replace by 1000
             
             % Print a newline and important info every 100 iterations
             if isequal(mod(n_iters, 100), 1)
-                fprintf('\n[Generation: %5d, score:%f...%f...%f]', round(n_iters/PopSize), min(score_diversity(:,1)), mean(score_diversity(:,1)), max(score_diversity(:,1)));
+                fprintf('\n[Generation: %5d, new offspring scores:%f...%f...%f]', round(n_iters/PopSize), min(score_diversity(:,1)), mean(score_diversity(:,1)), max(score_diversity(:,1)));
                 % dbtickqueue(n_iters);
             end
             
@@ -127,40 +189,38 @@ Gen = 150; % should replace by 1000
     end
 
 
-
-[termcond, term_score, n_iters] = two_dimensional_fitter_loop('gamultiobj()', ...
-    @(obj_fn, phi_init) gamultiobj(obj_fn, length(phi_init), [], [], [], [], [], [], ...
+[termcond, term_score, n_iters] = two_dimensional_fitter_loop('gagamultiobj()', ...
+    @(obj_fn, phi_init) ga_gamultiobj(obj_fn, length(phi_init), [], [], [], [], [], [], ...
     gaoptimset('TolFun', TolFun, ...
     'PopulationSize', PopSize, ...
     'Generations', Gen, ...
     'Vectorized', 'on', ...
-    'StallGenLimit', 10, ...
-    'ParetoFraction', 0.5, ...
-    'CrossoverFraction', 0.5, ...
-    'DistanceMeasureFcn', {@distancecrowdingModified}, ...
-    'InitialPopulation', repmat(phi_init,1,PopSize)' )));
+    'StallGenLimit', StallGen, ...
+    'ParetoFraction', 1, ...
+    'MutationFcn', @mutationgaussianModified, ...
+    'CrossoverFraction', 0.2, ...%     'SelectionFcn', @selectiontournament, ...
+    'CrossoverFcn', @crossoverscatteredModified, ...
+    'InitialPopulation', repmat(phi_init,1,PopSize)')));
+
+% TODO: Write a custom termination function to stop when
 
 
-
-
-function [a,b,c,d] = step_until_10neg6(prev_opts)
-    if exist('prev_opts', 'var')
-        [a,b,c,d] = fit_boo(prev_opts);
-    else
-        [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-6, ...
-                            'StopAtStepNumber', MaxStepsPerIteration, ...
-                            'StepGrowth', StepGrowth);
+    function [a,b,c,d] = step_until_10neg6(prev_opts)
+        if exist('prev_opts', 'var')
+            [a,b,c,d] = fit_boo(prev_opts);
+        else
+            [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-6, ...
+                'StopAtStepNumber', MaxStepsPerIteration, ...
+                'StepGrowth', StepGrowth);
+        end
     end
-end
 
 % NOW DO THE LAST FIT05C STEP:
 
 MaxStepsPerIteration=10;
 StepGrowth=1.1;
 
-
-
-fit_iteratively(@step_until_10neg6, ...
-                create_term_fn());
+[~, s, ~] = fit_iteratively(@step_until_10neg6, ...
+    create_term_fn());
 
 end

@@ -90,12 +90,14 @@ for order_x=order_x_range
             end
         end
         
-        prefitrnd();
-        fit05c();
+%         prefitrnd();
+%         fit05c();
+        
+        new_term_score = fitgen00();
         
 %         fit05();
         
-        [~,new_term_score,~,~] = quick_search();
+%         [~,new_term_score,~,~] = quick_search();
         
         
         fprintf('======================================================================\n');
