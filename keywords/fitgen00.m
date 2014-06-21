@@ -1,38 +1,15 @@
-function term_score = fitgen00()
+function fitgen00()
+
+global GA_XXXHistory GA_XXXPointer GA_MaskFittable;
+
 semse();
 
 PopSize = 100;
-TolFun = 1e-15; % 1e-15 is not enough?
-Gen = 250;
-StallGen = 50;
-
+TolFun = 1e-6; % 1e-6 is not enough?
+Gen = 10000;
+StallGen = 200;
 
     function xoverKids  = crossoverscatteredModified(parents,options,GenomeLength,FitnessFcn,unused,thisPopulation)
-        
-        global STACK;
-        
-        mask_rows = 0;
-        for ii = 1:length(STACK)
-            if isfield(STACK{ii}{1}, 'fit_fields')
-                mask_rows = mask_rows + 1;
-            end
-        end
-        
-        mask = false(mask_rows, size(thisPopulation,2));
-        mask_rowi = 1;
-        variable_index = 1;
-        for ii = 1:length(STACK)
-            if isfield(STACK{ii}{1}, 'fit_fields')
-                l = 0;
-                for i =1:length(STACK{ii}{1}.fit_fields)
-                    l = l + size(STACK{ii}{1}.(cell2mat(STACK{ii}{1}.fit_fields(i))),1) * ...
-                        size(STACK{ii}{1}.(cell2mat(STACK{ii}{1}.fit_fields(i))),2);
-                end
-                mask(mask_rowi,variable_index:(variable_index+l-1)) = true;
-                variable_index = variable_index+l;
-                mask_rowi = mask_rowi + 1;
-            end
-        end
         
         %CROSSOVERSCATTERED Position independent crossover function.
         %   XOVERKIDS = CROSSOVERSCATTERED(PARENTS,OPTIONS,GENOMELENGTH, ...
@@ -74,11 +51,11 @@ StallGen = 50;
             % Randomly select half of the genes from each parent
             % This loop may seem like brute force, but it is twice as fast as the
             % vectorized version, because it does no allocation.
-            for j = 1:mask_rows
+            for j = 1:size(GA_MaskFittable,1)
                 if(rand > 0.5)
-                    xoverKids(i,mask(j,:)) = thisPopulation(r1,mask(j,:));
+                    xoverKids(i,logical(GA_MaskFittable(j,:))) = thisPopulation(r1,logical(GA_MaskFittable(j,:)));
                 else
-                    xoverKids(i,mask(j,:)) = thisPopulation(r2,mask(j,:));
+                    xoverKids(i,logical(GA_MaskFittable(j,:))) = thisPopulation(r2,logical(GA_MaskFittable(j,:)));
                 end
             end
             % Make sure that offspring are feasible w.r.t. linear constraints
@@ -100,6 +77,7 @@ StallGen = 50;
         %MUTATIONGAUSSIAN Gaussian mutation.
         
         r = range(thisPopulation);
+        r(r==0) = 1;
         
         mutationChildren = zeros(length(parents),GenomeLength);
         for i=1:length(parents)
@@ -113,7 +91,7 @@ StallGen = 50;
             if randi(2)==2
                 scale = r;
             else
-                scale = 1;
+                scale = Gen/state.Generation/10.0;
             end
             mutationChildren(i,:) = parent  + scale .* randn(1,length(parent)) .* mask ;
         end
@@ -122,9 +100,10 @@ StallGen = 50;
 
 
 
-    function [termcond, term_score, n_iters] = two_dimensional_fitter_loop(fittername, highlevel_fn)
+    function [termcond, term_score, n_iters, term_phi] = two_dimensional_fitter_loop(fittername, highlevel_fn)
         
-        global STACK META;
+        global STACK META XXX;
+        
         
         phi_init = pack_fittables(STACK);
         
@@ -136,18 +115,85 @@ StallGen = 50;
             return
         end
         
+        % initialization of the MaskFittable
+        mask_rows = 0;
+        for ii = 1:length(STACK)
+            if isfield(STACK{ii}{1}, 'fit_fields')
+                mask_rows = mask_rows + 1;
+            end
+        end
+        
+        GA_MaskFittable = zeros(mask_rows, length(phi_init));
+        mask_rowi = 1;
+        variable_index = 1;
+        for ii = 1:length(STACK)
+            if isfield(STACK{ii}{1}, 'fit_fields')
+                l = 0;
+                for i =1:length(STACK{ii}{1}.fit_fields)
+                    l = l + size(STACK{ii}{1}.(cell2mat(STACK{ii}{1}.fit_fields(i))),1) * ...
+                        size(STACK{ii}{1}.(cell2mat(STACK{ii}{1}.fit_fields(i))),2);
+                end
+                GA_MaskFittable(mask_rowi,variable_index:(variable_index+l-1)) = ii;
+                variable_index = variable_index+l;
+                mask_rowi = mask_rowi + 1;
+            end
+        end
+
+        
+        % initialization of the StimHistory and StackHistory
+        GA_PhiHistory = Inf((size(GA_MaskFittable,1)-1)*PopSize*2, length(phi_init));
+        GA_XXXHistory = cell((size(GA_MaskFittable,1)-1)*PopSize*2,1);
+        GA_XXXPointer = 1;
+        
         n_iters = 0;
         start_depth = find_fit_start_depth(STACK);
         fprintf('The STACK computation start depth is %d\n', start_depth);
         
         function score_diversity = my_obj_fn(phi2)
+            
             n_sol = size(phi2,1);
+            n_params = size(phi2,2);
             score_diversity = Inf(n_sol,2);
             
             for phi_i=1:n_sol
                 
                 unpack_fittables(phi2(phi_i,:));
-                calc_xxx(start_depth);
+                
+                % check for already computed stimulus
+                s = start_depth-1;
+                for c=(size(GA_MaskFittable,1)-1):-1:1
+                    [~, last_param_position] = find(GA_MaskFittable(c+1,:),1);
+                    cols = 1:(last_param_position - 1);
+                    phi = Inf(1,n_params);
+                    phi(cols) = phi2(phi_i,cols);
+                    [is_stored, stored_index] = ismember(phi,GA_PhiHistory,'rows');
+                    if is_stored
+                        s = GA_MaskFittable(c,last_param_position - 1);
+                        XXX{s}.dat = GA_XXXHistory{stored_index};
+                        break
+                    end
+                end
+                
+                calc_xxx(s+1);
+                
+                % try to update the cached copies
+                for c=(size(GA_MaskFittable,1)-1):-1:1
+                    [~, last_param_position] = find(GA_MaskFittable(c+1,:),1);
+                    cols = 1:(last_param_position - 1);
+                    phi = Inf(1,n_params);
+                    phi(cols) = phi2(phi_i,cols);
+                    if ~ismember(phi,GA_PhiHistory,'rows');
+                        s = GA_MaskFittable(c,last_param_position - 1);
+                        GA_XXXHistory{GA_XXXPointer} = XXX{s}.dat;
+                        GA_PhiHistory(GA_XXXPointer,:) = phi;
+                        GA_XXXPointer = GA_XXXPointer + 1;
+                        if GA_XXXPointer > length(GA_XXXHistory)
+                            GA_XXXPointer = 1;
+                        end
+%                     else
+%                         break
+                    end
+                end
                 
                 [m, p] = META.perf_metric();
                 score_diversity(phi_i,1) = m + p;
@@ -157,12 +203,6 @@ StallGen = 50;
             if (n_sol>1)
                 dists = squareform(pdist(phi2));
                 score_diversity(:,2) = -min(dists+max(max(dists))*eye(n_sol));
-            end
-            
-            % Print a newline and important info every 100 iterations
-            if isequal(mod(n_iters, 100), 1)
-                fprintf('\n[Generation: %5d, new offspring scores:%f...%f...%f]', round(n_iters/PopSize), min(score_diversity(:,1)), mean(score_diversity(:,1)), max(score_diversity(:,1)));
-                % dbtickqueue(n_iters);
             end
             
             % Print 1 progress dot for every 5 iterations no matter what
@@ -189,7 +229,7 @@ StallGen = 50;
     end
 
 
-[termcond, term_score, n_iters] = two_dimensional_fitter_loop('gagamultiobj()', ...
+[termcond, term_score, n_iters, term_phi] = two_dimensional_fitter_loop('gagamultiobj()', ...
     @(obj_fn, phi_init) ga_gamultiobj(obj_fn, length(phi_init), [], [], [], [], [], [], ...
     gaoptimset('TolFun', TolFun, ...
     'PopulationSize', PopSize, ...
@@ -202,7 +242,74 @@ StallGen = 50;
     'CrossoverFcn', @crossoverscatteredModified, ...
     'InitialPopulation', repmat(phi_init,1,PopSize)')));
 
-% TODO: Write a custom termination function to stop when
+% TODO: Write a custom termination function to stop when the improvement on
+% the best item alone for objective 1 is not big enough
+
+unpack_fittables(term_phi);
+
+    function [a,b,c,d] = step_until_10neg3(prev_opts)
+        if exist('prev_opts', 'var')
+            [a,b,c,d] = fit_boo(prev_opts);
+        else
+            [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-3, ...
+                'StopAtStepSize', 10^-6,...
+                'StopAtStepNumber', MaxStepsPerIteration, ...
+                'StepGrowth', StepGrowth);
+        end
+    end
+
+    function [a,b,c,d] = step_until_10neg35(prev_opts)
+        if exist('prev_opts', 'var')
+            [a,b,c,d] = fit_boo(prev_opts);
+        else
+            [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-3.5, ...
+                'StopAtStepSize', 10^-6,...
+                'StopAtStepNumber', MaxStepsPerIteration, ...
+                'StepGrowth', StepGrowth);
+        end
+    end
+
+    function [a,b,c,d] = step_until_10neg4(prev_opts)
+        if exist('prev_opts', 'var')
+            [a,b,c,d] = fit_boo(prev_opts);
+        else
+            [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-4, ...
+                'StopAtStepSize', 10^-7,...
+                'StopAtStepNumber', MaxStepsPerIteration, ...
+                'StepGrowth', StepGrowth);
+        end
+    end
+
+    function [a,b,c,d] = step_until_10neg45(prev_opts)
+        if exist('prev_opts', 'var')
+            [a,b,c,d] = fit_boo(prev_opts);
+        else
+            [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-4.5, ...
+                'StopAtStepSize', 10^-7,...
+                'StopAtStepNumber', MaxStepsPerIteration, ...
+                'StepGrowth', StepGrowth);
+        end
+    end
+
+    function [a,b,c,d] = step_until_10neg5(prev_opts)
+        if exist('prev_opts', 'var')
+            [a,b,c,d] = fit_boo(prev_opts);
+        else
+            [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-5, ...
+                'StopAtStepNumber', MaxStepsPerIteration, ...
+                'StepGrowth', StepGrowth);
+        end
+    end
+
+    function [a,b,c,d] = step_until_10neg55(prev_opts)
+        if exist('prev_opts', 'var')
+            [a,b,c,d] = fit_boo(prev_opts);
+        else
+            [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-5.5, ...
+                'StopAtStepNumber', MaxStepsPerIteration, ...
+                'StepGrowth', StepGrowth);
+        end
+    end
 
 
     function [a,b,c,d] = step_until_10neg6(prev_opts)
@@ -220,7 +327,26 @@ StallGen = 50;
 MaxStepsPerIteration=10;
 StepGrowth=1.1;
 
-[~, s, ~] = fit_iteratively(@step_until_10neg6, ...
-    create_term_fn());
+
+% fit_iteratively(@step_until_10neg3, ...
+%     create_term_fn());
+% 
+% fit_iteratively(@step_until_10neg35, ...
+%     create_term_fn());
+% 
+% fit_iteratively(@step_until_10neg4, ...
+%     create_term_fn());
+% 
+% fit_iteratively(@step_until_10neg45, ...
+%     create_term_fn());
+% 
+% fit_iteratively(@step_until_10neg5, ...
+%     create_term_fn());
+% 
+% fit_iteratively(@step_until_10neg55, ...
+%     create_term_fn());
+% 
+% [~, term_score, ~] = fit_iteratively(@step_until_10neg6, ...
+%     create_term_fn());
 
 end

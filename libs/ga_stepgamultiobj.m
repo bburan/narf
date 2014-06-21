@@ -41,7 +41,7 @@ nextPopulation = [xoverKids ; mutateKids ];
 if strcmpi(options.Vectorized, 'off') 
     nextScore = fcnvectorizer(nextPopulation,FitnessFcn,numObj,options.SerialUserFcn);
 else
-    nextScore = FitnessFcn(nextPopulation);
+    [nextScore] = FitnessFcn(nextPopulation);
 end
 
 % Update the current population

@@ -21,16 +21,38 @@ if  options.Verbosity > 1
     fprintf('Generation   f-count    Pareto distance    Pareto spread\n');
 end
 
+historyBest = repmat(Inf, options.StallGenLimit, 1);
+historyPointer = 1;
+
 currentState = 'iter';
 % Run the main loop until some termination condition becomes true
 exitFlag = [];
 while true
        state.Generation = state.Generation + 1;
         % check to see if any stopping criteria have been met
-       [state,exitFlag,reasonToStop] = ga_gamultiobjConverged(options,state);
+%        [state,exitFlag,reasonToStop] = ga_gamultiobjConverged(options,state);
+       exitFlag = [];
+       if state.Generation > options.Generations
+           exitFlag = 1;
+           reasonToStop = 'Maximal number of iterations reached => exiting\n';
+       end
+       if range(historyBest) < options.TolFun
+           exitFlag = 1;         
+           reasonToStop = 'Optimization stalled => exiting\n';
+       end
        if ~isempty(exitFlag)
            break;
        end
+       
+       
+            % Print a newline and important info every 10 iterations
+            if isequal(mod(state.Generation-1, 5), 1)
+                fprintf('\nGeneration %5d => current scores: [%f...%f...%f]\n', state.Generation, ...
+                    min(state.Score(:,1)), mean(state.Score(:,1)), max(state.Score(:,1)));
+                [~, best] = min(state.Score(:,1));
+                fprintf('best indiv last parameter is %f\n',state.Population(best,end));
+                % dbtickqueue(n_iters);
+            end
        
         % Repeat for each sub-population (element of the PopulationSize vector)
         offset = 0;
@@ -45,7 +67,13 @@ while true
             end
             state = ga_stepgamultiobj(pop,thisPopulation,options,state,GenomeLength,FitnessFcn);
             offset = offset + populationSize;
-        end 
+        end
+        
+        historyBest(historyPointer) = min(state.Score(:,1));
+        historyPointer = historyPointer + 1;
+        if historyPointer > options.StallGenLimit
+            historyPointer = 1;
+        end
         
         % Migration
 %         state = migrate(FitnessFcn,GenomeLength,options,state); %%%%%%%%%
@@ -57,6 +85,7 @@ end % End while loop
 % Update output structure
 output.generations = state.Generation;
 output.message = reasonToStop;
+fprintf(output.message);
 
 % If sub-population model is used, merge all sub-population and perform
 % another non-dominated sorting
