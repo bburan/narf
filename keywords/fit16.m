@@ -59,7 +59,7 @@ end
 
 % Now gradually shrink the stopping criterion
 scale = META.perf_metric()/100; % Start at the current performance value
-stop_at=10^-6;
+stop_at=10^-10;
 
 while(scale > stop_at)
     fit_iteratively(make_subfitter(scale), create_term_fn('StopAtAbsScoreDelta', scale));

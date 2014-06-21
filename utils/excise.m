@@ -4,7 +4,9 @@ function x = excise(x)
 % For higher dimensional matrices, excises a hyper-row (dimensions 2 to N)
 % if there is a NAN anywhere.
 
-if ndims(x) < 3
+if isvector(x)
+    x = x(~isnan(x));
+elseif ndims(x) == 2
     x(any(isnan(x)'),:) = [];
 elseif ndims(x) == 3    
     [a,b,c] = size(x);
