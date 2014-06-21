@@ -196,10 +196,16 @@ function do_depression_cartoon(sel, stack, xxx)
     end    
     x.dat.demo.(mdl.time)= (1/fs) * (0:size(x.dat.demo.(mdl.input), 1))';
     
+    %if isfield(XXX{1},'filecodes') && ~isempty(XXX{1}.filecodes),
+     %   unique_codes = unique(XXX{1}.filecodes);
+    %else
+        unique_codes={''};
+    %end
+        
     data=[];
     for jj=1:length(mdls),
        mdls{jj}.offset_in=0;
-        xfiltered=do_depression_filter(mdls{jj}, x, stack, xxx);
+        xfiltered=do_depression_filter(mdls{jj}, x);%, stack, xxx);
         xfiltered.dat.demo.stim=xfiltered.dat.demo.(mdl.input);
         
         data=cat(1,data,...
