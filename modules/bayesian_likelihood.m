@@ -89,80 +89,140 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
             return
         end        
         
-        % This old way of doing this is about 2x slower than before
-%         fprintf('Old way: ');
-%         tic;        
-%         % Find the total absolute stim integral (on a per-stimulus basis)
-%         for s = 1:si
-%             % Total predicted spiking activity of model, unnormalized
-%         	CDF = cumsum(stim(:,s));
-%            
-%             % Build up the scaled inter-spike intervals distribution
-%            for r = 1:ri
-%                 spiketimes = resp{s,r}; 
-%                 scaled_spiketimes = interp1q([0; time], [0; CDF], [0; spiketimes]);                
-%                 sISIs = diff(scaled_spiketimes);
-% 
-%                 % FIXME: Sometimes scaled ISIs of 0 occur
-%                 % I'm not sure what to do about this.
-%                 % Right now I'll just 'modify' them to be slightly nonzero
-%                 sISIs(sISIs < 0) = 10^-9; % FIXME
-%     
-%                 if any(isnan(sISIs))
-%                     keyboard;
-%                     error('How did a scaled ISI become NaN?!');
-%                 end
-%                
-%                 scaled_ISIs = cat(1, scaled_ISIs, sISIs);
-%            end
-%         end    
-%         toc;        
-        
-        CDF = cumsum(stim(:));        
-        scaled_ISIs = [];        
-        dt = time(2) - time(1);
-        
-        for kk = 1:length(spiketimes)            
-            scaled_spiketimes = zeros(size(spiketimes{kk}));        
-            t = 0;        
-            ind = 1;    
-            for jj = 1:length(spiketimes{kk}),
-                % Consume CDF until we reach the appropriate time t
-                t_spike = spiketimes{kk}(jj);
-                while t < t_spike
-                   t = t + dt;
-                   ind = ind + 1;
-                end
-    
-                % Linearly interpolate            
-                if ind == 1
-                    lbound = 0;
-                else
-                    lbound = CDF(ind-1);
-                end
-                rbound = CDF(ind);
-                weight = (t - t_spike) / dt; 
-                scaled_spiketimes(jj) = lbound*(weight) + rbound*(1-weight);
-            end            
-            scaled_ISIs = cat(1, scaled_ISIs, diff(scaled_spiketimes));            
+        [ssi, ri] = size(spiketimes);
+        if ssi ~= si
+            keyboard;
+            error('Incorrectly sized raw_spiketimes cell array.');
         end
-        
+
+        % Since we throw away the first spike when computing ISIs, there
+        % should be one less ISI than spiketime for every stim & repetition                
+        zs = cellfun(@length, spiketimes);
+        zs = zs-1;
+        scaled_ISIs = nan(sum(zs(:)), 1);
+        %scaled_ISIs = [];
+        idx = 1;
+        dt = time(2) - time(1);
+        % Find the total absolute stim integral (on a per-stimulus basis)
+        for s = 1:si
+            % Total predicted spiking activity of model, unnormalized
+        	CDF = cumsum([0; stim(:,s)]);  
+
+            % Build up the scaled inter-spike intervals distribution
+           for r = 1:ri
+                
+                % Concise way                
+                %scaled_spiketimes_old = interp1q([0; time], [0; CDF], [0; spiketimes{s,r}]);                
+                %scaled_ISIs = cat(1, scaled_ISIs, diff(scaled_spiketimes));
+                
+                % Much faster way
+                spktimes = spiketimes{s,r}; 
+                indexes = ceil(spktimes / dt);
+                % Interpolate
+                lbounds = CDF(indexes);
+                rbounds = CDF(indexes+1);
+                weights = (indexes.*dt - spktimes) ./ dt;
+                scaled_spktimes = lbounds.*(weights) + rbounds.*(1-weights);                
+
+                % Scalar way
+                % scaled_spiketimes = zeros(size(spiketimes{s,r}));
+                %t = 0;
+                %ind = 1;
+                %scaled_t_spike_prev = 0;
+%                 for jj = 1:length(spktimes)
+%                     % Consume CDF until we reach the appropriate time t
+%                     t_spike = spktimes(jj);            
+%                     while t < t_spike
+%                         t = t + dt;
+%                         ind = ind + 1;
+%                     end
+%                     
+%                     %fprintf('ind=%d, indexes(jj)=%d\n', ind, indexes(jj));
+%                     
+%                     % Linearly interpolate
+%                     lbound = CDF(ind);
+%                     rbound = CDF(ind+1);
+%                     weight = (t - t_spike) / dt;
+%                     scaled_t_spike = lbound*(weight) + rbound*(1-weight);
+%                     
+%                     % Update for next pass
+%                     scaled_ISIs(idx) = scaled_t_spike - scaled_t_spike_prev;
+%                     idx = idx + 1;
+%                     scaled_t_spike_prev = scaled_t_spike;
+%                 end
+                
+                sISIs = diff(scaled_spktimes);  % Note that we drop first spike of each trial because there was no previous spike from which to compute an ISI, and I don't trust using t=0.                 
+                %scaled_ISIs = cat(1, scaled_ISIs, sISIs);
+                n_ISIs = length(sISIs);
+                scaled_ISIs(idx:idx+n_ISIs-1) = sISIs;
+                idx = idx + n_ISIs;
+           end
+        end    
+       
+        % 6/20/2014: I tried using spike_intervals module and doing all the
+        % stimuli at once, but this made some interspike intervals overly
+        % large (from the last spike of one trial to the first spike of
+        % another), and it was in general hard to reason about properly.
+        % At some point this should be resurrected because it could
+        % potentially be another 2-3x faster than the above. 
+%         CDF = cumsum(stim(:));        
+%         scaled_ISIs = [];        
+%         dt = time(2) - time(1);        
+%         
+%         fprintf('Old: ');
+%         tic;
+%         for kk = 1:length(spiketimes)            
+%             scaled_spiketimes = zeros(size(spiketimes{kk}));        
+%             t = 0;        
+%             ind = 1;    
+%             for jj = 1:length(spiketimes{kk}),        
+%                 % Consume CDF until we reach the appropriate time t
+%                 t_spike = spiketimes{kk}(jj);
+%                 while t < t_spike
+%                    t = t + dt;
+%                    ind = ind + 1;
+%                 end
+%     
+%                 % Linearly interpolate            
+%                 if ind == 1
+%                     lbound = 0;
+%                 else
+%                     lbound = CDF(ind-1);
+%                 end
+%                 rbound = CDF(ind);
+%                 weight = (t - t_spike) / dt; 
+%                 scaled_spiketimes(jj) = lbound*(weight) + rbound*(1-weight);
+%             end            
+%             scaled_ISIs = cat(1, scaled_ISIs, diff(scaled_spiketimes));            
+%         end
+%                 
+%         fprintf('New: ');
+%         zISIs = [];
+%         for kk = 1:length(spiketimes)
+%             sISIs = diff(interp1q([0; time], [0; CDF], [0; spiketimes{kk}]));
+%             zISIs = cat(1, zISIs, sISIs);
+%         end
+                
          % We compare to RESPAVG
-        total_time = total_time + dt*length(CDF);
+        total_time = total_time + si * (time(end));
+        % total_time = total_time + dt*length(CDF);
         
     end
     
     % Anything less than the temporal cutoff should be NaN'd
-    scaled_ISIs(scaled_ISIs <= mdl.probcutoff) = NaN;
-    scaled_ISIs = excise(scaled_ISIs);
+    %scaled_ISIs(scaled_ISIs <= mdl.probcutoff) = NaN;
+    
+    % Remove all NaNs at end
+    % This is the safe way of oding it
+    % scaled_ISIs = excise(scaled_ISIs);    
     
     % Everything should also be shifted left to the cutoff
-    scaled_ISIs(:) = scaled_ISIs(:) - mdl.probcutoff;
+    % scaled_ISIs(:) = scaled_ISIs(:) - mdl.probcutoff;
     
     n_spikes = length(scaled_ISIs);
     
     % Average lambda for the stimulus-scaled ISIs
-	l_avg = 1 / nanmean(scaled_ISIs); 
+	% l_avg = 1 / nanmean(scaled_ISIs); 
     
     % Average lambda we should expect, from looking at RESP
     lambda = total_time / n_spikes;
@@ -184,7 +244,7 @@ function [nlogl, scaled_ISIs] = helper_fn(mdl, x, stimfiles)
     %         plot([0,1], [0,1], 'k--', z2, uni, 'b-');
     %     end
     
-    err = sum((z2 - uni).^2) / n_spikes; % Sum of squares error works
+    err = sum((z2 - uni).^2) / n_spikes; % Mean squared error
     % err = sum(abs(z2 - uni)) / n_spikes; % L1 error worked pretty well
     %err = max(abs(z2 - uni)); % L0 error may also work (KS plot-style)
     nlogl = err;
