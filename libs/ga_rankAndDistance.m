@@ -1,4 +1,4 @@
-function [pop,score,nonDomRank,Distance]  = rankAndDistance(pop,score,options,nParents)
+function [pop,score,nonDomRank,Distance]  = ga_rankAndDistance(pop,score,options,nParents)
 %rankAndDistance Assign rank and distance measure to each individual
 
 %   Copyright 2007 The MathWorks, Inc.

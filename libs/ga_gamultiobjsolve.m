@@ -1,4 +1,4 @@
-function [x,fval,exitFlag,output,population,scores] = gamultiobjsolve(FitnessFcn,GenomeLength, ...
+function [x,fval,exitFlag,output,population,scores] = ga_gamultiobjsolve(FitnessFcn,GenomeLength, ...
      Aineq,bineq,Aeq,beq,lb,ub,options,output)
 %GAMULTIOBJSOLVE Genetic algorithm multi-objective solver.
 
@@ -10,7 +10,7 @@ function [x,fval,exitFlag,output,population,scores] = gamultiobjsolve(FitnessFcn
 % Create initial state: population, scores, status data
 state = ga_gamultiobjMakeState(GenomeLength,FitnessFcn,output.problemtype,options);
 
-currentState = 'init';
+% currentState = 'init';
 % Give the plot/output Fcns a chance to do any initialization they need.
 % state = gadsplot(options,state,currentState,'Genetic Algorithm'); %%%%%%%
 % [state,options] = gaoutput(FitnessFcn,options,state,currentState); %%%%%%
@@ -21,10 +21,11 @@ if  options.Verbosity > 1
     fprintf('Generation   f-count    Pareto distance    Pareto spread\n');
 end
 
-historyBest = repmat(Inf, options.StallGenLimit, 1);
+historyBest = Inf(options.StallGenLimit, 1);
 historyPointer = 1;
+best_score = Inf;
 
-currentState = 'iter';
+% currentState = 'iter';
 % Run the main loop until some termination condition becomes true
 exitFlag = [];
 while true
@@ -49,8 +50,8 @@ while true
             if isequal(mod(state.Generation-1, 5), 1)
                 fprintf('\nGeneration %5d => current scores: [%f...%f...%f]\n', state.Generation, ...
                     min(state.Score(:,1)), mean(state.Score(:,1)), max(state.Score(:,1)));
-                [~, best] = min(state.Score(:,1));
-                fprintf('best indiv last parameter is %f\n',state.Population(best,end));
+%                 [~, best] = min(state.Score(:,1));
+%                 fprintf('best indiv last parameter is %f\n',state.Population(best,end));
                 % dbtickqueue(n_iters);
             end
        
@@ -69,7 +70,14 @@ while true
             offset = offset + populationSize;
         end
         
-        historyBest(historyPointer) = min(state.Score(:,1));
+        previous_best = best_score;
+        best_score = min(state.Score(:,1));
+        if best_score == previous_best
+            options.genSinceLastChange = options.genSinceLastChange + 1;
+        else
+            options.genSinceLastChange = 1;
+        end
+        historyBest(historyPointer) = best_score;
         historyPointer = historyPointer + 1;
         if historyPointer > options.StallGenLimit
             historyPointer = 1;
@@ -124,7 +132,7 @@ output.funccount   = state.FunEval;
 population = state.Population;
 scores = state.Score;
 
-currentState = 'done';
+% currentState = 'done';
 % Give the Output functions a chance to finish up
 % gadsplot(options,state,currentState,'Genetic Algorithm');
 % gaoutput(FitnessFcn,options,state,currentState);

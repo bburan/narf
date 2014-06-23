@@ -61,13 +61,18 @@ n_sol = size(population,1);
 dists = squareform(pdist(population));
 score(:,2) = -min(dists+max(max(dists))*eye(n_sol));
 % we remove the solutions that are really too bad:
-toremove = find(score(:,1) > 2 * min(score(:,1)), 1);
+toremove = find(score(:,1) > 5 * min(score(:,1)), 1);
 if ~isempty(toremove)
-    if length(toremove) > popSize
-        toremove = toremove(1:popSize);
+    if length(toremove) >= popSize
+        toremove = toremove(1:(length(toremove)-popSize-1));
     end
     score = score(~ismember(1:(2*popSize), toremove), :);
     population = population(~ismember(1:(2*popSize), toremove), :);
+end
+
+if size(score,1)< popSize
+    fprintf('ouille.\n')
+    fprintf('current pop size = %d (%d)\n',size(score,1),size(population,1));
 end
 
 % fprintf('best indiv score = %f\n',min(score(:,1)));

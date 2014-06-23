@@ -213,6 +213,9 @@ end
 % Take defaults for parameters that are not in options structure
 options = gaoptimset(defaultopt,options);
 
+options.genSinceLastChange = 1;
+
+
 % All inputs should be double
 try
     dataType = superiorfloat(nvars,Aineq,bineq,Aeq,beq,lb,ub);
