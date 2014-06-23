@@ -52,11 +52,16 @@ StallGen = 200;
             % This loop may seem like brute force, but it is twice as fast as the
             % vectorized version, because it does no allocation.
             for j = 1:size(GA_MaskFittable,1)
-                if(rand > 0.5)
-                    xoverKids(i,logical(GA_MaskFittable(j,:))) = thisPopulation(r1,logical(GA_MaskFittable(j,:)));
-                else
-                    xoverKids(i,logical(GA_MaskFittable(j,:))) = thisPopulation(r2,logical(GA_MaskFittable(j,:)));
-                end
+                % this has 1/2 prob to take either one of the parents
+                %                 if(rand > 0.5)
+                %                     xoverKids(i,logical(GA_MaskFittable(j,:))) = thisPopulation(r1,logical(GA_MaskFittable(j,:)));
+                %                 else
+                %                     xoverKids(i,logical(GA_MaskFittable(j,:))) = thisPopulation(r2,logical(GA_MaskFittable(j,:)));
+                %                 end
+                % this does a randomly weighted average
+                alpha = rand;
+                xoverKids(i,logical(GA_MaskFittable(j,:))) = alpha * thisPopulation(r1,logical(GA_MaskFittable(j,:))) + ...
+                    (1 - alpha) * thisPopulation(r2,logical(GA_MaskFittable(j,:)));
             end
             % Make sure that offspring are feasible w.r.t. linear constraints
             if constr
@@ -88,10 +93,10 @@ StallGen = 200;
             end
             % half of the gaussian mutations are created with a scale
             % depending of the current population range, the other have 1
-            if randi(2)==2
+            if rand>0.5
                 scale = r;
             else
-                scale = Gen/state.Generation/10.0;
+                scale = options.StallGenLimit / options.genSinceLastChange;
             end
             mutationChildren(i,:) = parent  + scale .* randn(1,length(parent)) .* mask ;
         end
@@ -240,6 +245,7 @@ StallGen = 200;
     'MutationFcn', @mutationgaussianModified, ...
     'CrossoverFraction', 0.2, ...%     'SelectionFcn', @selectiontournament, ...
     'CrossoverFcn', @crossoverscatteredModified, ...
+    'DistanceMeasureFcn', @ga_distancecrowding, ...
     'InitialPopulation', repmat(phi_init,1,PopSize)')));
 
 % TODO: Write a custom termination function to stop when the improvement on
