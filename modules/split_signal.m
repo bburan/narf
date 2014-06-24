@@ -71,55 +71,13 @@ function x = do_split_signal(mdl, x)
     fns = fieldnames(x.dat);
     for ii = 1:length(fns)
          sf=fns{ii};
-         %x.dat.(sf).(mdl.input);
-         
-         % SVD:
-         for ii=1:length(mdl.unique_codes),
-             ff=find(x.dat.(sf).trial_code==mdl.unique_codes(ii));
-             x.dat.(sf).(mdl.outputs{ii})=...
+         for kk=1:length(mdl.unique_codes),
+             ff=find(x.dat.(sf).trial_code==mdl.unique_codes(kk));
+             x.dat.(sf).(mdl.outputs{kk})=...
                  x.dat.(sf).(mdl.input)(:,ff,:);
          end
     end
 end
 
-% ------------------------------------------------------------------------
-% Splitters
-
-    function split_by_filecode(x, stimfile, signal)
-        
-        % Use defaults
-        unique_codes = unique(filecodes);
-        xxxs = cell(1, length(unique_codes));
-        estfiles = xxx{end}.training_set;
-        valfiles = xxx{end}.test_set;
-        
-        % Otherwise, group by filecode
-        for ii = 1:length(unique_codes);
-            fc = unique_codes{ii};
-            
-            matches = strcmp(fc, filecodes);
-            
-            efs = estfiles(matches);
-            vfs = valfiles(matches(matches<=length(valfiles)));
-            
-            xxxs{ii} = xxx;
-            xxxs{ii}{end}.dat = [];
-            xxxs{ii}{end}.training_set={};
-            xxxs{ii}{end}.test_set={};
-            xxxs{ii}{end}.filecodes={};
-            
-            for jj = 1:length(efs)
-                f = efs{jj};
-                xxxs{ii}{end}.dat.(f) = xxx{end}.dat.(f);
-                xxxs{ii}{end}.training_set{jj} = f;
-                xxxs{ii}{end}.filecodes{jj} = fc;
-            end
-            for jj = 1:length(vfs)
-                f = vfs{jj};
-                xxxs{ii}{end}.dat.(f) = xxx{end}.dat.(f);
-                xxxs{ii}{end}.test_set{jj} = f;
-            end
-            
-        end
-    end
+% 
 end

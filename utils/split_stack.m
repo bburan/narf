@@ -47,6 +47,7 @@ for ii=startidx:endidx,
         STACK{ii+1}{jj}=mdl;
     end
 end
+XXX=XXX(1);
 update_xxx(startidx);
 
 append_module(MODULES.unify_signal);
@@ -54,3 +55,6 @@ for ii=(endidx+1):length(oldstack),
     STACK{end+1}=oldstack{ii};
 end
 
+
+XXX=XXX(1);
+update_xxx(startidx);

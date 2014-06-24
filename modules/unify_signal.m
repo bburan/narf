@@ -72,22 +72,27 @@ function x = do_unify_signal(mdl, x)
     
     for ii = 1:length(fns)
         sf=fns{ii};
-        jj=1;
-        insize=size(x.dat.(sf).(mdl.inputs{1}));
-        while jj<length(mdl.inputs) & ~insize(2),
-           jj=jj+1;
-           insize=size(x.dat.(sf).(mdl.inputs{jj}));
+                
+        % Find the size of the input signals
+        for jj = 1:length(mdl.inputs)
+           insize=size(x.dat.(sf).(mdl.inputs{jj}));    
+           if insize(2) ~= 0 
+                break;
+           end        
+        end 
+        
+        if size(x.dat.(sf).(mdl.inputs{jj}), 3) > 1;
+            fprintf('Insize weird.\n');            
+            keyboard;
         end
         x.dat.(sf).(mdl.output)=zeros([insize(1),...
                                       length(x.dat.(sf).trial_code),...
                                       insize(3:end)]);
-        
-        % SVD:
-        for ii=1:length(mdl.unique_codes),
-            ff=find(x.dat.(sf).trial_code==mdl.unique_codes(ii));
+               
+        for kk=1:length(mdl.unique_codes),
+            ff = find(x.dat.(sf).trial_code == mdl.unique_codes(kk));
             if ~isempty(ff),
-               x.dat.(sf).(mdl.output)(:,ff,:)=...
-                  x.dat.(sf).(mdl.inputs{ii});
+               x.dat.(sf).(mdl.output)(:,ff,:) = x.dat.(sf).(mdl.inputs{kk});
             end
         end
     end
