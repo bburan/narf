@@ -7,5 +7,5 @@ function y = nl_dexp(phi, z)
     kappa = phi(4);   % Curvature
     
     y = base + peak * exp(-exp(-kappa.*(z-lrshift))); 
-
+    
 end

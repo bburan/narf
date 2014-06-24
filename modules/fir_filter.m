@@ -101,47 +101,52 @@ function x = do_fir_filtering(mdl, x)
     
          % Compute the size of the filter
          [T, S, C] = size(x.dat.(sf).(mdl.input));
-         
-         if ~isequal(C, mdl.num_dims)
-            error('Dimensions of (mdl.input) don''t match channel count.');
-         end
-         
-         zf = {};
-         for c = 1:C
-            % Find proper initial conditions for the filter
-            [~, zftmp] = filter(coefs(c,:)', [1], ...
-                     init_data_space .* x.dat.(sf).(mdl.input)(1, 1, c));
-            zf{c} = zftmp;
-         end
-                     
-%          % Old way of filtering
-%          fprintf('Old Way:');
-%          tmp = zeros(T, S, C);     
-%          for s = 1:S
-%              for c = 1:C,                 
-%                  
-%                  [tmp(:, s, c), zftmp] = filter(coefs(c,:)', [1], ...
-%                      x.dat.(sf).(mdl.input)(:, s, c), ...
-%                      zf{c});
-%                  zf{c} = zftmp;      
-%              end
-%          end        
 
-         % Tests revealed that below is 2-5x faster than the above: 
-         tmp = zeros(T*S, C);   
-         dd = reshape(x.dat.(sf).(mdl.input), T*S, C); % 210000x3   
-         for c = 1:C, 
-             tmp(:, c) = filter(coefs(c,:)', [1], dd(:,c), zf{c}, 1);
-         end                
-         tmp = reshape(tmp, T, S, C);
-         x.dat.(sf).(mdl.filtered_input) = tmp;
-         
-         % The output is the sum of the filtered channels
-         if mdl.sum_channels
-             x.dat.(sf).(mdl.output) = sum(tmp, 3) + mdl.baseline; 
-             % tmp2 = sum(tmp, 3);
+         if S,
+             if ~isequal(C, mdl.num_dims)
+                 error('Dimensions of (mdl.input) don''t match channel count.');
+             end
+
+             zf = {};
+             for c = 1:C
+                 % Find proper initial conditions for the filter
+                 [~, zftmp] = filter(coefs(c,:)', [1], ...
+                                     init_data_space .* x.dat.(sf).(mdl.input)(1, 1, c));
+                 zf{c} = zftmp;
+             end
+             
+             %          % Old way of filtering
+             %          fprintf('Old Way:');
+             %          tmp = zeros(T, S, C);     
+             %          for s = 1:S
+             %              for c = 1:C,                 
+             %                  
+             %                  [tmp(:, s, c), zftmp] = filter(coefs(c,:)', [1], ...
+             %                      x.dat.(sf).(mdl.input)(:, s, c), ...
+             %                      zf{c});
+             %                  zf{c} = zftmp;      
+             %              end
+             %          end        
+
+             % Tests revealed that below is 2-5x faster than the above: 
+             tmp = zeros(T*S, C);   
+             dd = reshape(x.dat.(sf).(mdl.input), T*S, C); % 210000x3   
+             for c = 1:C, 
+                 tmp(:, c) = filter(coefs(c,:)', [1], dd(:,c), zf{c}, 1);
+             end                
+             tmp = reshape(tmp, T, S, C);
+             x.dat.(sf).(mdl.filtered_input) = tmp;
+             
+             % The output is the sum of the filtered channels
+             if mdl.sum_channels
+                 x.dat.(sf).(mdl.output) = sum(tmp, 3) + mdl.baseline; 
+                 % tmp2 = sum(tmp, 3);
+             else
+                 x.dat.(sf).(mdl.output) = tmp + mdl.baseline; 
+             end
          else
-             x.dat.(sf).(mdl.output) = tmp + mdl.baseline; 
+             x.dat.(sf).(mdl.filtered_input) = x.dat.(sf).(mdl.input);
+             x.dat.(sf).(mdl.output)=zeros(T,S,1);
          end
     end
 end

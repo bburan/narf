@@ -23,10 +23,6 @@ if start_depth < 1
     error('Start depth less than 1 not allowed.');
 end
 
-if ~exist('end_depth', 'var')
-    end_depth = length(STACK);
-end
-
 % Make a flattened list of modules from STACK
 flatstack = {};
 xxxindexes = [];
@@ -35,6 +31,10 @@ for ii = 1:length(STACK)
         flatstack{end+1} = STACK{ii}{jj};      
         xxxindexes(end+1) = ii; 
     end
+end
+
+if ~exist('end_depth', 'var')
+    end_depth = length(flatstack);
 end
 
 % If XXX is not fully initialized, we need to compute earlier
@@ -72,7 +72,16 @@ for ii = start_depth:end_depth,
                 isempty(intersect(flatstack{ii}.required, modified)) && ...
                 length(XXX) > (xxxindexes(ii) + 1)
             % No computation required. Pass through existing signals.  
-            flatxxx{ii+1} = merge_structs(XXX{xxxindexes(ii)+1}, flatxxx{ii});
+            %flatxxx{ii+1} = merge_structs(XXX{xxxindexes(ii)+1}, flatxxx{ii});
+            flatxxx{ii+1}=XXX{xxxindexes(ii)+1};
+            fns = fieldnames(flatxxx{ii+1}.dat);
+            for idx = 1:length(fns);
+                for jj=1:length(modified),
+                flatxxx{ii+1}.dat.(fns{idx}).(modified{jj})= ...
+                    flatxxx{ii}.dat.(fns{idx}).(modified{jj});
+                end
+            end
+            
         else
             % Uncomment this to help debug your tree traversals
             %if isfield(flatstack{ii}, 'output')

@@ -38,9 +38,12 @@ if nargin > 0
 end
 
 % Optimize this module for tree traversal  
-m.required = {'cellid', 'training_set', 'test_set', 'filecodes'};   % Signal dependencies
-m.modifies = {m.output_stim, m.output_stim_time, m.output_resp, m.output_resp_time ...
-                m.output_respavg};          % These signals are modified
+% Signal dependencies
+m.required = {'cellid', 'training_set', 'test_set'};
+% These signals are modified
+m.modifies = {m.output_stim, m.output_stim_time, ...
+              m.output_resp, m.output_resp_time ...
+              m.output_respavg, 'trial_code'};
 
 
 % Optional fields
@@ -136,8 +139,6 @@ function x = do_load_from_baphy(mdl, x)
             RDT=0;
         end
         
-        
-        
         % Load the raw_stim part of the data structure
         stimfile = [cfd(idx).stimpath cfd(idx).stimfile];
         fprintf('Loading stimulus: %s\n', stimfile);
@@ -146,10 +147,8 @@ function x = do_load_from_baphy(mdl, x)
             options.filtfmt=mdl.stimulus_format;
             options.fsout=mdl.raw_stim_fs;
             options.chancount=mdl.stimulus_channel_count;
-            % JL: added this in the debug, it may be removed later
-            %options.forceregen = 1;
             [stim,stimparam] = loadstimbytrial(stimfile,options);
-
+            
             if RDT,
                 disp('special stimulus processing for RDT');
                 stim=stim(:,:,:,3);
@@ -443,6 +442,25 @@ function x = do_load_from_baphy(mdl, x)
             stim(nanstim)=0;
         end
         
+        % setup trial_code
+        cat_file_set=cat(2,x.training_set,x.test_set);
+        training_count=length(x.training_set);
+        test_count=length(x.test_set);
+        
+        if ~isfield(x,'filecodes') || isempty(x.filecodes),
+           x.filecodes=repmat({''},[1 training_count+test_count]);
+        elseif length(x.filecodes)<training_count,
+           x.filecodes=repmat(x.file_codes(1),[1 training_count+test_count]);
+        elseif length(x.filecodes)<training_count+test_count,
+           x.filecodes=x.filecodes([1:training_count 1:test_count]);
+        end
+        x.unique_codes=unique(x.filecodes);
+        
+        this_code=x.filecodes{strcmp(f,cat_file_set)};
+        codeidx=find(strcmp(this_code,x.unique_codes));
+        
+        x.dat.(f).trial_code=ones(size(stim,2),1).*codeidx;
+       
         x.dat.(f).(mdl.output_stim) = stim;
         x.dat.(f).(mdl.output_resp) = permute(resp, [1, 3, 2]);
         x.dat.(f).(mdl.output_respavg) = ...
@@ -658,8 +676,16 @@ function hs = create_gui(parent_handle, stack, xxx)
             str = 'Est&Val Set';
         elseif is_training
             str = 'Estimation Set';
-        elseif is_test
+            if isfield(x, 'training_codes') && ~isempty(x.training_codes)
+                fc = x.training_codes(min(find(strcmp(sf, x.training_set))));
+                str = [str ' [' sprintf('%s', fc) ']'];
+            end
+         elseif is_test
             str = 'Validation Set';
+            if isfield(x, 'test_codes') && ~isempty(x.test_codes)
+                fc = x.test_codes(min(find(strcmp(sf, x.test_set))));
+                str = [str ' [' sprintf('%s', fc) ']'];
+            end
         else
             str = 'Not in a set!?'
         end

@@ -3,7 +3,7 @@
 % just like fit05 semse instead of nmse, still stopping at 1e-5
 %
 function fit05a()
-
+    
 semse();
 
 MaxStepsPerIteration=10;
