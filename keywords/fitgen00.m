@@ -81,7 +81,8 @@ StallGen = 200;
     function mutationChildren = mutationgaussianModified(parents,options,GenomeLength,FitnessFcn,state,thisScore,thisPopulation)
         %MUTATIONGAUSSIAN Gaussian mutation.
         
-        r = range(thisPopulation);
+        [~,r_idx] = sort(thisScore(:,1));
+        r = range(thisPopulation(r_idx(1:10),:));
         r(r==0) = 1;
         
         mutationChildren = zeros(length(parents),GenomeLength);
@@ -92,13 +93,16 @@ StallGen = 200;
                 mask = floor(randi(length(parent),1,length(parent))/length(parent));
             end
             % half of the gaussian mutations are created with a scale
-            % depending of the current population range, the other have 1
+            % depending of the current population (good-scoring) range, the other have 1
             if rand>0.5
                 scale = r;
             else
-                scale = options.StallGenLimit / options.genSinceLastChange;
+                scale = 1 - options.genSinceLastChange / options.StallGenLimit;
             end
-            mutationChildren(i,:) = parent  + scale .* randn(1,length(parent)) .* mask ;
+            % let's draw random values from a Laplace distribution
+            u = rand(1,length(parent)) - 0.5;            
+            mutationChildren(i,:) = parent + scale .* (sign(u).*log(1-2*abs(u))) .* mask ;
+%             mutationChildren(i,:) = parent  + scale .* randn(1,length(parent)) .* mask ;
         end
     end
 
