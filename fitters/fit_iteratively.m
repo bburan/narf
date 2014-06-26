@@ -37,42 +37,45 @@ while ~termcond
             prev_opts{jj} = nan; % Just a stupid placeholder
             continue;
         end
+        for mm=1:length(STACK{jj}),
+            fprintf('Running fitter on only module %d:%d (%s)\n', ...
+                    jj, mm, STACK{jj}{mm}.name);
         
-        fprintf('Running fitter on only module %d (%s)\n', jj, STACK{jj}{1}.name);
-        
-        % Erase all fit fields except the normal one
-        for kk = 1:length(STACK)
-            if ~isfield(cached_stack{kk}{1}, 'fit_fields') || jj==kk
-                continue;
+            % Erase all fit fields except the normal one
+            for kk = 1:length(STACK)
+                for ll=1:length(STACK{kk}),
+                    if ~isfield(cached_stack{kk}{ll}, 'fit_fields') || ...
+                            (jj==kk && mm==ll),
+                        continue;
+                    else
+                        STACK{kk}{ll}.fit_fields = {};
+                    end
+                end
+            end
+            
+            % Run the fitter once, passing it the previous opts if they exist.       
+            if length(prev_opts) < jj
+                [~, s_new, iters, prev_opts{jj}] = fitter();
             else
-                for ll = 1:length(STACK{kk}{:})
-                    STACK{kk}{ll}.fit_fields = {};
+                [~, s_new, iters, prev_opts{jj}] = fitter(prev_opts{jj});
+            end        
+            
+            if isnan(s)
+                s = s_new;   % Just the first time, initialize it
+            end
+            
+            % Restore the fit fields
+            for kk = 1:length(STACK)
+                if ~isfield(cached_stack{kk}{1}, 'fit_fields')
+                    continue;
+                else
+                    for ll = 1:length(STACK{kk}(:))
+                        STACK{kk}{ll}.fit_fields = cached_stack{kk}{ll}.fit_fields;
+                    end
                 end
             end
         end
-        
-        % Run the fitter once, passing it the previous opts if they exist.       
-        if length(prev_opts) < jj
-            [~, s_new, iters, prev_opts{jj}] = fitter();
-        else
-            [~, s_new, iters, prev_opts{jj}] = fitter(prev_opts{jj});
-        end        
-        
-        if isnan(s)
-            s = s_new;   % Just the first time, initialize it
-        end
-        
-        % Restore the fit fields
-        for kk = 1:length(STACK)
-            if ~isfield(cached_stack{kk}{1}, 'fit_fields')
-                continue;
-            else
-                for ll = 1:length(STACK{kk}{:})
-                    STACK{kk}{ll}.fit_fields = cached_stack{kk}{ll}.fit_fields;
-                end
-            end
-        end
-    end    
+    end
     
     n_iters = n_iters + iters;
     if isnan(s)

@@ -43,7 +43,7 @@ end
 
 % Optimize this module for tree traversal  
 m.required = {m.input1, m.input2, m.time};   % Signal dependencies
-m.modifies = {m.output, m.error};          % These signals are modified
+m.modifies = {m.output};          % These signals are modified
 
 % Optional fields
 m.plot_fns = {};

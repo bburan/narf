@@ -23,12 +23,14 @@ end
 hold on;
 leg = {};
 handles = [];
+plotted_data=0;
 for ii = 1:length(xxs)
     
     % Skip unless all fields are in existence
     if  ~isfield(xxs{ii}.dat, sel.stimfile) || ...
             ~isfield(xxs{ii}.dat.(sel.stimfile), xfield) || ...
-            ~all(isfield(xxs{ii}.dat.(sel.stimfile), yfields))
+            ~all(isfield(xxs{ii}.dat.(sel.stimfile), yfields)) ||...
+            isempty(xxs{ii}.dat.(sel.stimfile).(yfields{1})),
         continue;
     end
     
@@ -72,14 +74,17 @@ for ii = 1:length(xxs)
             end
         end
     end
+    plotted_data=1;
 end
 
-lh = legend(handles, leg{:}, 'Location', 'NorthWest'); 
-set(lh,'Interpreter', 'none');
+if plotted_data,
+   lh = legend(handles, leg{:}, 'Location', 'NorthWest');
+   set(lh,'Interpreter', 'none');
+   
+   do_xlabel(xlab);
+   do_ylabel(ylab);
 
-do_xlabel(xlab);
-do_ylabel(ylab);
-
-axis tight;
+   axis tight;
+end
 
 hold off;

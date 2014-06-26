@@ -205,6 +205,7 @@ function do_depression_cartoon(sel, stack, xxx)
     data=[];
     for jj=1:length(mdls),
        mdls{jj}.offset_in=0;
+        x.dat.demo.(mdls{jj}.input)=x.dat.demo.(mdl.input);
         xfiltered=do_depression_filter(mdls{jj}, x);%, stack, xxx);
         xfiltered.dat.demo.stim=xfiltered.dat.demo.(mdl.input);
         
