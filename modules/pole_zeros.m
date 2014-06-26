@@ -23,11 +23,11 @@ m.time =   'stim_time';
 m.output = 'stim';
 
 % Optional fields
-m.auto_plot = @do_plot_pz_impulse_response;
+m.auto_plot = @do_plot_pz_heat_impulse_response;
 m.auto_init = @auto_init_pz;
 m.plot_fns = {};
-m.plot_fns{1}.fn = @do_plot_single_default_output;
-m.plot_fns{1}.pretty_name = 'Output vs Time';
+m.plot_fns{1}.fn = @do_plot_pz_heat_impulse_response;
+m.plot_fns{1}.pretty_name = 'Heat Impulse';
 m.plot_fns{2}.fn = @do_plot_pz_impulse_response;
 m.plot_fns{2}.pretty_name = 'Impulse Response';
 m.plot_fns{3}.fn = @do_plot_pz_step_response;
@@ -36,9 +36,8 @@ m.plot_fns{4}.fn = @do_plot_pz_bodemag_plot;
 m.plot_fns{4}.pretty_name = 'Bode Mag. Plot';
 m.plot_fns{5}.fn = @do_plot_zplane;
 m.plot_fns{5}.pretty_name = 'ZPlane Plot';
-m.plot_fns{6}.fn = @do_plot_pz_heat_impulse_response;
-m.plot_fns{6}.pretty_name = 'Heat Impulse';
-
+m.plot_fns{6}.fn = @do_plot_single_default_output;
+m.plot_fns{6}.pretty_name = 'Output vs Time';
 % Overwrite the default module fields with arguments 
 if nargin > 0
     m = merge_structs(m, args);
@@ -146,21 +145,51 @@ function do_plot_zplane(sel, stack, xxx)
     %    z(:,ii) = sys.z{ii};
     %    p(:,ii) = sys.p{ii};
     %end
-    zplane(mdls{1}.zeros', mdls{1}.poles');
+    zplane(mdls{1}.zeros(:)', mdls{1}.poles(:)');
     do_xlabel('Real Axis');
     do_ylabel('Imaginary Axis');
 end
 
 function do_plot_pz_heat_impulse_response(sel, stack, xxx)
-    mdls = stack{end};
+    mdls = stack{end};    
     xins = {xxx(1:end-1)};        
     sys = makesys(mdls{1});
-    Y = impulse(sys,0:0.001:0.1);    
-    h = imagesc(Y);
+    
+    x = xins{1};
+    x = x{end};
+    fns = fieldnames(x.dat);
+    time = x.dat.(fns{1}).(mdls{1}.time);
+    dt = time(2) - time(1);
+    Y = impulse(sys, linspace(0, 0.15, 500));  
+    Y = squeeze(Y);
+    
+    [mod, mod_idx] = find_modules(stack, 'weight_channels', true);
+    
+    if ~isempty(mod)
+        img = Y';
+        img = cat(1, nan(1, size(img,2)), img);        
+        img = cat(1, mod{1}.weights * Y', img);
+        
+        h = imagesc(img);
+        
+        do_ylabel('STRF | Impulse');    
+    else
+        h = imagesc(Y);    
+        do_ylabel('Impulse Response');
+    end
+    ca = caxis;
+    lim = max(abs(ca));
+    caxis([-lim, +lim]);
     set(gca,'YDir','normal');
     axis xy tight;   
-    do_xlabel('Time [s]');
-    do_ylabel('Impulse Response');
+    do_xlabel('Time [ms]');
+   
+    setAxisLabelCallback('X', @(z) z*150/500);
+        
+    
+    
+    
 end
+
 
 end
