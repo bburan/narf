@@ -37,6 +37,23 @@ end
 m.required = {m.input, m.time};   % Signal dependencies
 m.modifies = {m.output};          % These signals are modified
 
+% Expand the fit constraints if necessary
+if isfield(m, 'fit_constraints')
+    [idx, con] = get_constraint_index(m.fit_constraints, 'weights');
+    if idx
+        for bound = {'lower', 'upper'}
+            bound = cell2mat(bound);
+            if isfield(con, bound) && ~isequal(size(m.weights), size(con.(bound)))
+                if isequal(size(con.(bound)), [1 1])
+                    m.fit_constraints{idx}.(bound) = con.(bound)*ones(size(m.weights, 1), size(m.weights, 2));
+                else
+                    error('Wrong constraint size')
+                end
+            end
+        end
+    end
+end
+
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 

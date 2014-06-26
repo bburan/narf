@@ -31,6 +31,11 @@ m.filtered_input = 'stim_filtered';
 m.time =   'stim_time';
 m.output = 'stim';
 m.init_fit_sig = 'respavg';
+m.fit_constraints = {...
+    struct('var', 'coefs', 'lower', -Inf, 'upper', Inf), ...
+    struct('var', 'baseline', 'lower', -Inf, 'upper', Inf) ...
+};
+
 
 % Optional fields
 m.plot_gui_create_fn = @create_chan_selector_gui;
@@ -60,6 +65,7 @@ m.modifies = {m.output, m.filtered_input};       % These signals are modified
 % Reset the FIR filter coefficients if its size doesn't match num_coefs
 if ~isequal([m.num_dims m.num_coefs], size(m.coefs))
     m.coefs = zeros(m.num_dims, m.num_coefs);
+    % and update the fit constraints
 end
 
 % ------------------------------------------------------------------------
@@ -83,6 +89,11 @@ function mdl = auto_init_fir_filter(stack, xxx)
     
     mdl.num_dims = C; 
     mdl.coefs = zeros(mdl.num_dims, mdl.num_coefs);
+    % update the fit constraint to expand the coefs constraints
+    [i, con] = get_constraint_index(mdl.fit_constraints, 'coefs');
+    mdl.fit_constraints(i) = {...
+        struct('var', 'coefs', 'lower', con.lower*ones(mdl.num_dims, mdl.num_coefs), 'upper', con.upper*ones(mdl.num_dims, mdl.num_coefs)) ...
+    };
 end
 
 function x = do_fir_filtering(mdl, x)   

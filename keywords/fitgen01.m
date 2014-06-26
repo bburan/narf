@@ -397,7 +397,7 @@ unpack_fittables(term_phi);
         end
     end
 
-% NOW DO THE LAST FIT05C STEP:
+% NOW DO ONLY THE LAST FIT05C STEP:
 
 MaxStepsPerIteration=10;
 StepGrowth=1.1;
