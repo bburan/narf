@@ -11,8 +11,11 @@ m.editable_fields = {'bf', 's', 'add_factor', 'norm_factor', 'order', 'num_chann
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.bf  = 1; % best freq in units of CHANNELS
-m.s   = 1; % sigma param in units of CHANNELS
+m.bf  = 0.5; % best freq in units of CHANNELS
+m.s   = 0.1; % sigma param in units of CHANNELS
+% m.s_optim = {'upper', 30, ...
+%              'lower', 0};
+
 m.add_factor = 0;
 m.norm_factor = 1;
 m.num_channels = 10;
@@ -30,6 +33,10 @@ m.plot_fns{1}.pretty_name = 'Heat Map';
 m.plot_fns{2}.fn = @do_plot_all_default_outputs;
 m.plot_fns{2}.pretty_name = 'Output Channels (All)';
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};  % Signal dependencies
+m.modifies = {m.output};       % These signals are modified
+
 % Overwrite the default module fields with arguments
 if nargin > 0
     m = merge_structs(m, args);
@@ -38,21 +45,63 @@ end
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
+% % % Old non-scaled version
+%     function weights = noncausal(mdl)
+%         xx = (1:mdl.num_channels) - mdl.bf;
+%         if (mdl.order==0)
+%             weights = exp(-((xx).^2)/2/mdl.s)/(2*pi*mdl.s);
+%         elseif (mdl.order==1)
+%             weights = (-xx).*exp(-(xx.^2)/2/mdl.s)/(2*pi * mdl.s^2);
+%         elseif (mdl.order==2)
+%             weights = ((-xx).^2-mdl.s).*exp(-(xx.^2)/2/mdl.s)/(2*pi * mdl.s^3);
+%         elseif (mdl.order==3)
+%             weights = (-xx).*(xx.^2-3*mdl.s).*exp(-(xx.^2)/2/mdl.s)/(2*pi * mdl.s^4);
+%         else
+%             error('Spectral order not handled (must be an integer in [0,3])')
+%         end
+%         weights = mdl.add_factor + weights * mdl.norm_factor;
+%     end
+
+% % % % New scaled version (v1)
+%     function weights = noncausal(mdl)
+%         s = mdl.s * mdl.num_channels;
+%         bf = mdl.bf * mdl.num_channels;
+%         xx = (1:mdl.num_channels) - bf;
+%         if (mdl.order==0)
+%             weights = exp(-((xx).^2)/2/s)/(2*pi*s);
+%         elseif (mdl.order==1)
+%             weights = (-xx).*exp(-(xx.^2)/2/s)/(2*pi * s^2);
+%         elseif (mdl.order==2)
+%             weights = ((-xx).^2-s).*exp(-(xx.^2)/2/s)/(2*pi * s^3);
+%         elseif (mdl.order==3)
+%             weights = (-xx).*(xx.^2-3*s).*exp(-(xx.^2)/2/s)/(2*pi * s^4);
+%         else
+%             error('Spectral order not handled (must be an integer in [0,3])')
+%         end
+%         weights = mdl.add_factor + weights * mdl.norm_factor;
+%     end
+
+
+% % % New scaled version (v2)
     function weights = noncausal(mdl)
-        xx = (1:mdl.num_channels) - mdl.bf;
+        s = mdl.s;
+        bf = mdl.bf;
+        xx = (1:mdl.num_channels)/mdl.num_channels - bf;
         if (mdl.order==0)
-            weights = exp(-((xx).^2)/2/mdl.s)/(2*pi*mdl.s);
+            weights = exp(-((xx).^2)/2/s)/(2*pi*s);
         elseif (mdl.order==1)
-            weights = (-xx).*exp(-(xx.^2)/2/mdl.s)/(2*pi * mdl.s^2);
+            weights = (-xx).*exp(-(xx.^2)/2/s)/(2*pi * s^2);
         elseif (mdl.order==2)
-            weights = ((-xx).^2-mdl.s).*exp(-(xx.^2)/2/mdl.s)/(2*pi * mdl.s^3);
+            weights = ((-xx).^2-s).*exp(-(xx.^2)/2/s)/(2*pi * s^3);
         elseif (mdl.order==3)
-            weights = (-xx).*(xx.^2-3*mdl.s).*exp(-(xx.^2)/2/mdl.s)/(2*pi * mdl.s^4);
+            weights = (-xx).*(xx.^2-3*s).*exp(-(xx.^2)/2/s)/(2*pi * s^4);
         else
             error('Spectral order not handled (must be an integer in [0,3])')
         end
         weights = mdl.add_factor + weights * mdl.norm_factor;
     end
+
+
 
 
     function mdl = auto_init_lindeberg_spectral(stack, xxx)

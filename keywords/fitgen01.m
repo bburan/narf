@@ -1,4 +1,4 @@
-function fitgen00()
+function fitgen01()
 
 global GA_XXXHistory GA_XXXPointer GA_MaskFittable GA_LowerBound GA_UpperBound GA_Bounded;
 
@@ -397,7 +397,7 @@ unpack_fittables(term_phi);
         end
     end
 
-% DON'T DO ANYTHING MORE:
+% NOW DO ONLY THE LAST FIT05C STEP:
 
 MaxStepsPerIteration=10;
 StepGrowth=1.1;
@@ -421,7 +421,7 @@ StepGrowth=1.1;
 % fit_iteratively(@step_until_10neg55, ...
 %     create_term_fn());
 % 
-% [~, term_score, ~] = fit_iteratively(@step_until_10neg6, ...
-%     create_term_fn());
+[~, term_score, ~] = fit_iteratively(@step_until_10neg6, ...
+    create_term_fn());
 
 end

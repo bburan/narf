@@ -1,4 +1,4 @@
-function fitgen00()
+function fitgen02()
 
 global GA_XXXHistory GA_XXXPointer GA_MaskFittable GA_LowerBound GA_UpperBound GA_Bounded;
 
@@ -397,31 +397,31 @@ unpack_fittables(term_phi);
         end
     end
 
-% DON'T DO ANYTHING MORE:
+% NOW DO ALL THE FIT05C STEPS:
 
 MaxStepsPerIteration=10;
 StepGrowth=1.1;
 
 
-% fit_iteratively(@step_until_10neg3, ...
-%     create_term_fn());
-% 
-% fit_iteratively(@step_until_10neg35, ...
-%     create_term_fn());
-% 
-% fit_iteratively(@step_until_10neg4, ...
-%     create_term_fn());
-% 
-% fit_iteratively(@step_until_10neg45, ...
-%     create_term_fn());
-% 
-% fit_iteratively(@step_until_10neg5, ...
-%     create_term_fn());
-% 
-% fit_iteratively(@step_until_10neg55, ...
-%     create_term_fn());
-% 
-% [~, term_score, ~] = fit_iteratively(@step_until_10neg6, ...
-%     create_term_fn());
+fit_iteratively(@step_until_10neg3, ...
+    create_term_fn());
+
+fit_iteratively(@step_until_10neg35, ...
+    create_term_fn());
+
+fit_iteratively(@step_until_10neg4, ...
+    create_term_fn());
+
+fit_iteratively(@step_until_10neg45, ...
+    create_term_fn());
+
+fit_iteratively(@step_until_10neg5, ...
+    create_term_fn());
+
+fit_iteratively(@step_until_10neg55, ...
+    create_term_fn());
+
+[~, term_score, ~] = fit_iteratively(@step_until_10neg6, ...
+    create_term_fn());
 
 end
