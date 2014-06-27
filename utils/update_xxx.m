@@ -111,8 +111,15 @@ for ii = start_depth:end_depth,
                      FLATXXX{ii}.(modified{jj});
                else
                   for idx = 1:length(fns)
+                      % % % JL: It used to crash everytime in the "inspect"
+                      % panel of NARF before I added this try/catch block
+                      % -> now it only throws a warning
+                      try
                      FLATXXX{ii+1}.dat.(fns{idx}).(modified{jj})= ...
                         FLATXXX{ii}.dat.(fns{idx}).(modified{jj});
+                      catch err
+                          fprintf('WARNING: I could not perform the assignment of %s\n', modified{jj});
+                      end
                   end
                end
             end
