@@ -150,6 +150,32 @@ StallGen = 200;
             return
         end
         
+        % for all modules, we check the size of fit_constraints.lower and
+        % fit_constraints.upper and extend it to match fit_fields if
+        % relevant
+        for ii = 1:length(STACK)
+            if isfield(STACK{ii}{1}, 'fit_fields') && ...
+                    isfield(STACK{ii}{1}, 'fit_constraints')
+                for i = 1:length(STACK{ii}{1}.fit_fields)
+                    field = cell2mat(STACK{ii}{1}.fit_fields(i));
+                    [idx, con] = get_constraint_index(STACK{ii}{1}.fit_constraints, field);
+                    if idx
+                        for bound = {'lower', 'upper'}
+                            bound = cell2mat(bound);
+                            if isfield(con, bound) && ~isequal(size(STACK{ii}{1}.(field)), size(con.(bound)))
+                                if isequal(size(con.(bound)), [1 1])
+                                    STACK{ii}{1}.fit_constraints{idx}.(bound) = ...
+                                        con.(bound)*ones(size(STACK{ii}{1}.(field), 1), size(STACK{ii}{1}.(field), 2));
+                                else
+                                    error('Wrong constraint size')
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
         % initialization of the MaskFittable and VarName
         mask_rows = 0;
         for ii = 1:length(STACK)
@@ -196,6 +222,10 @@ StallGen = 200;
                 variable_index = variable_index+l;
                 mask_rowi = mask_rowi + 1;
             end
+        end
+        
+        if sum(~GA_Bounded)
+            fprintf('Warning: one or more module did not set lower+upper bounds.\n Unbounded optimization is buggy but will proceed.\n');
         end
 
 %         % initialization of the LowerBound and UpperBound
