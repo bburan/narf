@@ -9,4 +9,6 @@ append_module(MODULES.pole_zeros.mdl(...
                        'n_poles', 2, ...
                        'n_zeros', 1)));
 
+fitSubstack();
+
 end

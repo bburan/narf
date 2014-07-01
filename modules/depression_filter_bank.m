@@ -196,21 +196,22 @@ function do_depression_cartoon(sel, stack, xxx)
     end    
     x.dat.demo.(mdl.time)= (1/fs) * (0:size(x.dat.demo.(mdl.input), 1))';
     
-    %if isfield(XXX{1},'filecodes') && ~isempty(XXX{1}.filecodes),
-     %   unique_codes = unique(XXX{1}.filecodes);
-    %else
-        unique_codes={''};
-    %end
+    if isfield(xxx{end},'unique_codes') && ~isempty(xxx{end}.unique_codes),
+        unique_codes=xxx{end}.unique_codes;
+    else
+        unique_codes=cell(1,length(mdls));
+    end
         
     data=[];
     for jj=1:length(mdls),
-       mdls{jj}.offset_in=0;
+        mdls{jj}.offset_in=0;
         x.dat.demo.(mdls{jj}.input)=x.dat.demo.(mdl.input);
         xfiltered=do_depression_filter(mdls{jj}, x);%, stack, xxx);
-        xfiltered.dat.demo.stim=xfiltered.dat.demo.(mdl.input);
+        xfiltered.dat.demo.stim=xfiltered.dat.demo.(mdls{jj}.input);
         
         data=cat(1,data,...
-                 [x.dat.demo.(mdl.input)(:,1)+1 squeeze(xfiltered.dat.demo.(mdl.input))]);
+                 [x.dat.demo.(mdls{jj}.input)(:,1)+1 ...
+                  squeeze(xfiltered.dat.demo.(mdls{jj}.input))]);
         data((end-9):end,:,:)=nan;
     end
     timeaxis=(1:size(data,1))'./fs;
@@ -233,7 +234,7 @@ function do_depression_cartoon(sel, stack, xxx)
         plot(timeaxis,data);
         axis([timeaxis([1 end])' -0.1 2.1]);
         for jj=1:length(mdls),
-            text(0.5+(jj-1)*3.5,2,[unique_codes{jj} mdl.input],...
+            text(0.5+(jj-1)*3.5,2,[unique_codes{jj} ' ' mdl.input],...
                                 'VerticalAlign','top');
             legstr={};
             for ii=1:length(mdls{jj}.tau);
