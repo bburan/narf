@@ -443,7 +443,7 @@ unpack_fittables(term_phi);
 
 [best_nl, score] = fmincon(@fit_last_module, [1 10 10 2 1], [], [], [], [], ...
                     [0     0   0   0 0], [20 80 200 10 10], [], optimset('Algorithm', 'interior-point', 'Display', 'off', ...
-                    'TolFun', 1e-4, 'TolX', 1e-4, 'MaxIter', 5));
+                    'TolFun', 1e-6, 'TolX', 1e-4, 'MaxIter', 20));
 STACK{end-1}{1}.phi = best_nl;
 calc_xxx(1);
 
