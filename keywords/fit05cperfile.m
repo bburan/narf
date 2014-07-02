@@ -2,17 +2,26 @@ function fit05cperfile()
 
 global STACK XXX
 
-% Remove an
+disp('NOW FITTING EACH TRIAL_CODE SEPARATELY');
+
+% Remove any correlation at end of stack
 if strcmp(STACK{end}{1}.name, 'correlation')
     STACK = STACK(1:end-1);
     XXX = XXX(1:end-1);
 end
 
-% Then boost on each file individually
-disp('NOW FITTING EACH FILECODE SEPARATELY');
+% find first STACK entry with fit_fields
+ii=1;
+while ii<length(STACK) && ...
+        (~isfield(STACK{ii}{1},'fit_fields') || ...
+         isempty(STACK{ii}{1}.fit_fields)),
+    ii=ii+1;
+end
+
 [~,mseidx]=find_modules(STACK,'mean_squared_error');
-split_stack(2,mseidx{1}-1);
+
+% Then boost on each file individually
+split_stack(ii,mseidx{1}-1);
 fit05c;
 
-%fit_split_simply(@fit05c, @split_by_filecode, @unify_respfiles); 
 

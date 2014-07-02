@@ -1,9 +1,11 @@
-% function fit05b()
+% function fit05a()
 %
-% like fit05 but normalize MSE by SE and stop at 10^(-4.5)
+% just like fit05 semse instead of nmse, still stopping at 1e-5
 %
-function fit05b()
+function fit05g()
 
+    global STACK
+    
 semse();
 
 MaxStepsPerIteration=10;
@@ -83,6 +85,18 @@ function [a,b,c,d] = step_until_10neg6(prev_opts)
     end
 end
 
+disp('Removing static spike NL for quick fit');
+[nl_mods,nl_idx] = find_modules(STACK, 'nonlinearity', false);
+nl_save=nl_mods{end};
+nl_idx=nl_idx{end};
+
+for jj=1:length(STACK{nl_idx}),
+    STACK{nl_idx}{jj}.nlfn=@nl_dummy;
+    STACK{nl_idx}{jj}=rmfield(STACK{nl_idx}{jj},'fit_fields');
+end
+
+% now run sequence of progressively tighter fits on model without
+% spike NL, and don't run quite so deep.
 fit_boo('StopAtAbsScoreDelta', 10^-2.0, ...
         'StepGrowth', StepGrowth);
 
@@ -95,17 +109,40 @@ fit_iteratively(@step_until_10neg35, ...
 fit_iteratively(@step_until_10neg4, ...
                 create_term_fn());
 
+if 0 && strcmpi(func2str(nl_save{1}.nlfn),'nl_sig_logistic'),
+    disp('Reinitializing static spike NL for final fit');
+    pop_module();  % remove MSE module
+    pop_module();  % remove siglog
+    siglogs();
+    % restore MSE module
+    semse();
+else
+    disp('Restoring static spike NL for final fit');
+    STACK{nl_idx}=nl_save; % restore original NL function
+end
+update_xxx(2);
+
+%
+% now run through the series of fits again with static NL included.
+fit_iteratively(@step_until_10neg3, ...
+                create_term_fn());
+
+fit_iteratively(@step_until_10neg35, ...
+                create_term_fn());
+
+fit_iteratively(@step_until_10neg4, ...
+                create_term_fn());
+
 fit_iteratively(@step_until_10neg45, ...
                 create_term_fn());
 
-%fit_iteratively(@step_until_10neg5, ...
-%                create_term_fn());
+fit_iteratively(@step_until_10neg5, ...
+                create_term_fn());
 
 %fit_iteratively(@step_until_10neg55, ...
 %                create_term_fn());
 
 %fit_iteratively(@step_until_10neg6, ...
 %                create_term_fn());
-
 end
 

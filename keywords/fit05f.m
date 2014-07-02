@@ -1,13 +1,15 @@
-% function fit05b()
+% function fit05f()
 %
-% like fit05 but normalize MSE by SE and stop at 10^(-4.5)
+% like fit05 but "fast"-- 
+% MaxStepsPerIteration=8
+% StepGrowth=1.2
 %
-function fit05b()
+function fit05f()
 
-semse();
+nmse();
 
-MaxStepsPerIteration=10;
-StepGrowth=1.1;
+MaxStepsPerIteration=8;
+StepGrowth=1.2;
 
 function [a,b,c,d] = step_until_10neg3(prev_opts)              
     if exist('prev_opts', 'var')
@@ -63,16 +65,6 @@ function [a,b,c,d] = step_until_10neg5(prev_opts)
     end
 end
 
-function [a,b,c,d] = step_until_10neg55(prev_opts)
-    if exist('prev_opts', 'var')
-        [a,b,c,d] = fit_boo(prev_opts);
-    else
-        [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', 10^-5.5, ...
-                            'StopAtStepNumber', MaxStepsPerIteration, ...
-                            'StepGrowth', StepGrowth);
-    end
-end
-
 function [a,b,c,d] = step_until_10neg6(prev_opts)
     if exist('prev_opts', 'var')
         [a,b,c,d] = fit_boo(prev_opts);
@@ -98,14 +90,9 @@ fit_iteratively(@step_until_10neg4, ...
 fit_iteratively(@step_until_10neg45, ...
                 create_term_fn());
 
-%fit_iteratively(@step_until_10neg5, ...
-%                create_term_fn());
-
-%fit_iteratively(@step_until_10neg55, ...
-%                create_term_fn());
+fit_iteratively(@step_until_10neg5, ...
+                create_term_fn());
 
 %fit_iteratively(@step_until_10neg6, ...
 %                create_term_fn());
-
 end
-

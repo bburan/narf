@@ -38,7 +38,7 @@ if nargin > 0
 end
 
 % Optimize this module for tree traversal  
-m.required = {m.input1, m.input2, m.input_resp m.time};   % Signal dependencies
+m.required = {m.input_stim1 m.input_stim2 m.input_resp m.time};   % Signal dependencies
 m.modifies = {m.output};          % These signals are modified
 
 % ------------------------------------------------------------------------
