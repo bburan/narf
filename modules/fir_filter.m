@@ -177,16 +177,14 @@ function do_plot_fir_coefs_as_heatmap(sel, stack, xxx)
     %  Plot all parameter sets' coefficients. Separate them by white pixels.
     wmat=[];
     
-    weight_mdl=find_modules(stack,'weight_channels');
+    [weight_mdl, idxs]=find_modules(stack,'weight_channels');
     if ~isempty(weight_mdl),
         weight_mdl=weight_mdl{end};
+        idx = idxs{end};
         
         for ii = 1:length(mdls)
-            wts=weight_mdl{ii}.weights;
-            if isfield(weight_mdl{ii},'force_positive') && ...
-                    weight_mdl{ii}.force_positive,
-                wts=abs(wts);
-            end
+            % Get the extra argument to calc the weights
+            [~, wts] = weight_mdl{ii}.fn(weight_mdl{ii}, xxx{idx});            
             sw=std(wts,0,1);
             sw(sw<eps)=1;
             wts=wts./repmat(sw,[size(wts,1) 1]);

@@ -6,13 +6,15 @@ m.mdl = @weight_channels;
 m.name = 'weight_channels';
 m.fn = @do_weight_channels;
 m.pretty_name = 'Weight Channels';
-m.editable_fields = {'weights', 'y_offset', 'force_positive', ...
+m.editable_fields = {'phi', 'phifn', 'weights', 'y_offset', 'force_positive', ...
                     'input', 'time', 'output'};
 m.isready_pred = @isready_always;
 
 % Module fields that are specific to THIS MODULE
-m.weights = [1]; % Each column weights several channels to produce
-m.y_offset = [0]; % A column of y-offsets to be added to each output chan. 
+m.phi = []; 
+m.phifn = [];  % Applied to phi, this is used to generate weights
+m.weights = [1];   % Each column weights several channels to produce
+m.y_offset = [0];  % A column of y-offsets to be added to each output chan. 
 m.force_positive = 0;  % if 1, all values of weight matrix
                        % rectified before projection
 m.input =  'stim';
@@ -57,34 +59,48 @@ if isfield(m, 'fit_constraints')
     end
 end
 
+function W = help_calc_weights(mdl, x)
+    
+    fns = fieldnames(x.dat);
+    
+    if isfield(mdl, 'phi') && isfield(mdl, 'phifn') && ~isempty(mdl.phifn)
+        mdl.weights = mdl.phifn(mdl.phi, size(x.dat.(fns{1}).(mdl.input), 3));
+    end
+    
+    if isfield(mdl,'force_positive') && mdl.force_positive,
+        W=abs(mdl.weights);
+    else
+        W=mdl.weights;
+    end
+
+    % Normalize the channels to be one
+    W = W ./ repmat(sum(W), size(W,1), 1);    
+end
+
 % ------------------------------------------------------------------------
 % INSTANCE METHODS
 
-function x = do_weight_channels(mdl, x)   
-    fns = fieldnames(x.dat);
+function [x, W] = do_weight_channels(mdl, x)   
+        
+    W = help_calc_weights(mdl,x);
+    D = size(W, 2);
+    
+    fns = fieldnames(x.dat);    
     for ii = 1:length(fns)
          sf=fns{ii};
          
          % Check dimensions are OK
          [T, S, C] = size(x.dat.(sf).(mdl.input));
-         if ~isequal(C, size(mdl.weights, 1))
+         if ~isequal(C, size(W, 1))
             error('Dimensions of (mdl.input) don''t match weights.');
-         end
-         
-         if isfield(mdl,'force_positive') && mdl.force_positive,
-             W=abs(mdl.weights);
-         else
-             W=mdl.weights;
-         end
-         D = size(W, 2);
-         
+         end         
+             
          % Rewritten to avoid squeeze and to have improved performance
          % Simple matrix multiplies, reshapes, and bsxfuns are fastest
          d = reshape(x.dat.(sf).(mdl.input), T*S, C);
          tmp = d*W;
          tmp2 = reshape(tmp, T,S,D);
          x.dat.(sf).(mdl.output) = bsxfun(@plus, tmp2, reshape(mdl.y_offset, 1,1,D));
-
     end
 end
 
@@ -92,19 +108,20 @@ end
 % Plot methods
 
 function do_plot_wc_weights_as_heatmap(sel, stack, xxx)
-    mdls = stack{end};
-
+    mdls = stack{end};    
+        
     % Find the min and max values so colors are scaled appropriately
     c_max = 0;
-    for ii = 1:length(mdls)
-        c_max = max(c_max, max(abs(mdls{ii}.weights(:))));
+    for ii = 1:length(mdls)      
+        wts = help_calc_weights(mdls{ii}, xxx{end-1});  
+        c_max = max(c_max, max(abs(wts(:))));
     end
     
     % Plot all parameter sets' coefficients. Separate them by white pixels.
     xpos = 1;
     wmat=[];
     for ii = 1:length(mdls)
-        wts=mdls{ii}.weights';
+        wts = help_calc_weights(mdls{ii}, xxx{end-1})';
         if isfield(mdls{ii},'force_positive') && mdls{ii}.force_positive,
             wts=abs(wts);
         end

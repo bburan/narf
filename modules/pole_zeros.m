@@ -167,8 +167,9 @@ function do_plot_pz_heat_impulse_response(sel, stack, xxx)
     
     if ~isempty(mod)
         img = Y';
-        img = cat(1, nan(1, size(img,2)), img);        
-        img = cat(1, mod{1}.weights * Y', img);
+        img = cat(1, nan(1, size(img,2)), img);      
+        [~, weights] = mod{1}.fn(mod{1}, xins{1}{end});
+        img = cat(1, weights * Y', img);
         
         h = imagesc(img);
         
