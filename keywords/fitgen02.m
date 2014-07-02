@@ -1,10 +1,10 @@
 function fitgen02()
 
-global GA_XXXHistory GA_XXXPointer GA_MaskFittable GA_LowerBound GA_UpperBound GA_Bounded;
+global GA_XXXHistory GA_XXXPointer GA_MaskFittable GA_LowerBound GA_UpperBound GA_Bounded XXX META STACK;
 
 semse();
 
-PopSize = 100;
+PopSize = 10;
 TolFun = 1e-6; % 1e-6 is not enough?
 Gen = 10000;
 StallGen = 200;
@@ -134,22 +134,80 @@ StallGen = 200;
     end
 
 
-
-
-    function [termcond, term_score, n_iters, term_phi] = two_dimensional_fitter_loop(fittername, highlevel_fn)
-        
-        global STACK META XXX;
-        
-        phi_init = pack_fittables(STACK);
-        
-        if isempty(phi_init)
-            fprintf('Skipping because there are no parameters to fit.\n');
-            term_cond = NaN;
-            term_score = NaN;
-            n_iters = 0;
-            return
+    function switch_fittable(choice)
+        if strcmp(choice, 'all')
+            % we allow the optimization of all fields
+            fprintf('no implementation done for now\n');
+        elseif strcmp(choice, 'default')
+            % we allow only the optimization of fields without any
+            % alternative fitter
+            for ii = 1:length(STACK)
+                if isfield(STACK{ii}{1}, 'fit_fields') && ...
+                        isfield(STACK{ii}{1}, 'fit_constraints')
+                    for i = 1:length(STACK{ii}{1}.fit_constraints)
+                        field = STACK{ii}{1}.fit_constraints{i}.var;
+                        if isfield(STACK{ii}{1}.fit_constraints{i}, 'fitter')
+                            % there is a fitter indicated => turn off
+                            % only if matching variable
+                            matching_field = strcmp(field, STACK{ii}{1}.fit_fields);
+                            % turn the variable off if necessary
+                            if sum(matching_field) > 0
+                                % match => turn off
+                                STACK{ii}{1}.fit_fields = {STACK{ii}{1}.fit_fields{~matching_field}};
+                            end
+                        else
+                            % there is no fitter indicated => turn on
+                            % any variable
+                            matching_field = strcmp(field, STACK{ii}{1}.fit_fields);
+                            if sum(matching_field) == 0
+                                % no match => turn on
+                                STACK{ii}{1}.fit_fields = {STACK{ii}{1}.fit_fields{:} field};
+                            end
+                        end
+                    end
+                end
+            end
+        else
+            % we allow only the optimization of fields with the specified
+            % alternative fitter
+            for ii = 1:length(STACK)
+                if isfield(STACK{ii}{1}, 'fit_fields') && ...
+                        isfield(STACK{ii}{1}, 'fit_constraints')
+                    for i = 1:length(STACK{ii}{1}.fit_constraints)
+                        field = STACK{ii}{1}.fit_constraints{i}.var;
+                        if isfield(STACK{ii}{1}.fit_constraints{i}, 'fitter')
+                            % there is a fitter indicated => turn on
+                            % only if matching variable
+                            matching_field = strcmp(field, STACK{ii}{1}.fit_fields);
+                            if strcmp(choice, STACK{ii}{1}.fit_constraints{i}.fitter)
+                                % turn the variable on if necessary
+                                if sum(matching_field) == 0
+                                    % no match => turn on
+                                    STACK{ii}{1}.fit_fields = {STACK{ii}{1}.fit_fields{:} field};
+                                end
+                            else
+                                % turn the variable off
+                                if sum(matching_field) > 0
+                                    STACK{ii}{1}.fit_fields = {STACK{ii}{1}.fit_fields{~matching_field}};
+                                end
+                            end
+                        else
+                            % there is no fitter indicated => turn off
+                            % any variable
+                            matching_field = strcmp(field, STACK{ii}{1}.fit_fields);
+                            if sum(matching_field) > 0
+                                % match & on => turn off
+                                STACK{ii}{1}.fit_fields = {STACK{ii}{1}.fit_fields{~matching_field}};
+                            end
+                        end
+                    end
+                end
+            end
         end
-        
+    end
+
+
+    function initialize_GA_GLOBALS(phi_init)
         % for all modules, we check the size of fit_constraints.lower and
         % fit_constraints.upper and extend it to match fit_fields if
         % relevant
@@ -227,25 +285,22 @@ StallGen = 200;
         if sum(~GA_Bounded)
             fprintf('Warning: one or more module did not set lower+upper bounds.\n Unbounded optimization is buggy but will proceed.\n');
         end
+        
+    end
 
-%         % initialization of the LowerBound and UpperBound
-%         variable_index = 1;
-%         for ii = 1:length(STACK)
-%             if isfield(STACK{ii}{1}, 'fit_fields') && isfield(STACK{ii}{1}, 'fit_constraints')
-%                 l = 0;
-%                 for i = 1:length(STACK{ii}{1}.fit_fields)
-%                     variable = cell2mat(STACK{ii}{1}.fit_fields(i))
-%                     var_name = [STACK{ii}{1}.name '_' variable];
-%                     for j = 1:length(STACK{ii}{1}.fit_constraints)
-%                         if strcmp(STACK{ii}{1}.fit_constraints(j).var, variable)
-%                             fprintf('todo\n');
-%                         end
-%                     end
-%                 end
-%                 variable_index = variable_index+l;
-%             end
-%         end
 
+
+    function [termcond, term_score, n_iters, term_phi] = two_dimensional_fitter_loop(fittername, highlevel_fn)
+                
+        phi_init = pack_fittables(STACK);
+        
+        if isempty(phi_init)
+            fprintf('Skipping because there are no parameters to fit.\n');
+            term_cond = NaN;
+            term_score = NaN;
+            n_iters = 0;
+            return
+        end
 
         % initialization of the StimHistory and StackHistory
         GA_PhiHistory = Inf((size(GA_MaskFittable,1)-1)*PopSize*2, length(phi_init));
@@ -281,6 +336,10 @@ StallGen = 200;
                     end
                 end
                 
+% switch_fittable('fit05c');
+% fit05c();
+% switch_fittable('default');
+
                 calc_xxx(s+1);
                 
                 % try to update the cached copies
@@ -336,6 +395,14 @@ StallGen = 200;
     end
 
 
+% switch_fittable('fit05c');
+% switch_fittable('default');
+
+
+phi_init = pack_fittables(STACK);
+initialize_GA_GLOBALS(phi_init);
+
+
 [termcond, term_score, n_iters, term_phi] = two_dimensional_fitter_loop('gagamultiobj()', ...
     @(obj_fn, phi_init) ga_gamultiobj(obj_fn, length(phi_init), [], [], [], [], [], [], ...
     gaoptimset('TolFun', TolFun, ...
@@ -348,7 +415,7 @@ StallGen = 200;
     'CrossoverFraction', 0.2, ...%     'SelectionFcn', @selectiontournament, ...
     'CrossoverFcn', @crossover, ...
     'DistanceMeasureFcn', @ga_distancecrowding, ...
-    'InitialPopulation', repmat(phi_init,1,PopSize)')));
+    'InitialPopulation', [phi_init'; rand(PopSize-1,length(phi_init)).*repmat(GA_UpperBound-GA_LowerBound, PopSize-1,1) + repmat(GA_LowerBound, PopSize-1,1)])));
 
 unpack_fittables(term_phi);
 

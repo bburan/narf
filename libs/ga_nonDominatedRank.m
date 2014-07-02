@@ -1,4 +1,4 @@
-function nondominatedRank = nonDominatedRank(score,nParent)
+function nondominatedRank = ga_nonDominatedRank(score,nParent)
 %nonDominatedRank Assigns rank to individuals in 'score'. 
 %   The optional argument 'nParent' will limit rank assignment to only
 %   'nParent' individuals.

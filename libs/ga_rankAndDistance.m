@@ -12,7 +12,7 @@ end
 ParetoFraction = options.ParetoFraction;
 nScore = size(score,2);
 if nScore == 1 % single objective
-    nonDomRank = nonDominatedRank(score,nParents);
+    nonDomRank = ga_nonDominatedRank(score,nParents);
     % Remove individuals with infinite rank
     index = isinf(nonDomRank);
     nonDomRank(index) = [];
@@ -39,4 +39,3 @@ else
     [pop,score,nonDomRank,Distance] = ga_trimPopulation(pop,score,nonDomRank,Distance, ...
         popSize,nScore,nParents,ParetoFraction);
 end
-
