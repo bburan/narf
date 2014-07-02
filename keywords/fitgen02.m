@@ -4,7 +4,7 @@ global GA_XXXHistory GA_XXXPointer GA_MaskFittable GA_LowerBound GA_UpperBound G
 
 semse();
 
-PopSize = 10;
+PopSize = 100;
 TolFun = 1e-6; % 1e-6 is not enough?
 Gen = 10000;
 StallGen = 200;
