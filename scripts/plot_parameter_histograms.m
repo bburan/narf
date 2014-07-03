@@ -59,7 +59,7 @@ for ii = numel(params):-1:1
 end
 
 
-figure('Name', 'Parameter Histograms', 'NumberTitle', 'off', 'Position', [20 50 900 900]);
+figure('Name', ['Parameter Histograms of ' cell2mat(modelnames(1))], 'NumberTitle', 'off', 'Position', [20 50 900 900]);
 n = ceil(sqrt(n_params));
 
 warning('off','all');

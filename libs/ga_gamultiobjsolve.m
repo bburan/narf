@@ -46,13 +46,14 @@ while true
        end
        
        
-            % Print a newline and important info every 10 iterations
+            % Print a newline and important info every 5 iterations
+            % and tells the queue server that the job is still alive
             if isequal(mod(state.Generation-1, 5), 1)
                 fprintf('\nGeneration %5d => current scores: [%f...%f...%f]\n', state.Generation, ...
                     min(state.Score(:,1)), mean(state.Score(:,1)), max(state.Score(:,1)));
 %                 [~, best] = min(state.Score(:,1));
 %                 fprintf('best indiv last parameter is %f\n',state.Population(best,end));
-                % dbtickqueue(n_iters);
+                dbtickqueue(state.Generation);
             end
        
         % Repeat for each sub-population (element of the PopulationSize vector)

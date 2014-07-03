@@ -1,17 +1,26 @@
-function fitgen02()
+function fitgen03()
 
-global GA_PhiHistory GA_XXXHistory GA_XXXPointer GA_MaskFittable GA_LowerBound GA_UpperBound XXX META STACK;
+global GA_XXXHistory GA_PhiHistory GA_XXXPointer GA_MaskFittable GA_LowerBound GA_UpperBound STACK XXX META;
 
 semse();
 
 PopSize = 100;
 TolFun = 1e-6; % 1e-6 is not enough?
-Gen = 10000;
-StallGen = 200;
+Gen = 300;
+StallGen = 20;
 
+    function score = fit_last_module(x)
+%         global STACK XXX;
+        STACK{end-1}{1}.phi = x;
+        calc_xxx(length(STACK)-1);
+        score = XXX{end}.score_train_nmse;
+    end
 
     function [termcond, term_score, n_iters, term_phi] = two_dimensional_fitter_loop(fittername, highlevel_fn)
-                
+        
+%         global STACK META XXX;
+        
+        switch_fittable('default');
         phi_init = pack_fittables(STACK);
         
         if isempty(phi_init)
@@ -21,7 +30,7 @@ StallGen = 200;
             n_iters = 0;
             return
         end
-
+        
         % initialization of the StimHistory and StackHistory
         GA_PhiHistory = Inf((size(GA_MaskFittable,1)-1)*PopSize*2, length(phi_init));
         GA_XXXHistory = cell((size(GA_MaskFittable,1)-1)*PopSize*2,1);
@@ -41,41 +50,55 @@ StallGen = 200;
                 
                 unpack_fittables(phi2(phi_i,:));
                 
-                % check for already computed stimulus
                 s = start_depth-1;
-                for c=(size(GA_MaskFittable,1)-1):-1:1
-                    [~, last_param_position] = find(GA_MaskFittable(c+1,:),1);
-                    cols = 1:(last_param_position - 1);
-                    phi = Inf(1,n_params);
-                    phi(cols) = phi2(phi_i,cols);
-                    [is_stored, stored_index] = ismember(phi,GA_PhiHistory,'rows');
-                    if is_stored
-                        s = GA_MaskFittable(c,last_param_position - 1);
-                        XXX{s}.dat = GA_XXXHistory{stored_index};
-                        break
-                    end
-                end
-
+                
+                % check for already computed stimulus
+                %                 for c=(size(GA_MaskFittable,1)-1):-1:1
+                %                     [~, last_param_position] = find(GA_MaskFittable(c+1,:),1);
+                %                     cols = 1:(last_param_position - 1);
+                %                     phi = Inf(1,n_params);
+                %                     phi(cols) = phi2(phi_i,cols);
+                %                     [is_stored, stored_index] = ismember(phi,GA_PhiHistory,'rows');
+                %                     if is_stored
+                %                         s = GA_MaskFittable(c,last_param_position - 1);
+                %                         XXX{s}.dat = GA_XXXHistory{stored_index};
+                %                         break
+                %                     end
+                %                 end
+                
+                % switch_fittable('fit05c');
+                % fit05c();
+                % switch_fittable('default');
+                
                 calc_xxx(s+1);
                 
+                %                 fit_last_module([1 10 3 3 1]);
+                
                 % try to update the cached copies
-                for c=(size(GA_MaskFittable,1)-1):-1:1
-                    [~, last_param_position] = find(GA_MaskFittable(c+1,:),1);
-                    cols = 1:(last_param_position - 1);
-                    phi = Inf(1,n_params);
-                    phi(cols) = phi2(phi_i,cols);
-                    if ~ismember(phi,GA_PhiHistory,'rows');
-                        s = GA_MaskFittable(c,last_param_position - 1);
-                        GA_XXXHistory{GA_XXXPointer} = XXX{s}.dat;
-                        GA_PhiHistory(GA_XXXPointer,:) = phi;
-                        GA_XXXPointer = GA_XXXPointer + 1;
-                        if GA_XXXPointer > length(GA_XXXHistory)
-                            GA_XXXPointer = 1;
-                        end
-%                     else
-%                         break
-                    end
-                end
+                %                 for c=(size(GA_MaskFittable,1)-1):-1:1
+                %                     [~, last_param_position] = find(GA_MaskFittable(c+1,:),1);
+                %                     cols = 1:(last_param_position - 1);
+                %                     phi = Inf(1,n_params);
+                %                     phi(cols) = phi2(phi_i,cols);
+                %                     if ~ismember(phi,GA_PhiHistory,'rows');
+                %                         s = GA_MaskFittable(c,last_param_position - 1);
+                %                         GA_XXXHistory{GA_XXXPointer} = XXX{s}.dat;
+                %                         GA_PhiHistory(GA_XXXPointer,:) = phi;
+                %                         GA_XXXPointer = GA_XXXPointer + 1;
+                %                         if GA_XXXPointer > length(GA_XXXHistory)
+                %                             GA_XXXPointer = 1;
+                %                         end
+                % %                     else
+                % %                         break
+                %                     end
+                %                 end
+                
+%                 options = optimset(@fmincon);
+                [best_nl, score] = fmincon(@fit_last_module, [1 10 10 2 1], [], [], [], [], ...
+                    [0     0   0   0 0], [20 80 200 10 10], [], optimset('Algorithm', 'interior-point', 'Display', 'off', ...
+                    'TolFun', 1e-4, 'TolX', 1e-4, 'MaxIter', 5));
+                STACK{end-1}{1}.phi = best_nl;
+                calc_xxx(length(STACK)-1);
                 
                 [m, p] = META.perf_metric();
                 score_diversity(phi_i,1) = m + p;
@@ -88,9 +111,9 @@ StallGen = 200;
             end
             
             % Print 1 progress dot for every 5 iterations no matter what
-            if isequal(mod(n_iters, 5), 0) %% && ~bequiet
+%             if isequal(mod(n_iters, 5), 0) %% && ~bequiet
                 fprintf('.');
-            end
+%             end
             
             n_iters = n_iters + n_sol;
         end
@@ -110,13 +133,15 @@ StallGen = 200;
         
     end
 
-phi_init = pack_fittables(STACK);
-initialize_GA_GLOBALS(phi_init);
 
+% switch_fittable('fit05c');
+switch_fittable('default');
 phi0 = pack_fittables(STACK);
+initialize_GA_GLOBALS(phi0);
+
 
 [termcond, term_score, n_iters, term_phi] = two_dimensional_fitter_loop('gagamultiobj()', ...
-    @(obj_fn, phi_init) ga_gamultiobj(obj_fn, length(phi_init), [], [], [], [], [], [], ...
+    @(obj_fn, phi_init) ga_gamultiobj(obj_fn, length(phi0), [], [], [], [], [], [], ...
     gaoptimset('TolFun', TolFun, ...
     'PopulationSize', PopSize, ...
     'Generations', Gen, ...
@@ -127,9 +152,17 @@ phi0 = pack_fittables(STACK);
     'CrossoverFraction', 0.2, ...%     'SelectionFcn', @selectiontournament, ...
     'CrossoverFcn', @ga_crossover, ...
     'DistanceMeasureFcn', @ga_distancecrowding, ...
-    'InitialPopulation', [phi0'; rand(PopSize-1,length(phi_init)).*repmat(GA_UpperBound-GA_LowerBound, PopSize-1,1) + repmat(GA_LowerBound, PopSize-1,1)])));
+        'InitialPopulation', [phi0'; rand(PopSize-1,length(phi_init)).*repmat(GA_UpperBound-GA_LowerBound, PopSize-1,1) + repmat(GA_LowerBound, PopSize-1,1)])));
 
 unpack_fittables(term_phi);
+
+[best_nl, score] = fmincon(@fit_last_module, [1 10 10 2 1], [], [], [], [], ...
+                    [0     0   0   0 0], [20 80 200 10 10], [], optimset('Algorithm', 'interior-point', 'Display', 'off', ...
+                    'TolFun', 1e-6, 'TolX', 1e-4, 'MaxIter', 20));
+STACK{end-1}{1}.phi = best_nl;
+calc_xxx(1);
+
+switch_fittable('all');
 
     function [a,b,c,d] = step_until_10neg3(prev_opts)
         if exist('prev_opts', 'var')
