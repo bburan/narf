@@ -40,6 +40,10 @@ m.plot_fns{1}.pretty_name = 'Heat Map';
 m.plot_fns{2}.fn = @do_plot_all_default_outputs;
 m.plot_fns{2}.pretty_name = 'Output Channels (All)';
 
+% Optimize this module for tree traversal  
+m.required = {m.input, m.time};  % Signal dependencies
+m.modifies = {m.output};       % These signals are modified
+
 % Overwrite the default module fields with arguments
 if nargin > 0
     m = merge_structs(m, args);
