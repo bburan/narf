@@ -79,10 +79,11 @@ score(:,2) = ga_computeDiversity(population);
 % we adopt the survivor selection scheme from Segura 2013.
 [~, idx] = sort(score(:,1), 'ascend');
 % n = 1;
-newpop = population(idx(1),:);
-newscore = score(idx(1),:);
-population(idx(1),:) = [];
-score(idx(1),:) = [];
+elitist_survivors = ceil(options.ParetoFraction * popSize);
+newpop = population(idx(1:elitist_survivors),:);
+newscore = score(idx(1:elitist_survivors),:);
+population(idx(1:elitist_survivors),:) = [];
+score(idx(1:elitist_survivors),:) = [];
 th = 0.5;
 while size(newpop,1) < popSize
     score(:,2) = ga_computeDiversity(population, newpop);

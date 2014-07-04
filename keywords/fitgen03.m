@@ -94,9 +94,23 @@ StallGen = 20;
                 %                 end
                 
 %                 options = optimset(@fmincon);
-                [best_nl, score] = fmincon(@fit_last_module, [1 10 10 2 1], [], [], [], [], ...
-                    [0     0   0   0 0], [20 80 200 10 10], [], optimset('Algorithm', 'interior-point', 'Display', 'off', ...
-                    'TolFun', 1e-4, 'TolX', 1e-4, 'MaxIter', 5));
+                % these default work OK for siglog100b:
+                m_respavg = [];
+                m_stim = [];
+                for sf = fieldnames(XXX{end-2}.dat)', sf=sf{1};
+                    m_respavg = [m_respavg; mean(XXX{end-2}.dat.(sf).respavg,2)];
+                    m_stim = [m_stim; mean(XXX{end-2}.dat.(sf).stim,2)];
+                end
+                
+                p1 = prctile(m_respavg,5);
+                p2 = prctile(m_respavg,95);
+                p3 = median(m_stim);
+                p4 = 100;
+                p5 = 100;
+                
+                [best_nl, score] = fmincon(@fit_last_module, [p1 p2 p3 p4 p5], [], [], [], [], ...
+                    [0     0   0   1   1], [20 180 200 500 500], [], optimset('Algorithm', 'interior-point', 'Display', 'off', ...
+                    'TolFun', 1e-4, 'TolX', 1e-4, 'MaxIter', 100));
                 STACK{end-1}{1}.phi = best_nl;
                 calc_xxx(length(STACK)-1);
                 
@@ -147,7 +161,7 @@ initialize_GA_GLOBALS(phi0);
     'Generations', Gen, ...
     'Vectorized', 'on', ...
     'StallGenLimit', StallGen, ...
-    'ParetoFraction', 1, ...
+    'ParetoFraction', 0.1, ...
     'MutationFcn', @ga_mutation, ...
     'CrossoverFraction', 0.2, ...%     'SelectionFcn', @selectiontournament, ...
     'CrossoverFcn', @ga_crossover, ...
@@ -155,10 +169,24 @@ initialize_GA_GLOBALS(phi0);
         'InitialPopulation', [phi0'; rand(PopSize-1,length(phi_init)).*repmat(GA_UpperBound-GA_LowerBound, PopSize-1,1) + repmat(GA_LowerBound, PopSize-1,1)])));
 
 unpack_fittables(term_phi);
+calc_xxx(1);
 
-[best_nl, score] = fmincon(@fit_last_module, [1 10 10 2 1], [], [], [], [], ...
-                    [0     0   0   0 0], [20 80 200 10 10], [], optimset('Algorithm', 'interior-point', 'Display', 'off', ...
-                    'TolFun', 1e-6, 'TolX', 1e-4, 'MaxIter', 20));
+
+m_respavg = [];
+m_stim = [];
+for sf = fieldnames(XXX{end-2}.dat)', sf=sf{1};
+    m_respavg = [m_respavg; mean(XXX{end-2}.dat.(sf).respavg,2)];
+    m_stim = [m_stim; mean(XXX{end-2}.dat.(sf).stim,2)];
+end
+p1 = prctile(m_respavg,5);
+p2 = prctile(m_respavg,95);
+p3 = median(m_stim);
+p4 = 100;
+p5 = 100;
+
+[best_nl, score] = fmincon(@fit_last_module, [p1 p2 p3 p4 p5], [], [], [], [], ...
+    [0     0   0   1   1], [20 180 200 500 500], [], optimset('Algorithm', 'interior-point', 'Display', 'off', ...
+    'TolFun', 1e-4, 'TolX', 1e-4, 'MaxIter', 1000));
 STACK{end-1}{1}.phi = best_nl;
 calc_xxx(1);
 
