@@ -12,7 +12,7 @@ else
     newpop = varargin{1};
     score_2 = [];
     for i=1:size(population,1)
-        dists = pdist([population(i,selected_parameters); newpop]);
+        dists = pdist([population(i,selected_parameters); newpop(:,selected_parameters)]);
         if isequal(size(dists),[1 1])
             score_2 = [score_2 -dists];
         else
