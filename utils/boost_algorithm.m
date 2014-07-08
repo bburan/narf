@@ -150,10 +150,10 @@ while (true)
             % Should we stop searching? (perhaps s_delta is too small)
             term_cond = options.TermFn(n, stepsize, s_delta, o);
             if term_cond
-                if  options.StepAnyway
+                if options.StepAnyway
                     [s,o] = objfn(x_next);
                 else
-                    [s, o] = objfn(x);
+                    [s,o] = objfn(x);
                 end
                 term_phi = x;
                 term_score = s;
