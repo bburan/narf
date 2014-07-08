@@ -152,10 +152,11 @@ while (true)
             if term_cond
                 if options.StepAnyway
                     [s,o] = objfn(x_next);
+                    term_phi = x_next;
                 else
                     [s,o] = objfn(x);
-                end
-                term_phi = x;
+                    term_phi = x;
+                end                
                 term_score = s;
                 term_step = stepsize;
                 return;
