@@ -224,11 +224,11 @@ StepGrowth=1.1;
 
 
 
-% initialization of a best solution as found with fit05c
 phi0 = pack_fittables(STACK);
 
-fit05c();
 
+% initialization of a best solution as found with fit05c
+fit05c();
 phi_fit05c = pack_fittables(STACK);
 calc_xxx(1);
 [m, p] = META.perf_metric();
@@ -241,7 +241,31 @@ fprintf('\n\n ===== SOLUTION FROM FIT05C ===== SCORE is %f\n\n', best_score);
 
 
 
+
+% Do a run of fit05g+fit05c like
+unpack_fittables(phi0);calc_xxx(1); % reset
+fit05g();
+fit05c();
+phi_fit05gfit05c = pack_fittables(STACK);
+calc_xxx(1);
+
+[m, p] = META.perf_metric();
+if m+p < best_score
+    best_indiv = phi_fit05gfit05c;
+    best_score = m+p;
+    best_origin = 'initial fit05g+fit05c -like';
+    fprintf('\n\n ===== NEW BEST SOLUTION ===== SCORE is %f\n\n', best_score);
+end
+best_indivs = [best_indivs phi_fit05gfit05c];
+best_scores = [best_scores m+p];
+fprintf('\n\n ===== SOLUTION FROM FIT05g+FIT05c ===== SCORE is %f\n\n', m+p);
+
+
+
+
+
 % Do a run of fit09-like
+unpack_fittables(phi0);calc_xxx(1);
 % Initialization: If FIR filters are all zero, initialize them randomly
 [~, mod_idxs] = find_modules(STACK, 'fir_filter');
 for ii = 1:length(mod_idxs)
@@ -255,7 +279,6 @@ for ii = 1:length(mod_idxs)
     end
 end
 % Unpack the initial stack
-unpack_fittables(phi0);calc_xxx(1);
 % Now gradually shrink the stopping criterion
 scale=10^-1;
 stop_at=10^-2;%10^-6;

@@ -36,16 +36,20 @@ end
 
 % initialization of the MaskFittable and VarName
 mask_rows = 0;
+fittable_nb = 0;
 for ii = 1:length(STACK)
     if isfield(STACK{ii}{1}, 'fit_fields')
         mask_rows = mask_rows + 1;
+        for jj = 1:numel(STACK{ii}{1}.fit_fields)
+            fittable_nb = fittable_nb + numel(STACK{ii}{1}.fit_fields(jj));
+        end
     end
 end
 
-GA_MaskFittable = zeros(mask_rows, length(phi_init));
-GA_LowerBound = -Inf(1, length(phi_init));
-GA_UpperBound = Inf(1, length(phi_init));
-GA_Bounded = false(1, length(phi_init));
+GA_MaskFittable = zeros(mask_rows, fittable_nb);
+GA_LowerBound = -Inf(1, fittable_nb);
+GA_UpperBound = Inf(1, fittable_nb);
+GA_Bounded = false(1, fittable_nb);
 mask_rowi = 1;
 variable_index = 1;
 for ii = 1:length(STACK)
@@ -83,7 +87,7 @@ for ii = 1:length(STACK)
 end
 
 if sum(~GA_Bounded)
-    fprintf('Warning: one or more module did not set lower+upper bounds.\n Unbounded optimization is buggy but will proceed.\n');
+    fprintf('Warning: one or more module did not set lower+upper bounds.\n Partially unbounded optimization may be buggy but will proceed.\n');
 end
 
 end

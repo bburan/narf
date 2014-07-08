@@ -20,7 +20,8 @@ nMutateKids = popSize - nXoverKids;
 nParents = 2 * nXoverKids + nMutateKids;
 
 % Selection.
-parents = feval(options.SelectionFcn,[-rank,Distance],nParents,options,options.SelectionFcnArgs{:});
+% parents = feval(options.SelectionFcn,[-rank,Distance],nParents,options,options.SelectionFcnArgs{:});
+parents = feval(options.SelectionFcn,-score(:,1),nParents,options,options.SelectionFcnArgs{:});
 % Shuffle to prevent locality effects. 
 parents = parents(randperm(length(parents)));
 
@@ -106,7 +107,14 @@ while size(newpop,1) < popSize
 end
 
 state.Population(thisPopulation,:) = newpop;
+
+newscore(:,2) = ga_computeDiversity(newpop);
 state.Score(thisPopulation,:) = newscore;
+
+% [state.Population(thisPopulation,:),state.Score(thisPopulation,:), ...
+%     state.Rank(thisPopulation,:),state.Distance(thisPopulation,:)] = ...
+%     ga_rankAndDistance(newpop,newscore,options,popSize);
+
 
 
 % % fprintf('best indiv score = %f\n',min(score(:,1)));

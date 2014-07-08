@@ -3,7 +3,7 @@ function [term_phi, term_score, term_cond, term_step] = boost_algorithm(objfn, x
 %
 % See documentation of fit_boo.m for more information.
 %
-global XXX ; % NARF_DEBUG NARF_DEBUG_FIGURE;
+global XXX STACK GA_LowerBound GA_UpperBound GA_Bounded; % NARF_DEBUG NARF_DEBUG_FIGURE;
 
 n_params = length(x_0);
 
@@ -26,6 +26,21 @@ last_effect_recalc = -2*options.StepRelRecalcEvery;
 
 fprintf('\n');
 
+% the following block handles the definition of the step scaling factors
+steps_scaling_factor = ones(n_params,1);
+if options.ScaleStepSize,
+    initialize_GA_GLOBALS(x_0);
+    for ii = 1:length(GA_Bounded)
+        if GA_Bounded(ii),
+            steps_scaling_factor(ii) = GA_UpperBound(ii) - GA_LowerBound(ii);
+        end
+    end
+    % we scale the bounds so that their mediaan is equal to 1 (as to make
+    % the inclusion of bounds as independent as possible from the stopping
+    % step size)
+    steps_scaling_factor = steps_scaling_factor / median(steps_scaling_factor);
+end
+
 while (true) 
     x_next = x;
     s_next = s;  
@@ -39,7 +54,7 @@ while (true)
         fprintf('Calculating effect deltas for small epsilon step');        
         for d = 1:n_params
             stepdir = zeros(n_params, 1);
-            stepdir(d) = stepsize ./ 1000;            
+            stepdir(d) = stepsize ./ 1000 ./ steps_scaling_factor(d); %unused?
             
             [s_del, o] = objfn(x);
             eliteness(d) = abs(s - s_del);
@@ -85,9 +100,9 @@ while (true)
             end
             
             if options.StepRel
-                stepdir(idx) = stepsize / effect(idx);
+                stepdir(idx) = stepsize / effect(idx) / steps_scaling_factor(idx);
             else
-                stepdir(idx) = stepsize;
+                stepdir(idx) = stepsize / steps_scaling_factor(idx);
             end 
 
             x_fwd = x + stepdir;
