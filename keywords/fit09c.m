@@ -1,8 +1,8 @@
-function fit09()
+function fit09c()
 
 global STACK;
 
-nmse();
+semse();
 
 function fn = make_subfitter(del)
     function [a,b,c,d] = subfitter(prev_opts)    
@@ -24,6 +24,7 @@ function fn = make_subfitter(del)
             else
                 [a,b,c,d] = fit_boo('StopAtAbsScoreDelta', del, ...
                                     'StopAtStepNumber', 1, ...
+                                    'StepAnyway', true, ...
                                     'StepGrowth', 1.3);
             end
         else
