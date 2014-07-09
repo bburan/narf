@@ -109,13 +109,13 @@ fit_boo('StopAtAbsScoreDelta', 10^-2.0, ...
         'StepGrowth', StepGrowth);
 
 fit_iteratively(@step_until_10neg3, ...
-                create_term_fn());
+                create_term_fn('StopAtAbsScoreDelta', 10^-3));
 
 fit_iteratively(@step_until_10neg35, ...
-                create_term_fn());
+                create_term_fn('StopAtAbsScoreDelta', 10^-3.5));
 
 fit_iteratively(@step_until_10neg4, ...
-                create_term_fn());
+                create_term_fn('StopAtAbsScoreDelta', 10^-4));
 
 if 0 && strcmpi(func2str(nl_save{1}.nlfn),'nl_sig_logistic'),
     disp('Reinitializing static spike NL for final fit');
@@ -132,20 +132,20 @@ update_xxx(2);
 
 %
 % now run through the series of fits again with static NL included.
-fit_iteratively(@step_until_10neg3, ...
-                create_term_fn());
+fit_iteratively(@step_until_10neg3, ...    
+                create_term_fn('StopAtAbsScoreDelta', 10^-3));
 
 fit_iteratively(@step_until_10neg35, ...
-                create_term_fn());
+                create_term_fn('StopAtAbsScoreDelta', 10^-3.5));
 
 fit_iteratively(@step_until_10neg4, ...
-                create_term_fn());
+                create_term_fn('StopAtAbsScoreDelta', 10^-4));
 
 fit_iteratively(@step_until_10neg45, ...
-                create_term_fn());
+                create_term_fn('StopAtAbsScoreDelta', 10^-4.5));
 
 fit_iteratively(@step_until_10neg5, ...
-                create_term_fn());
+                create_term_fn('StopAtAbsScoreDelta', 10^-5));
 
 %fit_iteratively(@step_until_10neg55, ...
 %                create_term_fn());
