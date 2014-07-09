@@ -24,8 +24,6 @@ for ii = 1:length(STACK)
                         if isequal(size(con.(bound)), [1 1])
                             STACK{ii}{1}.fit_constraints{idx}.(bound) = ...
                                 con.(bound)*ones(size(STACK{ii}{1}.(field), 1), size(STACK{ii}{1}.(field), 2));
-                        else
-                            error('Wrong constraint size')
                         end
                     end
                 end
@@ -41,7 +39,7 @@ for ii = 1:length(STACK)
     if isfield(STACK{ii}{1}, 'fit_fields')
         mask_rows = mask_rows + 1;
         for jj = 1:numel(STACK{ii}{1}.fit_fields)
-            fittable_nb = fittable_nb + numel(STACK{ii}{1}.fit_fields(jj));
+            fittable_nb = fittable_nb + numel(STACK{ii}{1}.(cell2mat(STACK{ii}{1}.fit_fields(jj))));
         end
     end
 end

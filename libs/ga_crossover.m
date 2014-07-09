@@ -31,11 +31,11 @@ for i=1:nKids
     % vectorized version, because it does no allocation.
     for j = 1:size(GA_MaskFittable,1)
         % this has 1/2 prob to take either one of the parents
-        %                 if(rand > 0.5)
-        %                     xoverKids(i,logical(GA_MaskFittable(j,:))) = thisPopulation(r1,logical(GA_MaskFittable(j,:)));
-        %                 else
-        %                     xoverKids(i,logical(GA_MaskFittable(j,:))) = thisPopulation(r2,logical(GA_MaskFittable(j,:)));
-        %                 end
+        if(rand > 0.5)
+            xoverKids(i,:) = thisPopulation(r1,:);
+        else
+            xoverKids(i,:) = thisPopulation(r2,:);
+        end
         % this does a randomly weighted average
         alpha = rand;
         xoverKids(i,logical(GA_MaskFittable(j,:))) = alpha * thisPopulation(r1,logical(GA_MaskFittable(j,:))) + ...

@@ -1,6 +1,6 @@
 function fitgen04()
 
-global GA_PhiHistory GA_XXXHistory GA_XXXPointer GA_MaskFittable GA_LowerBound GA_UpperBound STACK META XXX;
+global GA_PhiHistory GA_FLATXXXHistory GA_FLATXXXPointer GA_MaskFittable GA_LowerBound GA_UpperBound STACK META FLATXXX XXX;
 
 semse();
 
@@ -15,7 +15,7 @@ MaxStepsPerIteration=10;
 StepGrowth=1.1;
 
     function [termcond, term_score, n_iters, term_phi] = two_dimensional_fitter_loop(fittername, highlevel_fn)
-        
+                
         phi_init = pack_fittables(STACK);
         
         if isempty(phi_init)
@@ -25,11 +25,11 @@ StepGrowth=1.1;
             n_iters = 0;
             return
         end
-        
+
         % initialization of the StimHistory and StackHistory
         GA_PhiHistory = Inf((size(GA_MaskFittable,1)-1)*PopSize*2, length(phi_init));
-        GA_XXXHistory = cell((size(GA_MaskFittable,1)-1)*PopSize*2,1);
-        GA_XXXPointer = 1;
+        GA_FLATXXXHistory = cell((size(GA_MaskFittable,1)-1)*PopSize*2,1);
+        GA_FLATXXXPointer = 1;
         
         n_iters = 0;
         start_depth = find_fit_start_depth(STACK);
@@ -55,12 +55,13 @@ StepGrowth=1.1;
                     [is_stored, stored_index] = ismember(phi,GA_PhiHistory,'rows');
                     if is_stored
                         s = GA_MaskFittable(c,last_param_position - 1);
-                        XXX{s}.dat = GA_XXXHistory{stored_index};
+                        FLATXXX{s+1}.dat = GA_FLATXXXHistory{stored_index};
+                        XXX{s+1}.dat = GA_FLATXXXHistory{stored_index};
                         break
                     end
                 end
-                
-                calc_xxx(s+1);
+
+                update_xxx(s+1);
                 
                 % try to update the cached copies
                 for c=(size(GA_MaskFittable,1)-1):-1:1
@@ -70,11 +71,11 @@ StepGrowth=1.1;
                     phi(cols) = phi2(phi_i,cols);
                     if ~ismember(phi,GA_PhiHistory,'rows');
                         s = GA_MaskFittable(c,last_param_position - 1);
-                        GA_XXXHistory{GA_XXXPointer} = XXX{s}.dat;
-                        GA_PhiHistory(GA_XXXPointer,:) = phi;
-                        GA_XXXPointer = GA_XXXPointer + 1;
-                        if GA_XXXPointer > length(GA_XXXHistory)
-                            GA_XXXPointer = 1;
+                        GA_FLATXXXHistory{GA_FLATXXXPointer} = FLATXXX{s+1}.dat;
+                        GA_PhiHistory(GA_FLATXXXPointer,:) = phi;
+                        GA_FLATXXXPointer = GA_FLATXXXPointer + 1;
+                        if GA_FLATXXXPointer > length(GA_FLATXXXHistory)
+                            GA_FLATXXXPointer = 1;
                         end
                     end
                 end
@@ -89,8 +90,10 @@ StepGrowth=1.1;
                 score_diversity(:,2) = -min(dists+max(max(dists))*eye(n_sol));
             end
             
-            % Print 1 progress dot for every generation
-            fprintf('.');
+            % Print 1 progress dot for every 5 iterations no matter what
+            if isequal(mod(n_iters, 5), 0) %% && ~bequiet
+                fprintf('.');
+            end
             
             n_iters = n_iters + n_sol;
         end

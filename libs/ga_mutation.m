@@ -16,7 +16,8 @@ global GA_LowerBound GA_UpperBound GA_Bounded;
 r = range(thisPopulation(r_idx(1:10),:));
 r(r==0) = 1;
 
-mutationChildren = zeros(length(parents),GenomeLength);
+% mutationChildren = zeros(length(parents),GenomeLength);
+mutationChildren = thisPopulation(parents,:);
 for i=1:length(parents)
     parent = thisPopulation(parents(i),:);
     mask = 0;
@@ -66,6 +67,7 @@ for i=1:length(parents)
                 end
             end
             newval = parent(j) + delta * (GA_UpperBound(j) - GA_LowerBound(j));
+%             mutationChildren(i,:) = parents(i,:);
             mutationChildren(i,j) = real(newval);
         end
     end
