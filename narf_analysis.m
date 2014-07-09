@@ -33,9 +33,9 @@ sel_batch = [];
 sel_cellids = {};
 sel_results = [];
 sel_metric  = 'r_ceiling';
-sel_columns = {'id', 'batch', 'cellid', 'modelname', ...
+sel_columns = {'id', 'cellid', 'modelname', ...
                'r_test', 'r_ceiling', 'r_floor', 'r_fit', ...
-               'lastmod'};    
+               'lastmod', 'n_parms'};    
 preview_fig = [];
 
 left_panel = uipanel('Parent', parent_handle, ...
@@ -1161,7 +1161,7 @@ tca = TableColumnAdjuster(hJTable);
         
         % Get the column types
         sql = 'SHOW COLUMNS FROM NarfResults';
-        columns = mysql(sql);        
+        columns = mysql(sql);
                
         l = length(db_results);                
         n_cols = length(sel_columns);
@@ -1169,7 +1169,9 @@ tca = TableColumnAdjuster(hJTable);
         
         % Quickly unpack the db_results into a cell array
         for j = 1:n_cols
-            if (strcmp('text', char(columns(j).Type)))
+            % Find the index of the 
+            idx = find(strcmp({columns.Field}, sel_columns{j}), 1);
+            if (strcmp('text', char(columns(idx).Type)))
                 tmp = cellstr(char(db_results.(sel_columns{j})));
             else
                 tmp = {db_results.(sel_columns{j})};

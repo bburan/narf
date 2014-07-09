@@ -140,7 +140,7 @@ while (true)
                 return;
             end     
         else
-            % Step was taken successful
+            % Step was taken successfully
             s_delta = s - s_next;   % Improvement in score            
             dirs = 1:n_params;      % Direction of the step;
             dir = dirs(x ~= x_next);
@@ -150,8 +150,13 @@ while (true)
             % Should we stop searching? (perhaps s_delta is too small)
             term_cond = options.TermFn(n, stepsize, s_delta, o);
             if term_cond
-                [s, o] = objfn(x); 
-                term_phi = x;
+                if options.StepAnyway
+                    [s,o] = objfn(x_next);
+                    term_phi = x_next;
+                else
+                    [s,o] = objfn(x);
+                    term_phi = x;
+                end                
                 term_score = s;
                 term_step = stepsize;
                 return;

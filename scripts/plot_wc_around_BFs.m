@@ -3,14 +3,21 @@ function plot_wc_around_BFs(batch, cellids, modelnames)
 
     function centered_weights = extract_wc_around_BFs(~)
         global STACK;
-        mods = find_modules(STACK, 'weight_channels');
-        w = mods{1}{1}.weights;
+        
+        % OPTION 1: Spectral analysis
+        mods = find_modules(STACK, 'weight_channels'); % Spectral
+        w = mods{1}{1}.weights; 
+        
+        % OPTION 2: Temporal analysis
+        %mods = find_modules(STACK, 'fir_filter');
+        %w = mods{1}{1}.coefs';
+       
         [N, M] = size(w);
         
-       centered_weights = zeros(9,M);         
+        centered_weights = zeros(9,M);         
         
-       % ----------------------------------------------------------------
-       % OPTION ONE: Center the weights at the best frequency
+        % ----------------------------------------------------------------
+        % OPTION ONE: Center the weights at the best frequency
       
         for jj = 1:M
             idx = find(abs(w(:,jj)) == max(abs(w(:,jj))), 1);
@@ -23,8 +30,7 @@ function plot_wc_around_BFs(batch, cellids, modelnames)
                     centered_weights(ii+5,jj) = nan;
                 end
             end
-        
-        
+                
             % Normalize to the BF
             %centered_weights = centered_weights ./ centered_weights(5);
         
@@ -37,8 +43,8 @@ function plot_wc_around_BFs(batch, cellids, modelnames)
         % (Showed we have more data at some freqs than others, but was hard
         % to derive many other conclusions from this)
         
-        % centered_weights = w;
-        % centered_weights = centered_weights ./ repmat(nanstd(centered_weights), size(w, 1), 1);
+        %centered_weights = w;
+        %centered_weights = centered_weights ./ repmat(nanstd(centered_weights), size(w, 1), 1);
         
         % ----------------------------------------------------------------
     end
