@@ -1,12 +1,13 @@
 function weights = wc_gaussian_root(phi, N_inputs)
     [N_chans, N_parms] = size(phi);
     
-    if N_parms ~= 2 
-        error('WC_GAUSSIAN needs exactly two parameters per channel');
+    if N_parms ~= 3 
+        error('WC_GAUSSIAN needs exactly 3 parameters per channel');
     end
     
     mu_khz  = phi(:, 1);  % Center of gaussian in kHz
     sig_khz = phi(:, 2);  % Gaussian STDDEV (as if kHz were linear)
+    nroot   = phi(:, 3);  % Nth root 
     
     weights = zeros(N_inputs, N_chans);
     
@@ -19,7 +20,7 @@ function weights = wc_gaussian_root(phi, N_inputs)
             spacing = (log(20000) - log(200)) / N_inputs;
             mu = (log(mu_khz(c)*1000) - log(200)) / spacing;
             sigma = (sig_khz(c)/10) * mu;
-            weights(:, c) = sqrt(gauss1([mu, sigma], 1:N_inputs));
+            weights(:, c) = gauss1([mu, sigma], 1:N_inputs).^(1/nroot(c));
         end
     end
 end
