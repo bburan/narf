@@ -24,8 +24,9 @@ XXX = XXX(1:2); FLATXXX = FLATXXX(1:2); calc_xxx(2);  % HACKY RECALC
 
 % Add depression before the PZ filter
 [pzmod, idx_pz] = find_modules(STACK, 'pole_zeros', 1);
-pop_module();
+pop_module(); pop_module();
 dep1pcw();
+norm();
 append_module(pzmod{1});
 
 % Re-fit with wcgd and depression
@@ -37,6 +38,7 @@ STACK{idx_log}{1}.phi   = [STACK{idx_log}{1}.phi 0 0];
 XXX = XXX(1:2); FLATXXX = FLATXXX(1:2); calc_xxx(2);  % HACKY RECALC
 
 % Add the output nonlinearity, which is also pretty nonlinear
+norm();
 dexp();
 
 % Fit everything 
