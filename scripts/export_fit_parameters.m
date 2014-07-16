@@ -35,7 +35,7 @@ end
 kk=find(keepcell);
 cellids=cellids(kk);
 cellcount=length(cellids);
-x0s=x0s(:,kk)
+x0s=x0s(:,kk);
 preds=preds(:,kk);
 stacks=stacks(:,kk);
 metas=metas(:,kk);

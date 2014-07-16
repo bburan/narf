@@ -6,23 +6,25 @@ function fit05anlperfile()
 global STACK XXX
 
 disp('NOW FITTING POST-FIR STAGES PER FILE');
-[~, mod_idxs] = find_modules(STACK, 'fir_filter', false);
-save_fitfields=cell(length(STACK),1);
-for ii=1:(mod_idxs{end}(1)), % 1:mod_idxs{end}(end),
-    if isfield(STACK{ii}{1},'fit_fields'),
-        save_fitfields{ii}=STACK{ii}{1}.fit_fields;
-        STACK{ii}{1}.fit_fields={};
-    end
+
+% Remove any correlation at end of stack
+if strcmp(STACK{end}{1}.name, 'correlation')
+    STACK = STACK(1:end-1);
+    XXX = XXX(1:end-1);
 end
 
-% Then boost on each file individually
-fit_split_simply(@fit05a, @split_by_filecode, @unify_respfiles); 
+% find first STACK entry with fit_fields
+ii=1;
+[~, mod_idxs] = find_modules(STACK, 'nonlinearity', false);
+if ~isempty(mod_idxs),
+    ii=mod_idxs{end};
 
-% restore fit fields settings
-for ii=1:length(save_fitfields),
-    if ~isempty(save_fitfields{ii}),
-        for jj=1:length(STACK{ii}),
-            STACK{ii}{jj}.fit_fields=save_fitfields{ii};
-        end
-    end
+    [~,mseidx]=find_modules(STACK,'mean_squared_error');
+    
+    % Then boost on each file individually
+    split_stack(ii,mseidx{1}-1);
 end
+
+fit05a;
+
+

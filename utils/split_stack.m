@@ -13,7 +13,7 @@ end
 oldstack=STACK;
 
 STACK=STACK(1:(startidx-1));
-XXX=XXX(1:2);
+XXX=XXX(1:startidx);
 
 append_module(MODULES.split_signal);
 split_mod=STACK{end}{1};
@@ -47,7 +47,7 @@ for ii=startidx:endidx,
         STACK{ii+1}{jj}=mdl;
     end
 end
-XXX=XXX(1);
+XXX=XXX(1:startidx);
 update_xxx(startidx);
 
 append_module(MODULES.unify_signal);

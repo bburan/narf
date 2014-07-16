@@ -26,6 +26,7 @@ m.train_score  = 'score_train_nlogl';
 m.test_score  = 'score_test_nlogl';
 m.output = 'score';
 m.is_perf_metric = true;
+m.norm_by_se=0;
 
 % Overwrite the default module fields with arguments 
 if nargin > 0
@@ -46,14 +47,44 @@ function x = do_likelihood_poisson(mdl, x)
     % Compute the mean squared error of the training set
     p = flatten_field(x.dat, x.training_set, mdl.input1);
     r = flatten_field(x.dat, x.training_set, mdl.input2);
+    p(p<0.00001)=0.00001;
     
-    train_score = - nansum(r.*log(p) - p);
     
     % Compute the mean squared error of the test set
     ptest = flatten_field(x.dat, x.test_set, mdl.input1);
     rtest = flatten_field(x.dat, x.test_set, mdl.input2);     
-    test_score = - nansum(rtest.*log(ptest) - ptest);    
-    
+    ptest(ptest<0.00001)=0.00001;
+    if ~isfield(mdl,'norm_by_se') || ~mdl.norm_by_se,
+        train_score = - nanmean(r.*log(p) - p) ./nanmean(r);
+        test_score = - nanmean(rtest.*log(ptest) - ptest) ./nanmean(r);    
+    else
+        % apply shrinkage filter to score
+        bincount=11;
+        %ll=round(linspace(1,length(p)+1,bincount+1));
+        %llv=round(linspace(1,length(ptest)+1,bincount+1));
+        ee=zeros(bincount,1);ve=zeros(bincount,1);
+        for bb=1:bincount,
+            bbidx=bb:bincount:length(p);
+            d=nanmean(r(bbidx));
+            ee(bb)= -nanmean(r(bbidx).*log(p(bbidx)) - p(bbidx))./(d+(d==0));
+        end
+        me=mean(ee);se=std(ee)./sqrt(bincount);
+        train_score=-shrinkage(-me,se,mdl.norm_by_se);
+        
+        if ~isempty(ptest),
+           for bb=1:bincount,
+                bbidx=bb:bincount:length(ptest);
+                d=nanmean(rtest(bbidx));
+                ve(bb)=-nanmean(rtest(bbidx).*log(ptest(bbidx))-ptest(bbidx)) ./...
+                       (d+(d==0));
+            end
+            me=mean(ve);se=std(ve)./sqrt(bincount);
+            test_score=-shrinkage(-me,se,mdl.norm_by_se);
+        else
+            test_score=nan;
+        end
+    end
+            
     x.(mdl.train_score) = train_score;
     x.(mdl.test_score) = test_score;   
     x.(mdl.output) = train_score;

@@ -1,4 +1,4 @@
-function gtSNS18()
+function fbSNS18ch100()
 
 global MODULES;
 

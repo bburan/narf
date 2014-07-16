@@ -70,7 +70,8 @@ function stopcode = default_termfn(n,s,d,o)
         return; 
     end
     
-    if length(first_deltas) < 1+opts.RelStopSamples && ~isnan(d)
+    if length(first_deltas) < 1+opts.RelStopSamples && ~isnan(d) && ...
+            ~isinf(d),
         first_deltas(end+1) = d;
     elseif isnan(d)
         % Do nothing
@@ -78,6 +79,7 @@ function stopcode = default_termfn(n,s,d,o)
         % Test if we need to stop
         if (d / mean(first_deltas(2:end)) < opts.StopAtRelScoreDelta)
             stopcode = 4;
+            keyboard
             fprintf('Relative score improvement less than %e, stopping.\n', ...
                 opts.StopAtRelScoreDelta);
             return
