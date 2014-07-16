@@ -250,6 +250,10 @@ function x = do_load_from_baphy(mdl, x)
                 end
             end
             
+            if mr>size(stim,1),
+               fprintf('mr=%d trimmed to %d\n',mr,size(stim,1));
+               mr=size(stim,1);
+            end
             oldresp=resp(1:mr,:,:);
             stim=stim(1:mr,:,:);
             umap=zeros(size(unique(ucat)));
