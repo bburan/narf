@@ -26,7 +26,7 @@ append_module(MODULES.pole_zeros.mdl(...
 
 append_module(MODULES.sum_fields.mdl(struct('inputs', {{'stim1', 'stim2'}})));
 
-append_module(MODULES.normalize_channels;
+append_module(MODULES.normalize_channels);
 
 
 end

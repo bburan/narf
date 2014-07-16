@@ -24,7 +24,7 @@ calc_xxx(length(STACK)); % Recalc last element
 
 % Add a second p1z1
 append_module(MODULES.pole_zeros.mdl(...
-                struct('fit_fields', {{'poles', 'delays'}}, ...
+                struct('fit_fields', {{'poles', 'zeros', 'delays'}}, ...
                        'output', 'stim2', ...
                        'n_poles', 1, ...
                        'n_zeros', 1)));
@@ -35,7 +35,7 @@ fitlastpz({'stim1', 'stim2'});
 [~, mod_idxs] = find_modules(STACK, 'pole_zeros');
 for jj = 1:length(mod_idxs)
     idx = mod_idxs{jj};
-    STACK{idx}{1}.fit_fields = {'poles', 'delays'};
+    STACK{idx}{1}.fit_fields = {'poles', 'zeros', 'delays'};
 end
 
 % The output is a normalized, weighted linear combination of all PZ modules
