@@ -217,7 +217,11 @@ while 1,
           CMD=sprintf([SSHCMD,tq.machinename,...
                        ' ps h -p ',num2str(tq.pid),''''],'svd');
           [s,w]=unix(CMD);
-          
+          if isempty(w),
+              disp('first check for live job failed.  trying again');
+              % try again. sometimes the unix buffer is screwy
+              [s,w]=unix(CMD);
+          end
           % recheck status to make sure that the job didn't JUST
           % complete (which happens, esp on a dbkillqueue(-1)
           tq=dbgetqueue(tq.id);
@@ -238,6 +242,7 @@ while 1,
               
               dblog('qid=%d: Proc %d is gone from %s! Setting complete=2.',...
                     tq.id,tq.pid,tq.machinename);
+              
               dbsetqueue(tq.id,tq.progress,2,tq.machinename);
               dbevent(4,tq.id,tq.machinename,tq.pid);
               

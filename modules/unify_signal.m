@@ -81,10 +81,10 @@ function x = do_unify_signal(mdl, x)
            end        
         end 
         
-        if size(x.dat.(sf).(mdl.inputs{jj}), 3) > 1;
-            fprintf('Insize weird.\n');            
-            keyboard;
-        end
+        %if size(x.dat.(sf).(mdl.inputs{jj}), 3) > 1;
+        %    fprintf('Insize weird.\n');            
+        %    keyboard;
+        %end
         x.dat.(sf).(mdl.output)=zeros([insize(1),...
                                       length(x.dat.(sf).trial_code),...
                                       insize(3:end)]);

@@ -1,3 +1,9 @@
+% function weights = wc_gaussian(phi, N_inputs)
+%
+% phi Channels X parameters.  
+%   phi(:,1) = center freq of Gaussian for each wight channel in KHz
+%   phi(:,2) = standard deviation of Gaussian in KHz(?)
+%
 function weights = wc_gaussian(phi, N_inputs)
     [N_chans, N_parms] = size(phi);
     

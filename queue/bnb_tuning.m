@@ -35,7 +35,7 @@ function res=bnb_tuning(cellid,runclass)
     
     fprintf('bnb_tuning: cell %s file %s\n',cellid,basename(parmfile));
     LoadMFile(parmfile);
-
+    
     options.PreStimSilence=exptparams.TrialObject.ReferenceHandle.PreStimSilence;
     options.PostStimSilence=exptparams.TrialObject.ReferenceHandle.PostStimSilence;
     options.rasterfs=100;
@@ -126,20 +126,34 @@ function res=bnb_tuning(cellid,runclass)
         res.hif=bhi;
     end
     
-    figure(1);clf
+    figure(1);
+    clf
+    subplot(2,1,1);
+    raster_plot(parmfile,r,tags,gca,options);
+    
+    subplot(2,1,2);
     plot([0 freqcount+1],[0 0]+baseline,'k--');
     hold on
     errorbar(p,pe);
     if bf>0,
         plot(mm,p(mm),'ro');
     end
-    
     hold off
     
-    xt=[1 floor(freqcount./2) freqcount];
-    set(gca,'XTick',xt,'XTickLabel',unique_freq(xt));
-    aa=axis;
-    axis([0 freqcount+1 aa(3:4)]);
+    stimulusvalues=unique_freq;
+    stimuluscount=length(stimulusvalues);
+    set(gca,'XLim',[0 stimuluscount+1]);  % make x axis look nice
+    if max(stimulusvalues)>4000,
+        stimulusKHz=round(stimulusvalues./100)./10;
+    elseif max(stimulusvalues)>100
+        stimulusKHz=round(stimulusvalues./10)./100;
+    else
+        stimulusKHz=stimulusvalues;
+    end
+    stimlabelidx=1:2:stimuluscount;
+    set(gca,'XTick',stimlabelidx,'XTickLabel',stimulusKHz(stimlabelidx));
+    
+    %axis([0 freqcount+1 aa(3:4)]);
     if bf>0,
         ht=title(sprintf('%s Rep%d BF=%.0f (%d-%d)',...
                          cellid,size(r,2),bf,blo,bhi));

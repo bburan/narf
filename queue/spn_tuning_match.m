@@ -32,7 +32,7 @@ function res=spn_tuning_match(cellid,batchid,verbose);
         dbWriteTuning(cellid,tftc,1);
         tt=dbReadTuning(cellid);
     end
-        
+    
     blo=[];
     if ~isempty(tt.lof) && tt.lof>0,
         if verbose,

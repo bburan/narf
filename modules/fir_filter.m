@@ -184,7 +184,11 @@ function do_plot_fir_coefs_as_heatmap(sel, stack, xxx)
         
         for ii = 1:length(mdls)
             % Get the extra argument to calc the weights
-            [~, wts] = weight_mdl{ii}.fn(weight_mdl{ii}, xxx{idx});            
+            if length(weight_mdl)>1,
+                [~, wts] = weight_mdl{ii}.fn(weight_mdl{ii},xxx{idx});
+            else
+                [~, wts] = weight_mdl{1}.fn(weight_mdl{1},xxx{idx});
+            end
             sw=std(wts,0,1);
             sw(sw<eps)=1;
             wts=wts./repmat(sw,[size(wts,1) 1]);

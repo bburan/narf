@@ -223,8 +223,9 @@ function x = do_load_from_baphy(mdl, x)
             TarBins=round(rparms.rasterfs.*TarDur);
             mr=1;
             ucat=zeros(size(TargetStartBin));
+            REMOVE_TAR_PHASE=0;
             for tt=1:length(TargetStartBin),
-                if TargetStartBin(tt)>0,
+                if TargetStartBin(tt)>0 && REMOVE_TAR_PHASE,
                     refend=TargetStartBin(tt).*rparms.SampleDur+...
                            rparms.PreStimSilence;
                     refend=round(refend.*rparms.rasterfs)-1;
