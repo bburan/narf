@@ -8,7 +8,7 @@ m.name = 'depression_filter_bank';
 m.fn = @do_depression_filter;
 m.pretty_name = 'Depression Filter Bank';
 m.editable_fields = {'num_channels', 'strength', 'tau', 'strength2', 'tau2',...
-                    'per_channel', 'offset_in', 'crosstalk',...
+                    'per_channel', 'offset_in', 'facil_on', 'crosstalk',...
                     'input', 'time', 'output' };
 m.isready_pred = @isready_always;
 
@@ -21,6 +21,7 @@ m.tau = [0 100];  % in ms
 m.tau2 = [0 0];  % in ms
 m.tau_norm = 1000;  % 1000 means ms, 10 means 10ths of sec, 1 means sec
 m.offset_in=[0];
+m.facil_on = 0;
 m.crosstalk = 0;
 m.raw_stim_freq = 100000;
 m.input = 'stim';
@@ -59,6 +60,12 @@ function x = do_depression_filter(mdl, x)
     end
     if ~isfield(mdl,'crosstalk'),
         mdl.crosstalk=0;
+    end
+    if ~isfield(mdl,'facil_on'),
+        mdl.facil_on=0;
+    end
+    if ~mdl.facil_on,
+        mdl.strength=abs(mdl.strength);
     end
     
     % Ivar says: This type of searching can possibly interact with proper
