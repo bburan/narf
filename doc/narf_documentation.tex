@@ -24,15 +24,19 @@
 
 \chapter{Basic Functionality and Data Structures}
 
-This document was written to clarify and document design decisions made regarding the Neural Activity Regression Framework (NARF) implemented in the Brain, Hearing and Behavior Laboratory of the Oregon Health and Science University (OHSU), under the supervision of Prof. Stephen David. As such, it is intended for developers rather and is very much a work in progress. 
+This document was written to clarify and document design decisions made regarding the Neural Activity Regression Framework (NARF) implemented in the Brain, Hearing and Behavior Laboratory of the Oregon Health and Science University (OHSU), under the supervision of Prof. Stephen David. The intended audience are end users who want to use NARF to analyze their neural data, and also for those intrepid programmers who want to implement their own models in the NARF framework. 
+
+\section{NARF in a Paragraph} 
+
+NARF is a MATLAB framework that was written to let us create and fit the parameters of thousands of different mathematical models of auditory neural activity. It is mathematically very general and does not assume a specific model structure -- neural or otherwise -- and could presumably be used to model many types of physical systems. It comes with a large collection of input-output building blocks, or ``modules'', from which more complex models may be built. Users are encouraged to write their own modules to model specific aspects of a system, although a variety of default modules are already available, including various nonlinear functions, convolution kernels, sample-rate conversions, filterbanks, differential equations, and file-loading modules. NARF also includes algorithms for fitting some or all of the parameters of modules, including user-defined modules, so that you may easily find the parameters that best describe your data. Fitting algorithms may be fairly sophisticated and are also user-definable. It is not unusual for us to fit some model parameters on one set of data, some parameters on another set of data, and verifying the entire model on a third subset of the data. If the model may be represented as a directed graph, when parameters are changed during fitting, only the minimum necessary will be recomputed at any time. After a model has been fit to the data, relevant statistics (also user-definable) may be logged and stored in a database. A GUI browser lets users quickly compare fits among different cells or models, group cells by experiment, record notes about each experiment, and generate a variety of useful plots. It is often necessary to test a model across a population of neurons to be sure that the model is not overly specific to a particular neural data set, so NARF has significant support for plotting the performance of a model across a population, querying the database, and queuing up collections of models to be fit for every neuron in a data set. Although not strictly a part of NARF, it integrates with the BAPHY and CellDB systems for the management of large amounts neural data. To date NARF has fit more than 700,000 models to neural data sets, requiring approximately 10 computer-years of time, if we consider the fact that we have run a computer cluster with seven nodes constantly for the last two years.
 
 \section{Problem and Approach}
 
-\subsection{The Problem}
+\subsection{The Problem NARF Attempts to Solve}
 
-There are many possible mathematical models which could be used describe the spiking activity of a neuron given some sensory stimulus. In our case, we will be considering mostly models of neurons in the auditory cortex of a mammal, usually a ferret, and usually near the A1 region. Neurons in this region of the brain often respond preferentially to a particular auditory frequency. For example, some neurons may spike continously whenever any sound has accoustic energy near 1.2KHz. Another neuron may spike frequently only on the onset of a 5KHz tone hidden in a ferret vocalization played to the  ferret's left ear while it is thinking about dinner. Our goal is to play recordings of various sounds, measure neural activity, and attempt to discover as much as we can about the neuron(s) we are studying.
+There are many possible mathematical models which could be used describe the spiking activity of a neuron that is given some sensory stimulus. In our case, we will be considering mostly models of neurons in the auditory cortex of a mammal, usually a ferret, and usually near the A1 region. Neurons in this region of the brain often respond preferentially to a particular auditory frequency. For example, some neurons may spike continously whenever any sound has accoustic energy near 1.2KHz. Another neuron may spike frequently only on the onset of a 5KHz tone hidden in a ferret vocalization played to the  ferret's left ear while it is thinking about dinner. Our goal is to play recordings of various sounds, measure neural activity, and attempt to discover as much as we can about the neuron(s) we are studying.
 
-Mathematically, the problem is that of developing a mathematical model which can accurately predict how a neuron will fire when a new, as-yet-unheard sound is played. This is a classic inference problem, in which we seek to infer which system produced the neural response that we measured. If the model's prediction closely matches the measured response of the neuron, then we have learned something significant about the neuron. The better our ability to predict the neuron's activity, the better our understanding of it, and the more we may learn through experiment about how neural activity is affected by various factors. Our ability to learn about the dynamics of neurons through experiment is thus closely related to our ability to model each neuron.
+Mathematically, the problem is to develop an equation and associated parameters that can accurately predict how a neuron will fire when a new, as-yet-unheard sound is played. This is a classic inference problem, in which we seek to infer which system produced the neural response that we measured. If the model's prediction closely matches the measured response of the neuron, then we have learned something significant about the neuron. The better our ability to predict the neuron's activity, the better our understanding of it, and the more we may learn through experiment about how neural activity is affected by various factors. Our ability to learn about the dynamics of neurons through experiment is thus closely related to our ability to model each neuron.
 
 Fortunately or unfortunately, while the neuroscientist community has developed a plethora of mathematical models which can describe this behavior, there remain few guidelines on which model should be used or how model parameters should be found. The difficulty for most scientists is in the implementation of existing models; it is often a significant amount of work to adapt another person's model to your needs, and significantly more work to develop one yourself. It's hard to compare your work to other scientists'. Ideally, we would be able to easily fitting several different models to the measured activity of the neuron, so that we might quickly identify the characteristics of the neuron under study, as well as give us the ability to compare our work with other researchers'. It would also be advantageous to be able to recombine parts of the model which were particularly useful in describing neural activity such that variations on successfully predictive models could be quickly examined. 
 
@@ -44,7 +48,7 @@ Most modeling approaches are highly domain-specific; modeling the a biological s
   f_1(x_1) \rightarrow x_2
 \end{equation}
 
-The notion of a 'pure' function is simply that it will always produce the same result when given the same input. This is familiar to most mathematicians, but the idea of a function is usually corrupted in the domain of computer science to mean just a ``subroutine'' of instructions. To be more specific, a pure function is on in which there are no side effects; no print statements, no changing of global variables, no writing to disk, and no use of global variables. A pure function is a complete black box whose outputs only depend on its explicit arguments and inputs. If a function's computation is based in any way on a global variable, then it is possible for the same function, given the same arguments, to produce different results depending on the value of the global variable at the time it was run. This should be avoided to maintain mathematical elegance. Indeed, it is often an explicit goal of a seasoned functional programmer to keep the number of non-pure functions to a minumum; but we digress and must return to the operation of NARF. 
+The notion of a 'pure' function is simply that it will always produce the same result when given the same input. This is familiar to most mathematicians, but the idea of a function is usually corrupted in the domain of computer science to mean just a ``subroutine'' of instructions. To be more specific, a pure function is on in which there are no side effects (i.e. no print statements, no changing of global variables, no writing to disk, and no use of global variables). A pure function is a complete black box whose outputs only depend on its explicit arguments and inputs. If a function's computation is based in any way on a global variable, then it is possible for the same function, given the same arguments, to produce different results depending on the value of the global variable at the time it was run. This should be avoided to maintain mathematical elegance. Most modules in NARF have their main function (usually prefixed with ``do\_'' by convention) that maps a set of inputs to outputs, and this function should always be pure. Indeed, it is often an explicit goal of a seasoned functional programmer to keep the number of non-pure functions to a minumum; but we digress and must return to the operation of NARF. 
 
 If we make a neural model out of more than one pure function (e.g. $f_1, f_2, ..., f_n$), then we could potentially chain the output of one function to the input of the next:
 
@@ -63,7 +67,7 @@ x_{4} = f_3(f_2(f_1(x_1)))
 
 All of the above has assumed that every function has no parameters. If we had a function which added 23 to it's input argument and then divided by three ($f_1(x_1) = (x_1 + 23) / 3 $), then we would be required to define a completely new function $f_1$ if we wanted to try adding 25 or dividing by a different number. If some part of the function's behavior will be changing regularly and many values must be tried, then it makes sense to bundle these changing parts into a model parameter vector $\phi_1 = [\phi_{11} \phi_{12}] = 23 3$ and define our function as $f_1(x_1, \phi_1) = (x_1 + \phi_{11}) / \phi_{12}$.
 
-Therefore, NARF assumes that every function has two arguments
+Therefore, NARF assumes that every mathematical function has two arguments
 
 \begin{equation}
   f_1(x_1, \phi_1) \rightarrow x_2
@@ -78,62 +82,149 @@ f_{2}(x_{2}, \phi_2) & \rightarrow & x_{3}\\
 f_{n}(x_{n}, \phi_n) & \rightarrow & x_{n+1}
 \end{eqnarray*}
 
-Now we can describe nearly any neural model by specifying some initial conditions $x_1$, a list of functions $f_1, f_2, ..., f_n$, and a list of parameter vectors $\phi_1, \phi_2, ..., \phi_n$. By executing the functions one after another, our prediction about the neural activity will finally be held in $x_{n+1}$. If we want, we can observe intermediate values of $x$ to better understand how the model is functioning as a whole. 
+Now we can describe nearly any neural model by specifying some initial conditions $x_1$, a list of functions $f_1, f_2, ..., f_n$, and a list of parameter vectors $\phi_1, \phi_2, ..., \phi_n$. By executing the functions one after another, our prediction about the neural activity will finally be held in $x_{n+1}$. If we want, we can observe intermediate values of $x$ to better understand how the model is functioning as a whole. Also, this formalism clearly separates the things we want to find at the end of the day (the parameters $\phi$) from the values that we need to compute to get work done ($x$). 
 
-\section{Module Technical Details}
+\section{The Most Important Global Variables: STACK and XXX}
 
-MATLAB's data types prohibit us from being completely general with regard to how we represent our functions $f$ and our data $x$. Data structures are never perfectly general, but some are more flexible than others. The approach used in NARF was to use MATLAB's cell arrays as much as possible because of their generality and loose ordering of data along different dimensions. 
+MATLAB's data types prohibit us from being completely general with regard to how we represent our functions $f$ and our data $x$. Data structures are never perfectly general, but some are more flexible than others, and for research its generally wiser to choose flexibility over raw speed. The approach used in NARF was to use MATLAB's cell arrays as much as possible because of their generality and loose ordering of data along different dimensions. 
 
-The structure which holds the list of functions $f_1, f_2, ...$ and parameters $\phi$ called \matlab{STACK} because it represents a big fat stack of transformations on the input data. The structure which holds all the $x_1, x_2, ..., x_{n+1}$ is called \matlab{XXX} due to the fact that each $x$ is dependent upon the previous and so it resembles a chain of x's. Each cell of \matlab{STACK} and \matlab{XXX} is a structure containing named fields. You may put any fields you like in each cell, except for the fields defined in the next two sections, which have special meaning to NARF and are used for special purposes. 
+The structure which holds the list of functions $f_1, f_2, ...$ and parameters $\phi$ is a global variable called \matlab{STACK} because it represents a big fat stack of transformations on the input data. The structure which holds all the $x_1, x_2, ..., x_{n+1}$ is another global variable called \matlab{XXX} due to the fact that each $x$ is dependent upon the previous and so it resembles a chain of x's. Also, XXX happens to be very visible but concise pattern, which is nice when you are staring at a huge block of matlab code. Each cell of \matlab{STACK} and \matlab{XXX} is a structure containing named fields. You may put any fields you like in each cell, except for the fields defined in the next two sections, which have special meaning to NARF and are used for special purposes. 
 
-\subsection{Terminology}
+\subsection{What are Modules and Signals?}
 
-\matlab{STACK} was described as a chain of modules, but we should first define what exactly a module is. Because so often it is convenient to keep a function $f$ and its associated parameters $\phi$ together, we will call them a \definition{module}, for lack of a better way to describe each block of modeling functionality. Each module's subfields are called \definition{parameters} because they represent named values of $\phi$. 
+\matlab{STACK} was described as a chain of modules, but we should first define what exactly a module is. Because so often it is convenient to keep a function $f$ and its associated parameters $\phi$ together, we will call them a \definition{module}, and use each module as an input-output block that models some small piece of functionality. Each module has subfields that we are calling \definition{parameters} because they represent named values of $\phi$. We'll see some examples in a few sections. 
 
-The data values $x_1, x_2, ...$ are represented as structs, and we name the fields of each struct a \definition{signals}, because typically they are long vectors of neural or electrical signals that were sampled at a regular rate. 
+The data values $x_1, x_2, ...$ of \matlab{XXX} are also represented as structs. We name the fields of each struct a \definition{signals}, because typically they are long vectors of neural or electrical signals that were sampled at a regular rate. Signals are a way of naming your variables going in and out of a module in a consistent way. We chose to organize our signals in a convenient way for our data; however you may find organizing your signals in a different way is more convenient. The choice is left up to you, and you may name your signals as you choose. 
 
 \subsection{Module Discovery and the \matlab{MODULES} Global Data Structure}
 
 Whenever a NARF GUI starts running, it searchers for modules that in the \matlab{modules/} directory upon startup and attempts to load them into a structure called \matlab{MODULES}. MATLAB is pretty good about allowing you to edit modules dynamically, but if you are adding new modules after starting a GUI, you may need to call the function \matlab{scan\_directory\_for\_modules.m} with the appropriate to re-scan them. 
 
-Once discovered, the global data structure \matlab{MODULES} is updated so that under each field is one of the objects returned by the modules. You could manually create such a global data structure like this:
+Once discovered, the global data structure \matlab{MODULES} is populated so that under each field is one of the objects returned by the modules. You could manually create such a global data structure like this:
 
 \begin{verbatim}
 >> global MODULES;
 >> MODULES = scan_directory_for_modules()
+MODULES = scan_directory_for_modules()
+Scanning dir for modules: /home/ivar/matlab/narf/modules
+Found 'add_nth_order_terms.m'
+Found 'bandpass_filter_bank.m'
+Found 'bayesian_likelihood.m'
+Found 'bernoulli_trials.m'
+Found 'concatenate_channels.m'
+Found 'correlation.m'
+Found 'depression_filter_bank.m'
+Found 'depression_filter_bank_nonorm.m'
+Found 'downsample_signal.m'
+Found 'error_norm.m'
+Found 'fir_filter.m'
+Found 'fir_separable_filter.m'
+Found 'fourier_transform.m'
+Found 'gammatone_filter.m'
+Found 'gammatone_filter_bank.m'
+Found 'gmm_nonlinearity.m'
+Found 'hilbert_transform.m'
+Found 'infer_respavg.m'
+Found 'int_fire_neuron.m'
+Found 'inter_spike_intervals.m'
+Found 'likelihood_poisson.m'
+Found 'lindeberg_filter.m'
+Found 'lindeberg_spectral.m'
+Found 'load_SNS_from_baphy.m'
+Found 'load_stim_resps_from_baphy.m'
+Found 'load_stim_resps_wehr.m'
+Found 'mean_squared_error.m'
+Found 'mutual_information.m'
+Found 'neural_statistics.m'
+Found 'nim_wrapper.m'
+Found 'nonlinearity.m'
+Found 'nonparm_filter_nonlinearity.m'
+Found 'nonparm_gain.m'
+Found 'nonparm_nonlinearity.m'
+Found 'nonparm_nonlinearity_2d.m'
+Found 'normalize_channels.m'
+Found 'passthru.m'
+Found 'pole_zeros.m'
+Skipping pole_zeros_quadratic.m due to error: Error: File: pole_zeros_quadratic.m Line: 175 Column: 10
+Function definition is misplaced or improperly nested.
+Found 'pz_synapse.m'
+Found 'pz_wavelet.m'
+Found 'pz_wavelet_filterbank.m'
+Found 'reparameterize.m'
+Skipping response_metrics.m due to error: Error: File: response_metrics.m Line: 53 Column: 19
+Expression or statement is incomplete or incorrect.
+Found 'smooth_respavg.m'
+Found 'sparse_empirical_nonlinearity.m'
+Found 'spike_times.m'
+Found 'spike_triggered_average.m'
+Found 'split_signal.m'
+Found 'state_space_diffeq.m'
+Found 'subsample_channels.m'
+Found 'sum_fields.m'
+Found 'sum_vector_elements.m'
+Found 'truncate_data.m'
+Found 'unify_signal.m'
+Found 'weight_channels.m'
 
 MODULES = 
 
               add_nth_order_terms: [1x1 struct]
+             bandpass_filter_bank: [1x1 struct]
               bayesian_likelihood: [1x1 struct]
+                 bernoulli_trials: [1x1 struct]
              concatenate_channels: [1x1 struct]
                       correlation: [1x1 struct]
            depression_filter_bank: [1x1 struct]
+    depression_filter_bank_nonorm: [1x1 struct]
                 downsample_signal: [1x1 struct]
-    elliptic_bandpass_filter_bank: [1x1 struct]
                        error_norm: [1x1 struct]
                        fir_filter: [1x1 struct]
+             fir_separable_filter: [1x1 struct]
+                fourier_transform: [1x1 struct]
+                 gammatone_filter: [1x1 struct]
             gammatone_filter_bank: [1x1 struct]
                  gmm_nonlinearity: [1x1 struct]
+                hilbert_transform: [1x1 struct]
                     infer_respavg: [1x1 struct]
                   int_fire_neuron: [1x1 struct]
             inter_spike_intervals: [1x1 struct]
+               likelihood_poisson: [1x1 struct]
+                 lindeberg_filter: [1x1 struct]
+               lindeberg_spectral: [1x1 struct]
+              load_SNS_from_baphy: [1x1 struct]
        load_stim_resps_from_baphy: [1x1 struct]
              load_stim_resps_wehr: [1x1 struct]
                mean_squared_error: [1x1 struct]
+               mutual_information: [1x1 struct]
+                neural_statistics: [1x1 struct]
+                      nim_wrapper: [1x1 struct]
                      nonlinearity: [1x1 struct]
       nonparm_filter_nonlinearity: [1x1 struct]
+                     nonparm_gain: [1x1 struct]
              nonparm_nonlinearity: [1x1 struct]
           nonparm_nonlinearity_2d: [1x1 struct]
                normalize_channels: [1x1 struct]
                          passthru: [1x1 struct]
+                       pole_zeros: [1x1 struct]
+                       pz_synapse: [1x1 struct]
+                       pz_wavelet: [1x1 struct]
+            pz_wavelet_filterbank: [1x1 struct]
+                   reparameterize: [1x1 struct]
                    smooth_respavg: [1x1 struct]
     sparse_empirical_nonlinearity: [1x1 struct]
+                      spike_times: [1x1 struct]
+          spike_triggered_average: [1x1 struct]
+                     split_signal: [1x1 struct]
+               state_space_diffeq: [1x1 struct]
+               subsample_channels: [1x1 struct]
                        sum_fields: [1x1 struct]
               sum_vector_elements: [1x1 struct]
+                    truncate_data: [1x1 struct]
+                     unify_signal: [1x1 struct]
+                  weight_channels: [1x1 struct]
 \end{verbatim}
 
-As you can see, there are already quite a few modules available for neural analysis. 
+As you can see, there are already quite a few modules available for neural analysis. You can also see that two modules are still under development and contain syntax errors, so they were not loaded or are available for use.. 
 
 \subsection{A Minimal Module}
 
@@ -160,6 +251,10 @@ m.time   = 'stim_time';
 m.output = 'prediction';
 m.add_parameter = 11;
 
+% Optimize this module for tree traversal  
+m.required = {'stim', 'stim_time'};   % Signal dependencies
+m.modifies = {'prediction'};          % These signals are modified
+
 % Optional things which may or may not be present
 m.is_perf_metric = false;
 m.fit_fields = {'add_amount'};
@@ -175,8 +270,8 @@ m.plot_fns{1}.fn = @do_plot_inputs;
 m.plot_fns{1}.pretty_name = 'Plot Output vs Time';
 
 % Finally, define any functions specific to this module
-function x = do_my_module(mdl, x, stack, xxx)   
-    % Add some amount to every single 
+function x = do_my_module(mdl, x)   
+    % Add some amount to every single input value
     x.(mdl.output) = x.(mdl.input) + mdl.add_parameter;
 end
 
@@ -189,7 +284,7 @@ end
 end
 \end{verbatim}
 
-It should be apparent to most programmers that a module is simply a function that returns a struct named \matlab{m} that has some field/value pairs. \matlab{m} is a default object which will be created even when \matlab{my\_module} is not given any arguments. What may be less obvious, confusing, or even mind-blowing is that the \matlab{args} variable is also intended to be a struct and that \matlab{m.mdl} stores a reference to the \matlab{my\_module} function itself. This means that a NARF module \matlab{m} can create a mutated copy of itself by passing a struct to the function stored under \matlab{m.mdl}. Consider the following example, which assumes that you have already scanned for modules and placed them in the global \matlab{MODULES} structure.
+It should be apparent to most programmers that a module is simply a function that returns a struct named \matlab{m} that has some field/value pairs. \matlab{m} is a default object which will be created even when \matlab{my\_module} is not given any arguments. What may be less obvious -- perhaps confusing, or even mind-blowing for those new to functional programming -- is that the \matlab{args} variable is also intended to be a struct and that \matlab{m.mdl} stores a reference to the \matlab{my\_module} function itself. This means that a NARF module \matlab{m} can create a mutated copy of itself by passing a struct to the function stored under \matlab{m.mdl}. Consider the following example, which assumes that you have already scanned for modules and placed them in the global \matlab{MODULES} structure.
 
 \begin{verbatim}
 >> global MODULES;
@@ -261,11 +356,11 @@ Modules are just structs; what makes them more than just a struct is that they i
 
 \item [\matlab{m.editable\_fields}] A cell array of strings that list which parameters should be editable in the GUI. Sometimes you don't want to expose all of the module parameters to naive users, and so by default no parameters are gui-editable unless listed in this cell array. Any fields listed in \matlab{m.editable\_fields} must have values with one of the following types: integer, floating point, 1D or 2D matrix, string, boolean, function, or a cell arary of strings. No other data types are allowed. If you need to add one, please make sure it is compatible with \matlab{write\_readably.m}.
 
-\item [\matlab{m.isready\_pred}] The ``module-is-ready-to-be-appended predicate''; in other words, a function that returns true only when the module has its data dependencies and connectivity met. Not all modules can be appended to an existing \matlab{STACK}; sometimes the signals are not ready or the input dimensionality is not correct for the module being used. In current practice, this predicate is not used much because we are mostly just building models whose modules all interact harmoniously, but leaving this hook intact is a good idea because perhaps in the future we will need to auto-generate models from modules that are not always compatible. 
+\item [\matlab{m.isready\_pred}] The ``module-is-ready-to-be-appended predicate''; in other words, a function that returns true only when the module has its data dependencies and connectivity met. Not all modules can be appended to an existing \matlab{STACK}; sometimes the signals are not ready or the input dimensionality is not correct for the module being used. In current practice, this predicate is not used much because we are mostly just building models whose modules all interact harmoniously, but leaving this hook intact is a good idea because perhaps in the future we will need to auto-generate models from modules that are not always compatible. Did I mention that research usually means you leave things in the code that may not be useful anymore, rather than being fastidious about keeping your code clean?
 
 \end{description}
 
-Modules may also have these optional fields which enable special behavior. These aren't fully documented yet; this is just an overview.
+Modules may also have these optional fields which enable special behavior. These aren't fully documented, but you should get the idea by looking at example source code when you need to use them.
 
 \begin{description}
 
@@ -277,20 +372,18 @@ Modules may also have these optional fields which enable special behavior. These
 
 \item [\matlab{m.auto\_init}] A function that is called which can be used to initialize a module's parameters based on the run-time values of the \matlab{XXX} struct. This is used sparingly but usefully in practice, since it can allow modules to adapt themselves to the particular model structure already defined. It is intended to be called by \matlab{append\_module.m}. 
 
-\item [\matlab{m.splitter}] Used to create parameter sets that act on different parts of the same data. 
-
-\item [\matlab{m.unifier}] Used to join the results of multiple parameter sets that acted on different parts of the same data. 
-
 \item [\matlab{m.is\_perf\_metric}] When true, this signals to any fitting algorithms that this module contains a performance metric that should be used to fit. 
+
+\item [\matlab{m.requires}] This is a list of all the signals that the pure function of the module uses to compute its outputs. If you define this value and put the correct signal in this list, you enable the module evaluator to know when the output of the module has been invalidated by a changing input. In a complex model with many modules, it can save significant simulation time if you only recompute modules whose input signals dependencies have changed, and skip recomputing the rest. 
+
+\item [\matlab{m.modifies}] This is a list of all the output signals of the module. This lets the module evaluator understand that subsequent modules -- who may depend on these output signals -- may have to have to be recomputed after this module. 
 
 \end{description}
 
 
 \subsection{\matlab{STACK} Global Data Structure}
 
-The \matlab{STACK} data structure is a cell array of cell arrays. The reason for this nesting will be described further in section \ref{sec:parameter-sets}, but for now we need only concern ourselves with the first level of cell arrays, which will be as long as there are modules in the stack. 
-
-A cell array containing the functions and their parameters that were applied to reach this point. 
+The \matlab{STACK} data structure is a cell array of cell arrays. The reason for this nesting will be described further in section \ref{sec:parameter-sets}, but for now we need only concern ourselves with the first level of cell arrays, which will have as many elements as there are modules in the stack. 
 
 \subsection{\matlab{META} Global Data Structure}
 
@@ -305,6 +398,8 @@ A model is more than just a collection of modules; certain pieces of information
   \item how long it took to fit the model, in seconds
   \item which performance metric is used to fit the model
   \item the git hash referring to the version of NARF used to fit the model
+  \item other performance metrics
+  \item programmer notes on the model
 \end{itemize}
 
 It might look something like this:
@@ -326,7 +421,29 @@ META =
 
 \subsection{\matlab{NARFGUI} Global Data Structure}
 
-This isn't really documented yet, but it contains handles to all of the GUI widgets created for each module. It is mostly used by \matlab{narf\_modelpane}.m.
+This will be left undocumented, since it is mostly used by \matlab{narf\_modelpane.m}. For the curious, it contains handles to all of the GUI widgets created for each module. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \subsection{\matlab{XXX} Global Data Structure}
 
@@ -363,7 +480,6 @@ In the above, dimensions are indicated with:
   \item {C} = Channel index \#
   \item {R} = Repetition index \#
 \end{description}
-
 
 Coefficients are the only things that AREN'T with the time index in first place. Why? Well, it's easier to edit them in the gui if they are not?
 
