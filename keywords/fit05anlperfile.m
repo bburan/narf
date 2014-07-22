@@ -18,7 +18,7 @@ ii=1;
 [~, mod_idxs] = find_modules(STACK, 'nonlinearity', false);
 if ~isempty(mod_idxs),
     ii=mod_idxs{end};
-
+    
     [~,mseidx]=find_modules(STACK,'mean_squared_error');
     
     % Then boost on each file individually

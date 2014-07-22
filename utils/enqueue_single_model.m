@@ -48,26 +48,30 @@ if ~isempty(rdata) && ~force_rerun,
     return
 end
 
-sql=['SELECT * FROM tQueue WHERE parmstring="', s, '"'];
+sql=['SELECT * FROM tQueue WHERE note="', note, '"'];
 qdata=mysql(sql);
 
 if ~isempty(qdata) && qdata(1).complete<=0
-        fprintf('Incomplete queue entry for %s already exists, skipping.\n',...
-                note);
-        if ~strcmp(note,qdata(1).note),
-            disp('fixing truncated tQueue.note');
-            sql=['UPDATE tQueue set note="',note,'"',...
-                 ' WHERE id=',num2str(qdata(1).id)];
-            mysql(sql);
-        end
-    return
+    fprintf('Incomplete entry for %s already exists, skipping.\n',note);
+    if ~strcmp(note,qdata(1).note),
+        disp('Fixing truncated tQueue.note');
+        sql=['UPDATE tQueue set note="',note,'"',...
+             ' WHERE id=',num2str(qdata(1).id)];
+        mysql(sql);
+    end
+    
 elseif ~isempty(qdata) && qdata(1).complete==2,
     fprintf('Dead queue entry for %s already exists. Resetting.\n', note);
-    dbsetqueue(qdata(1).id,0,0);
-    return
+    sql=['UPDATE tQueue SET complete=0, progress=0',...
+         ' WHERE id=',num2str(qdata(1).id)];
+    [res,r]=mysql(sql);
+    
 elseif ~isempty(qdata) && qdata(1).complete==1,
     fprintf('Resetting existing queue entry for %s\n', note);
-    dbsetqueue(qdata(1).id,0,0);
+    sql=['UPDATE tQueue SET complete=0, progress=0',...
+         ' WHERE id=',num2str(qdata(1).id)];
+    [res,r]=mysql(sql);
+    
 else
     fprintf('Adding new queue entry for %s\n', note);
     dbaddqueuemaster(s,note);
