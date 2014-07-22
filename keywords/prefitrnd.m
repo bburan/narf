@@ -11,7 +11,7 @@ function prefitrnd(dont_use_semse)
 % search. Keeping the best position for a real search, to happen later on.
 
 
-global STACK
+global STACK  XXX
 
 if (nargin>=1) && (dont_use_semse==1)
     nmse();
@@ -76,6 +76,33 @@ for i=1:10
                     STACK{kk}{ll}.time_weights = normrnd(0, 1, size(STACK{kk}{ll}.time_weights)); %(0,1) gaussian random initialization
                     STACK{kk}{ll}.('v') = 0;
                     STACK{kk}{ll}.('baseline') = 0;
+                elseif (strcmp(STACK{kk}{ll}.name, 'pole_zeros')),
+                    n_inputs=STACK{kk}{ll}.n_inputs;
+                    STACK{kk}{ll}.gains  = 100 * randn(1, n_inputs);
+                    STACK{kk}{ll}.delays = 5 + 10 * rand(n_inputs, 1);
+                    
+                    % This ad-hoc initialization works tolerably for n_zeros < 5
+                    %mdl.poles = repmat(-30 + -20*[1:mdl.n_poles], mdl.n_inputs, 1); 
+                    %mdl.zeros = repmat(-10 + -10*[1:mdl.n_zeros], mdl.n_inputs, 1);
+                elseif strcmp(STACK{kk}{ll}.name, 'nonlinearity') && ...
+                        strcmpi(func2str(STACK{kk}{ll}.nlfn),...
+                                         'nl_sig_logistic100'),
+                    % standard initialization from keyword that
+                    % depends on output of linear filter
+                    %pop_module();  % trim the mean_squared_error module from the stack
+                    update_xxx(2);
+                    ff=XXX{kk}.training_set{1};
+                    meanresp=nanmean(XXX{kk}.dat.(ff).respavg(:));
+                    meanpred=nanmean(XXX{kk}.dat.(ff).stim(:));
+                    resprange = max(XXX{kk}.dat.(ff).respavg(:))-...
+                        min(XXX{end}.dat.(ff).respavg(:));
+                    %curvature = 1 / resprange.*100;
+                    curvature = 100;
+                    STACK{kk}{ll}.phi=...
+                        [0 meanresp*2 meanpred curvature curvature];
+                    %fitSubstack();
+                    %nmse();
+                    keyboard
                 end
             end
         end
@@ -107,5 +134,7 @@ for i=1:10
         
     end
 end
+
+pop_module();  % trim the mean_squared_error module from the stack
 
 end

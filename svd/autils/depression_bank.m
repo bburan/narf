@@ -102,23 +102,32 @@ for jj=1:dcount,
       end
       %tstim(:,1:10)=min(tstim(:));
       
-      if taui(1)./abs(ui(1))./10>1,
+      if min(taui./abs(ui))>10,
           subsample=1;
-      elseif taui(1)./abs(ui(1))./10>.1,
-          subsample=10;
-      elseif taui(1)./abs(ui(1))./10>.01,
-          subsample=100;
-      elseif abs(ui(1))>10,
-          % tau too small, effectively no depression.
-          % otherwise this will create unstable oscillations
-          ui(:)=taui(:)./10*1000;
-          subsample=100;
       else
-          % tau too small, effectively no depression.
-          % otherwise this will create unstable oscillations
           subsample=1;
-          ui(:)=0;taui(:)=10;
+          for ii=1:length(taui),
+              if taui(ii)./abs(ui(ii))<10,
+                  ui(ii)=sign(ui(ii)).*taui(ii)./10;
+              end
+          end
       end
+      
+% $$$       elseif taui(1)./abs(ui(1))./10>.1,
+% $$$           subsample=10;
+% $$$       elseif taui(1)./abs(ui(1))./10>.01,
+% $$$           subsample=100;
+% $$$       elseif abs(ui(1))>10,
+% $$$           % tau too small, effectively no depression.
+% $$$           % otherwise this will create unstable oscillations
+% $$$           ui(:)=taui(:)./10*1000;
+% $$$           subsample=100;
+% $$$       else
+% $$$           % tau too small, effectively no depression.
+% $$$           % otherwise this will create unstable oscillations
+% $$$           subsample=1;
+% $$$           ui(:)=0;taui(:)=10;
+% $$$       end
       taui_ss=taui.*subsample;
       ui_ss=ui./subsample;
       for ii=2:size(stim,2),
