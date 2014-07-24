@@ -357,19 +357,24 @@ function x = do_load_from_baphy(mdl, x)
         if datasubset,
             
             repcount=squeeze(sum(~isnan(resp(1,:,:)),2));
-            %if max(repcount)>2,
-            %    validx=min(find(repcount==max(repcount)));
-            %else
-                [ff,ii]=sort(repcount,'descend');
-                ff=cumsum(ff)./sum(ff);
-                validx=ii(1:min(find(ff>=1/15)));
-            %end
             global META
             if META.batch==261,
                 SUBTORC=1;
             else
                 SUBTORC=0;
             end
+            if ismember(META.batch,[271 272]),
+                vfrac=0.15;
+            else
+                vfrac=0.1;
+            end
+            %if max(repcount)>2,
+            %    validx=min(find(repcount==max(repcount)));
+            %else
+            [ff,ii]=sort(repcount,'descend');
+            ff=cumsum(ff)./sum(ff);
+            validx=ii(1:min(find(ff>=vfrac)));
+            %end
             
             if SUBTORC && datasubset==2,
 

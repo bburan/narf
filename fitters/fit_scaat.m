@@ -8,7 +8,8 @@ default_options = struct('StepsPerParam', 1, ...
                          'InitStepSize', 1.0, ...
                          'StopAtStepsize', 10^-6, ...
                          'StepGrowth', 2.0, ...
-                         'StepShrink', 0.5);
+                         'StepShrink', 0.5, ...
+                         'FlipSign', false);
 
 if (length(varargin) == 1)
     options = merge_structs(default_options, varargin{1});
@@ -51,6 +52,15 @@ function [x, s, term_cond, stepsizes] = one_at_a_time(objfn, x_0, opts)
             % Comment out if desired
             fprintf('eval: %d, size: %.3e, coef#%3d, s_delta: %.3e, score:%e', o, stepsize, jj, d, s);
             
+            % If flipping a sign on this param helps, do it!
+            if opts.FlipSign
+                [s_inv, o] = objfn(-x);
+                if s_inv < s
+                    s = s_inv;
+                    x = -x;
+                end
+            end
+            
             ii = 1;
             while ii <= opts.StepsPerParam && stepsize > opts.StopAtStepsize 
                 
@@ -74,7 +84,7 @@ function [x, s, term_cond, stepsizes] = one_at_a_time(objfn, x_0, opts)
                 if s_bck < s
                     s_next = s_bck;
                     x_next = x_bck;
-                end
+                end                              
                 
                 if all(x == x_next)
                     stepsize = stepsize * opts.StepShrink;

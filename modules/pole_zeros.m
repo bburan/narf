@@ -169,11 +169,15 @@ function do_plot_pz_heat_impulse_response(sel, stack, xxx)
         img = Y' ./ mean(abs(Y(:)));
         img = cat(1, nan(1, size(img,2)), img);      
         [~, weights] = mod{1}.fn(mod{1}, xins{1}{mod_idx});
-        bot = weights * Y';
-        img = cat(1, bot ./ mean(abs(bot(:))), img);        
-        h = imagesc(img);
-        
-        do_ylabel('STRF | Impulse');    
+        if size(weights, 2) == size(Y,2)
+            bot = weights * Y';
+            img = cat(1, bot ./ mean(abs(bot(:))), img);        
+            h = imagesc(img);
+            do_ylabel('STRF | Impulse');    
+        else
+            h = imagesc(Y);    
+            do_ylabel('Impulse Response');
+        end
     else
         h = imagesc(Y);    
         do_ylabel('Impulse Response');
