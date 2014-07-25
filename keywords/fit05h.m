@@ -124,6 +124,12 @@ if 0 && strcmpi(func2str(nl_save{1}.nlfn),'nl_sig_logistic'),
     siglogs();
     % restore MSE module
     semse();
+elseif strcmpi(func2str(nl_save{1}.nlfn),'nl_dexp'),    
+    pop_module();  % remove MSE module
+    pop_module();  % remove dexp
+    dexp();
+    % restore MSE module
+    semse();
 else
     disp('Restoring static spike NL for final fit');
     STACK{nl_idx}=nl_save; % restore original NL function
