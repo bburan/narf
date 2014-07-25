@@ -264,6 +264,7 @@ function x = do_load_from_baphy(mdl, x)
                 resp(:,1:length(ttr),tt)=oldresp(:,:,ttr);
                 umap(tt)=ttr(1);
             end
+            x.dat.(f).trial2sequence=ucat;
             stim=stim(:,umap,:);
         elseif loadbytrial,
             options.tag_masks={'SPECIAL-TRIAL'};
