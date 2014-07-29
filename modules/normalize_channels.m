@@ -39,7 +39,8 @@ m.modifies = {m.output};          % These signals are modified
 function x = do_normalize_channels(mdl, x)    
     % Find mean and RMS for all channels across all stimfiles
     tstim=[];
-    fns = fieldnames(x.dat);
+    % fns = fieldnames(x.dat); %oops
+    fns = x.training_set;
     for ii = 1:length(fns),
         sf = fns{ii};
         [T, S, C] = size(x.dat.(sf).(mdl.input));
