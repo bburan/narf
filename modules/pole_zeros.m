@@ -104,6 +104,10 @@ function x = do_pole_zeros(mdl, x)
          % warning on Control:analysis:LsimStartTime;
          tmp(u_nan) = nan;
          
+         if prod(size(tmp))~=T*S,
+             warning('pole_zeros: output size mismatch!?!?!?');
+             tmp=tmp(1:size(u,1),:);
+         end
          tmp = reshape(tmp, T, S, 1);
          x.dat.(sf).(mdl.output) = tmp + mdl.y_offset;
     end

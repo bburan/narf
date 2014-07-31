@@ -70,7 +70,7 @@ function x = do_depression_filter(mdl, x)
     if ~isfield(mdl,'per_channel'),
         mdl.per_channel=0;
     end
-    
+
     % calculate global mean level of each channel for scaling dep
     T=0;
     for sf = fieldnames(x.dat)', 
@@ -100,6 +100,10 @@ function x = do_depression_filter(mdl, x)
         stim_time = x.dat.(sf).(mdl.time);
         % A simpler way to get sampling rate
         raw_stim_fs = 1/(stim_time(2) - stim_time(1)); 
+
+        % upper bound on tau --- 10000 bins
+        mdl.tau(abs(mdl.tau)>4000.*mdl.tau_norm./raw_stim_fs)=...
+            4000.*mdl.tau_norm./raw_stim_fs; 
         
         [T, S, N] = size(x.dat.(sf).(mdl.input));
         if isfield(mdl,'per_channel') && mdl.per_channel && num_channels<1,

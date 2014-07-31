@@ -1,4 +1,4 @@
-function fitset=export_pred_vectors(batch, cellids, modelnames)
+function fitset=export_pred_vectors(batch, cellids, modelnames, remove_out_nl)
 
 global XXX STACK META
 
@@ -18,6 +18,11 @@ global XXX STACK META
         end
     end
 
+    if ~exist('remove_out_nl','var'),
+        remote_out_nl=1;
+    end
+    
+    
 stack_extractor = @(x) x;
 %meta_extractor = @getfitval;
 meta_extractor = @(x) x;
