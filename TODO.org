@@ -1,45 +1,82 @@
 * Present Pareto Front for 176
   All use fb18ch100, fit09c unless otherwise noted
-  |  N | Model                                | R_test |     EFOV |       Bits |                 mBits/Extra Parm | Improvement Reason         |
-  |----+--------------------------------------+--------+----------+------------+----------------------------------+----------------------------|
-  |  5 | log2n_wcg01w_ap0z0_dexp3b            |    266 | 0.070756 | 0.10587063 | (10.587063 - 100 Bits) / (5 - N) |                            |
-  |  6 | log2n_wcg01w_ap1z0_dexp3b            |    276 | 0.076176 | 0.11431007 |                         0.843944 | POLE                       |
-  |  7 | log2n_wcg01w_ap1z1_dexp3b            |    320 |   0.1024 | 0.15585542 |                         4.154535 | ZERO                       |
-  |  8 | log2n_wcg01w_ap2z1_dexp3b            |    338 | 0.114244 | 0.17501876 |                         1.916334 | POLE                       |
-  |  9 | log2n_wcg01w_ap2z1_dexp              |    344 | 0.118336 | 0.18169914 |                         0.668038 | NL                         |
-  | 10 | log2n_wcg01_ap2z1_dexp               |    357 | 0.127449 | 0.19668864 |                          1.49895 | spectral width             |
-  | 11 | lognn_wcg01_ap2z1_dexp               |    365 | 0.133225 | 0.20627055 |                         0.958191 | LOGN                       |
-  | 12 | lognn_wcg01_ap3z1_dexp               |    368 | 0.135424 | 0.20993531 |                         0.366476 | POLE                       |
-  | 14 | lognn_wcg01_adp1pc_ap2z1_dexp        |    374 | 0.139876 | 0.21738343 |                         0.372406 | trade pole for ADP         |
-  | 17 | lognn_wcg02_ap2z1_dexp               |    379 | 0.143641 | 0.22371237 |                       0.21096467 | Add 2nd channel, ditch ADP |
-  | 19 | lognn_wcg02_ap3z1_dexp               |    381 | 0.145161 | 0.22627537 |                          0.12815 | add pole                   |
-  | 23 | lognn_wcg02_adp1pc_ap2z1_dexp        |    395 | 0.156025 | 0.24472783 |                        0.4613115 | add ADP                    |
-  |----+--------------------------------------+--------+----------+------------+----------------------------------+----------------------------|
-  | 47 | lognn_wcg02_adp1pcw_fir15_siglog100  |    406 | 0.164836 | 0.25986857 |                      0.063086417 | fit05g/c                   |
-  | 48 | lognbzn_wcg02_adp1pc_fir15_siglog100 |    413 | 0.170569 | 0.26980613 |                         0.993756 | fit05h/c                   |
+  |  N | Model                               | R_test |     EFOV |        Bits |                 mBits/Extra Parm | Improvement Reason         |
+  |----+-------------------------------------+--------+----------+-------------+----------------------------------+----------------------------|
+  |  3 | log2n_wcg01w_wc01                   |    188 | 0.035344 | 0.051913531 | (5.1913531 - 100 Bits) / (3 - N) |                            |
+  |  4 | log2n_wcg01w_ap0z0_wc01             |    218 | 0.047524 | 0.070245354 |                        1.8331823 | Delay                      |
+  |  5 | log2n_wcg01w_ap0z0_dexp3b           |    266 | 0.070756 |  0.10587063 |                        3.5625276 | Output NL                  |
+  |  6 | log2n_wcg01w_ap1z0_dexp3b           |    276 | 0.076176 |  0.11431007 |                         0.843944 | POLE                       |
+  |  7 | log2n_wcg01w_ap1z1_dexp3b           |    320 |   0.1024 |  0.15585542 |                         4.154535 | ZERO                       |
+  |  8 | log2n_wcg01w_ap2z1_dexp3b           |    338 | 0.114244 |  0.17501876 |                         1.916334 | POLE                       |
+  |  9 | log2n_wcg01w_ap2z1_dexp             |    344 | 0.118336 |  0.18169914 |                         0.668038 | NL                         |
+  | 10 | log2n_wcg01_ap2z1_dexp              |    357 | 0.127449 |  0.19668864 |                          1.49895 | spectral width             |
+  | 11 | lognn_wcg01_ap2z1_dexp              |    365 | 0.133225 |  0.20627055 |                         0.958191 | LOGN                       |
+  | 12 | lognn_wcg01_ap3z1_dexp              |    368 | 0.135424 |  0.20993531 |                         0.366476 | POLE                       |
+  | 14 | lognn_wcg01_adp1pc_ap2z1_dexp       |    374 | 0.139876 |  0.21738343 |                         0.372406 | trade pole for ADP         |
+  | 17 | lognn_wcg02_ap2z1_dexp              |    379 | 0.143641 |  0.22371237 |                       0.21096467 | Add 2nd channel, ditch ADP |
+  | 19 | lognn_wcg02_ap3z1_dexp              |    381 | 0.145161 |  0.22627537 |                          0.12815 | add pole                   |
+  | 23 | lognn_wcg02_adp1pc_ap2z1_dexp       |    395 | 0.156025 |  0.24472783 |                        0.4613115 | add ADP                    |
+  | 32 | lognn_wcg03_adp1pc_ap2z1_dexp       |    398 | 0.158404 |  0.24880025 |                      0.045249111 | add 3rd channel            |
+  | 35 | lognn_wcg03_adp1pc_ap3z1_dexp       |    400 |     0.16 |  0.25153877 |                         0.091284 | add pole                   |
+  |----+-------------------------------------+--------+----------+-------------+----------------------------------+----------------------------|
+  | 47 | lognn_wcg02_adp1pcw_fir15_siglog100 |    406 | 0.164836 |  0.25986857 |                         0.069415 | fit05g/c                   |
+  | 48 | lognbn_wcg02_adp1pc_fir15_siglog100 |    413 | 0.170569 |  0.26980613 |                         0.993756 | fit05h/c                   |
+  | 68 | lognbn_wcg03_adp1pc_fir15_siglog100 |    414 | 0.171396 |  0.27124531 |                        7.1959e-3 | fit05h/c                   |
+  |----+-------------------------------------+--------+----------+-------------+----------------------------------+----------------------------|
   #+TBLFM: $4=($3/1000)^2::$5=-log(1-$4)/log(2)::$6=100*($5-@-1$5)/($1 - @-1$1)
 
+* Weird Things Noted
+  1. Adding ADP1PC really smears out the temporal response (check out the PZ fits!). Why?
+  2. We are still waiting on the lognn_wcg03_adp1pc_fir15_siglog100_fit05h_fit05c fits....they will probably take the last 2% of the pareto curve.
+
+* Points to Prove to make Parameterized models dominate
+  1. The last 2 percent is a temporal artifact of binning 
+  2. Using MSE instead of correlation
+
 * Models Needed for Main Paper
-** Main Thrust
-  1. [X] Classic STRF model (Previous work)
-  2. [X] Rank 1-4 simplification
-  3. [X] Spectral simplification
-  4. [X] Temporal simplification
-  5. [X] Nonlinearities can further improve
-	 - [X] Depression helps
-	 - [X] Voltq helps
+** Main Thrusts
+  1. [X] Rank 1-4 simplification of STRF is nearly equivalent
+  2. [X] Spectral simplification IMPROVES performance
+  3. [X] Temporal simplification Captures 98% of everything (perhaps some better temporal parameterizations/nonlinearities exist)
+  4. [X] Fewer parameters may actually perform BETTER and give you MORE RESOLUTION (FB channels, spectral channels, and temporal bin size)
+  5. [ ] Parameterized models work for different stimuli and different brain regions
+  6. [-] Nonlinearities can further improve
+	 - [X] Facilitation/Depression helps
+	 - [ ] Voltq helps
 	 - [ ] Per-chan NLs help
 
-** Reasons Why
+** Proving the Thrusts
+*** Show that for linear models, parameterization helps.
+    1. [X] Show that wcNN beats classic STRF
+    2. [X] Show that wcgNN beats wcNN
+    3. [ ] Show that apz models beat FIR15     
+
 *** Same performance, fewer params: Pareto front
     1. [ ] Shows optimality of models
     2. [ ] Shows combinatoric approach mostly generates suboptimal results
 
 *** Better performance on data-limited sets
+    1. [ ] Show: Given X amount of data, you can estimate N parameters before you start overfitting
+    2. [ ] Show that _more_ channels are useful when its parameterized (Better basis functions)
 
-*** Applicable to other brain areas, stimuli
-    1. [ ] Show that IC neurons are simpler
-    2. [ ] Show concept works for non-vocalization data.
+*** Enhanced Resolution on Existing Data Sets
+    1. [ ] At 200Hz, 500Hz
+    2. [ ] With 24 or 36 channels.
+
+*** Applicable to other brain areas
+**** Inferior Colliculus
+    1. [X] 270 (IC): wcg02/ap3z1 wins vs FIR! 
+	   2 channels is enough!
+
+**** A1 
+    1. [X] 265 (A1): wcg03/ap2z1 wins (For some reason ap3z1 does poorly on low correlation cells)	  
+    2. [X] 267 (A1): wcg03/ap3z1 wins!    
+    3. [ ] 264 (PPF): wcg03/ap2z1 wins! 
+    4. [X] 266 (PEG): wcg03/ap3z1 is the winner
+	  
+*** Applicable to other Stimuli
+    5. [X] 271 (NAT, A1): wcg02/ap2z1 wins!
+    6. [ ] 272 (NAT, PEG): 
 
 ** Extra, Optional Supporting Points 
 *** Similarity of other cost functions
@@ -49,8 +86,9 @@
     1. [X] Show that FB is better than GT
 
 *** Alternative Nonlinearities 
-    1. [ ] Shows lognn Compressor is best
-    2. [ ] Shows dexp NL is best for AP, and SIGLOG is best for FIR
+    1. [ ] Shows lognn Compressor is best (Sorta isn't true)
+    2. [ ] Shows dexp NL is best for AP
+    3. [ ] Show that SIGLOG is best for FIR
 
 *** Alternative Spectral simplifications 
     1. [X] Gaussian differences
@@ -62,12 +100,25 @@
     2. [ ] Inverse Gaussian? (no other hypotheses were really tested)
 
 * Minimal Remaining Work
-  - Compute the log likelihood
-  - Revise Poisson Cost Function. Predicted spike rate P gives 1/P = lambda, the poisson interval. Compute the ISI of the spike train, and using the inverse of CDF(lambda), figure out how likely that spike train is. 
+** Plots
+   - Full Pareto Front (all models, no text)
+   - Some models (just the front, with text and summary)
+
+** Establish Pareto Optimal models
+   - Plot function for "pareto optimal" 
+   
+** Show that HF noise is a problem
+   - Could I plot avg spikes/bin vs fit performance for various models?? Would suggest which neurons have too little data, thus too much HF noise, thus too much crap.
+     If the models do relatively well regardless, then it's NOT the number of spikes/bin
+
+** Show Other Metrics/Cost Functions
+   - Compute the naive log likelihood
+   - Revise Poisson Cost Function. Predicted spike rate P gives 1/P = lambda, the poisson interval. Compute the ISI of the spike train, and using the inverse of CDF(lambda), figure out how likely that spike train is. 
+   - Optionally, try cost functions that exclude outliers
 	
-* Wish List for SVD
-  - Stimuli set that are not just vocalizations
+* Ivar's Wish List 
   - A data set with 30 reps for training, 30 for fitting (they can be different)
-  - Raw data, unfiltered and before any processing occurs, recorded anywhere? Can you get delta/gamma waves from that? LFPs?
-  - Recordings from the Cochlear Nucleus, Superior Olivary, Inferior Colliculus, Medial Geniculate Nucleus, (A1), or Non-A1 cortex? By When?
+  - Patch-clamp data!
+  - Un-preprocessed data to see if post-model-fitting-spike-re-sorting is viable
+  - Recordings from the Cochlear Nucleus, Superior Olivary, Inferior Colliculus, Medial Geniculate Nucleus, (A1), or Non-A1 cortex?
   - XYZ positional data so I could start connecting best-fit parameters to cortical location

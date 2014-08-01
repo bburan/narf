@@ -28,7 +28,7 @@ for ii = 1:N
         continue;
     else
         data(:, jj, 1) = [results.n_parms];
-        data(:, jj, 2) = [results.r_test];        
+        data(:, jj, 2) = [results.r_ceiling];        
         modelnames{jj} = models{ii};
         jj = jj + 1;
     end

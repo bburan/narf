@@ -59,6 +59,7 @@ for pass = 1:2
         
         if pass == 1
             line([x+0.1 x-0.1 x x x-0.1 x+0.1], [yt, yt, yt, yb, yb, yb], 'Linewidth', 2, 'Linestyle', '-', 'Color', pickcolor(ii));
+            %line([x x], [yc, yc], 'Linewidth', 2, 'Linestyle', '-', 'Color', pickcolor(ii));
         else
             %fittime = d_fittime(ii);
             %text(x, yc, sprintf('%s [%0.1f]', name, fittime/60));
@@ -68,8 +69,9 @@ for pass = 1:2
 end
 
 hold off
+title('Pareto Plot');
 xlabel('Number of Parameters');
 ylabel(sprintf('%s', metric_name), 'interpreter', 'none');
-xticks(1:ceil(max(d_nparm(:))));
+% xticks(1:10:ceil(max(d_nparm(:))));
 
 end
