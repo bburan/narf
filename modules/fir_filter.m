@@ -200,15 +200,18 @@ function do_plot_fir_coefs_as_heatmap(sel, stack, xxx)
                 coefs=[];
             end
             [wc, hc] = size(coefs');
-            [w, h] = size([coefs;wcoefs]');
-            wmat=cat(2,wmat,[coefs;wcoefs]);
+            wts = wts./max(abs(wts(:))).*max(abs(coefs(:)));
+            [w, h] = size([wts coefs; zeros(size(wts,2)) wcoefs]');
+            n_chans = size(wts,2);
+            wmat=cat(2, wmat, [wts coefs; zeros(n_chans) wcoefs]);
+            
         end
     else
         for ii = 1:length(mdls)
             coefs = mdls{ii}.coefs;
             [wc, hc] = size(coefs');
             [w, h] = size(coefs');
-            wmat=cat(2,wmat,coefs);
+            wmat=cat(2, wmat, coefs);
         end
     end
     imagesc(wmat);
@@ -216,10 +219,11 @@ function do_plot_fir_coefs_as_heatmap(sel, stack, xxx)
     hold on;
     for ii=1:length(mdls);
         if ii<length(mdls),
-            plot([1 1].*w.*ii+0.5,[0.5 h+0.5],'w-','LineWidth',2);
+            plot([1 1].*w.*ii+0.5, [0.5 h+0.5],'w-','LineWidth',2);            
         end
         if hc<h,
             plot([0.5 size(wmat,2)+0.5],[hc+0.5 hc+0.5],'w-','LineWidth',2);
+            plot([n_chans+0.5 n_chans+0.5], [0 h],'w-','LineWidth',2);
         end
         coefs = mdls{ii}.coefs;
         text(w.*ii, 1, sprintf('Sp: %f\nSm: %f', ...

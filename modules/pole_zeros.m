@@ -165,18 +165,28 @@ function do_plot_pz_heat_impulse_response(sel, stack, xxx)
     time = x.dat.(fns{1}).(mdls{1}.time);
     dt = time(2) - time(1);
     Y = impulse(sys, linspace(0, 0.15, 500));  
-    Y = squeeze(Y);
+    Y = squeeze(Y);    
     
     [mod, mod_idx] = find_modules(stack, 'weight_channels', true);
     
     if ~isempty(mod)
         img = Y' ./ mean(abs(Y(:)));
-        img = cat(1, nan(1, size(img,2)), img);      
         [~, weights] = mod{1}.fn(mod{1}, xins{1}{mod_idx});
+        n_chans = size(weights,2);
         if size(weights, 2) == size(Y,2)
-            bot = weights * Y';
-            img = cat(1, bot ./ mean(abs(bot(:))), img);        
-            h = imagesc(img);
+            strf = weights * Y';
+            
+            % Normalize everything           
+            weights = weights./max(abs(weights(:))).*max(abs(strf(:)));
+            Y = Y./max(abs(Y(:))).*max(abs(strf(:)));
+            % Repeats is how many pixels wide to make the spectral params
+            repeats = 30;            
+            big = [];
+            for kk = 1:n_chans
+                big = cat(2, big, repmat(weights(:,kk), 1, repeats));
+            end
+            img = [big strf; zeros(n_chans, repeats*n_chans) Y'];            
+            h = imagesc(img);       
             do_ylabel('STRF | Impulse');    
         else
             h = imagesc(Y);    
@@ -185,14 +195,20 @@ function do_plot_pz_heat_impulse_response(sel, stack, xxx)
     else
         h = imagesc(Y);    
         do_ylabel('Impulse Response');
-    end
+    end   
     ca = caxis;
     lim = max(abs(ca));
+    [wws, hhs] = size(strf');
+    [hh, ww] = size(img);
+    hold on;
+    plot([0.5 ww+0.5],[hhs+0.5 hhs+0.5],'w-','LineWidth',2);
+    plot([1 1].*n_chans.*repeats+0.5, [0 hh],'w-','LineWidth',2);
+    hold off;
     caxis([-lim, +lim]);
-    set(gca,'YDir','normal');
+    set(gca,'YDir','normal');         
     axis xy tight;   
     do_xlabel('Time [ms]');
-   
+          
     setAxisLabelCallback('X', @(z) z*150/500);
         
     

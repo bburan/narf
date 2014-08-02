@@ -1,3 +1,24 @@
+
+{'fb18ch100', {'', 'trunc05', 'trunc10', 'trunc15', 'trunc20', 'trunc25', 'trunc50', 'trunc75'}, 'lognn', {{'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc01', 'fir15', 'siglog100', 'fit05h', 'fit05c'},   {'wc02', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc03', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wc04', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg01', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg02', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg03', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg04', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg01', 'ap3z1', 'dexp', 'fit09c'}, {'wcg02', 'ap3z1', 'dexp', 'fit09c'}, {'wcg03', 'ap3z1', 'dexp', 'fit09c'}, {'wcg04', 'ap3z1', 'dexp', 'fit09c'}}}
+
+{'fb18ch100', {'', 'trunc05', 'trunc10', 'trunc15', 'trunc20', 'trunc25', 'trunc50', 'trunc75'}, 'lognn', {{'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc01', 'fir15', 'siglog100', 'fit05h', 'fit05c'},   {'wc02', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wc03', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wc04', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wc01', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc02', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc03', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc04', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wcg01', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg02', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg03', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg04', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wcg01', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg02', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg03', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg04', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wcg01', 'ap3z1', 'dexp', 'fit09c'}, {'wcg02', 'ap3z1', 'dexp', 'fit09c'}, {'wcg03', 'ap3z1', 'dexp', 'fit09c'}, {'wcg04', 'ap3z1', 'dexp', 'fit09c'}, {'wcg01', 'ap2z1', 'dexp', 'fit09c'}, {'wcg02', 'ap2z1', 'dexp', 'fit09c'}, {'wcg03', 'ap2z1', 'dexp', 'fit09c'}, {'wcg04', 'ap2z1', 'dexp', 'fit09c'}, {'wcg01', 'adp1pc', 'ap3z1', 'dexp', 'fit09c'}, {'wcg02', 'adp1pc', 'ap3z1', 'dexp', 'fit09c'}, {'wcg03', 'adp1pc', 'ap3z1', 'dexp', 'fit09c'},  {'wcg04', 'adp1pc', 'ap3z1', 'dexp', 'fit09c'},  {'wcg01', 'adp1pc', 'ap2z1', 'dexp', 'fit09c'}, {'wcg02', 'adp1pc', 'ap2z1', 'dexp', 'fit09c'}, {'wcg03', 'adp1pc', 'ap2z1', 'dexp', 'fit09c'},  {'wcg04', 'adp1pc', 'ap2z1', 'dexp', 'fit09c'}, }}
+
+* Notes for Stephen
+
+  Most of the useful data can be found under analyses tagged with "paper"
+  
+  Figure 0 (Monster Pareto Plot):  /auto/users/ivar/plots/pareto_all_dots.eps 
+  Figure 1 (Full Linear vs Rank N): /auto/users/ivar/plots/fig1a.eps   and /auto/users/ivar/plots/fig1b.eps
+  Figure 2 (Performance vs fit set size): Not ready. Can see in progress results by browsing to analysis 25, selecting all models, and clicking the "TRUNC" button
+  Figure 3 (Bar plot of Rank N, WCG, and fully parameterized models): /auto/users/ivar/plots/fig3.eps  (Rebuild using analysis 25)
+  Figure 4 (Data-limited performance of Fig 3): Not ready, but can be built from analysis 25 using "TRUNC" button
+  Figure 5 (Bar plot of all nonlinear models): /auto/users/ivar/plots/fig5.eps  (Note we are "missing" the ADP+FIR models here because they are LOGNBN...fixable)
+  Figure 6 (Data-limited performance of Fig 5): REALLY not ready, but can be built from analysis 18. 
+  Figure 7 (Just Pareto Optimal Front): /auto/users/ivar/plots/fig7.eps 
+  Figure 8-infinity (Examples): Buildable. Go to analysis 26, pick one of these cells: tul035b-d1, sti019c-d1, dai026a-a1, por031a-17-1, por076b-a1, por031a-04-1, por079a-c3, sti016a-a1. Examples STRFs and their components may be plotted by selecting a cell from 276 and running the script "plot_examples_for_paper.m" Column 1 is the RANK-N approximation (Full nonparametric, linear).  Column 2 is the WCG with (Parameterized spectral, linear).  Column 3 is the fully parameterized model, linear.
+
+
+
 * Present Pareto Front for 176
   All use fb18ch100, fit09c unless otherwise noted
   |  N | Model                               | R_test |     EFOV |        Bits |                 mBits/Extra Parm | Improvement Reason         |

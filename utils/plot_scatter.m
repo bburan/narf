@@ -73,7 +73,7 @@ for i = 1:Nsets
             [~, ijx] = unique(j_values);
             ipts = interp1(i_values(iix), cdfi(iix), grid, 'linear');
             jpts = interp1(j_values(ijx), cdfj(ijx), grid, 'linear');
-            plot(jpts, ipts, 'r-');
+            %plot(jpts, ipts, 'r-');
         end
                       
         % Turn off tick labels unless in the bottom or leftmost rows
