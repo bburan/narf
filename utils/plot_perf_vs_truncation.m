@@ -33,6 +33,26 @@ end
 % Create list of unique names
 unames = unique(names);
 
+% Make "pretty" names with parameter count included
+pnames = [];
+n_parms = [];
+for ii = 1:length(unames)
+    sql = ['select * from NarfResults where modelname="' unames{ii} '";'];
+    ret = mysql(sql);
+    if ~isempty(ret)
+        n_parms(ii) = ret(1).n_parms;        
+        pnames{ii} = sprintf('[n=%d] %s', n_parms(ii), unames{ii});
+    else
+        pnames{ii} = unames{ii};
+        n_parms(ii) = NaN;
+    end
+end
+
+% Resort by the number of parameter count
+[~, idx] = sort(n_parms);
+unames = unames(idx);
+pnames = pnames(idx);
+
 scores = {};
 for ii = 1:length(unames)    
     % Collect indexes that match each unique name
@@ -64,7 +84,7 @@ for ii = 1:length(unames)
     hold off;
 end
 
-legend(unames, 'Location', 'SouthEast', 'Interpreter', 'none');
+legend(pnames, 'Location', 'SouthEast', 'Interpreter', 'none');
 title('Model Performance vs Data Fraction');
 xlabel('Percent of Estimation Set Data Used');
 ylabel(sprintf('%s', metric_name), 'interpreter', 'none');
