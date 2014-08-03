@@ -1,14 +1,14 @@
+* Priority
+  - Fix inhibitory bug on apz models  
 
-{'fb18ch100', {'', 'trunc05', 'trunc10', 'trunc15', 'trunc20', 'trunc25', 'trunc50', 'trunc75'}, 'lognn', {{'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc01', 'fir15', 'siglog100', 'fit05h', 'fit05c'},   {'wc02', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc03', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wc04', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg01', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg02', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg03', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg04', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg01', 'ap3z1', 'dexp', 'fit09c'}, {'wcg02', 'ap3z1', 'dexp', 'fit09c'}, {'wcg03', 'ap3z1', 'dexp', 'fit09c'}, {'wcg04', 'ap3z1', 'dexp', 'fit09c'}}}
 
-{'fb18ch100', {'', 'trunc05', 'trunc10', 'trunc15', 'trunc20', 'trunc25', 'trunc50', 'trunc75'}, 'lognn', {{'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc01', 'fir15', 'siglog100', 'fit05h', 'fit05c'},   {'wc02', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wc03', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wc04', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wc01', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc02', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc03', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wc04', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wcg01', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg02', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg03', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg04', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wcg01', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg02', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg03', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'}, {'wcg04', 'adp1pc', 'fir15', 'siglog100', 'fit05h', 'fit05c'},  {'wcg01', 'ap3z1', 'dexp', 'fit09c'}, {'wcg02', 'ap3z1', 'dexp', 'fit09c'}, {'wcg03', 'ap3z1', 'dexp', 'fit09c'}, {'wcg04', 'ap3z1', 'dexp', 'fit09c'}, {'wcg01', 'ap2z1', 'dexp', 'fit09c'}, {'wcg02', 'ap2z1', 'dexp', 'fit09c'}, {'wcg03', 'ap2z1', 'dexp', 'fit09c'}, {'wcg04', 'ap2z1', 'dexp', 'fit09c'}, {'wcg01', 'adp1pc', 'ap3z1', 'dexp', 'fit09c'}, {'wcg02', 'adp1pc', 'ap3z1', 'dexp', 'fit09c'}, {'wcg03', 'adp1pc', 'ap3z1', 'dexp', 'fit09c'},  {'wcg04', 'adp1pc', 'ap3z1', 'dexp', 'fit09c'},  {'wcg01', 'adp1pc', 'ap2z1', 'dexp', 'fit09c'}, {'wcg02', 'adp1pc', 'ap2z1', 'dexp', 'fit09c'}, {'wcg03', 'adp1pc', 'ap2z1', 'dexp', 'fit09c'},  {'wcg04', 'adp1pc', 'ap2z1', 'dexp', 'fit09c'}, }}
 
 * Notes for Stephen
 
-  Most of the useful data can be found under analyses tagged with "paper"
+  Most of the useful data can be found under analyses tagged with "paper":
   
   Figure 0 (Monster Pareto Plot):  /auto/users/ivar/plots/pareto_all_dots.eps 
-  Figure 1 (Full Linear vs Rank N): /auto/users/ivar/plots/fig1a.eps   and /auto/users/ivar/plots/fig1b.eps
+  Figure 1 (Full Linear vs Rank N): /auto/users/ivar/plots/fig1a.eps and /auto/users/ivar/plots/fig1b.eps
   Figure 2 (Performance vs fit set size): Not ready. Can see in progress results by browsing to analysis 25, selecting all models, and clicking the "TRUNC" button
   Figure 3 (Bar plot of Rank N, WCG, and fully parameterized models): /auto/users/ivar/plots/fig3.eps  (Rebuild using analysis 25)
   Figure 4 (Data-limited performance of Fig 3): Not ready, but can be built from analysis 25 using "TRUNC" button
@@ -16,8 +16,6 @@
   Figure 6 (Data-limited performance of Fig 5): REALLY not ready, but can be built from analysis 18. 
   Figure 7 (Just Pareto Optimal Front): /auto/users/ivar/plots/fig7.eps 
   Figure 8-infinity (Examples): Buildable. Go to analysis 26, pick one of these cells: tul035b-d1, sti019c-d1, dai026a-a1, por031a-17-1, por076b-a1, por031a-04-1, por079a-c3, sti016a-a1. Examples STRFs and their components may be plotted by selecting a cell from 276 and running the script "plot_examples_for_paper.m" Column 1 is the RANK-N approximation (Full nonparametric, linear).  Column 2 is the WCG with (Parameterized spectral, linear).  Column 3 is the fully parameterized model, linear.
-
-
 
 * Present Pareto Front for 176
   All use fb18ch100, fit09c unless otherwise noted
@@ -48,7 +46,6 @@
 
 * Weird Things Noted
   1. Adding ADP1PC really smears out the temporal response (check out the PZ fits!). Why?
-  2. We are still waiting on the lognn_wcg03_adp1pc_fir15_siglog100_fit05h_fit05c fits....they will probably take the last 2% of the pareto curve.
 
 * Points to Prove to make Parameterized models dominate
   1. The last 2 percent is a temporal artifact of binning 
@@ -56,7 +53,7 @@
 
 * Models Needed for Main Paper
 ** Main Thrusts
-  1. [X] Rank 1-4 simplification of STRF is nearly equivalent
+  1. [X] Rank 1-4 simplification of STRF provides equivalent performance
   2. [X] Spectral simplification IMPROVES performance
   3. [X] Temporal simplification Captures 98% of everything (perhaps some better temporal parameterizations/nonlinearities exist)
   4. [X] Fewer parameters may actually perform BETTER and give you MORE RESOLUTION (FB channels, spectral channels, and temporal bin size)
@@ -143,3 +140,14 @@
   - Un-preprocessed data to see if post-model-fitting-spike-re-sorting is viable
   - Recordings from the Cochlear Nucleus, Superior Olivary, Inferior Colliculus, Medial Geniculate Nucleus, (A1), or Non-A1 cortex?
   - XYZ positional data so I could start connecting best-fit parameters to cortical location
+
+* Other
+  1. [ ] Log-Likelihood: slow and fast
+  2. [ ] Add note to documentation about new fit/split stuff: 
+     If you update a signal (input, output, etc) make sure to also update the "req" and "deps" fields 
+     -> Or better yet, I need to define a function (get dependencies) which does this automatically. 
+  3. [ ] Behavioral Splitter
+  4. [ ] Reneval process (Kass, Ventura, Emerett Brown)
+  5. [ ] ML neural models by Paninski
+  6. [ ] K-fold xval
+  7. [ ] Write about using the "evidence" for neural models

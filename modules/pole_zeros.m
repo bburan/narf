@@ -66,7 +66,7 @@ function mdl = auto_init_pz(stack, xxx)
     [T, S, C] = size(x.dat.(sf).(mdl.input)); 
       
     mdl.n_inputs = C;
-    mdl.gains  = 16 * ones(1, mdl.n_inputs);
+    mdl.gains  = 0.6*ones(1, mdl.n_inputs);
     mdl.delays = 5 + zeros(mdl.n_inputs, 1);
     
     % This ad-hoc initialization works tolerably for n_zeros < 5
