@@ -11,7 +11,7 @@ D = data(:,:);
 D(D==0) = NaN;
 d_metric = abs(D);
 
-d_means = nanmean(d_metric);
+d_means = nanmedian(d_metric);
 d_count = sum(~isnan(d_metric));
 d_stddev = sqrt(nanvar(d_metric));
 d_stderr = d_stddev ./ sqrt(d_count);
@@ -60,7 +60,22 @@ for ii = 1:length(unames)
     
     scores{ii} = sortrows(scores{ii});
     hold on;
-    plot(scores{ii}(:,1), scores{ii}(:,2), 'Marker', 'o', 'MarkerEdgeColor', 'k', 'MarkerSize', 2, 'LineWidth', 2, 'color', pickcolor(ii), 'LineStyle', pickline(1+floor(ii/12)))
+    if 0,
+        n=1./(scores{ii}(2:end,1));
+        r=1./(scores{ii}(2:end,2)).^2;
+        plot(n,r, 'Marker', 'o', 'MarkerEdgeColor', 'k', ...
+             'MarkerSize', 2, 'LineWidth', 2, 'color', pickcolor(ii), ...
+             'LineStyle', pickline(1+floor(ii/12)));
+        p=polyfit(n,r,1);
+        x=[0 max(n)];
+        plot(x,p(1)*x+p(2),'--','color', pickcolor(ii));
+    else
+        n=scores{ii}(2:end,1);
+        r=scores{ii}(2:end,2);
+        plot(n,r, 'Marker', 'o', 'MarkerEdgeColor', 'k', ...
+             'MarkerSize', 2, 'LineWidth', 2, 'color', pickcolor(ii), ...
+             'LineStyle', pickline(1+floor(ii/12)));
+    end
     hold off;
 end
 
