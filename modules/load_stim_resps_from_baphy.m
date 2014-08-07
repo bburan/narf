@@ -111,6 +111,19 @@ function x = do_load_from_baphy(mdl, x)
             fname=f;
         end
         
+        % BNB 2014-07-28 - RDT specific check to perform prediction only
+        % for stream 1, 2 or the combined stream.  The combined stream is
+        % indexed as 3 and is the default.
+        if strfind(f, '_stream1'),
+            stream = 1;
+            fname = strrep(f, '_stream1', '');
+        elseif strfind(f, '_stream2'),
+            stream = 2;
+            fname = strrep(f, '_stream2', '');
+        else
+            stream = 3;
+        end
+        
         % Find the index number of cfd corresponding to the file
         idx = 0;
         for j = 1:length(cfd)
@@ -151,7 +164,7 @@ function x = do_load_from_baphy(mdl, x)
             
             if RDT,
                 disp('special stimulus processing for RDT');
-                stim=stim(:,:,:,3);
+                stim=stim(:,:,:,stream);
             end
         else
             [stim,stimparam] = loadstimfrombaphy(stimfile, [], [], ...
